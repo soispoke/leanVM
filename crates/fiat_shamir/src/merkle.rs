@@ -3,6 +3,7 @@
 
 use crate::transcript::TranscriptError;
 use primitives::field::{F64, F192};
+use primitives::hash::{BLOCK_LEN, OUT_LEN, hash_many, hash_many_dyn_from_state, zero_prefix_state};
 use serde::{Deserialize, Serialize};
 
 pub type Hash = [u8; 32];
@@ -65,6 +66,48 @@ fn hash_words(image: &[F64]) -> Hash {
         *dst = word.0.to_le_bytes();
     }
     hash_leaf(&bytes)
+}
+
+/// Hash every row's leaf image together, one digest per row.
+///
+/// Whole blocks of the zero prefix are one chaining value, absorbed once for all rows.
+fn hash_rows(rows: &[Vec<F64>], row_words: usize, leaf_words: usize) -> Vec<Hash> {
+    let leaf_bytes = 8 * leaf_words;
+    let zero_blocks = 8 * (leaf_words - row_words) / BLOCK_LEN;
+    let image = leaf_bytes - zero_blocks * BLOCK_LEN;
+    // A leaf of no whole block, or a whole leaf of zero blocks: one row at a time.
+    if !leaf_bytes.is_multiple_of(BLOCK_LEN) || image == 0 {
+        return rows
+            .iter()
+            .map(|row| hash_words(&leaf_image(row, leaf_words)))
+            .collect();
+    }
+
+    // Each image is its zeros past the prefix, then the row.
+    let mut images = vec![0u8; rows.len() * image];
+    for (dst, row) in images.chunks_exact_mut(image).zip(rows) {
+        let words = dst[image - 8 * row_words..].as_chunks_mut::<8>().0;
+        for (dst, word) in words.iter_mut().zip(row) {
+            *dst = word.0.to_le_bytes();
+        }
+    }
+    let mut digests = vec![[0u8; 32]; rows.len()];
+    let t_offset = (zero_blocks * BLOCK_LEN) as u64;
+    hash_many_dyn_from_state(
+        &images,
+        image,
+        &zero_prefix_state(zero_blocks),
+        t_offset,
+        digests.as_flattened_mut(),
+    );
+    digests
+}
+
+/// Hash each pair of children into its parent, all pairs together.
+fn hash_pairs(pairs: &[[Hash; 2]]) -> Vec<Hash> {
+    let mut parents = vec![[0u8; 32]; pairs.len()];
+    hash_many::<{ 2 * OUT_LEN }>(pairs.as_flattened().as_flattened(), parents.as_flattened_mut());
+    parents
 }
 
 /// Query positions with duplicates removed, ascending: the order a phase stores
@@ -142,12 +185,10 @@ impl PrunedMerklePaths {
         if sorted.len() != self.leaf_data.len() || row_words > leaf_words {
             return None;
         }
-        let hashes = self
-            .leaf_data
-            .iter()
-            .map(|row| (row.len() == row_words).then(|| hash_words(&leaf_image(row, leaf_words))))
-            .collect::<Option<Vec<_>>>()?;
-        Some((sorted, hashes))
+        if self.leaf_data.iter().any(|row| row.len() != row_words) {
+            return None;
+        }
+        Some((sorted, hash_rows(&self.leaf_data, row_words, leaf_words)))
     }
 
     /// Verifier side: authenticate this phase against `root` and expand it into
@@ -186,6 +227,7 @@ impl PrunedMerklePaths {
         for _ in 0..height {
             let mut level = Vec::with_capacity(2 * nodes.len());
             let mut parents = Vec::with_capacity(nodes.len());
+            let mut pairs = Vec::with_capacity(nodes.len());
             let mut i = 0;
             while i < nodes.len() {
                 let idx = nodes[i].0;
@@ -197,13 +239,14 @@ impl PrunedMerklePaths {
                 } else {
                     (*supplied.next()?, nodes[i].1)
                 };
-                parents.push((idx >> 1, hash_pair(&left, &right)));
+                parents.push(idx >> 1);
+                pairs.push([left, right]);
                 level.push((idx & !1, left));
                 level.push((idx | 1, right));
                 i += if paired { 2 } else { 1 };
             }
             known.push(level);
-            nodes = parents;
+            nodes = parents.into_iter().zip(hash_pairs(&pairs)).collect();
         }
         // The last fold leaves exactly the root, and nothing may be left over.
         if supplied.next().is_some() || nodes[0].1 != *root {
