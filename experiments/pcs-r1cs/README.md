@@ -52,3 +52,7 @@ The original measurements and detailed accounting are preserved in the [research
 ## Published-branch evidence
 
 The [review validation record](evidence/2026-10-20-review/README.md) retains fresh measurements, exact source/environment provenance and regression logs for the cleaned code. Fixed public seeds generate benchmark fixtures, not production secrets.
+
+## Formal assurance
+
+The structured gate lowering and its ideal-model soundness theorem are in [`formal/quotient/QuotientSecurity/R1CS.lean`](../../formal/quotient/QuotientSecurity/R1CS.lean). The six row equations are equivalent to the shared quotient gate, and the five eliminated auxiliary wires are uniquely determined. The theorem preserves the original copy and packed public word constraints and the original `(Q + 3) / 2^128` soundness bound. See the [formal scope](../../formal/quotient/README.md#structured-r1cs-comparison) for the distinction between packed word equations and the diagnostic checker's individual bit anchors, and for the implementation and concrete circuit obligations that remain outside the proof. Benchmark and adversarial tests are not formal verification of either complete pipeline.

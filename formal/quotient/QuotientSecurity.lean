@@ -16,6 +16,7 @@ import QuotientSecurity.ConcreteZK
 import QuotientSecurity.Sequence
 import QuotientSecurity.Joint
 import QuotientSecurity.Statement
+import QuotientSecurity.R1CS
 
 /-- info: 'QuotientSecurity.verifier_rbrKnowledgeSoundness' depends on axioms: [propext, Classical.choice, Quot.sound] -/
 #guard_msgs in
@@ -312,3 +313,31 @@ import QuotientSecurity.Statement
 /-- info: 'QuotientSecurity.Instance.sat_iff' depends on axioms: [propext, Classical.choice, Quot.sound] -/
 #guard_msgs in
 #print axioms QuotientSecurity.Instance.sat_iff
+
+/-- info: 'QuotientSecurity.StructuredR1CS.aux_unique' depends on axioms: [propext, Quot.sound] -/
+#guard_msgs in
+#print axioms QuotientSecurity.StructuredR1CS.aux_unique
+
+/-- info: 'QuotientSecurity.StructuredR1CS.row_extend_iff' depends on axioms: [propext, Quot.sound] -/
+#guard_msgs in
+#print axioms QuotientSecurity.StructuredR1CS.row_extend_iff
+
+/-- info: 'QuotientSecurity.StructuredR1CS.row_iff' depends on axioms: [propext, Quot.sound] -/
+#guard_msgs in
+#print axioms QuotientSecurity.StructuredR1CS.row_iff
+
+/-- info: 'QuotientSecurity.Instance.r1cs_iff_relation' depends on axioms: [propext, Classical.choice, Quot.sound] -/
+#guard_msgs in
+#print axioms QuotientSecurity.Instance.r1cs_iff_relation
+
+/-- info: 'QuotientSecurity.Instance.exists_r1cs_iff_relation' depends on axioms: [propext, Classical.choice, Quot.sound] -/
+#guard_msgs in
+#print axioms QuotientSecurity.Instance.exists_r1cs_iff_relation
+
+/-- info: 'QuotientSecurity.Instance.r1cs_aux_unique' depends on axioms: [propext, Classical.choice, Quot.sound] -/
+#guard_msgs in
+#print axioms QuotientSecurity.Instance.r1cs_aux_unique
+
+/-- info: 'QuotientSecurity.Instance.r1cs_soundness' depends on axioms: [propext, Classical.choice, Quot.sound] -/
+#guard_msgs in
+#print axioms QuotientSecurity.Instance.r1cs_soundness

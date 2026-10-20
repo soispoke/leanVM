@@ -1,0 +1,15 @@
+{
+  "date": "2026-10-20",
+  "command": "LEAN_NUM_THREADS=8 lake build",
+  "directory": "formal/quotient",
+  "result": "success",
+  "toolchain": "leanprover/lean4:v4.34.0",
+  "source_sha256": {
+    "formal/quotient/QuotientSecurity/R1CS.lean": "b561e7eecbf7cc6acab03d5e1f0df1ffa6543845bc1659aedd6abd84aaca5168",
+    "formal/quotient/QuotientSecurity.lean": "1888dcc856662fd153ba109b483b1cd7bced36f004689b59aa7933b78698672e",
+    "formal/quotient/lean-toolchain": "8733782dc070a99b312039cda424f601b80f3be6f6f512627da5ba25adc27632",
+    "formal/quotient/lake-manifest.json": "e7c38c49792a422026d190f4afbea974fb5afe4ccfd9d4bcdd6c885b396e7b17",
+    "crates/rec_aggregation/examples/comparison_support/r1cs.rs": "8b8afa2821269bcbe7a2b7c577cf9db32e9ad44249a28e449504b65e69d9715b"
+  },
+  "build_log_sha256": "5812262dd3e2c0b0f2eab8d4ba97c89784bcdcfa59a60548bf901140e529bf0e"
+}
