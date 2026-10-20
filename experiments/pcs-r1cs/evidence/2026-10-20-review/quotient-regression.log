@@ -1,0 +1,12 @@
+   Compiling flock v0.1.0 (/private/tmp/leanvm-pcs-recursion-20261020/crates/flock)
+    Finished `release` profile [optimized] target(s) in 11.15s
+     Running unittests src/lib.rs (target/release/deps/flock-39f139930a6b1b9b)
+
+running 4 tests
+test quotient::tests::claims_hold_exactly_for_a_witness ... ok
+test quotient::tests::claims_open_against_the_commitments ... ok
+test quotient::tests::membership_proof_leaves_true_claims ... ok
+test quotient::tests::public_weights_are_products_over_coordinates ... ok
+
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 59 filtered out; finished in 0.42s
+

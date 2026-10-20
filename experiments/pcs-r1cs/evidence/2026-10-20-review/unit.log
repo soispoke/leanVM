@@ -1,0 +1,29 @@
+    Finished `release` profile [optimized] target(s) in 0.13s
+     Running unittests examples/comparison.rs (target/release/examples/comparison-81ff50aed4843c09)
+
+running 4 tests
+test comparison_support::generator_tests::source_edits_fail_closed ... ok
+test comparison_support::r1cs::tests::elimination_matches_gate ... ok
+test comparison_support::r1cs::tests::malformed_shapes_and_wiring_are_rejected ... ok
+test comparison_support::piop_guest::tests::keccak_matches_independent_implementation ... ok
+
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.31s
+
+        0.46 real         0.43 user         0.09 sys
+           195985408  maximum resident set size
+                   0  average shared memory size
+                   0  average unshared data size
+                   0  average unshared stack size
+               29661  page reclaims
+                 302  page faults
+                   0  swaps
+                   0  block input operations
+                   0  block output operations
+                   0  messages sent
+                   0  messages received
+                   1  signals received
+                   3  voluntary context switches
+                2289  involuntary context switches
+          1202202529  instructions retired
+           424812423  cycles elapsed
+            62653064  peak memory footprint

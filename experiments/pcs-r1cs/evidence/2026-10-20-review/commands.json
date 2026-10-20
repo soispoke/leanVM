@@ -1,0 +1,162 @@
+[
+  {
+    "name": "clippy",
+    "command": [
+      "cargo",
+      "clippy",
+      "--locked",
+      "--release",
+      "-p",
+      "rec_aggregation",
+      "--all-targets",
+      "--",
+      "-D",
+      "warnings"
+    ],
+    "expected_peak_gb": 12,
+    "admissions": [
+      "ok: 61.2 + 12.0 GB <= 100 GB\n"
+    ],
+    "seconds": 0.19103245799999996,
+    "returncode": 0
+  },
+  {
+    "name": "unit",
+    "command": [
+      "cargo",
+      "test",
+      "--locked",
+      "--release",
+      "-p",
+      "rec_aggregation",
+      "--example",
+      "comparison"
+    ],
+    "expected_peak_gb": 12,
+    "admissions": [
+      "ok: 61.3 + 12.0 GB <= 100 GB\n"
+    ],
+    "seconds": 0.46781254099999997,
+    "returncode": 0
+  },
+  {
+    "name": "build",
+    "command": [
+      "cargo",
+      "build",
+      "--locked",
+      "--release",
+      "-p",
+      "rec_aggregation",
+      "--examples"
+    ],
+    "expected_peak_gb": 12,
+    "admissions": [
+      "ok: 61.4 + 12.0 GB <= 100 GB\n"
+    ],
+    "seconds": 6.085497958,
+    "returncode": 0
+  },
+  {
+    "name": "fan1-process0",
+    "command": [
+      "target/release/examples/comparison",
+      "--samples",
+      "3",
+      "--seed",
+      "1002"
+    ],
+    "expected_peak_gb": 35,
+    "admissions": [
+      "ok: 60.7 + 35.0 GB <= 100 GB\n"
+    ],
+    "seconds": 19.445650792000002,
+    "returncode": 0
+  },
+  {
+    "name": "fan2-process0",
+    "command": [
+      "target/release/examples/batch",
+      "--samples",
+      "3",
+      "--seed",
+      "1102",
+      "--fan-in",
+      "2"
+    ],
+    "expected_peak_gb": 35,
+    "admissions": [
+      "ok: 61.5 + 35.0 GB <= 100 GB\n"
+    ],
+    "seconds": 34.94267024999999,
+    "returncode": 0
+  },
+  {
+    "name": "fan1-process1",
+    "command": [
+      "target/release/examples/comparison",
+      "--samples",
+      "3",
+      "--seed",
+      "2002"
+    ],
+    "expected_peak_gb": 35,
+    "admissions": [
+      "ok: 62.6 + 35.0 GB <= 100 GB\n"
+    ],
+    "seconds": 19.157577707999998,
+    "returncode": 0
+  },
+  {
+    "name": "fan2-process1",
+    "command": [
+      "target/release/examples/batch",
+      "--samples",
+      "3",
+      "--seed",
+      "2102",
+      "--fan-in",
+      "2"
+    ],
+    "expected_peak_gb": 35,
+    "admissions": [
+      "ok: 62.8 + 35.0 GB <= 100 GB\n"
+    ],
+    "seconds": 33.089354541000006,
+    "returncode": 0
+  },
+  {
+    "name": "fan1-process2",
+    "command": [
+      "target/release/examples/comparison",
+      "--samples",
+      "3",
+      "--seed",
+      "3002"
+    ],
+    "expected_peak_gb": 35,
+    "admissions": [
+      "ok: 59.1 + 35.0 GB <= 100 GB\n"
+    ],
+    "seconds": 18.134171207999998,
+    "returncode": 0
+  },
+  {
+    "name": "fan2-process2",
+    "command": [
+      "target/release/examples/batch",
+      "--samples",
+      "3",
+      "--seed",
+      "3102",
+      "--fan-in",
+      "2"
+    ],
+    "expected_peak_gb": 35,
+    "admissions": [
+      "ok: 59.2 + 35.0 GB <= 100 GB\n"
+    ],
+    "seconds": 32.75823058400002,
+    "returncode": 0
+  }
+]

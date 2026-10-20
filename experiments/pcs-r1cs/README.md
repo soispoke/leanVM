@@ -48,3 +48,7 @@ The EVM is upstream revm with the proposed ten-gas `FIELD_MUL` instruction. R1CS
 The Keccak gadget is a constrained bit-level implementation, not a demonstrated state-of-the-art arithmetization. The results do not establish an unavoidable R1CS cost or an architecture-wide winner. General R1CS compilation, compact onchain circuit publication, production registry/coverage semantics, larger recursive trees, ordinary application state and block execution proving remain outside this prototype. The underlying VM proofs are not zero knowledge; application privacy composition has not been independently audited here.
 
 The original measurements and detailed accounting are preserved in the [research record](https://github.com/soispoke/hardness/blob/5c377d0bcf47b02f2208098b5f3d517016a540c8/prototypes/leanccs-pcs-comparison/baselines/pcs-openings/recursion/COMPARISON.md). They belong to that source revision. Validation and measurements of this cleaned branch are recorded separately rather than silently relabeling those historical results.
+
+## Published-branch evidence
+
+The [review validation record](evidence/2026-10-20-review/README.md) retains fresh measurements, exact source/environment provenance and regression logs for the cleaned code. Fixed public seeds generate benchmark fixtures, not production secrets.

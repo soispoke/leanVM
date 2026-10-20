@@ -1,0 +1,19 @@
+   Compiling flock v0.1.0 (/private/tmp/leanvm-pcs-recursion-20261020/crates/flock)
+   Compiling evm v0.1.0 (/private/tmp/leanvm-pcs-recursion-20261020/crates/evm)
+    Finished `release` profile [optimized] target(s) in 10.93s
+     Running unittests src/lib.rs (target/release/deps/evm-acfbe2fdeb085df5)
+
+running 4 tests
+test contract::tests::gas_report ... ignored
+test quotient::tests::gas_report ... ignored
+test quotient::tests::contract_is_the_verifier ... ok
+test contract::tests::contract_is_the_verifier ... ok
+
+test result: ok. 2 passed; 0 failed; 2 ignored; 0 measured; 0 filtered out; finished in 0.33s
+
+   Doc-tests evm
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+

@@ -1,0 +1,65 @@
+[
+  {
+    "name": "quotient-regression",
+    "command": [
+      "cargo",
+      "test",
+      "--locked",
+      "--release",
+      "-p",
+      "flock",
+      "quotient::tests",
+      "--",
+      "--include-ignored",
+      "--test-threads=1"
+    ],
+    "admission": [
+      "ok: 57.2 + 16.0 GB <= 100 GB\n"
+    ],
+    "returncode": 0
+  },
+  {
+    "name": "evm-regression",
+    "command": [
+      "cargo",
+      "test",
+      "--locked",
+      "--release",
+      "-p",
+      "evm"
+    ],
+    "admission": [
+      "ok: 58.7 + 12.0 GB <= 100 GB\n"
+    ],
+    "returncode": 0
+  },
+  {
+    "name": "default-recursion-regression",
+    "command": [
+      "cargo",
+      "test",
+      "--locked",
+      "--release",
+      "-p",
+      "rec_aggregation",
+      "--lib",
+      "aggregate_two_to_one",
+      "--",
+      "--test-threads=1"
+    ],
+    "admission": [
+      "ok: 60.8 + 30.0 GB <= 100 GB\n"
+    ],
+    "returncode": 0
+  },
+  {
+    "name": "opening-regression",
+    "command": [
+      "target/release/examples/standalone_opening"
+    ],
+    "admission": [
+      "ok: 57.7 + 30.0 GB <= 100 GB\n"
+    ],
+    "returncode": 0
+  }
+]

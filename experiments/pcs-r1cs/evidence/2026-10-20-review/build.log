@@ -1,0 +1,20 @@
+   Compiling rec_aggregation v0.1.0 (/private/tmp/leanvm-pcs-recursion-20261020/crates/rec_aggregation)
+    Finished `release` profile [optimized] target(s) in 6.06s
+        6.08 real        50.57 user         1.83 sys
+           709345280  maximum resident set size
+                   0  average shared memory size
+                   0  average unshared data size
+                   0  average unshared stack size
+              316516  page reclaims
+                1035  page faults
+                   0  swaps
+                   0  block input operations
+                   0  block output operations
+                   0  messages sent
+                   0  messages received
+                   7  signals received
+                 204  voluntary context switches
+              113575  involuntary context switches
+          1243206247  instructions retired
+           470938769  cycles elapsed
+            64160440  peak memory footprint

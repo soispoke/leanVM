@@ -1,0 +1,586 @@
+{
+  "1": {
+    "pcs": {
+      "n": 9,
+      "metrics": {
+        "admission_openings_us": {
+          "median": 5103.125,
+          "min": 4411.667,
+          "max": 5802.209
+        },
+        "admission_piop_us": {
+          "median": 38.167,
+          "min": 34.25,
+          "max": 53.667
+        },
+        "aggregate_prove_us": {
+          "median": 686173.5410000001,
+          "min": 639926.75,
+          "max": 787992.875
+        },
+        "aggregate_transport_bytes": {
+          "median": 217960,
+          "min": 216832,
+          "max": 219848
+        },
+        "aggregate_verify_us": {
+          "median": 5021.584,
+          "min": 4836.5,
+          "max": 6325.667
+        },
+        "base_cycles": {
+          "median": 797302,
+          "min": 797152,
+          "max": 797376
+        },
+        "calldata_bytes": {
+          "median": 248,
+          "min": 248,
+          "max": 248
+        },
+        "client_us": {
+          "median": 800529.333,
+          "min": 725923.542,
+          "max": 950506.459
+        },
+        "code_len": {
+          "median": 35312,
+          "min": 35312,
+          "max": 35312
+        },
+        "compile_us": {
+          "median": 88708.833,
+          "min": 85351.958,
+          "max": 91577.70899999999
+        },
+        "coverage_us": {
+          "median": 14.708,
+          "min": 13.040999999999999,
+          "max": 20.25
+        },
+        "eip7623_transaction_gas": {
+          "median": 35927,
+          "min": 35915,
+          "max": 35939
+        },
+        "evm_with_context_us": {
+          "median": 56.375,
+          "min": 53.792,
+          "max": 95.45899999999999
+        },
+        "execution_gas": {
+          "median": 10971,
+          "min": 10971,
+          "max": 10971
+        },
+        "guest_execute_diagnostic_us": {
+          "median": 59626.75,
+          "min": 57496.917,
+          "max": 64996.583
+        },
+        "hint_prep_us": {
+          "median": 5216.125,
+          "min": 4656.292,
+          "max": 5447.416
+        },
+        "memory_cells": {
+          "median": 921130,
+          "min": 921106,
+          "max": 921178
+        },
+        "negative_guest_cases": {
+          "median": 0,
+          "min": 0,
+          "max": 0
+        },
+        "opening_prove_us": {
+          "median": 238243.125,
+          "min": 218199.334,
+          "max": 330464.0
+        },
+        "padded_cycles": {
+          "median": 1277952,
+          "min": 1277952,
+          "max": 1277952
+        },
+        "piop_prove_us": {
+          "median": 556712.583,
+          "min": 502154.333,
+          "max": 668376.542
+        },
+        "reference_r1cs_check_us": {
+          "median": 18059.958000000002,
+          "min": 15782.999999999998,
+          "max": 18442.084000000003
+        },
+        "sample": {
+          "median": 2,
+          "min": 1,
+          "max": 3
+        },
+        "serial_cold_us": {
+          "median": 1675814.5019999999,
+          "min": 1605815.333,
+          "max": 1870088.5010000004
+        },
+        "serial_warm_us": {
+          "median": 1483866.7499999998,
+          "min": 1412889.0,
+          "max": 1668250.0850000002
+        },
+        "witness_us": {
+          "median": 5569.875,
+          "min": 4943.833,
+          "max": 6202.084
+        },
+        "process": {
+          "median": 1,
+          "min": 0,
+          "max": 2
+        },
+        "fan_in": {
+          "median": 1,
+          "min": 1,
+          "max": 1
+        }
+      }
+    },
+    "r1cs": {
+      "n": 9,
+      "metrics": {
+        "admission_openings_us": {
+          "median": 5103.125,
+          "min": 4411.667,
+          "max": 5802.209
+        },
+        "admission_piop_us": {
+          "median": 38.167,
+          "min": 34.25,
+          "max": 53.667
+        },
+        "aggregate_prove_us": {
+          "median": 1882681.3329999999,
+          "min": 1802262.791,
+          "max": 1980001.5
+        },
+        "aggregate_transport_bytes": {
+          "median": 221336,
+          "min": 220408,
+          "max": 221592
+        },
+        "aggregate_verify_us": {
+          "median": 6248.084,
+          "min": 5964.334,
+          "max": 10041.583999999999
+        },
+        "base_cycles": {
+          "median": 2809896,
+          "min": 2809746,
+          "max": 2809970
+        },
+        "calldata_bytes": {
+          "median": 64,
+          "min": 64,
+          "max": 64
+        },
+        "client_us": {
+          "median": 800529.333,
+          "min": 725923.542,
+          "max": 950506.459
+        },
+        "code_len": {
+          "median": 93019,
+          "min": 93019,
+          "max": 93019
+        },
+        "compile_us": {
+          "median": 173521.292,
+          "min": 159803.875,
+          "max": 185939.792
+        },
+        "coverage_us": {
+          "median": 1.375,
+          "min": 1.083,
+          "max": 1.708
+        },
+        "eip7623_transaction_gas": {
+          "median": 23560,
+          "min": 23560,
+          "max": 23560
+        },
+        "evm_with_context_us": {
+          "median": 20.5,
+          "min": 19.042,
+          "max": 23.125
+        },
+        "execution_gas": {
+          "median": 61,
+          "min": 61,
+          "max": 61
+        },
+        "guest_execute_diagnostic_us": {
+          "median": 189548.167,
+          "min": 167547.41700000002,
+          "max": 197187.875
+        },
+        "hint_prep_us": {
+          "median": 4511.833,
+          "min": 4382.917,
+          "max": 6056.917
+        },
+        "memory_cells": {
+          "median": 2933591,
+          "min": 2933579,
+          "max": 2933639
+        },
+        "negative_guest_cases": {
+          "median": 0,
+          "min": 0,
+          "max": 0
+        },
+        "opening_prove_us": {
+          "median": 238243.125,
+          "min": 218199.334,
+          "max": 330464.0
+        },
+        "padded_cycles": {
+          "median": 4423680,
+          "min": 4423680,
+          "max": 4423680
+        },
+        "piop_prove_us": {
+          "median": 556712.583,
+          "min": 502154.333,
+          "max": 668376.542
+        },
+        "reference_r1cs_check_us": {
+          "median": 18059.958000000002,
+          "min": 15782.999999999998,
+          "max": 18442.084000000003
+        },
+        "sample": {
+          "median": 2,
+          "min": 1,
+          "max": 3
+        },
+        "serial_cold_us": {
+          "median": 2975881.833,
+          "min": 2914067.249,
+          "max": 3166806.128
+        },
+        "serial_warm_us": {
+          "median": 2697438.416,
+          "min": 2653837.5409999997,
+          "max": 2901097.128
+        },
+        "witness_us": {
+          "median": 5569.875,
+          "min": 4943.833,
+          "max": 6202.084
+        },
+        "process": {
+          "median": 1,
+          "min": 0,
+          "max": 2
+        },
+        "fan_in": {
+          "median": 1,
+          "min": 1,
+          "max": 1
+        }
+      }
+    }
+  },
+  "2": {
+    "pcs": {
+      "n": 9,
+      "metrics": {
+        "admission_openings_us": {
+          "median": 9843.5,
+          "min": 8279.375,
+          "max": 10521.457999999999
+        },
+        "admission_piop_us": {
+          "median": 71.125,
+          "min": 61.958000000000006,
+          "max": 89.708
+        },
+        "aggregate_prove_us": {
+          "median": 1250661.542,
+          "min": 1225334.9170000001,
+          "max": 1557160.416
+        },
+        "aggregate_transport_bytes": {
+          "median": 225824,
+          "min": 224192,
+          "max": 226528
+        },
+        "aggregate_verify_us": {
+          "median": 6175.5830000000005,
+          "min": 4970.2080000000005,
+          "max": 11129.958
+        },
+        "base_cycles": {
+          "median": 1594520,
+          "min": 1594345,
+          "max": 1594727
+        },
+        "calldata_bytes": {
+          "median": 496,
+          "min": 496,
+          "max": 496
+        },
+        "client_us": {
+          "median": 1497073.583,
+          "min": 1421339.0,
+          "max": 1612429.876
+        },
+        "code_len": {
+          "median": 35338,
+          "min": 35338,
+          "max": 35338
+        },
+        "compile_us": {
+          "median": 87991.25,
+          "min": 80435.584,
+          "max": 95342.0
+        },
+        "coverage_us": {
+          "median": 24.041999999999998,
+          "min": 23.584000000000003,
+          "max": 26.334000000000003
+        },
+        "eip7623_transaction_gas": {
+          "median": 71854,
+          "min": 71818,
+          "max": 71878
+        },
+        "evm_with_context_us": {
+          "median": 95.083,
+          "min": 94.0,
+          "max": 106.33399999999999
+        },
+        "execution_gas": {
+          "median": 21942,
+          "min": 21942,
+          "max": 21942
+        },
+        "fan_in": {
+          "median": 2,
+          "min": 2,
+          "max": 2
+        },
+        "guest_execute_diagnostic_us": {
+          "median": 130454.99999999999,
+          "min": 123840.25,
+          "max": 138343.084
+        },
+        "hint_prep_us": {
+          "median": 11082.708,
+          "min": 10295.459,
+          "max": 12484.166
+        },
+        "memory_cells": {
+          "median": 1841936,
+          "min": 1841864,
+          "max": 1841996
+        },
+        "negative_guest_cases": {
+          "median": 0,
+          "min": 0,
+          "max": 0
+        },
+        "opening_prove_us": {
+          "median": 434526.91599999997,
+          "min": 421232.167,
+          "max": 483457.333
+        },
+        "padded_cycles": {
+          "median": 2555904,
+          "min": 2555904,
+          "max": 2555904
+        },
+        "piop_prove_us": {
+          "median": 1031452.416,
+          "min": 976486.9169999999,
+          "max": 1118139.7089999998
+        },
+        "sample": {
+          "median": 2,
+          "min": 1,
+          "max": 3
+        },
+        "serial_cold_us": {
+          "median": 2982963.2490000003,
+          "min": 2927272.2920000004,
+          "max": 3394907.625
+        },
+        "serial_warm_us": {
+          "median": 2774726.458,
+          "min": 2721968.585,
+          "max": 3198288.834
+        },
+        "shared_setup_us": {
+          "median": 119796.416,
+          "min": 101276.79100000001,
+          "max": 130760.917
+        },
+        "witness_us": {
+          "median": 10325.167000000001,
+          "min": 9194.667000000001,
+          "max": 11594.624
+        },
+        "process": {
+          "median": 1,
+          "min": 0,
+          "max": 2
+        }
+      }
+    },
+    "r1cs": {
+      "n": 9,
+      "metrics": {
+        "admission_openings_us": {
+          "median": 9843.5,
+          "min": 8279.375,
+          "max": 10521.457999999999
+        },
+        "admission_piop_us": {
+          "median": 71.125,
+          "min": 61.958000000000006,
+          "max": 89.708
+        },
+        "aggregate_prove_us": {
+          "median": 4184361.8750000005,
+          "min": 3960847.583,
+          "max": 4599886.416
+        },
+        "aggregate_transport_bytes": {
+          "median": 240552,
+          "min": 239720,
+          "max": 241096
+        },
+        "aggregate_verify_us": {
+          "median": 5971.084,
+          "min": 5627.709,
+          "max": 10134.208
+        },
+        "base_cycles": {
+          "median": 5619712,
+          "min": 5619537,
+          "max": 5619919
+        },
+        "calldata_bytes": {
+          "median": 128,
+          "min": 128,
+          "max": 128
+        },
+        "client_us": {
+          "median": 1497073.583,
+          "min": 1421339.0,
+          "max": 1612429.876
+        },
+        "code_len": {
+          "median": 93047,
+          "min": 93047,
+          "max": 93047
+        },
+        "compile_us": {
+          "median": 166888.375,
+          "min": 155841.833,
+          "max": 174426.833
+        },
+        "coverage_us": {
+          "median": 2.584,
+          "min": 2.1260000000000003,
+          "max": 2.75
+        },
+        "eip7623_transaction_gas": {
+          "median": 47120,
+          "min": 47030,
+          "max": 47120
+        },
+        "evm_with_context_us": {
+          "median": 24.208,
+          "min": 22.209,
+          "max": 27.040999999999997
+        },
+        "execution_gas": {
+          "median": 122,
+          "min": 122,
+          "max": 122
+        },
+        "fan_in": {
+          "median": 2,
+          "min": 2,
+          "max": 2
+        },
+        "guest_execute_diagnostic_us": {
+          "median": 375455.042,
+          "min": 352107.75,
+          "max": 398530.458
+        },
+        "hint_prep_us": {
+          "median": 10237.75,
+          "min": 9820.166,
+          "max": 10649.25
+        },
+        "memory_cells": {
+          "median": 5866910,
+          "min": 5866862,
+          "max": 5866946
+        },
+        "negative_guest_cases": {
+          "median": 0,
+          "min": 0,
+          "max": 0
+        },
+        "opening_prove_us": {
+          "median": 434526.91599999997,
+          "min": 421232.167,
+          "max": 483457.333
+        },
+        "padded_cycles": {
+          "median": 8847360,
+          "min": 8847360,
+          "max": 8847360
+        },
+        "piop_prove_us": {
+          "median": 1031452.416,
+          "min": 976486.9169999999,
+          "max": 1118139.7089999998
+        },
+        "sample": {
+          "median": 2,
+          "min": 1,
+          "max": 3
+        },
+        "serial_cold_us": {
+          "median": 5973774.458,
+          "min": 5746481.0,
+          "max": 6513134.624
+        },
+        "serial_warm_us": {
+          "median": 5708256.834,
+          "min": 5455666.959,
+          "max": 6243325.958
+        },
+        "shared_setup_us": {
+          "median": 119796.416,
+          "min": 101276.79100000001,
+          "max": 130760.917
+        },
+        "witness_us": {
+          "median": 10325.167000000001,
+          "min": 9194.667000000001,
+          "max": 11594.624
+        },
+        "process": {
+          "median": 1,
+          "min": 0,
+          "max": 2
+        }
+      }
+    }
+  }
+}
