@@ -2460,7 +2460,10 @@ dependencies = [
 name = "rec_aggregation"
 version = "0.1.0"
 dependencies = [
+ "bench",
  "bincode",
+ "evm",
+ "fiat_shamir",
  "flock",
  "lean_compiler",
  "lean_da",
@@ -2470,6 +2473,8 @@ dependencies = [
  "primitives",
  "rand 0.9.4",
  "serde",
+ "serde_json",
+ "sha3",
  "sphincs",
  "tracing",
  "xmss",

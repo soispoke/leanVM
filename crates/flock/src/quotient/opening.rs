@@ -61,6 +61,10 @@ impl Layout {
         }
     }
 
+    pub fn lane_map(&self) -> &[(usize, usize)] {
+        &self.lanes
+    }
+
     fn log_lane(&self) -> usize {
         self.log_n - self.fold
     }
@@ -193,12 +197,17 @@ pub fn open(table: &Table, committed: &Committed, claims: &[Claim]) -> Proof {
 }
 
 /// Check an opening of `claims` against `root`.
-pub fn verify(layout: &Layout, root: &Hash, claims: &[Claim], proof: &Proof) -> bool {
+pub fn verification_trace(
+    layout: &Layout,
+    root: &Hash,
+    claims: &[Claim],
+    proof: &Proof,
+) -> Option<fiat_shamir::transcript::RawProof> {
     let Ok(config) = layout.config() else {
-        return false;
+        return None;
     };
     if claims.iter().any(|claim| claim.point.len() != layout.vars) {
-        return false;
+        return None;
     }
     let [iv, statement] = seed(root, claims);
     let mut vs = VerifierState::new(iv, proof, statement);
@@ -227,7 +236,7 @@ pub fn verify(layout: &Layout, root: &Hash, claims: &[Claim], proof: &Proof) -> 
                 acc + lambda * eq_eval(&claim.point[..log_lane], low) * on_lanes
             })
     };
-    recursive_verifier_with_basis_succinct(
+    let accepted = recursive_verifier_with_basis_succinct(
         &config,
         layout.log_n,
         layout.lanes.len(),
@@ -237,5 +246,11 @@ pub fn verify(layout: &Layout, root: &Hash, claims: &[Claim], proof: &Proof) -> 
         &mut vs,
     )
     .is_ok()
-        && vs.finish().is_ok()
+        && vs.finish().is_ok();
+    accepted.then(|| vs.into_raw_proof())
+}
+
+/// Original boolean entry point, sharing the exact verification path with trace extraction.
+pub fn verify(layout: &Layout, root: &Hash, claims: &[Claim], proof: &Proof) -> bool {
+    verification_trace(layout, root, claims, proof).is_some()
 }

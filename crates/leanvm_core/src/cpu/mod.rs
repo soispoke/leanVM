@@ -292,6 +292,13 @@ impl Program {
         self.witness.insert(name.into(), entries);
     }
 
+    /// Experimental host-only helper: concatenate independent applications' hint queues.
+    pub fn append_witness_from(&mut self, other: &Self) {
+        for (name, entries) in &other.witness {
+            self.witness.entry(name.clone()).or_default().extend(entries.clone());
+        }
+    }
+
     /// Assemble a program directly from a fixed bytecode vector, starting at
     /// `(pc, fp) = (0, 0)` with no allocation hints. Suitable for straight-line
     /// programs that never change the frame pointer and touch only the first

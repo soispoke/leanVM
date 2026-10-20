@@ -13,22 +13,28 @@ use crate::record::{MAX_ABSORBED, Node, Sym, record};
 const SCALARS: usize = COMMITMENT + 32;
 
 /// The proof as the recorder reads it: every read and every challenge is a node.
-pub(crate) struct Recorder {
+pub struct Recorder {
     state: Sym,
     /// Read since the last challenge.
     pending: Vec<Sym>,
     roots: u8,
-    pub(crate) read: u16,
+    pub read: u16,
 }
 
 impl Recorder {
-    pub(crate) fn new() -> Self {
+    pub fn new() -> Self {
         Self {
             state: Sym::new(Node::Seed),
             pending: Vec::new(),
             roots: 0,
             read: 0,
         }
+    }
+}
+
+impl Default for Recorder {
+    fn default() -> Self {
+        Self::new()
     }
 }
 

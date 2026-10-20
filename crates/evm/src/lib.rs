@@ -15,4 +15,4 @@ mod codegen;
 pub mod contract;
 pub mod machine;
 pub mod quotient;
-mod record;
+pub mod record;

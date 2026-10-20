@@ -2432,6 +2432,10 @@ struct OpeningShape {
 /// The recursion program's placeholder map depends on table structure and bytecode
 /// size, so one compiled guest serves every proof layout.
 fn placeholder_map(kbc: usize) -> BTreeMap<String, String> {
+    standalone_placeholder_map(kbc, None)
+}
+#[doc(hidden)]
+pub fn standalone_placeholder_map(kbc: usize, custom: Option<(usize, usize, usize)>) -> BTreeMap<String, String> {
     // Only block and coordinate structure is used here; dummy instructions and
     // table sizes let us derive it before the guest's bytecode exists.
     let stand_in = vec![leanvm_core::cpu::Op::Xor { a: 0, b: 0, c: 0 }; 1 << kbc];
@@ -2686,7 +2690,20 @@ fn placeholder_map(kbc: usize) -> BTreeMap<String, String> {
 
     // ---- LIG candidate tables (fixed [minm, maxm] range; open_stacked config) ----
     let oshape = |m: usize, log_inv_rate: usize| {
-        let shape = whir_shape(m, log_inv_rate);
+        let shape = if let Some((log_n, fold, reduction)) = custom {
+            let config = pcs::whir::config_for_shape(log_n, pcs::whir::LOG_INV_RATE_0, fold, reduction).unwrap();
+            let levels = config.level_shapes(log_n);
+            let depth: Vec<usize> = levels.block_len.iter().map(|b| b.trailing_zeros() as usize).collect();
+            let per_squeeze = depth.iter().map(|&d| 192 / d).collect();
+            WhirShape {
+                config,
+                levels,
+                depth,
+                per_squeeze,
+            }
+        } else {
+            whir_shape(m, log_inv_rate)
+        };
         let (vc, sh) = (&shape.config, &shape.levels);
         let (cn, cr) = (sh.levels, vc.level_steps);
         // Every cap root must match a transcript-bound root, including the final level.
@@ -2759,10 +2776,14 @@ fn placeholder_map(kbc: usize) -> BTreeMap<String, String> {
     };
     let (minm, maxm) = (MU_MIN, MU_MAX);
     let rates = pcs::whir::MIN_LOG_INV_RATE..=pcs::whir::MAX_LOG_INV_RATE;
-    let cands: Vec<_> = rates
-        .clone()
-        .flat_map(|r| (minm..=maxm).map(move |m| oshape(m, r)))
-        .collect();
+    let cands: Vec<_> = if let Some((n, _, _)) = custom {
+        vec![oshape(n, pcs::whir::LOG_INV_RATE_0)]
+    } else {
+        rates
+            .clone()
+            .flat_map(|r| (minm..=maxm).map(move |m| oshape(m, r)))
+            .collect()
+    };
     let maxlev = cands.iter().map(|c| c.n_levels).max().unwrap();
     let maxsvk = cands.iter().map(|c| c.vanish_values.len()).max().unwrap();
     let maxood = cands.iter().flat_map(|c| &c.ood_samples).copied().max().unwrap_or(0);

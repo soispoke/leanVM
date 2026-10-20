@@ -23,3 +23,8 @@ serde.workspace = true
 tracing.workspace = true
 
 [dev-dependencies]
+fiat_shamir.workspace = true
+bench.workspace = true
+evm = { path = "../evm" }
+serde_json = "1"
+sha3 = "0.11"
