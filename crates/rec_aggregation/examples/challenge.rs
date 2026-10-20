@@ -10,7 +10,7 @@ mod shared;
 use fiat_shamir::transcript::{Proof, RawProof};
 use flock::{
     membership::{DEPTH, Secret, Statement},
-    quotient::{self, Index, Table, circuit, opening},
+    quotient::{self, Index, Oracle, Table, circuit, opening},
 };
 use leanvm_core::cpu;
 use primitives::field::{F64, F192};
@@ -70,17 +70,24 @@ fn write(path: impl AsRef<Path>, value: &impl Serialize) {
 fn statement(c: &Client) -> Statement {
     Statement { y: c.y, root: c.root }
 }
-fn full(args: &[String]) -> bool {
+/// Whether the aggregate checks the PIOP, and the PIOP's random oracle.
+fn interface(args: &[String]) -> (bool, Oracle) {
     match arg(args, "--interface").as_str() {
-        "pcs" => false,
-        "r1cs" => true,
+        "pcs" => (false, Oracle::Keccak),
+        "r1cs" => (true, Oracle::Keccak),
+        "r1cs-vm" => (true, Oracle::Blake2s),
         other => panic!("unknown interface {other}"),
     }
 }
 
 /// Native admission: the PIOP and all three openings, returning the aggregate's inputs.
-fn admit<'a>(s: &'a Setup, layouts: &'a [opening::Layout; 2], c: &Client) -> Option<(Vec<Opened<'a>>, Vec<RawProof>)> {
-    let (roots, claims) = quotient::verify(&s.wiring.root, &statement(c), &c.piop, LOG_ROWS).ok()?;
+fn admit<'a>(
+    s: &'a Setup,
+    layouts: &'a [opening::Layout; 2],
+    oracle: Oracle,
+    c: &Client,
+) -> Option<(Vec<Opened<'a>>, Vec<RawProof>)> {
+    let (roots, claims) = quotient::verify_with(oracle, &s.wiring.root, &statement(c), &c.piop, LOG_ROWS).ok()?;
     let opened: Vec<Opened> = [
         (&layouts[0], roots[0], vec![claims.witness]),
         (&s.index.table().layout, s.wiring.root, vec![claims.wiring]),
@@ -119,7 +126,7 @@ fn public(s: &Setup, full: bool, clients: &[Client], admitted: &[(Vec<Opened>, V
         .collect();
     batch_public(&claims)
 }
-fn program(s: &Setup, full: bool, admitted: &[(Vec<Opened>, Vec<RawProof>)]) -> cpu::Program {
+fn program(s: &Setup, (full, oracle): (bool, Oracle), admitted: &[(Vec<Opened>, Vec<RawProof>)]) -> cpu::Program {
     let (opened, raws) = &admitted[0];
     for (_, rs) in admitted {
         for (a, b) in rs.iter().zip(raws) {
@@ -130,7 +137,7 @@ fn program(s: &Setup, full: bool, admitted: &[(Vec<Opened>, Vec<RawProof>)]) -> 
             );
         }
     }
-    build(opened, raws, &s.wiring.root, &s.app_id, full, admitted.len())
+    build(opened, raws, &s.wiring.root, &s.app_id, full, oracle, admitted.len())
 }
 
 fn main() {
@@ -157,6 +164,7 @@ fn main() {
             write(arg(&args, "--out"), &witnesses);
         }
         Some("clients") => {
+            let (_, oracle) = interface(&args);
             let s = setup();
             let mut rng = StdRng::from_os_rng();
             let witnesses: Vec<Witness> = read(arg(&args, "--workload"));
@@ -178,7 +186,16 @@ fn main() {
                         committed.push(c);
                         root
                     };
-                    let p = quotient::prove(&s.circuit, &s.index, &s.wiring.root, &st, &cells, &masks, &mut commit);
+                    let p = quotient::prove_with(
+                        oracle,
+                        &s.circuit,
+                        &s.index,
+                        &s.wiring.root,
+                        &st,
+                        &cells,
+                        &masks,
+                        &mut commit,
+                    );
                     Client {
                         y: st.y,
                         root: st.root,
@@ -195,15 +212,16 @@ fn main() {
         }
         Some("aggregate") => {
             // The candidate's timed step: admission, guest preparation and proving.
-            let full = full(&args);
+            let mode = interface(&args);
+            let full = mode.0;
             let s = setup();
             let layouts = layouts();
             let clients: Vec<Client> = read(arg(&args, "--clients"));
             let admitted: Vec<_> = clients
                 .iter()
-                .map(|c| admit(&s, &layouts, c).expect("admissible client proof"))
+                .map(|c| admit(&s, &layouts, mode.1, c).expect("admissible client proof"))
                 .collect();
-            let template = program(&s, full, &admitted);
+            let template = program(&s, mode, &admitted);
             let mut prog = template.clone();
             for (c, (opened, raws)) in clients.iter().zip(&admitted) {
                 let mut p = template.clone();
@@ -219,12 +237,13 @@ fn main() {
             );
         }
         Some("verify") => {
-            let full = full(&args);
+            let mode = interface(&args);
+            let full = mode.0;
             let s = setup();
             let layouts = layouts();
             let clients: Vec<Client> = read(arg(&args, "--clients"));
             let proof: cpu::Proof = read(arg(&args, "--proof"));
-            let admitted: Option<Vec<_>> = clients.iter().map(|c| admit(&s, &layouts, c)).collect();
+            let admitted: Option<Vec<_>> = clients.iter().map(|c| admit(&s, &layouts, mode.1, c)).collect();
             let Some(admitted) = admitted else {
                 println!(
                     "{}",
@@ -232,7 +251,7 @@ fn main() {
                 );
                 std::process::exit(1);
             };
-            let prog = program(&s, full, &admitted);
+            let prog = program(&s, mode, &admitted);
             let public = public(&s, full, &clients, &admitted);
             let t = Instant::now();
             let ok = cpu::verify(&prog, &public, &proof).is_ok_and(|v| v.log_inv_rate == LOG_INV_RATE);

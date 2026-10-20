@@ -5,7 +5,7 @@ mod shared;
 use fiat_shamir::transcript::RawProof;
 use flock::{
     membership::{Secret, Statement},
-    quotient::{self, Index, Table, circuit, opening},
+    quotient::{self, Index, Oracle, Table, circuit, opening},
 };
 use leanvm_core::cpu;
 use primitives::field::F64;
@@ -36,6 +36,12 @@ fn main() {
         .find(|p| p[0] == "--seed")
         .map(|p| p[1].parse::<u64>().unwrap())
         .unwrap_or(99127);
+    // `--oracle blake2s` proves applications on the VM's BLAKE2s transcript, which only an aggregate can check.
+    let oracle = match args.windows(2).find(|p| p[0] == "--oracle").map(|p| p[1].as_str()) {
+        None | Some("keccak") => Oracle::Keccak,
+        Some("blake2s") => Oracle::Blake2s,
+        Some(other) => panic!("unknown oracle {other}"),
+    };
     let mut rng = StdRng::seed_from_u64(seed);
     let t = Instant::now();
     let circuit = circuit::membership();
@@ -77,7 +83,16 @@ fn main() {
                 committed.push(c);
                 root
             };
-            let proved = quotient::prove(&circuit, &index, &wiring.root, &statement, &cells, &masks, &mut commit);
+            let proved = quotient::prove_with(
+                oracle,
+                &circuit,
+                &index,
+                &wiring.root,
+                &statement,
+                &cells,
+                &masks,
+                &mut commit,
+            );
             let p = elapsed(t);
             piop_prove_us += p;
             let t = Instant::now();
@@ -131,7 +146,8 @@ fn main() {
             .collect();
         let t = Instant::now();
         for f in &fixtures {
-            let (roots, claims) = quotient::verify(&wiring.root, &f.statement, &f.proved.proof, 20).unwrap();
+            let (roots, claims) =
+                quotient::verify_with(oracle, &wiring.root, &f.statement, &f.proved.proof, 20).unwrap();
             assert_eq!(claims, f.proved.claims);
             assert_eq!(roots, [f.committed[0].root, f.committed[1].root]);
         }
@@ -146,9 +162,14 @@ fn main() {
             })
             .collect();
         let admission_openings_us = elapsed(t);
-        for full in if sample % 2 == 0 { [false, true] } else { [true, false] } {
+        let modes: &[bool] = match (oracle, sample % 2) {
+            (Oracle::Blake2s, _) => &[true],
+            (_, 0) => &[false, true],
+            _ => &[true, false],
+        };
+        for &full in modes {
             let t = Instant::now();
-            let template = build(&opened[0], &raws[0], &wiring.root, &app_id, full, n);
+            let template = build(&opened[0], &raws[0], &wiring.root, &app_id, full, oracle, n);
             let compile_us = elapsed(t);
             // Compiled shape must cover each input, not just the first proof.
             for rs in &raws {
@@ -229,7 +250,7 @@ fn main() {
                     println!(
                         "{}",
                         serde_json::json!({"kind":"capacity", "status":"unsupported", "fan_in":n,
-                        "interface":if full {"r1cs"} else {"pcs"}, "sample":sample, "log_committed":log_committed})
+                        "interface":match (full, oracle) { (false, _) => "pcs", (true, Oracle::Keccak) => "r1cs", (true, Oracle::Blake2s) => "r1cs-vm" }, "sample":sample, "log_committed":log_committed})
                     );
                     continue;
                 }
@@ -249,7 +270,7 @@ fn main() {
                 + aggregate_verify_us;
             println!(
                 "{}",
-                serde_json::json!({"kind":"sample","fan_in":n,"sample":sample,"warmup":sample==0,"interface":if full{"r1cs"}else{"pcs"},"shared_setup_us":setup_us,"client_us":client_us,"witness_us":witness_us,"piop_prove_us":piop_prove_us,"opening_prove_us":opening_prove_us,"admission_piop_us":admission_piop_us,"admission_openings_us":admission_openings_us,"compile_us":compile_us,"hint_prep_us":hint_prep_us,"guest_execute_diagnostic_us":guest_execute_us,"evm_with_context_us":evm_us,"coverage_us":coverage_us,"execution_gas":gas,"calldata_bytes":calldata_bytes,"eip7623_transaction_gas":transaction_gas,"aggregate_prove_us":aggregate_prove_us,"aggregate_verify_us":aggregate_verify_us,"serial_warm_us":serial_warm_us,"serial_cold_us":serial_warm_us+setup_us+compile_us,"negative_guest_cases":negative_cases,"base_cycles":stats.base_counts.iter().sum::<usize>(),"base_counts":stats.base_counts,"padded_cycles":stats.cycles,"memory_cells":stats.mem_used,"code_len":program.code_len(),"aggregate_transport_bytes":bincode::serialize(&proof).unwrap().len(),"stats":stats.details()})
+                serde_json::json!({"kind":"sample","fan_in":n,"sample":sample,"warmup":sample==0,"interface":match (full, oracle) { (false, _) => "pcs", (true, Oracle::Keccak) => "r1cs", (true, Oracle::Blake2s) => "r1cs-vm" },"shared_setup_us":setup_us,"client_us":client_us,"witness_us":witness_us,"piop_prove_us":piop_prove_us,"opening_prove_us":opening_prove_us,"admission_piop_us":admission_piop_us,"admission_openings_us":admission_openings_us,"compile_us":compile_us,"hint_prep_us":hint_prep_us,"guest_execute_diagnostic_us":guest_execute_us,"evm_with_context_us":evm_us,"coverage_us":coverage_us,"execution_gas":gas,"calldata_bytes":calldata_bytes,"eip7623_transaction_gas":transaction_gas,"aggregate_prove_us":aggregate_prove_us,"aggregate_verify_us":aggregate_verify_us,"serial_warm_us":serial_warm_us,"serial_cold_us":serial_warm_us+setup_us+compile_us,"negative_guest_cases":negative_cases,"base_cycles":stats.base_counts.iter().sum::<usize>(),"base_counts":stats.base_counts,"padded_cycles":stats.cycles,"memory_cells":stats.mem_used,"code_len":program.code_len(),"aggregate_transport_bytes":bincode::serialize(&proof).unwrap().len(),"stats":stats.details()})
             );
         }
     }

@@ -84,6 +84,7 @@ pub(crate) fn build(
     index_root: &[u8; 32],
     app_id: &[u8; 32],
     full: bool,
+    oracle: quotient::Oracle,
     batch: usize,
 ) -> Program {
     assert_eq!(opened.len(), 3, "three opening profiles are required");
@@ -129,7 +130,7 @@ pub(crate) fn build(
     }
     let mut main = String::from("\ndef main():\n");
     if full {
-        let (h, f, m) = piop_guest::generate(index_root, app_id, 20);
+        let (h, f, m) = piop_guest::generate(oracle, index_root, app_id, 20);
         headers.push_str(&h);
         functions.push_str(&f);
         main.push_str(&m);
@@ -369,6 +370,11 @@ pub fn run() {
         .find(|p| p[0] == "--seed")
         .map(|p| p[1].parse::<u64>().unwrap())
         .unwrap_or(902);
+    let oracle = match args.windows(2).find(|p| p[0] == "--oracle").map(|p| p[1].as_str()) {
+        None | Some("keccak") => quotient::Oracle::Keccak,
+        Some("blake2s") => quotient::Oracle::Blake2s,
+        Some(other) => panic!("unknown oracle {other}"),
+    };
     let mut rng = StdRng::seed_from_u64(seed);
     let t = Instant::now();
     let circuit = circuit::membership();
@@ -420,7 +426,16 @@ pub fn run() {
             committed.push(c);
             root
         };
-        let proved = quotient::prove(&circuit, &index, &wiring.root, &statement, &cells, &masks, &mut commit);
+        let proved = quotient::prove_with(
+            oracle,
+            &circuit,
+            &index,
+            &wiring.root,
+            &statement,
+            &cells,
+            &masks,
+            &mut commit,
+        );
         let piop_prove_us = elapsed(t);
         let t = Instant::now();
         let mut opened = Vec::new();
@@ -446,7 +461,8 @@ pub fn run() {
         // Both interfaces admit exactly the same native proof, retaining authenticated
         // Merkle expansions for aggregation rather than doing that work a second time.
         let t = Instant::now();
-        let (roots, claims) = quotient::verify(&wiring.root, &statement, &proved.proof, circuit.log_rows).unwrap();
+        let (roots, claims) =
+            quotient::verify_with(oracle, &wiring.root, &statement, &proved.proof, circuit.log_rows).unwrap();
         assert_eq!(claims, proved.claims);
         assert_eq!(roots, [committed[0].root, committed[1].root]);
         let admission_piop_us = elapsed(t);
@@ -458,11 +474,12 @@ pub fn run() {
         let admission_openings_us = elapsed(t);
         let mode_order = if sample % 2 == 0 { [false, true] } else { [true, false] };
         for full in mode_order {
-            if args.iter().any(|a| a == "--full") && !full || args.iter().any(|a| a == "--pcs") && full {
+            let vm = oracle == quotient::Oracle::Blake2s;
+            if (args.iter().any(|a| a == "--full") || vm) && !full || args.iter().any(|a| a == "--pcs") && full {
                 continue;
             }
             let t = Instant::now();
-            let mut program = build(&opened, &raws, &wiring.root, &app_id, full, 1);
+            let mut program = build(&opened, &raws, &wiring.root, &app_id, full, oracle, 1);
             let compile_us = elapsed(t);
             let t = Instant::now();
             install_witness(&mut program, &opened, &raws, &statement, &proved.proof);
@@ -523,7 +540,7 @@ pub fn run() {
                 + coverage_us;
             println!(
                 "{}",
-                serde_json::json!({"kind":"sample","sample":sample,"warmup":sample==0,"interface":if full{"r1cs"}else{"pcs"},"statement":statement.halves().iter().map(|x|[x.c0,x.c1]).collect::<Vec<_>>(),"witness_us":witness_us,"piop_prove_us":piop_prove_us,"opening_prove_us":opening_prove_us,"client_us":client_us,"reference_r1cs_check_us":reference_check_us,"admission_piop_us":admission_piop_us,"admission_openings_us":admission_openings_us,"compile_us":compile_us,"hint_prep_us":hint_prep_us,"guest_execute_diagnostic_us":guest_execute_us,"aggregate_prove_us":aggregate_prove_us,"aggregate_verify_us":aggregate_verify_us,"evm_with_context_us":evm_with_context_us,"coverage_us":coverage_us,"execution_gas":execution_gas,"calldata_bytes":calldata.len(),"eip7623_transaction_gas":evm::machine::transaction_gas(&calldata,execution_gas,40),"serial_warm_us":serial_warm_us,"serial_cold_us":serial_warm_us+shared_setup_us+compile_us,"negative_guest_cases":negatives,"aggregate_transport_bytes":serialized.len(),"code_len":program.code_len(),"base_cycles":stats.base_counts.iter().sum::<usize>(),"base_counts":stats.base_counts,"padded_cycles":stats.cycles,"memory_cells":stats.mem_used,"stats":stats.details()})
+                serde_json::json!({"kind":"sample","sample":sample,"warmup":sample==0,"interface":match (full, vm) { (false, _) => "pcs", (true, false) => "r1cs", (true, true) => "r1cs-vm" },"statement":statement.halves().iter().map(|x|[x.c0,x.c1]).collect::<Vec<_>>(),"witness_us":witness_us,"piop_prove_us":piop_prove_us,"opening_prove_us":opening_prove_us,"client_us":client_us,"reference_r1cs_check_us":reference_check_us,"admission_piop_us":admission_piop_us,"admission_openings_us":admission_openings_us,"compile_us":compile_us,"hint_prep_us":hint_prep_us,"guest_execute_diagnostic_us":guest_execute_us,"aggregate_prove_us":aggregate_prove_us,"aggregate_verify_us":aggregate_verify_us,"evm_with_context_us":evm_with_context_us,"coverage_us":coverage_us,"execution_gas":execution_gas,"calldata_bytes":calldata.len(),"eip7623_transaction_gas":evm::machine::transaction_gas(&calldata,execution_gas,40),"serial_warm_us":serial_warm_us,"serial_cold_us":serial_warm_us+shared_setup_us+compile_us,"negative_guest_cases":negatives,"aggregate_transport_bytes":serialized.len(),"code_len":program.code_len(),"base_cycles":stats.base_counts.iter().sum::<usize>(),"base_counts":stats.base_counts,"padded_cycles":stats.cycles,"memory_cells":stats.mem_used,"stats":stats.details()})
             );
         }
     }

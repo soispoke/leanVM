@@ -1,11 +1,15 @@
 //! Generate the exact upstream PIOP graph, including constrained Keccak-f1600.
-//! Generate the exact upstream PIOP graph, with its Keccak-256 transcript as a GF(2) circuit.
+//! Generate the exact upstream PIOP graph, with its transcript on either random oracle: Keccak-256 as a GF(2)
+//! circuit, or the VM's native BLAKE2s chain.
 use super::keccak;
 use evm::{
     contract::Recorder,
     record::{Node, Sym, record},
 };
-use flock::{membership::Statement, quotient};
+use flock::{
+    membership::Statement,
+    quotient::{self, Oracle},
+};
 use primitives::field::F192;
 use std::{collections::HashMap, fmt::Write};
 fn lit(x: F192) -> String {
@@ -60,7 +64,7 @@ fn word_bits(width: usize, bit: impl Fn(usize) -> String) -> Vec<String> {
         })
         .collect()
 }
-pub fn generate(index_root: &[u8; 32], app_id: &[u8; 32], log_rows: usize) -> (String, String, String) {
+pub fn generate(oracle: Oracle, index_root: &[u8; 32], app_id: &[u8; 32], log_rows: usize) -> (String, String, String) {
     let (r, g) = record(|| quotient::reduce(&mut Recorder::new(), log_rows).unwrap());
     let mut m = String::from(
         "    statement = StackBuf(4)\n    hint_witness(statement, \"app_statement\")\n    proof = StackBuf(9)\n    hint_witness(proof, \"app_proof\")\n",
@@ -68,8 +72,13 @@ pub fn generate(index_root: &[u8; 32], app_id: &[u8; 32], log_rows: usize) -> (S
     // Statement words and commitment roots are canonical 128-bit values; their bits
     // are reused wherever the transcript absorbs them.
     for k in 0..4 {
-        scalar_bits(&mut m, &format!("sbits{k}"), &format!("statement[{k}]"), 2);
-        scalar_bits(&mut m, &format!("rootbits{k}"), &format!("proof[{k}]"), 2);
+        if oracle == Oracle::Keccak {
+            scalar_bits(&mut m, &format!("sbits{k}"), &format!("statement[{k}]"), 2);
+            scalar_bits(&mut m, &format!("rootbits{k}"), &format!("proof[{k}]"), 2);
+        } else {
+            // BLAKE2s message chunks pin the statement's top limbs; a root's are pinned here.
+            writeln!(m, "    root_lo{k}, root_hi{k} = canonical_limbs_p0(proof[{k}])").unwrap();
+        }
     }
     let mut bits: HashMap<u32, (String, usize)> = HashMap::new();
     for (i, node) in g.nodes.iter().enumerate() {
@@ -108,6 +117,29 @@ pub fn generate(index_root: &[u8; 32], app_id: &[u8; 32], log_rows: usize) -> (S
                     "    v{i} = v{a}\n    for j in unroll(0, 64):\n        v{i} = v{i} * v{i}"
                 )
                 .unwrap();
+            }
+            Node::Seed if oracle == Oracle::Blake2s => {
+                let [circuit, _] = quotient::vm_seed(
+                    index_root,
+                    &Statement {
+                        y: [0; 32],
+                        root: [0; 32],
+                    },
+                );
+                let iv: Vec<u8> = circuit.iter().flat_map(|w| w.0.to_le_bytes()).collect();
+                let iv = fiat_shamir::merkle::hash_to_scalars(&iv.try_into().unwrap());
+                writeln!(m, "    seed_pi = StackBuf(2)\n    blake2s([statement[0], statement[1]], [statement[2], statement[3]], seed_pi)\n    f{i} = StackBuf(2)\n    blake2s([{}, {}], seed_pi, f{i})", lit(iv[0]), lit(iv[1])).unwrap();
+            }
+            Node::Hash(prev, fields, n) if oracle == Oracle::Blake2s => {
+                let mut state = format!("f{prev}");
+                for (k, &a) in fields[..n as usize].iter().enumerate() {
+                    writeln!(m, "    f{i}_{k} = obs_p0({state}, v{a})").unwrap();
+                    state = format!("f{i}_{k}");
+                }
+                writeln!(m, "    f{i} = squeeze_state_p0({state})").unwrap();
+            }
+            Node::Low(a) if oracle == Oracle::Blake2s => {
+                writeln!(m, "    v{i} = challenge_from_state_p0(f{a})").unwrap();
             }
             Node::Seed => {
                 // The label is a constant prefix followed by the four 16-byte statement words.
@@ -175,5 +207,9 @@ pub fn generate(index_root: &[u8; 32], app_id: &[u8; 32], log_rows: usize) -> (S
             writeln!(m, "    claim_{i}[{k}] = {value}").unwrap();
         }
     }
-    (String::new(), keccak::permutation_function(), m)
+    let functions = match oracle {
+        Oracle::Keccak => keccak::permutation_function(),
+        Oracle::Blake2s => String::new(),
+    };
+    (String::new(), functions, m)
 }

@@ -1,7 +1,7 @@
 {
   "version": 1,
   "track": "A: prover-only",
-  "interfaces": ["pcs", "r1cs"],
+  "interfaces": ["pcs", "r1cs", "r1cs-vm"],
   "fan_in": 8,
   "reps": 5,
   "editable": [

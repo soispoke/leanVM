@@ -105,7 +105,7 @@ def evaluate(args):
     # Hidden workload: the seed never enters the candidate tree or its process.
     seed = int.from_bytes(secrets.token_bytes(8), "little") if args.seed is None else args.seed
     (out / "seed").write_text(str(seed))
-    for step, extra in [("workload", ["--seed", seed, "--fan-in", args.fan_in, "--out", out / "workload.bin"]), ("clients", ["--workload", out / "workload.bin", "--out", out / "clients.bin"])]:
+    for step, extra in [("workload", ["--seed", seed, "--fan-in", args.fan_in, "--out", out / "workload.bin"]), ("clients", ["--interface", args.interface, "--workload", out / "workload.bin", "--out", out / "clients.bin"])]:
         code, _, _, _, err = run(reference, step, *extra, threads=args.threads)
         if code:
             return finish("error", reason=f"reference {step} failed", stderr=err[-2000:])

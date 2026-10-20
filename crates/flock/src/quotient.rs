@@ -155,6 +155,28 @@ pub fn sum_point(log_rows: usize) -> Vec<F192> {
     [&vec![F192::ONE; m][..], &[F192::ZERO; 4], &extension().0].concat()
 }
 
+/// The random oracle's instantiation: Keccak-256 for a verifier that is an EVM contract, or the VM's BLAKE2s chain
+/// ([`fiat_shamir::FiatShamirState::new`]) for a verifier that runs in leanVM.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum Oracle {
+    Keccak,
+    Blake2s,
+}
+
+/// The BLAKE2s chain's seed: a digest of the circuit, then a digest of the statement's four 128-bit halves.
+pub fn vm_seed(index_root: &Hash, statement: &Statement) -> [[F64; 4]; 2] {
+    let circuit = primitives::hash::hash(&[b"flock-quotient-vm-1".as_slice(), index_root].concat());
+    let halves: Vec<u8> = statement
+        .halves()
+        .iter()
+        .flat_map(|x| [x.c0.to_le_bytes(), x.c1.to_le_bytes()].concat())
+        .collect();
+    [
+        fiat_shamir::digest_words(&circuit),
+        fiat_shamir::digest_words(&primitives::hash::hash(&halves)),
+    ]
+}
+
 /// The transcript's seed: the circuit and the statement.
 pub fn label(index_root: &Hash, statement: &Statement) -> Vec<u8> {
     [
@@ -227,12 +249,41 @@ pub fn prove(
     masks: &[[F64; 3]; 4],
     commit: &mut dyn FnMut(&Table) -> Hash,
 ) -> Proved {
+    prove_with(
+        Oracle::Keccak,
+        circuit,
+        index,
+        index_root,
+        statement,
+        cells,
+        masks,
+        commit,
+    )
+}
+
+/// [`prove`] with the random oracle `oracle`.
+pub fn prove_with(
+    oracle: Oracle,
+    circuit: &Circuit,
+    index: &Index,
+    index_root: &Hash,
+    statement: &Statement,
+    cells: &[F64],
+    masks: &[[F64; 3]; 4],
+    commit: &mut dyn FnMut(&Table) -> Hash,
+) -> Proved {
     let m = circuit.log_rows + 2;
     let n = 1usize << m;
     assert_eq!(cells.len(), n);
     // The public weight's polynomial has degree `2^m + 9 * 2^10`, and the quotient must stay below `2^(m+2)`.
     assert!(m > REGION + 2 && m + 3 <= domain::BASIS);
-    let mut ps = ProverState::keccak(&label(index_root, statement));
+    let mut ps = match oracle {
+        Oracle::Keccak => ProverState::keccak(&label(index_root, statement)),
+        Oracle::Blake2s => {
+            let [iv, public] = vm_seed(index_root, statement);
+            ProverState::new(iv, public)
+        }
+    };
 
     // The witness: four polynomials in the row, each with a multiple of the rows' vanishing polynomial.
     let span = tracing::info_span!("Witness").entered();
@@ -381,7 +432,8 @@ pub fn prove(
     ps.add_scalar(domain::evaluate(index.sigma(), 0, 1, &digits[..m]));
 
     let proof = ps.into_proof();
-    let (_, claims) = verify(index_root, statement, &proof, circuit.log_rows).expect("a challenge to reject");
+    let (_, claims) =
+        verify_with(oracle, index_root, statement, &proof, circuit.log_rows).expect("a challenge to reject");
     Proved {
         proof,
         claims,
@@ -511,8 +563,26 @@ pub fn verify(
     proof: &Proof,
     log_rows: usize,
 ) -> Result<([Hash; 2], Claims), VerifyError> {
+    verify_with(Oracle::Keccak, index_root, statement, proof, log_rows)
+}
+
+/// [`verify`] with the random oracle `oracle`.
+pub fn verify_with(
+    oracle: Oracle,
+    index_root: &Hash,
+    statement: &Statement,
+    proof: &Proof,
+    log_rows: usize,
+) -> Result<([Hash; 2], Claims), VerifyError> {
+    let vs = match oracle {
+        Oracle::Keccak => VerifierState::keccak(&label(index_root, statement), proof),
+        Oracle::Blake2s => {
+            let [iv, public] = vm_seed(index_root, statement);
+            VerifierState::new(iv, proof, public)
+        }
+    };
     let mut stream = Stream {
-        vs: VerifierState::keccak(&label(index_root, statement), proof),
+        vs,
         statement: *statement,
     };
     let reduced = reduce(&mut stream, log_rows)?;
@@ -702,6 +772,41 @@ mod tests {
 
     /// Each table's claims open against its commitment, the quotient table's two in one opening, and a claim with
     /// another value does not.
+    /// Each oracle verifies its own proofs and nothing else, and the BLAKE2s seed binds the statement.
+    #[test]
+    fn oracles_do_not_cross() {
+        let mut rng = Rng::new(0xB2);
+        let circuit = toy();
+        let index = Index::new(&circuit);
+        let wiring = opening::commit(index.table());
+        let x: Vec<bool> = (0..256).map(|_| rng.next_u64() & 1 == 1).collect();
+        let statement = toy_statement(&x);
+        let cells = circuit.cells(&x);
+        for oracle in [Oracle::Keccak, Oracle::Blake2s] {
+            let proved = prove_with(
+                oracle,
+                &circuit,
+                &index,
+                &wiring.root,
+                &statement,
+                &cells,
+                &masks(&mut rng),
+                &mut |table: &Table| opening::commit(table).root,
+            );
+            let other = if oracle == Oracle::Keccak {
+                Oracle::Blake2s
+            } else {
+                Oracle::Keccak
+            };
+            let verdict = |o, s: &Statement| verify_with(o, &wiring.root, s, &proved.proof, circuit.log_rows);
+            assert_eq!(verdict(oracle, &statement).expect("its own oracle").1, proved.claims);
+            assert!(verdict(other, &statement).map_or(true, |(_, c)| c != proved.claims));
+            let mut moved = statement;
+            moved.root[0] ^= 1;
+            assert!(verdict(oracle, &moved).map_or(true, |(_, c)| c != proved.claims));
+        }
+    }
+
     #[test]
     fn claims_open_against_the_commitments() {
         let mut rng = Rng::new(0x0E);
