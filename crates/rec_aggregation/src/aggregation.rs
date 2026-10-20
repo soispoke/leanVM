@@ -1675,7 +1675,10 @@ fn gen_verify(
 /// candidate `mu` in `MU_MIN..=MU_MAX` (mirrored by the soundness test's
 /// residual-log cap).
 const MU_MIN: usize = 22;
-const MU_MAX: usize = leanvm_core::pcs::MAX_MU;
+/// Kept at 2^28 when the native window grew: each arm is guest bytecode.
+const MU_MAX: usize = 28;
+
+const _: () = assert!(MU_MAX <= leanvm_core::pcs::MAX_MU);
 
 const _: () = assert!(MU_MIN >= leanvm_core::pcs::MIN_MU);
 

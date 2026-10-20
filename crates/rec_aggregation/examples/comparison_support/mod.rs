@@ -1,4 +1,6 @@
 //! Matched standalone-opening aggregation and circuit claims.
+#[path = "keccak.rs"]
+mod keccak;
 #[allow(dead_code)]
 #[path = "standalone_opening.rs"]
 pub(crate) mod opening_adapter;

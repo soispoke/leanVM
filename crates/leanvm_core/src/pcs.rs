@@ -47,8 +47,9 @@ pub use ::pcs::whir::{MAX_LOG_INV_RATE, MIN_LOG_INV_RATE};
 const _: () = assert!(::pcs::whir::SECURITY_BITS == crate::SECURITY_BITS as usize);
 /// Minimum committed-witness log-size accepted by the WHIR level ladder, with one level of margin.
 pub const MIN_MU: usize = 15;
-/// Largest committed size accepted by all verifiers and compiled into the recursion guest.
-pub const MAX_MU: usize = 28;
+/// Largest committed size accepted by the native and Python verifiers. The recursion
+/// guest compiles its own, smaller window (`rec_aggregation`'s `MU_MAX`).
+pub const MAX_MU: usize = 30;
 
 /// The shared WHIR config for a `2^μ`-word witness, memoized per `(μ, log_inv_rate)`.
 fn whir_config(mu: usize, log_inv_rate: usize) -> std::sync::Arc<ProverConfig> {
