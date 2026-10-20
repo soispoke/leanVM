@@ -37,11 +37,7 @@ fn main() {
         .map(|p| p[1].parse::<u64>().unwrap())
         .unwrap_or(99127);
     // `--oracle blake2s` proves applications on the VM's BLAKE2s transcript, which only an aggregate can check.
-    let oracle = match args.windows(2).find(|p| p[0] == "--oracle").map(|p| p[1].as_str()) {
-        None | Some("keccak") => Oracle::Keccak,
-        Some("blake2s") => Oracle::Blake2s,
-        Some(other) => panic!("unknown oracle {other}"),
-    };
+    let oracle = oracle_arg(&args);
     let mut rng = StdRng::seed_from_u64(seed);
     let t = Instant::now();
     let circuit = circuit::membership();
@@ -165,6 +161,7 @@ fn main() {
         let modes: &[bool] = match (oracle, sample % 2) {
             (Oracle::Blake2s, _) => &[true],
             _ if args.iter().any(|a| a == "--pcs") => &[false],
+            _ if args.iter().any(|a| a == "--r1cs") => &[true],
             (_, 0) => &[false, true],
             _ => &[true, false],
         };
@@ -261,7 +258,7 @@ fn main() {
                     .sum();
                 println!(
                     "{}",
-                    serde_json::json!({"kind":"dry-run","fan_in":n,"interface":match (full, oracle) { (false, _) => "pcs", (true, Oracle::Keccak) => "r1cs", (true, Oracle::Blake2s) => "r1cs-vm" },"base_cycles":exec.base_counts.iter().sum::<usize>(),"base_counts":exec.base_counts,"taus":exec.taus(),"log_mem":exec.mem.len().trailing_zeros(),"committed":committed,"log_committed":(committed as f64).log2(),"mu":layout.shape.mu,"code_len":program.code_len(),"memory_cells":exec.mem_used,"negative_guest_cases":negative_cases})
+                    serde_json::json!({"kind":"dry-run","fan_in":n,"interface":interface_name(full, oracle),"base_cycles":exec.base_counts.iter().sum::<usize>(),"base_counts":exec.base_counts,"taus":exec.taus(),"log_mem":exec.mem.len().trailing_zeros(),"committed":committed,"log_committed":(committed as f64).log2(),"mu":layout.shape.mu,"code_len":program.code_len(),"memory_cells":exec.mem_used,"negative_guest_cases":negative_cases})
                 );
                 continue;
             }
@@ -272,7 +269,7 @@ fn main() {
                     println!(
                         "{}",
                         serde_json::json!({"kind":"capacity", "status":"unsupported", "fan_in":n,
-                        "interface":match (full, oracle) { (false, _) => "pcs", (true, Oracle::Keccak) => "r1cs", (true, Oracle::Blake2s) => "r1cs-vm" }, "sample":sample, "log_committed":log_committed})
+                        "interface":interface_name(full, oracle), "sample":sample, "log_committed":log_committed})
                     );
                     continue;
                 }
@@ -292,7 +289,7 @@ fn main() {
                 + aggregate_verify_us;
             println!(
                 "{}",
-                serde_json::json!({"kind":"sample","fan_in":n,"sample":sample,"warmup":sample==0,"interface":match (full, oracle) { (false, _) => "pcs", (true, Oracle::Keccak) => "r1cs", (true, Oracle::Blake2s) => "r1cs-vm" },"shared_setup_us":setup_us,"client_us":client_us,"witness_us":witness_us,"piop_prove_us":piop_prove_us,"opening_prove_us":opening_prove_us,"admission_piop_us":admission_piop_us,"admission_openings_us":admission_openings_us,"compile_us":compile_us,"hint_prep_us":hint_prep_us,"guest_execute_diagnostic_us":guest_execute_us,"evm_with_context_us":evm_us,"coverage_us":coverage_us,"execution_gas":gas,"calldata_bytes":calldata_bytes,"eip7623_transaction_gas":transaction_gas,"aggregate_prove_us":aggregate_prove_us,"aggregate_verify_us":aggregate_verify_us,"serial_warm_us":serial_warm_us,"serial_cold_us":serial_warm_us+setup_us+compile_us,"negative_guest_cases":negative_cases,"base_cycles":stats.base_counts.iter().sum::<usize>(),"base_counts":stats.base_counts,"padded_cycles":stats.cycles,"memory_cells":stats.mem_used,"code_len":program.code_len(),"aggregate_transport_bytes":bincode::serialize(&proof).unwrap().len(),"stats":stats.details()})
+                serde_json::json!({"kind":"sample","fan_in":n,"sample":sample,"warmup":sample==0,"interface":interface_name(full, oracle),"shared_setup_us":setup_us,"client_us":client_us,"witness_us":witness_us,"piop_prove_us":piop_prove_us,"opening_prove_us":opening_prove_us,"admission_piop_us":admission_piop_us,"admission_openings_us":admission_openings_us,"compile_us":compile_us,"hint_prep_us":hint_prep_us,"guest_execute_diagnostic_us":guest_execute_us,"evm_with_context_us":evm_us,"coverage_us":coverage_us,"execution_gas":gas,"calldata_bytes":calldata_bytes,"eip7623_transaction_gas":transaction_gas,"aggregate_prove_us":aggregate_prove_us,"aggregate_verify_us":aggregate_verify_us,"serial_warm_us":serial_warm_us,"serial_cold_us":serial_warm_us+setup_us+compile_us,"negative_guest_cases":negative_cases,"base_cycles":stats.base_counts.iter().sum::<usize>(),"base_counts":stats.base_counts,"padded_cycles":stats.cycles,"memory_cells":stats.mem_used,"code_len":program.code_len(),"aggregate_transport_bytes":bincode::serialize(&proof).unwrap().len(),"stats":stats.details()})
             );
         }
     }

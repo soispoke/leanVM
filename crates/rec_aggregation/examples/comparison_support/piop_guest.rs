@@ -1,4 +1,3 @@
-//! Generate the exact upstream PIOP graph, including constrained Keccak-f1600.
 //! Generate the exact upstream PIOP graph, with its transcript on either random oracle: Keccak-256 as a GF(2)
 //! circuit, or the VM's native BLAKE2s chain.
 use super::keccak;

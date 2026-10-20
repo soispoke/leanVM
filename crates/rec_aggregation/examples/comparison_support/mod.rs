@@ -196,6 +196,22 @@ pub(crate) fn build(
     let source = headers + &functions + &main;
     lean_compiler::compile(&lean_compiler::parse(&source).expect("combined guest parses"))
 }
+/// `--oracle keccak|blake2s`: the application PIOP's random oracle (Keccak-256 by default).
+pub(crate) fn oracle_arg(args: &[String]) -> quotient::Oracle {
+    match args.windows(2).find(|p| p[0] == "--oracle").map(|p| p[1].as_str()) {
+        None | Some("keccak") => quotient::Oracle::Keccak,
+        Some("blake2s") => quotient::Oracle::Blake2s,
+        Some(other) => panic!("unknown oracle {other}"),
+    }
+}
+/// The interface a record reports: where the PIOP is verified, and on which transcript.
+pub(crate) fn interface_name(full: bool, oracle: quotient::Oracle) -> &'static str {
+    match (full, oracle) {
+        (false, _) => "pcs",
+        (true, quotient::Oracle::Keccak) => "r1cs",
+        (true, quotient::Oracle::Blake2s) => "r1cs-vm",
+    }
+}
 pub(crate) fn pcs_public(opened: &[Opened]) -> [F192; 2] {
     let mut bytes = hash(b"pcs-aggregate-claims-v1").to_vec();
     for o in opened {
@@ -370,11 +386,7 @@ pub fn run() {
         .find(|p| p[0] == "--seed")
         .map(|p| p[1].parse::<u64>().unwrap())
         .unwrap_or(902);
-    let oracle = match args.windows(2).find(|p| p[0] == "--oracle").map(|p| p[1].as_str()) {
-        None | Some("keccak") => quotient::Oracle::Keccak,
-        Some("blake2s") => quotient::Oracle::Blake2s,
-        Some(other) => panic!("unknown oracle {other}"),
-    };
+    let oracle = oracle_arg(&args);
     let mut rng = StdRng::seed_from_u64(seed);
     let t = Instant::now();
     let circuit = circuit::membership();
@@ -540,7 +552,7 @@ pub fn run() {
                 + coverage_us;
             println!(
                 "{}",
-                serde_json::json!({"kind":"sample","sample":sample,"warmup":sample==0,"interface":match (full, vm) { (false, _) => "pcs", (true, false) => "r1cs", (true, true) => "r1cs-vm" },"statement":statement.halves().iter().map(|x|[x.c0,x.c1]).collect::<Vec<_>>(),"witness_us":witness_us,"piop_prove_us":piop_prove_us,"opening_prove_us":opening_prove_us,"client_us":client_us,"reference_r1cs_check_us":reference_check_us,"admission_piop_us":admission_piop_us,"admission_openings_us":admission_openings_us,"compile_us":compile_us,"hint_prep_us":hint_prep_us,"guest_execute_diagnostic_us":guest_execute_us,"aggregate_prove_us":aggregate_prove_us,"aggregate_verify_us":aggregate_verify_us,"evm_with_context_us":evm_with_context_us,"coverage_us":coverage_us,"execution_gas":execution_gas,"calldata_bytes":calldata.len(),"eip7623_transaction_gas":evm::machine::transaction_gas(&calldata,execution_gas,40),"serial_warm_us":serial_warm_us,"serial_cold_us":serial_warm_us+shared_setup_us+compile_us,"negative_guest_cases":negatives,"aggregate_transport_bytes":serialized.len(),"code_len":program.code_len(),"base_cycles":stats.base_counts.iter().sum::<usize>(),"base_counts":stats.base_counts,"padded_cycles":stats.cycles,"memory_cells":stats.mem_used,"stats":stats.details()})
+                serde_json::json!({"kind":"sample","sample":sample,"warmup":sample==0,"interface":interface_name(full, oracle),"statement":statement.halves().iter().map(|x|[x.c0,x.c1]).collect::<Vec<_>>(),"witness_us":witness_us,"piop_prove_us":piop_prove_us,"opening_prove_us":opening_prove_us,"client_us":client_us,"reference_r1cs_check_us":reference_check_us,"admission_piop_us":admission_piop_us,"admission_openings_us":admission_openings_us,"compile_us":compile_us,"hint_prep_us":hint_prep_us,"guest_execute_diagnostic_us":guest_execute_us,"aggregate_prove_us":aggregate_prove_us,"aggregate_verify_us":aggregate_verify_us,"evm_with_context_us":evm_with_context_us,"coverage_us":coverage_us,"execution_gas":execution_gas,"calldata_bytes":calldata.len(),"eip7623_transaction_gas":evm::machine::transaction_gas(&calldata,execution_gas,40),"serial_warm_us":serial_warm_us,"serial_cold_us":serial_warm_us+shared_setup_us+compile_us,"negative_guest_cases":negatives,"aggregate_transport_bytes":serialized.len(),"code_len":program.code_len(),"base_cycles":stats.base_counts.iter().sum::<usize>(),"base_counts":stats.base_counts,"padded_cycles":stats.cycles,"memory_cells":stats.mem_used,"stats":stats.details()})
             );
         }
     }

@@ -33,6 +33,10 @@ Two-application batches, with the reference built from `8fbcfe33` and fresh hidd
 | Baseline, PCS and R1CS | none | accepted; repetitions differ by 28% (PCS) and 22% (R1CS) under host load |
 | C2 | drops the PIOP's nonzero check in the guest generator | rejected before building: edit outside the prover crates |
 | C3 | proves at rate 1 whatever the caller asks | rejected: the proof verifies (`verified: true`, 45% larger) but the reference pins rate 2 |
-| C1 | a comment in an editable prover crate | first rejected by an exact proof-size limit (pruned paths differ by 32 bytes between workloads), then accepted with the 1% limit; its 20% apparent speedup did not count, the gate requiring more than 24% |
+| C1 | a comment in an editable prover crate | first rejected by an exact proof-size limit (pruned paths differ by 32 bytes between workloads), then accepted with the 1% limit |
 
-PILOT_R1CS_PLACEHOLDER
+Scoring against a stored baseline (`c1-pcs.json`, `c1-r1cs.json`) made the no-op C1 look 1.20 times faster on PCS and 1.29 times faster on R1CS, because host load differed between the sessions. On R1CS that exceeded the rule's 20% noise threshold, so on a host with valid timing it would have counted as an improvement. The evaluator now alternates baseline and candidate repetitions within one session. Rerun that way (`c1-pcs-paired.json`), C1's paired speedups are 0.89, 1.01 and 1.17, median 1.01, and it does not count. Within one session the two proofs have identical sizes.
+
+## Regressions
+
+`regressions/` holds the upstream suites rerun on this branch: the `pcs`, `flock`, `fiat_shamir`, `leanvm_core`, `evm` and `primitives` tests (179 passed, including the Python verifier's regenerated WHIR table), the quotient tests with ignored ones (including `oracles_do_not_cross`), the default two-to-one recursion test (`aggregate_two_to_one`, whose guest keeps the 2^28 window), and the standalone opening regression with its recursive proofs and negative checks.

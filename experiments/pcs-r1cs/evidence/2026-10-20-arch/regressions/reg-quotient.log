@@ -1,0 +1,10 @@
+
+running 5 tests
+test quotient::tests::claims_hold_exactly_for_a_witness ... ok
+test quotient::tests::claims_open_against_the_commitments ... ok
+test quotient::tests::membership_proof_leaves_true_claims ... ok
+test quotient::tests::oracles_do_not_cross ... ok
+test quotient::tests::public_weights_are_products_over_coordinates ... ok
+
+test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 56 filtered out; finished in 51.76s
+

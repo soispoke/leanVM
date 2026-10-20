@@ -1,0 +1,127 @@
+{
+ "baseline": "8fbcfe33116716f27f2530c0b0df7916decf7372",
+ "candidate": "dcf3286f67797abd45970dcc7eb1c0a2d35bcafc",
+ "interface": "pcs",
+ "fan_in": 2,
+ "host": {
+  "machine": "x86_64",
+  "node": "f344a92685ef",
+  "rustc": "rustc 1.99.1 (58cf8f9c3 2026-10-13)"
+ },
+ "timing_valid": false,
+ "timing_note": "host lacks ['pclmulqdq']: field arithmetic runs a software fallback, so times are not representative",
+ "pairs": [
+  {
+   "candidate": {
+    "aggregate_wall_s": 226.75677797000026,
+    "peak_rss_gib": 7.404117584228516,
+    "score_s_per_app": 113.48348916500012,
+    "report": {
+     "base_cycles": 1594790,
+     "code_len": 35338,
+     "committed": 61865984,
+     "stats": "MUL 2^19.255 (39.2%)  XOR 2^18.482 (23.0%)  DEREF 2^18.327 (20.6%)  SET 2^17.13 (9.0%)  JUMP 2^16.399 (5.4%)  BLAKE2S 2^15.441 (2.8%)  MEMORY 2^20.813  BYTECODE 2^15.109  TOTAL_COMMITTED 2^25.883"
+    },
+    "execution_gas": 21942,
+    "fan_in": 2,
+    "ok": true,
+    "proof_bytes": 224480,
+    "verify_us": 210200.36000000002
+   },
+   "baseline": {
+    "aggregate_wall_s": 201.16681219100064,
+    "peak_rss_gib": 7.415706634521484,
+    "score_s_per_app": 100.67884909450032,
+    "report": {
+     "base_cycles": 1594790,
+     "code_len": 35338,
+     "committed": 61865984,
+     "stats": "MUL 2^19.255 (39.2%)  XOR 2^18.482 (23.0%)  DEREF 2^18.327 (20.6%)  SET 2^17.13 (9.0%)  JUMP 2^16.399 (5.4%)  BLAKE2S 2^15.441 (2.8%)  MEMORY 2^20.813  BYTECODE 2^15.109  TOTAL_COMMITTED 2^25.883"
+    },
+    "execution_gas": 21942,
+    "fan_in": 2,
+    "ok": true,
+    "proof_bytes": 224480,
+    "verify_us": 190885.998
+   }
+  },
+  {
+   "baseline": {
+    "aggregate_wall_s": 150.069654480998,
+    "peak_rss_gib": 7.4141998291015625,
+    "score_s_per_app": 75.129432580499,
+    "report": {
+     "base_cycles": 1594790,
+     "code_len": 35338,
+     "committed": 61865984,
+     "stats": "MUL 2^19.255 (39.2%)  XOR 2^18.482 (23.0%)  DEREF 2^18.327 (20.6%)  SET 2^17.13 (9.0%)  JUMP 2^16.399 (5.4%)  BLAKE2S 2^15.441 (2.8%)  MEMORY 2^20.813  BYTECODE 2^15.109  TOTAL_COMMITTED 2^25.883"
+    },
+    "execution_gas": 21942,
+    "fan_in": 2,
+    "ok": true,
+    "proof_bytes": 224480,
+    "verify_us": 189210.68
+   },
+   "candidate": {
+    "aggregate_wall_s": 148.54741067499708,
+    "peak_rss_gib": 7.420005798339844,
+    "score_s_per_app": 74.36352452799854,
+    "report": {
+     "base_cycles": 1594790,
+     "code_len": 35338,
+     "committed": 61865984,
+     "stats": "MUL 2^19.255 (39.2%)  XOR 2^18.482 (23.0%)  DEREF 2^18.327 (20.6%)  SET 2^17.13 (9.0%)  JUMP 2^16.399 (5.4%)  BLAKE2S 2^15.441 (2.8%)  MEMORY 2^20.813  BYTECODE 2^15.109  TOTAL_COMMITTED 2^25.883"
+    },
+    "execution_gas": 21942,
+    "fan_in": 2,
+    "ok": true,
+    "proof_bytes": 224480,
+    "verify_us": 179638.38100000002
+   }
+  },
+  {
+   "candidate": {
+    "aggregate_wall_s": 149.13267274800455,
+    "peak_rss_gib": 7.4179229736328125,
+    "score_s_per_app": 74.65943193950227,
+    "report": {
+     "base_cycles": 1594790,
+     "code_len": 35338,
+     "committed": 61865984,
+     "stats": "MUL 2^19.255 (39.2%)  XOR 2^18.482 (23.0%)  DEREF 2^18.327 (20.6%)  SET 2^17.13 (9.0%)  JUMP 2^16.399 (5.4%)  BLAKE2S 2^15.441 (2.8%)  MEMORY 2^20.813  BYTECODE 2^15.109  TOTAL_COMMITTED 2^25.883"
+    },
+    "execution_gas": 21942,
+    "fan_in": 2,
+    "ok": true,
+    "proof_bytes": 224480,
+    "verify_us": 186191.13100000002
+   },
+   "baseline": {
+    "aggregate_wall_s": 173.83772704600415,
+    "peak_rss_gib": 7.419597625732422,
+    "score_s_per_app": 87.08432379050207,
+    "report": {
+     "base_cycles": 1594790,
+     "code_len": 35338,
+     "committed": 61865984,
+     "stats": "MUL 2^19.255 (39.2%)  XOR 2^18.482 (23.0%)  DEREF 2^18.327 (20.6%)  SET 2^17.13 (9.0%)  JUMP 2^16.399 (5.4%)  BLAKE2S 2^15.441 (2.8%)  MEMORY 2^20.813  BYTECODE 2^15.109  TOTAL_COMMITTED 2^25.883"
+    },
+    "execution_gas": 21942,
+    "fan_in": 2,
+    "ok": true,
+    "proof_bytes": 224480,
+    "verify_us": 330920.53500000003
+   }
+  }
+ ],
+ "candidate_score_s_per_app": 74.65943193950227,
+ "baseline_score_s_per_app": 87.08432379050207,
+ "paired_speedups": [
+  0.8871673741729742,
+  1.0102995125279746,
+  1.166420926709808
+ ],
+ "speedup": 1.0102995125279746,
+ "improvement": false,
+ "status": "accepted"
+}

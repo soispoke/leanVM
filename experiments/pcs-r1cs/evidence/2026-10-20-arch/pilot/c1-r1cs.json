@@ -1,0 +1,54 @@
+{
+ "baseline": "8fbcfe33116716f27f2530c0b0df7916decf7372",
+ "candidate": "dcf3286f67797abd45970dcc7eb1c0a2d35bcafc",
+ "interface": "r1cs",
+ "fan_in": 2,
+ "host": {
+  "machine": "x86_64",
+  "node": "f344a92685ef",
+  "rustc": "rustc 1.99.1 (58cf8f9c3 2026-10-13)"
+ },
+ "timing_valid": false,
+ "timing_note": "host lacks ['pclmulqdq']: field arithmetic runs a software fallback, so times are not representative",
+ "reps": [
+  {
+   "aggregate_wall_s": 400.5978724279994,
+   "peak_rss_gib": 17.583824157714844,
+   "candidate_report": {
+    "base_cycles": 4378980,
+    "code_len": 261229,
+    "committed": 158007296,
+    "stats": "XOR 2^21.273 (57.9%)  MUL 2^20.19 (27.3%)  DEREF 2^18.511 (8.5%)  SET 2^17.132 (3.3%)  JUMP 2^16.4 (2.0%)  BLAKE2S 2^15.44 (1.0%)  MEMORY 2^22.141  BYTECODE 2^17.995  TOTAL_COMMITTED 2^27.235"
+   },
+   "execution_gas": 122,
+   "fan_in": 2,
+   "ok": true,
+   "proof_bytes": 235144,
+   "verify_us": 263299.39
+  },
+  {
+   "aggregate_wall_s": 445.7979183610005,
+   "peak_rss_gib": 17.579456329345703,
+   "candidate_report": {
+    "base_cycles": 4378980,
+    "code_len": 261229,
+    "committed": 158007296,
+    "stats": "XOR 2^21.273 (57.9%)  MUL 2^20.19 (27.3%)  DEREF 2^18.511 (8.5%)  SET 2^17.132 (3.3%)  JUMP 2^16.4 (2.0%)  BLAKE2S 2^15.44 (1.0%)  MEMORY 2^22.141  BYTECODE 2^17.995  TOTAL_COMMITTED 2^27.235"
+   },
+   "execution_gas": 122,
+   "fan_in": 2,
+   "ok": true,
+   "proof_bytes": 235144,
+   "verify_us": 249434.998
+  }
+ ],
+ "score_s_per_app": 211.72713129424997,
+ "scores": [
+  200.4305859089997,
+  223.02367667950026
+ ],
+ "speedup": 1.2877950531092606,
+ "required_gain": 0.20223967702190235,
+ "improvement": false,
+ "status": "accepted"
+}

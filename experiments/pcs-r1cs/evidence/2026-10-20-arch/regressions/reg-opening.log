@@ -1,0 +1,6 @@
+witness: compiled code=11485 raw_scalars=105
+witness: recursive proof and 5 negative checks passed MUL 2^16.511 (39.8%)  XOR 2^15.673 (22.3%)  DEREF 2^15.556 (20.5%)  SET 2^14.455 (9.6%)  JUMP 2^13.523 (5.0%)  BLAKE2S 2^12.659 (2.8%)  MEMORY 2^18.026  BYTECODE 2^13.487  TOTAL_COMMITTED 2^23.067
+wiring: compiled code=11436 raw_scalars=87
+wiring: recursive proof and 5 negative checks passed MUL 2^16.462 (39.8%)  XOR 2^15.627 (22.3%)  DEREF 2^15.501 (20.5%)  SET 2^14.388 (9.5%)  JUMP 2^13.518 (5.2%)  BLAKE2S 2^12.576 (2.7%)  MEMORY 2^17.974  BYTECODE 2^13.481  TOTAL_COMMITTED 2^22.884
+quotient: compiled code=15289 raw_scalars=105
+quotient: recursive proof and 7 negative checks passed MUL 2^16.979 (38.4%)  XOR 2^16.29 (23.8%)  DEREF 2^16.089 (20.7%)  SET 2^14.764 (8.3%)  JUMP 2^14.265 (5.9%)  BLAKE2S 2^13.238 (2.9%)  MEMORY 2^18.599  BYTECODE 2^13.9  TOTAL_COMMITTED 2^23.658
