@@ -1,0 +1,20 @@
+{
+  "version": 1,
+  "track": "A: prover-only",
+  "interfaces": ["pcs", "r1cs"],
+  "fan_in": 8,
+  "reps": 5,
+  "editable": [
+    "crates/primitives/src/**",
+    "crates/parallel/src/**",
+    "crates/pcs/src/**",
+    "crates/fiat_shamir/src/**",
+    "crates/flock/src/**",
+    "crates/leanvm_core/src/**",
+    "crates/lean_compiler/src/**"
+  ],
+  "score": "median over reps of (candidate aggregate wall seconds + reference verification seconds) / fan_in",
+  "limits": {"peak_rss_ratio": 1.25, "proof_bytes_ratio": 1.0, "execution_gas_ratio": 1.0},
+  "noise": {"min_gain": 0.03, "range_multiplier": 2.0},
+  "timing_requires_cpu_flags": ["pclmulqdq"]
+}
