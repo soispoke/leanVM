@@ -12,7 +12,7 @@ So Track A needs no Lean check: the statement does not change. A change to what 
 
 `challenge.json` is the contract. Candidates may edit only the listed prover crates' sources; any other path rejects the candidate before it is built. That gate is a fast failure and a statement of intent, not the soundness argument. A run is rejected if the candidate's aggregate fails, the reference rejects any repetition's proof, or a limit is exceeded: peak memory above 1.25 times baseline, a proof more than 1% larger (pruned Merkle paths vary by a few bytes between workloads, since query positions follow the transcript), or more EVM execution gas.
 
-The score is the median over five repetitions of candidate aggregate wall time plus reference verification time, divided by the fan-in. Client proving is excluded because it is identical on both paths and done by the reference. An improvement counts only if the speedup exceeds both 3% and twice the baseline's relative half-range across its own repetitions. Each scored run draws a fresh workload seed that never enters the candidate's tree or process; the evaluator itself flips one byte of the first proof and requires the reference to reject it.
+The score is the median over five repetitions of aggregate wall time plus reference verification time, divided by the fan-in. Client proving is excluded because it is identical on both paths and done by the reference. Baseline and candidate repetitions alternate within one session (candidate first on even repetitions, baseline first on odd ones), so drifting host load affects both alike. An improvement counts only if every adjacent pair favours the candidate (a chance of 1 in 32 for five pairs when there is no effect) and the median paired speedup exceeds 3%. Comparing against a baseline measured in an earlier session failed in the pilot: a no-op candidate appeared 29% faster because host load had changed. Each evaluation draws a fresh workload seed that never enters the candidate's tree or process, and the evaluator flips one byte of the candidate's first proof and requires the reference to reject it.
 
 ## Hardware
 
@@ -21,12 +21,8 @@ Timing needs a CPU with carry-less multiplication. The `arch-fv-autoresearch-01`
 ## Use
 
 ```sh
-# Calibrate: the baseline against itself.
-python3 experiments/pcs-r1cs/challenge/evaluate.py --baseline BASE --candidate BASE \
-  --interface r1cs --out runs/base-r1cs
-# Score a candidate commit.
 python3 experiments/pcs-r1cs/challenge/evaluate.py --baseline BASE --candidate CAND \
-  --interface r1cs --baseline-result runs/base-r1cs/result.json --out runs/cand-r1cs
+  --interface r1cs-vm --out runs/cand-r1cs-vm
 ```
 
 Give every interface the same search budget. Report absolute scores on the same machine; the difference between interfaces after comparable effort is the architectural evidence, not either track's speedup over its own baseline.

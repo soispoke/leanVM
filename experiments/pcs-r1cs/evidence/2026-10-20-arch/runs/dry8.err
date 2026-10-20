@@ -1,0 +1,3 @@
+batch sample=0 full=false code=35381
+batch sample=0 full=true code=261272
+peak_rss_gib=19.29 exit=0

@@ -1,0 +1,24 @@
+{
+ "baseline": "8fbcfe33116716f27f2530c0b0df7916decf7372",
+ "candidate": "0643a5ee079979a7666af6178b7538ac8636deeb",
+ "interface": "pcs",
+ "fan_in": 2,
+ "host": {
+  "machine": "x86_64",
+  "node": "f344a92685ef",
+  "rustc": "rustc 1.99.1 (58cf8f9c3 2026-10-13)"
+ },
+ "timing_valid": false,
+ "timing_note": "host lacks ['pclmulqdq']: field arithmetic runs a software fallback, so times are not representative",
+ "status": "rejected",
+ "reason": "reference verifier rejected the aggregate",
+ "rep": 0,
+ "verdict": {
+  "execution_gas": 21942,
+  "fan_in": 2,
+  "ok": false,
+  "proof_bytes": 327256,
+  "verify_us": 202854.079
+ },
+ "stderr": ""
+}

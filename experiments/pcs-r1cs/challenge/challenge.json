@@ -13,8 +13,8 @@
     "crates/leanvm_core/src/**",
     "crates/lean_compiler/src/**"
   ],
-  "score": "median over reps of (candidate aggregate wall seconds + reference verification seconds) / fan_in",
+  "score": "median over reps of (aggregate wall seconds + reference verification seconds) / fan_in, for candidate and baseline alike",
   "limits": {"peak_rss_ratio": 1.25, "proof_bytes_ratio": 1.01, "execution_gas_ratio": 1.0},
-  "noise": {"min_gain": 0.03, "range_multiplier": 2.0},
+  "noise": {"min_gain": 0.03, "rule": "baseline and candidate alternate within one session; every pair must favour the candidate and the median paired speedup must exceed 1 + min_gain"},
   "timing_requires_cpu_flags": ["pclmulqdq"]
 }

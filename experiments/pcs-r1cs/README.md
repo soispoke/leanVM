@@ -4,6 +4,7 @@ This branch is a reproducible research comparison based on `leanEthereum/leanVM`
 
 * **PCS:** execution runs the upstream EVM PIOP and emits opening claims. One aggregate verifies all three opening proofs, covering all four claims.
 * **Structured R1CS:** the aggregate additionally verifies the PIOP, including its Keccak transcript, and binds the registered application identity and public inputs. Execution emits that app claim.
+* **Structured R1CS on the VM transcript (`r1cs-vm`):** the same, with the PIOP's random oracle instantiated by the VM's BLAKE2s chain instead of Keccak-256. Only the aggregate reads this transcript, so it uses the hash native to the aggregate. Client proofs then differ from the PCS path's; see [the decision](HASH-DECISION.md).
 
 The workload is knowledge of a BLAKE2s preimage and a depth-32 Merkle path, not a complete shielded-pool transaction. The structured R1CS description lowers exactly to the existing full-adder gate and copy constraints. It is not a general sparse-matrix compiler. Registration trusts the compiler that associates the versioned application description with the fixed wiring commitment and authenticated aggregate program.
 
@@ -37,7 +38,7 @@ For a manual capacity probe, after a successful memory admission:
 LEANVM_NUM_THREADS=8 cargo run --locked --release -p rec_aggregation --example batch -- --fan-in 4 --samples 0
 ```
 
-An unsupported committed witness size produces a `kind: capacity`, `status: unsupported` record, never a successful sample or zero proving time. Other proving errors fail the process. The pinned backend accepts committed witness log sizes only through 28. A larger recursive tree is not implemented here.
+An unsupported committed witness size produces a `kind: capacity`, `status: unsupported` record, never a successful sample or zero proving time. Other proving errors fail the process. Native and Python verifiers accept committed sizes through 2^30 (`pcs::MAX_MU`); the WHIR profile stays 128-bit there, and the recursion guest keeps its 2^28 window. A recursive tree of aggregates is not implemented here. `--dry-run` reports the exact committed shape a batch would need without proving it, and `--pcs` or `--oracle blake2s` select the interfaces.
 
 ## Validation and interpretation
 
@@ -45,9 +46,23 @@ Tests cover R1CS gate elimination, tampered auxiliary variables, malformed dimen
 
 The EVM is upstream revm with the proposed ten-gas `FIELD_MUL` instruction. R1CS execution does not require that opcode. Both paths use a native prototype dependency-frame coverage adapter. Its CPU cost is measured; no production opcode gas is invented for it. The R1CS EVM contract only emits a claim, so its execution gas is not the cost of a real application transaction.
 
-The Keccak gadget is a constrained bit-level implementation, not a demonstrated state-of-the-art arithmetization. The results do not establish an unavoidable R1CS cost or an architecture-wide winner. General R1CS compilation, compact onchain circuit publication, production registry/coverage semantics, larger recursive trees, ordinary application state and block execution proving remain outside this prototype. The underlying VM proofs are not zero knowledge; application privacy composition has not been independently audited here.
+The Keccak circuit is the bit-level floor for this instruction set, not a native Keccak opcode (see below). The results do not establish an unavoidable R1CS cost or an architecture-wide winner. General R1CS compilation, compact onchain circuit publication, production registry/coverage semantics, larger recursive trees, ordinary application state and block execution proving remain outside this prototype. The underlying VM proofs are not zero knowledge; application privacy composition has not been independently audited here.
 
 The original measurements and detailed accounting are preserved in the [research record](https://github.com/soispoke/hardness/blob/5c377d0bcf47b02f2208098b5f3d517016a540c8/prototypes/leanccs-pcs-comparison/baselines/pcs-openings/recursion/COMPARISON.md). They belong to that source revision. Validation and measurements of this cleaned branch are recorded separately rather than silently relabeling those historical results.
+
+## Optimization round
+
+[`comparison_support/keccak.rs`](../../crates/rec_aggregation/examples/comparison_support/keccak.rs) emits Keccak-f[1600] as one shared straight-line function: the state lives in frame cells, constants only flip a wire's polarity, and repeated subterms are shared. A round costs the theta parity network (two XORs a bit) and chi (one AND and about two XORs a bit), which is the floor when every state bit is a machine word and `XOR` and `MUL` are separate instructions. Bit binding uses Horner evaluation per 64-bit limb, avoiding a constant load per bit. Correctness is proved, not sampled: one generated round agrees with an independent FIPS 202 round on every input of Hamming weight at most two, and both are polynomials of degree at most two over GF(2), so they are equal everywhere. Further tests read the emitted source text back against the reference permutation, derive the round constants and rotation offsets from the specification, and run the compiled guest against `sha3` at every transcript length. Deliberately wrong theta and chi indices both fail.
+
+The Keccak circuit removes 572,000 heap accesses per application and cuts the R1CS path's extra cycles over PCS from 2.01M to 1.39M. The VM transcript removes nearly all of the rest. Per application, from the [Arch runs](evidence/2026-10-20-arch/README.md) (counts are exact; that VM lacks `pclmulqdq`, so its wall times are not representative):
+
+| Per application | PCS | R1CS, VM transcript | R1CS, Keccak |
+| --- | ---: | ---: | ---: |
+| Aggregate VM cycles | 797,207 | 797,964 | 2,189,442 |
+| Committed size, one / four / eight applications | 2^24.88 / 2^26.88 / 2^27.88 | 2^24.88 / 2^26.88 / 2^27.88 | 2^26.24 / 2^28.23 / 2^29.23 |
+| Application execution gas | 10,971 | 61 | 61 |
+
+The [Track A challenge](challenge/README.md) freezes everything but the prover: the candidate build only runs the timed aggregate, and the frozen baseline build makes the hidden workload and the client proofs and verifies the result. Its pilot is recorded in the [Arch evidence](evidence/2026-10-20-arch/README.md).
 
 ## Published-branch evidence
 

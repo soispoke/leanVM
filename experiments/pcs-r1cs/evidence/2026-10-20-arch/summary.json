@@ -1,0 +1,100 @@
+[
+ {
+  "interface": "pcs",
+  "fan_in": 1,
+  "cycles_per_app": 797207.0,
+  "log_committed": 24.884,
+  "code_len": 35312,
+  "proven": true,
+  "execution_gas": 10971,
+  "negative_guest_cases": 15
+ },
+ {
+  "interface": "r1cs-vm",
+  "fan_in": 1,
+  "cycles_per_app": 797964.0,
+  "log_committed": 24.884,
+  "code_len": 36246,
+  "proven": true,
+  "execution_gas": 61,
+  "negative_guest_cases": 30
+ },
+ {
+  "interface": "r1cs",
+  "fan_in": 1,
+  "cycles_per_app": 2189442.0,
+  "log_committed": 26.238,
+  "code_len": 261201,
+  "proven": true,
+  "execution_gas": 61,
+  "negative_guest_cases": 30
+ },
+ {
+  "interface": "r1cs-vm",
+  "fan_in": 2,
+  "cycles_per_app": 798194.5,
+  "log_committed": 25.883,
+  "code_len": 36273,
+  "proven": true,
+  "execution_gas": 122,
+  "negative_guest_cases": 3
+ },
+ {
+  "interface": "pcs",
+  "fan_in": 4,
+  "cycles_per_app": 797281.75,
+  "log_committed": 26.882,
+  "code_len": 35353,
+  "proven": true,
+  "negative_guest_cases": 3,
+  "execution_gas": 43884
+ },
+ {
+  "interface": "r1cs-vm",
+  "fan_in": 4,
+  "cycles_per_app": 798171.75,
+  "log_committed": 26.882,
+  "code_len": 36288,
+  "proven": true,
+  "execution_gas": 244,
+  "negative_guest_cases": 3
+ },
+ {
+  "interface": "r1cs",
+  "fan_in": 4,
+  "cycles_per_app": 2189518.75,
+  "log_committed": 28.234,
+  "code_len": 261244,
+  "proven": false,
+  "negative_guest_cases": 3
+ },
+ {
+  "interface": "pcs",
+  "fan_in": 8,
+  "cycles_per_app": 797196.625,
+  "log_committed": 27.881,
+  "code_len": 35381,
+  "proven": true,
+  "negative_guest_cases": 3,
+  "execution_gas": 87768
+ },
+ {
+  "interface": "r1cs-vm",
+  "fan_in": 8,
+  "cycles_per_app": 798123.375,
+  "log_committed": 27.881,
+  "code_len": 36316,
+  "proven": true,
+  "execution_gas": 488,
+  "negative_guest_cases": 3
+ },
+ {
+  "interface": "r1cs",
+  "fan_in": 8,
+  "cycles_per_app": 2189433.625,
+  "log_committed": 29.234,
+  "code_len": 261272,
+  "proven": false,
+  "negative_guest_cases": 3
+ }
+]

@@ -40,6 +40,7 @@ def frozen_violations(paths):
 def checkout(rev, root):
     path = root / rev
     if not path.exists():
+        git("worktree", "prune")  # forget trees of evaluations whose directories are gone
         git("worktree", "add", "--detach", str(path), rev)
     return path
 
@@ -110,43 +111,55 @@ def evaluate(args):
         if code:
             return finish("error", reason=f"reference {step} failed", stderr=err[-2000:])
 
-    reps = []
-    for rep in range(args.reps):
-        proof = out / f"aggregate-{rep}.bin"
-        code, stdout, wall, peak, err = run(candidate, "aggregate", "--interface", args.interface, "--clients", out / "clients.bin", "--out", proof, threads=args.threads)
+    def aggregate(binary, tag, rep):
+        """Prove with `binary`, verify with the reference; return the record or a rejection reason."""
+        proof = out / f"{tag}-{rep}.bin"
+        code, stdout, wall, peak, err = run(binary, "aggregate", "--interface", args.interface, "--clients", out / "clients.bin", "--out", proof, threads=args.threads)
         if code:
-            return finish("rejected", reason="candidate aggregate failed", rep=rep, stderr=err[-2000:])
+            return None, {"reason": f"{tag} aggregate failed", "stderr": err[-2000:]}
         code, verdict, _, _, err = run(reference, "verify", "--interface", args.interface, "--clients", out / "clients.bin", "--proof", proof, threads=args.threads)
         v = json.loads(verdict.strip().splitlines()[-1]) if verdict.strip() else {"ok": False}
         if code or not v.get("ok"):
-            return finish("rejected", reason="reference verifier rejected the aggregate", rep=rep, verdict=v, stderr=err[-2000:])
-        reps.append({"aggregate_wall_s": wall, "peak_rss_gib": peak, "candidate_report": json.loads(stdout.strip().splitlines()[-1]), **v})
-        if rep == 0:
-            # The verifier must not be vacuous: a flipped proof byte is rejected.
-            data = bytearray(proof.read_bytes())
-            data[len(data) // 2] ^= 1
-            tampered = out / "tampered.bin"
-            tampered.write_bytes(bytes(data))
-            code, verdict, _, _, _ = run(reference, "verify", "--interface", args.interface, "--clients", out / "clients.bin", "--proof", tampered, threads=args.threads)
-            if code == 0:
-                return finish("error", reason="reference verifier accepted a tampered proof")
-    scores = [(r["aggregate_wall_s"] + r["verify_us"] / 1e6) / args.fan_in for r in reps]
-    record.update(reps=reps, score_s_per_app=statistics.median(scores), scores=scores)
+            return None, {"reason": f"reference verifier rejected the {tag} aggregate", "verdict": v, "stderr": err[-2000:]}
+        score = (wall + v["verify_us"] / 1e6) / args.fan_in
+        return {"aggregate_wall_s": wall, "peak_rss_gib": peak, "score_s_per_app": score, "report": json.loads(stdout.strip().splitlines()[-1]), **v}, proof
 
-    if args.baseline_result:
-        b = json.loads(pathlib.Path(args.baseline_result).read_text())
-        assert b["interface"] == args.interface and b["fan_in"] == args.fan_in and b["baseline"] == base
-        lim = MANIFEST["limits"]
-        worst = lambda key: max(r[key] for r in reps)
-        for key, ratio in [("peak_rss_gib", lim["peak_rss_ratio"]), ("proof_bytes", lim["proof_bytes_ratio"]), ("execution_gas", lim["execution_gas_ratio"])]:
-            if worst(key) > ratio * max(r[key] for r in b["reps"]):
-                return finish("rejected", reason=f"{key} exceeds {ratio} x baseline")
-        bs = b["scores"]
-        median = statistics.median(bs)
-        spread = (max(bs) - min(bs)) / (2 * median)
-        threshold = max(MANIFEST["noise"]["min_gain"], MANIFEST["noise"]["range_multiplier"] * spread)
-        speedup = median / record["score_s_per_app"]
-        record.update(speedup=speedup, required_gain=threshold, improvement=record["timing_valid"] and speedup - 1 > threshold)
+    # Baseline and candidate alternate within one session, so drifting host load hits both alike.
+    pairs = []
+    for rep in range(args.reps):
+        order = [("candidate", candidate), ("baseline", reference)]
+        pair = {}
+        for tag, binary in order if rep % 2 == 0 else reversed(order):
+            result, detail = aggregate(binary, tag, rep)
+            if result is None:
+                return finish("rejected" if tag == "candidate" else "error", rep=rep, **detail)
+            pair[tag] = result
+            if rep == 0 and tag == "candidate":
+                # The verifier must not be vacuous: a flipped proof byte is rejected.
+                data = bytearray(detail.read_bytes())
+                data[len(data) // 2] ^= 1
+                tampered = out / "tampered.bin"
+                tampered.write_bytes(bytes(data))
+                code, _, _, _, _ = run(reference, "verify", "--interface", args.interface, "--clients", out / "clients.bin", "--proof", tampered, threads=args.threads)
+                if code == 0:
+                    return finish("error", reason="reference verifier accepted a tampered proof")
+        pairs.append(pair)
+    record["pairs"] = pairs
+
+    lim = MANIFEST["limits"]
+    for key, ratio in [("peak_rss_gib", lim["peak_rss_ratio"]), ("proof_bytes", lim["proof_bytes_ratio"]), ("execution_gas", lim["execution_gas_ratio"])]:
+        if max(p["candidate"][key] for p in pairs) > ratio * max(p["baseline"][key] for p in pairs):
+            return finish("rejected", reason=f"{key} exceeds {ratio} x baseline")
+    ratios = [p["baseline"]["score_s_per_app"] / p["candidate"]["score_s_per_app"] for p in pairs]
+    speedup = statistics.median(ratios)
+    record.update(
+        candidate_score_s_per_app=statistics.median(p["candidate"]["score_s_per_app"] for p in pairs),
+        baseline_score_s_per_app=statistics.median(p["baseline"]["score_s_per_app"] for p in pairs),
+        paired_speedups=ratios,
+        speedup=speedup,
+        # Every adjacent pair must agree (chance 2^-reps under no effect) and the median gain must clear the floor.
+        improvement=record["timing_valid"] and all(r > 1 for r in ratios) and speedup - 1 > MANIFEST["noise"]["min_gain"],
+    )
     return finish("accepted")
 
 
@@ -159,7 +172,6 @@ def main():
     p.add_argument("--reps", type=int, default=MANIFEST["reps"])
     p.add_argument("--threads", type=int)
     p.add_argument("--seed", type=int, help="fixed workload seed (calibration only; scored runs draw a fresh one)")
-    p.add_argument("--baseline-result", help="result.json of the baseline evaluated against itself")
     p.add_argument("--out", required=True)
     sys.exit(evaluate(p.parse_args()))
 
