@@ -254,7 +254,8 @@ fn main() {
             let prog = program(&s, mode, &admitted);
             let public = public(&s, full, &clients, &admitted);
             let t = Instant::now();
-            let ok = cpu::verify(&prog, &public, &proof).is_ok_and(|v| v.log_inv_rate == LOG_INV_RATE);
+            let rate = cpu::verify(&prog, &public, &proof).ok().map(|v| v.log_inv_rate);
+            let ok = rate == Some(LOG_INV_RATE);
             let verify_us = elapsed(t);
             // Each application's execution: the EVM call whose emitted claims the aggregate must cover.
             let code = if full {
@@ -278,7 +279,7 @@ fn main() {
             }
             println!(
                 "{}",
-                serde_json::json!({"ok": ok, "verify_us": verify_us, "proof_bytes": bincode::serialize(&proof).unwrap().len(), "execution_gas": gas, "fan_in": clients.len()})
+                serde_json::json!({"ok": ok, "verified": rate.is_some(), "log_inv_rate": rate, "verify_us": verify_us, "proof_bytes": bincode::serialize(&proof).unwrap().len(), "execution_gas": gas, "fan_in": clients.len()})
             );
             std::process::exit(i32::from(!ok));
         }

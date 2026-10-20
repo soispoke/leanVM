@@ -14,7 +14,7 @@
     "crates/lean_compiler/src/**"
   ],
   "score": "median over reps of (candidate aggregate wall seconds + reference verification seconds) / fan_in",
-  "limits": {"peak_rss_ratio": 1.25, "proof_bytes_ratio": 1.0, "execution_gas_ratio": 1.0},
+  "limits": {"peak_rss_ratio": 1.25, "proof_bytes_ratio": 1.01, "execution_gas_ratio": 1.0},
   "noise": {"min_gain": 0.03, "range_multiplier": 2.0},
   "timing_requires_cpu_flags": ["pclmulqdq"]
 }

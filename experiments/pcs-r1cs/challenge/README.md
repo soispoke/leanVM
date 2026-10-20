@@ -10,7 +10,7 @@ So Track A needs no Lean check: the statement does not change. A change to what 
 
 ## Rules
 
-`challenge.json` is the contract. Candidates may edit only the listed prover crates' sources; any other path rejects the candidate before it is built. That gate is a fast failure and a statement of intent, not the soundness argument. A run is rejected if the candidate's aggregate fails, the reference rejects any repetition's proof, or a limit is exceeded: peak memory above 1.25 times baseline, a larger proof, or more EVM execution gas.
+`challenge.json` is the contract. Candidates may edit only the listed prover crates' sources; any other path rejects the candidate before it is built. That gate is a fast failure and a statement of intent, not the soundness argument. A run is rejected if the candidate's aggregate fails, the reference rejects any repetition's proof, or a limit is exceeded: peak memory above 1.25 times baseline, a proof more than 1% larger (pruned Merkle paths vary by a few bytes between workloads, since query positions follow the transcript), or more EVM execution gas.
 
 The score is the median over five repetitions of candidate aggregate wall time plus reference verification time, divided by the fan-in. Client proving is excluded because it is identical on both paths and done by the reference. An improvement counts only if the speedup exceeds both 3% and twice the baseline's relative half-range across its own repetitions. Each scored run draws a fresh workload seed that never enters the candidate's tree or process; the evaluator itself flips one byte of the first proof and requires the reference to reject it.
 

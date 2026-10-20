@@ -164,6 +164,7 @@ fn main() {
         let admission_openings_us = elapsed(t);
         let modes: &[bool] = match (oracle, sample % 2) {
             (Oracle::Blake2s, _) => &[true],
+            _ if args.iter().any(|a| a == "--pcs") => &[false],
             (_, 0) => &[false, true],
             _ => &[true, false],
         };
@@ -243,6 +244,27 @@ fn main() {
                 negative_cases += 1;
             }
             eprintln!("batch sample={sample} full={full} code={}", program.code_len());
+            if args.iter().any(|a| a == "--dry-run") {
+                // The exact committed shape of the proof this run would need, without proving it.
+                let exec = program.execute(public).expect("batch guest");
+                let layout = cpu::layout(
+                    &program.prog,
+                    exec.mem.len().trailing_zeros() as usize,
+                    exec.taus(),
+                    public,
+                );
+                let committed: usize = layout
+                    .placements
+                    .iter()
+                    .filter(|p| !p.is_virtual())
+                    .map(|p| 1usize << p.n_vars)
+                    .sum();
+                println!(
+                    "{}",
+                    serde_json::json!({"kind":"dry-run","fan_in":n,"interface":match (full, oracle) { (false, _) => "pcs", (true, Oracle::Keccak) => "r1cs", (true, Oracle::Blake2s) => "r1cs-vm" },"base_cycles":exec.base_counts.iter().sum::<usize>(),"base_counts":exec.base_counts,"taus":exec.taus(),"log_mem":exec.mem.len().trailing_zeros(),"committed":committed,"log_committed":(committed as f64).log2(),"mu":layout.shape.mu,"code_len":program.code_len(),"memory_cells":exec.mem_used,"negative_guest_cases":negative_cases})
+                );
+                continue;
+            }
             let t = Instant::now();
             let (proof, stats) = match cpu::prove(&program, public, 2) {
                 Ok(result) => result,

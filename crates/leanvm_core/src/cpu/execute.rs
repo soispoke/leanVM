@@ -33,6 +33,14 @@ pub struct Execution {
     pub(crate) trace: Trace, // rows + final access-count columns, emitted in the same walk
 }
 
+impl Execution {
+    /// `log2` of each table's proven height. With the memory size and the bytecode, this
+    /// fixes the committed shape ([`super::layout`]) without building the witness.
+    pub fn taus(&self) -> [usize; crate::tables::N_TABLES] {
+        self.trace.row_counts().map(|r| r.trailing_zeros() as usize)
+    }
+}
+
 /// Why a run has no execution the interpreter can find: the program, on this public
 /// input and advice, asks for something the machine cannot do.
 #[derive(Clone, Debug, PartialEq, Eq)]
