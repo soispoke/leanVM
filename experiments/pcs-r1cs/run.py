@@ -62,6 +62,7 @@ def main():
     parser.add_argument("--processes", type=int, default=3)
     parser.add_argument("--samples", type=int, default=3)
     parser.add_argument("--fan-ins", default="1,2", help="comma-separated batch sizes, e.g. 1,2,4,8")
+    parser.add_argument("--threads", type=int, default=8, help="LEANVM_NUM_THREADS; 8 matches the Mac's performance cores")
     parser.add_argument("--interfaces", default="pcs,r1cs", help="any of pcs, r1cs (Keccak transcript), r1cs-vm (BLAKE2s)")
     args = parser.parse_args()
     fans = tuple(int(f) for f in args.fan_ins.split(","))
@@ -74,13 +75,14 @@ def main():
     # Exclusive directory creation preserves failed and incomplete runs too.
     out.mkdir(parents=True, exist_ok=False)
     env = os.environ.copy()
-    env["LEANVM_NUM_THREADS"] = "8"
+    env["LEANVM_NUM_THREADS"] = str(args.threads)
     commands = []
     manifest = {
         "status": "running", "revision": subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=ROOT, text=True).strip(),
         "dirty": bool(subprocess.check_output(["git", "status", "--porcelain", "--untracked-files=no"], cwd=ROOT)),
         "platform": platform.platform(), "rustc": subprocess.check_output(["rustc", "--version"], text=True).strip(),
-        "workers": {"LEANVM_NUM_THREADS": "8", "efficiency_workers": "upstream default"},
+        "workers": {"LEANVM_NUM_THREADS": str(args.threads), "efficiency_workers": "upstream default"},
+        "cpu_flags_missing": [f for f in ("pclmulqdq", "vpclmulqdq", "gfni") if platform.machine() == "x86_64" and f not in open("/proc/cpuinfo").read()] if Path("/proc/cpuinfo").exists() else [],
         "processes": args.processes, "samples": args.samples, "fan_ins": fans, "interfaces": interfaces, "sources": digest_sources(),
         "scope": "serial prototype stages; native coverage adapter; no application state or block execution proving",
     }
