@@ -33,6 +33,7 @@
 
 mod gf2;
 pub mod hash;
+pub mod keccak;
 pub mod lincheck;
 pub mod membership;
 pub mod quotient;
