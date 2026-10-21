@@ -684,6 +684,27 @@ mod tests {
         }
     }
 
+    /// The two hypotheses `formal/quotient`'s `Desc.soundness_ofRows` keeps on the weights: the carry cells of
+    /// the public rows weigh nothing (`c 1 = 0`), and a word's 128 bit weights (the products over set coordinates
+    /// that `public_weights_are_products_over_coordinates` checks) are independent over GF(2): rank 128.
+    #[test]
+    fn public_weights_are_independent() {
+        assert_eq!(coordinate_weight(1), Some(F192::ZERO));
+        let mut basis: Vec<u128> = Vec::new();
+        for j in 0..128 {
+            let w = bit_weight(j);
+            assert_eq!(w.c2, 0);
+            let mut v = w.c0 as u128 | (w.c1 as u128) << 64;
+            for &b in &basis {
+                v = v.min(v ^ b);
+            }
+            assert_ne!(v, 0, "bit weight {j} depends on the others");
+            basis.push(v);
+            basis.sort_unstable_by(|a, b| b.cmp(a));
+        }
+        assert_eq!(basis.len(), 128);
+    }
+
     #[test]
     fn claims_hold_exactly_for_a_witness() {
         let mut rng = Rng::new(0x51);
