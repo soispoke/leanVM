@@ -626,3 +626,17 @@ mod tests {
         assert_eq!(c.rows() - before, 32);
     }
 }
+
+impl Wire {
+    /// Whether the wire is a row's carry (possibly negated). A positive carry fills a `c` slot for free; an `x`
+    /// or `y` slot reads it through a conversion row.
+    pub fn is_carry(self) -> bool {
+        matches!(self.kind, Kind::Carry(_))
+    }
+
+    /// Whether the wire is a negated row output. A negated wire costs a row ([`Ckt::positive`]) when it enters a
+    /// carry; in an XOR its negation is free.
+    pub fn is_negated(self) -> bool {
+        self.neg && self.as_const().is_none()
+    }
+}
