@@ -891,6 +891,27 @@ dependencies = [
 ]
 
 [[package]]
+name = "circuit_suite"
+version = "0.1.0"
+dependencies = [
+ "ark-bn254",
+ "ark-ff 0.5.0",
+ "fiat_shamir",
+ "flock",
+ "k256",
+ "num-bigint",
+ "num-traits",
+ "parallel",
+ "primitives",
+ "rand 0.9.4",
+ "serde",
+ "serde_json",
+ "sha2 0.10.9",
+ "sha3",
+ "tikv-jemallocator",
+]
+
+[[package]]
 name = "clap"
 version = "4.6.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1800,6 +1821,7 @@ dependencies = [
  "elliptic-curve",
  "once_cell",
  "sha2 0.10.9",
+ "signature",
 ]
 
 [[package]]

@@ -19,7 +19,7 @@ pub enum Src {
 }
 
 /// A full adder: the bits of `x` and `y`, the carry of `c`.
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
 pub struct Row {
     pub x: Src,
     pub y: Src,
@@ -43,7 +43,6 @@ pub struct Circuit {
 
 pub struct Builder {
     rows: Vec<Row>,
-    inputs: Vec<u32>,
     carry_one: Option<Src>,
 }
 
@@ -57,9 +56,17 @@ impl Builder {
     pub fn new() -> Self {
         Self {
             rows: vec![IDLE; PUBLIC_ROWS],
-            inputs: Vec::new(),
             carry_one: None,
         }
+    }
+
+    /// The rows so far, the public ones included.
+    pub fn len(&self) -> usize {
+        self.rows.len()
+    }
+
+    pub fn is_empty(&self) -> bool {
+        self.rows.is_empty()
     }
 
     pub fn row(&mut self, x: Src, y: Src, c: Src) -> Src {
@@ -70,7 +77,6 @@ impl Builder {
     /// A free bit: a row reading its own output, which the gate then makes `0` or `1`.
     pub fn input(&mut self) -> Src {
         let at = self.rows.len() as u32;
-        self.inputs.push(at);
         self.row(Src::Row(at), Src::Zero, Src::Zero)
     }
 
@@ -84,7 +90,7 @@ impl Builder {
     }
 
     /// A cell of carry one.
-    fn carry_one(&mut self) -> Src {
+    pub fn carry_one(&mut self) -> Src {
         if self.carry_one.is_none() {
             self.carry_one = Some(self.row(Src::One, Src::One, Src::Zero));
         }
@@ -158,6 +164,7 @@ impl Builder {
     pub fn finish(mut self, log_rows: usize, public: &[Vec<Src>; 4]) -> Circuit {
         let n = 1 << log_rows;
         assert!(self.rows.len() <= n, "{} rows", self.rows.len());
+        assert!(public.iter().all(|word| word.len() == WORD_BITS));
         let bit = |word: usize, j: usize| match word {
             0..4 => public[word][j],
             4 if j == 0 => Src::One,
@@ -172,6 +179,22 @@ impl Builder {
             };
         }
         self.rows.resize(n, IDLE);
+        Circuit::from_rows(log_rows, self.rows)
+    }
+}
+
+impl Circuit {
+    /// The circuit of `rows`, its input rows those reading their own output and two zeros, and its wiring the
+    /// one [`Builder::finish`] gives: a circuit is determined by its rows.
+    pub fn from_rows(log_rows: usize, rows: Vec<Row>) -> Circuit {
+        let n = 1 << log_rows;
+        assert_eq!(rows.len(), n, "a circuit has 2^log_rows rows");
+        let inputs: Vec<u32> = (0..n as u32)
+            .filter(|&r| {
+                let row = rows[r as usize];
+                [row.x, row.y, row.c] == [Src::Row(r), Src::Zero, Src::Zero]
+            })
+            .collect();
 
         // A cycle is a source and the cells reading it, in cell order.
         const NONE: u32 = u32::MAX;
@@ -195,27 +218,141 @@ impl Builder {
         for r in 0..n {
             join(2 + r, 4 * r as u32 + 3, &mut sigma);
         }
-        for (r, row) in self.rows.iter().enumerate() {
+        for (r, row) in rows.iter().enumerate() {
             for (role, src) in [row.x, row.y, row.c].into_iter().enumerate() {
                 join(slot(src), (4 * r + role) as u32, &mut sigma);
             }
         }
         Circuit {
             log_rows,
-            rows: self.rows,
-            inputs: self.inputs,
+            rows,
+            inputs,
             sigma,
         }
     }
-}
 
-impl Circuit {
+    pub fn rows(&self) -> &[Row] {
+        &self.rows
+    }
+
+    /// What `formal/quotient`'s `AdderCircuit` and `Wired` assume of a circuit: an input row reads its own output
+    /// and two zeros, every other row reads constants or rows of lower rank (the public rows ranked last, nothing
+    /// reading them), every reading cell is on the cycle of the output cell it reads, the cells reading a constant
+    /// are one cycle that holds its public anchor, and the statement's public cells read rows that drop the carry.
+    pub fn check_wired(&self) -> Result<(), String> {
+        let n = self.rows.len();
+        if n != 1 << self.log_rows || self.sigma.len() != 4 * n {
+            return Err("sizes".into());
+        }
+        let rank = |r: usize| if r < PUBLIC_ROWS { n + r } else { r };
+        let mut is_input = vec![false; n];
+        self.inputs.iter().for_each(|&r| is_input[r as usize] = true);
+        for (r, row) in self.rows.iter().enumerate() {
+            let sources = [row.x, row.y, row.c];
+            if is_input[r] {
+                if sources != [Src::Row(r as u32), Src::Zero, Src::Zero] {
+                    return Err(format!("input row {r}"));
+                }
+                continue;
+            }
+            for src in sources {
+                if let Src::Row(from) = src
+                    && ((from as usize) < PUBLIC_ROWS || rank(from as usize) >= rank(r))
+                {
+                    return Err(format!("row {r} reads row {from}"));
+                }
+            }
+        }
+
+        // Cycles of the wiring, each named by its least cell.
+        let mut cycle = vec![u32::MAX; 4 * n];
+        for start in 0..4 * n {
+            if cycle[start] != u32::MAX {
+                continue;
+            }
+            let mut at = start;
+            while cycle[at] == u32::MAX {
+                cycle[at] = start as u32;
+                at = self.sigma[at] as usize;
+            }
+            if at != start {
+                return Err("the wiring is not a permutation".into());
+            }
+        }
+        let (zero_anchor, one_anchor) = (4 * (5 * 64), 4 * (4 * 64));
+        if self.rows[5 * 64].x != Src::Zero || self.rows[4 * 64].x != Src::One {
+            return Err("anchors".into());
+        }
+        for (r, row) in self.rows.iter().enumerate() {
+            for (role, src) in [row.x, row.y, row.c].into_iter().enumerate() {
+                let source = match src {
+                    Src::Zero => zero_anchor,
+                    Src::One => one_anchor,
+                    Src::Row(from) => 4 * from as usize + 3,
+                };
+                if cycle[4 * r + role] != cycle[source] {
+                    return Err(format!("cell {role} of row {r}"));
+                }
+            }
+        }
+        // The zero's and the one's cycles hold no output cell, and are distinct.
+        if cycle[zero_anchor] == cycle[one_anchor]
+            || (0..n).any(|r| cycle[4 * r + 3] == cycle[zero_anchor] || cycle[4 * r + 3] == cycle[one_anchor])
+        {
+            return Err("constant cycles".into());
+        }
+        // Word 5 is all zeros, word 4 is a one then zeros, and words 0 to 3 read rows that drop the carry.
+        for r in 0..PUBLIC_ROWS {
+            let (word, row) = (r / (WORD_BITS / 2), self.rows[r]);
+            if row.c != Src::Zero {
+                return Err(format!("public row {r} reads a carry"));
+            }
+            let ok = match word {
+                0..4 => [row.x, row.y].into_iter().all(|src| match src {
+                    Src::Row(from) => {
+                        let from = self.rows[from as usize];
+                        [from.y, from.c] == [Src::Zero, Src::Zero]
+                    }
+                    _ => false,
+                }),
+                4 if r == 4 * 64 => [row.x, row.y] == [Src::One, Src::Zero],
+                _ => [row.x, row.y] == [Src::Zero, Src::Zero],
+            };
+            if !ok {
+                return Err(format!("public row {r}"));
+            }
+        }
+        Ok(())
+    }
+
     pub fn n_inputs(&self) -> usize {
         self.inputs.len()
     }
 
     /// Every cell's value, from the free inputs. A cell holds `a + theta b`, bit `a` and carry `b`.
     pub fn cells(&self, inputs: &[bool]) -> Vec<F64> {
+        let v = self.values(inputs);
+        let read = |v: &[u8], src: Src| match src {
+            Src::Zero => 0,
+            Src::One => 1,
+            Src::Row(r) => v[r as usize],
+        };
+        let theta = beta()[1];
+        let element = [F64::ZERO, F64::ONE, theta, theta + F64::ONE];
+        parallel::map_collect(4 * self.rows.len(), |cell| {
+            let (r, row) = (cell / 4, self.rows[cell / 4]);
+            let code = match cell % 4 {
+                0 => read(&v, row.x),
+                1 => read(&v, row.y),
+                2 => read(&v, row.c),
+                _ => v[r],
+            };
+            element[code as usize]
+        })
+    }
+
+    /// Each row's output from the free inputs, as `a + 2 b`: its bit `a` and its carry `b`.
+    pub fn values(&self, inputs: &[bool]) -> Vec<u8> {
         assert_eq!(inputs.len(), self.inputs.len());
         let mut v = vec![0u8; self.rows.len()];
         for (&row, &input) in self.inputs.iter().zip(inputs) {
@@ -232,18 +369,7 @@ impl Circuit {
             let (x, y, c) = (read(&v, row.x) & 1, read(&v, row.y) & 1, read(&v, row.c) >> 1);
             v[r] = (x ^ y ^ c) | ((x & y) ^ (c & (x ^ y))) << 1;
         }
-        let theta = beta()[1];
-        let element = [F64::ZERO, F64::ONE, theta, theta + F64::ONE];
-        parallel::map_collect(4 * self.rows.len(), |cell| {
-            let (r, row) = (cell / 4, self.rows[cell / 4]);
-            let code = match cell % 4 {
-                0 => read(&v, row.x),
-                1 => read(&v, row.y),
-                2 => read(&v, row.c),
-                _ => v[r],
-            };
-            element[code as usize]
-        })
+        v
     }
 }
 
@@ -314,75 +440,22 @@ mod tests {
     /// read rows that drop the carry.
     #[test]
     fn membership_is_a_wired_loop_free_circuit() {
+        membership().check_wired().unwrap();
+    }
+
+    #[test]
+    fn a_circuit_is_its_rows() {
         let circuit = membership();
-        let n = circuit.rows.len();
-        let rank = |r: usize| if r < PUBLIC_ROWS { n + r } else { r };
-        let is_input: Vec<bool> = {
-            let mut flags = vec![false; n];
-            circuit.inputs.iter().for_each(|&r| flags[r as usize] = true);
-            flags
-        };
-        for (r, row) in circuit.rows.iter().enumerate() {
-            let sources = [row.x, row.y, row.c];
-            if is_input[r] {
-                assert_eq!(sources, [Src::Row(r as u32), Src::Zero, Src::Zero]);
-                continue;
-            }
-            for src in sources {
-                if let Src::Row(from) = src {
-                    assert!(from as usize >= PUBLIC_ROWS, "row {r} reads a public row");
-                    assert!(rank(from as usize) < rank(r), "row {r} reads row {from}");
-                }
-            }
-        }
+        let again = Circuit::from_rows(circuit.log_rows, circuit.rows.clone());
+        assert_eq!(again.sigma, circuit.sigma);
+        assert_eq!(again.inputs, circuit.inputs);
+    }
 
-        // Cycles of the wiring, each named by its least cell.
-        let mut cycle = vec![u32::MAX; 4 * n];
-        for start in 0..4 * n {
-            if cycle[start] != u32::MAX {
-                continue;
-            }
-            let mut at = start;
-            while cycle[at] == u32::MAX {
-                cycle[at] = start as u32;
-                at = circuit.sigma[at] as usize;
-            }
-            assert_eq!(at, start, "the wiring is not a permutation");
-        }
-        let (zero_anchor, one_anchor) = (4 * (5 * 64), 4 * (4 * 64));
-        assert_eq!(circuit.rows[5 * 64].x, Src::Zero);
-        assert_eq!(circuit.rows[4 * 64].x, Src::One);
-        for (r, row) in circuit.rows.iter().enumerate() {
-            for (role, src) in [row.x, row.y, row.c].into_iter().enumerate() {
-                let source = match src {
-                    Src::Zero => zero_anchor,
-                    Src::One => one_anchor,
-                    Src::Row(from) => 4 * from as usize + 3,
-                };
-                assert_eq!(cycle[4 * r + role], cycle[source], "cell {role} of row {r}");
-            }
-        }
-        // The zero's and the one's cycles hold no output cell, and are distinct.
-        assert_ne!(cycle[zero_anchor], cycle[one_anchor]);
-        assert!((0..n).all(|r| cycle[4 * r + 3] != cycle[zero_anchor] && cycle[4 * r + 3] != cycle[one_anchor]));
-
-        // Word 5 is all zeros, word 4 is a one then zeros, and words 0 to 3 read rows that drop the carry.
-        for r in 0..PUBLIC_ROWS {
-            let (word, row) = (r / (WORD_BITS / 2), circuit.rows[r]);
-            assert_eq!(row.c, Src::Zero);
-            match word {
-                0..4 => {
-                    for src in [row.x, row.y] {
-                        let Src::Row(from) = src else {
-                            panic!("a statement bit reads a constant")
-                        };
-                        let from = circuit.rows[from as usize];
-                        assert_eq!([from.y, from.c], [Src::Zero, Src::Zero]);
-                    }
-                }
-                4 if r == 4 * 64 => assert_eq!([row.x, row.y], [Src::One, Src::Zero]),
-                _ => assert_eq!([row.x, row.y], [Src::Zero, Src::Zero]),
-            }
-        }
+    #[test]
+    fn check_wired_rejects_a_forward_read() {
+        let mut rows = membership().rows.clone();
+        let last = rows.len() as u32 - 1;
+        rows[PUBLIC_ROWS + 300].y = Src::Row(last);
+        assert!(Circuit::from_rows(20, rows).check_wired().is_err());
     }
 }
