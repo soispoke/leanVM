@@ -25,6 +25,20 @@
 //! whatever the hint. A product with a canonical result (`mulmod`) adds the hint `r` and the range check
 //! `r < p`; an inverse is a hint `x` with `a x = 1 (mod p)`. Every check is a bit the caller ANDs into its
 //! validity bit ([`Nn::valid`]).
+//!
+//! # Costs (rows, measured by `gadget_costs` and `product_rows_by_threshold`)
+//! | 256-bit operands | secp256k1 p | secp256k1 n | BN254 r |
+//! |---|---|---|---|
+//! | product (512-bit word) | 67,751 | 67,751 | 67,495 |
+//! | square | 37,958 | 37,958 | 37,798 |
+//! | mulmod (hints r, q; r < p) | 70,086 | 76,056 | 80,259 |
+//! | sqrmod | 40,073 | 46,051 | 50,374 |
+//! | invmod | 69,822 | 75,793 | 79,960 |
+//! | addmod / submod | 778 / 1,291 | 836 / 1,410 | 919 / 1,578 |
+//! | `q p`, 257-bit `q` | 1,285 | 7,297 | 11,777 |
+//!
+//! Schoolbook 256 x 256 is 132,610 rows (`2.02 n^2`); Karatsuba down to 16-bit schoolbook leaves is 67,751
+//! (thresholds 8 to 128 measured: 73.5k, 67.8k (16 to 31), 71.2k (32), 82.7k (64), 102.8k (128)).
 
 use std::cell::RefCell;
 
@@ -167,6 +181,8 @@ pub fn naf(k: &BigInt) -> Vec<(usize, i8)> {
 pub struct Acc {
     pub cols: Vec<Vec<Wire>>,
     pub k: BigInt,
+    /// While set, everything added is subtracted instead.
+    pub neg: bool,
 }
 
 impl Acc {
@@ -174,6 +190,7 @@ impl Acc {
         Self {
             cols: vec![vec![]; width],
             k: BigInt::zero(),
+            neg: false,
         }
     }
 
@@ -191,6 +208,16 @@ impl Acc {
         if pos >= self.width() {
             return;
         }
+        if self.neg {
+            // -w 2^pos = (not w) 2^pos - 2^pos.
+            self.k -= BigInt::one() << pos;
+            if w.as_const().is_none() {
+                self.cols[pos].push(w.not());
+            } else if w.as_const() == Some(false) {
+                self.k += BigInt::one() << pos;
+            }
+            return;
+        }
         match w.as_const() {
             Some(true) => self.k += BigInt::one() << pos,
             Some(false) => {}
@@ -200,11 +227,9 @@ impl Acc {
 
     /// `- w 2^pos`, as `(not w) 2^pos - 2^pos`.
     pub fn neg_bit(&mut self, w: Wire, pos: usize) {
-        if pos >= self.width() {
-            return;
-        }
-        self.bit(w.not(), pos);
-        self.k -= BigInt::one() << pos;
+        self.neg = !self.neg;
+        self.bit(w, pos);
+        self.neg = !self.neg;
     }
 
     pub fn word(&mut self, w: &[Wire], shift: usize) {
@@ -231,7 +256,11 @@ impl Acc {
     }
 
     pub fn konst(&mut self, k: &BigInt) {
-        self.k += k;
+        if self.neg {
+            self.k -= k;
+        } else {
+            self.k += k;
+        }
     }
 }
 
@@ -652,6 +681,8 @@ impl Modulus {
 pub enum Term<'a> {
     /// `a b 2^shift`.
     Mul(&'a Int, &'a Int, usize),
+    /// `-a b 2^shift`.
+    NegMul(&'a Int, &'a Int, usize),
     /// `a^2 2^shift`.
     Sq(&'a Int, usize),
     /// `k a` for a signed constant `k`.
@@ -659,6 +690,8 @@ pub enum Term<'a> {
     /// `k a` for a big signed constant `k`.
     Scaled(&'a Int, BigInt),
     Const(BigInt),
+    /// `k g a` for a one-bit integer `g` (a selector) and a small signed constant `k`.
+    Gated(&'a Int, &'a Int, i64),
 }
 
 /// The circuit under construction, the free inputs an instance computation records, and the checks made so far.
@@ -727,6 +760,11 @@ impl<'a> Nn<'a> {
         self.checks.len()
     }
 
+    /// The checks recorded so far.
+    pub fn checks(&self) -> &[Wire] {
+        &self.checks
+    }
+
     /// The AND of every check made.
     pub fn valid(&mut self) -> Wire {
         let checks = std::mem::take(&mut self.checks);
@@ -766,6 +804,7 @@ impl<'a> Nn<'a> {
         for t in terms {
             match t {
                 Term::Mul(a, b, s) => add_range(BigInt::zero(), BigInt::from(&a.max * &b.max) << *s),
+                Term::NegMul(a, b, s) => add_range(-(BigInt::from(&a.max * &b.max) << *s), BigInt::zero()),
                 Term::Sq(a, s) => add_range(BigInt::zero(), BigInt::from(&a.max * &a.max) << *s),
                 Term::Lin(a, k) => {
                     let x = BigInt::from(a.max.clone()) * k;
@@ -784,6 +823,14 @@ impl<'a> Nn<'a> {
                     }
                 }
                 Term::Const(k) => add_range(k.clone(), k.clone()),
+                Term::Gated(_, a, k) => {
+                    let x = BigInt::from(a.max.clone()) * k;
+                    if *k >= 0 {
+                        add_range(BigInt::zero(), x)
+                    } else {
+                        add_range(x, BigInt::zero())
+                    }
+                }
             }
         }
         let o = if lo.is_negative() {
@@ -801,10 +848,12 @@ impl<'a> Nn<'a> {
             for t in terms {
                 e += match t {
                     Term::Mul(a, b, s) => BigInt::from(a.val() * b.val()) << *s,
+                    Term::NegMul(a, b, s) => -(BigInt::from(a.val() * b.val()) << *s),
                     Term::Sq(a, s) => BigInt::from(a.val() * a.val()) << *s,
                     Term::Lin(a, k) => BigInt::from(a.val().clone()) * k,
                     Term::Scaled(a, k) => BigInt::from(a.val().clone()) * k,
                     Term::Const(k) => k.clone(),
+                    Term::Gated(g, a, k) => BigInt::from(g.val() * a.val()) * k,
                 };
             }
             (e / &p).to_biguint().unwrap_or_default()
@@ -814,10 +863,20 @@ impl<'a> Nn<'a> {
         for t in terms {
             match t {
                 Term::Mul(a, b, s) => mul_into(self.c, &mut acc, &a.w, &b.w, *s),
+                Term::NegMul(a, b, s) => {
+                    acc.neg = true;
+                    mul_into(self.c, &mut acc, &a.w, &b.w, *s);
+                    acc.neg = false;
+                }
                 Term::Sq(a, s) => square_into(self.c, &mut acc, &a.w, *s),
                 Term::Lin(a, k) => const_mul_into(self.c, &mut acc, &a.w, 0, &BigInt::from(*k)),
                 Term::Scaled(a, k) => const_mul_into(self.c, &mut acc, &a.w, 0, k),
                 Term::Const(k) => acc.konst(k),
+                Term::Gated(g, a, k) => {
+                    let g0 = g.w.first().copied().unwrap_or(Wire::ZERO);
+                    let gw: Word = a.w.iter().map(|&x| and(self.c, g0, x)).collect();
+                    const_mul_into(self.c, &mut acc, &gw, 0, &BigInt::from(*k));
+                }
             }
         }
         acc.konst(&(&o * &p));
@@ -931,10 +990,12 @@ pub fn eval_terms(terms: &[Term], p: &BigUint) -> BigUint {
     for t in terms {
         e += match t {
             Term::Mul(a, b, s) => BigInt::from(a.val() * b.val()) << *s,
+            Term::NegMul(a, b, s) => -(BigInt::from(a.val() * b.val()) << *s),
             Term::Sq(a, s) => BigInt::from(a.val() * a.val()) << *s,
             Term::Lin(a, k) => BigInt::from(a.val().clone()) * k,
             Term::Scaled(a, k) => BigInt::from(a.val().clone()) * k,
             Term::Const(k) => k.clone(),
+            Term::Gated(g, a, k) => BigInt::from(g.val() * a.val()) * k,
         };
     }
     ((e % &p + &p) % &p).to_biguint().unwrap()
@@ -943,10 +1004,12 @@ pub fn eval_terms(terms: &[Term], p: &BigUint) -> BigUint {
 fn clone_term<'a>(t: &Term<'a>) -> Term<'a> {
     match t {
         Term::Mul(a, b, s) => Term::Mul(a, b, *s),
+        Term::NegMul(a, b, s) => Term::NegMul(a, b, *s),
         Term::Sq(a, s) => Term::Sq(a, *s),
         Term::Lin(a, k) => Term::Lin(a, *k),
         Term::Scaled(a, k) => Term::Scaled(a, k.clone()),
         Term::Const(k) => Term::Const(k.clone()),
+        Term::Gated(g, a, k) => Term::Gated(g, a, *k),
     }
 }
 

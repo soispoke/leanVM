@@ -27,6 +27,15 @@
 //! once their forms grow past [`LIMIT`] terms, `state[1]` and `state[2]` (a sparse update `s + c y` each).
 //! Soundness is that of [`Nn::congruence`]: every check holds over the integers for every hint value, so
 //! `valid = 1` means every materialised element is the Poseidon value modulo `r`.
+//!
+//! # Costs (rows, measured)
+//! - S-box: 182,435 (two squares, a product, three quotients `q r`).
+//! - Full round: 666,018 (three S-boxes, three materialisations of three coefficients each).
+//! - Partial round: 281,253 (one S-box; `state[0]` materialised from three coefficients; `state[1]`, `state[2]`
+//!   every second round).
+//! - Permutation: 21,547,660 (the first one, whose initial state is half constant, 21,171,529).
+//! - 1 KiB (17 permutations): 366,007,556 rows (`2^28.45`, closed on `2^29`), 3,292,490 free inputs (8,192
+//!   message bits, the rest hints); counted in 154 s with a 9.2 GB peak.
 
 use ark_bn254::Fr;
 use ark_ff::{AdditiveGroup, BigInteger, Field, PrimeField};
@@ -1253,6 +1262,15 @@ mod tests {
         );
         println!("rows per partial round: {}", st.partial_rounds / (2 * ROUNDS_P));
         println!("rows per permutation (second, all inputs hinted): {perm}");
+    }
+
+    /// The 1 KiB workload built, closed (2^29 rows) and evaluated for three seeds and an invalid instance (some
+    /// 30 GB; run with `--ignored`).
+    #[test]
+    #[ignore]
+    fn full_1k_matches_reference() {
+        let used = run_workload::<MESSAGE_BYTES>(&[1, 2, 3]);
+        println!("poseidon 1 KiB: {used} rows, evaluated");
     }
 
     /// The 1 KiB workload counted (about 2^28.4 rows: some 10 GB; run with `--ignored`).
