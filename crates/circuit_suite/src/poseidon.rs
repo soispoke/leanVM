@@ -35,7 +35,8 @@
 //!   every second round).
 //! - Permutation: 21,547,660 (the first one, whose initial state is half constant, 21,171,529).
 //! - 1 KiB (17 permutations): 366,007,556 rows (`2^28.45`, closed on `2^29`), 3,292,490 free inputs (8,192
-//!   message bits, the rest hints); counted in 154 s with a 9.2 GB peak.
+//!   message bits, the rest hints); counted in 154 s with a 9.2 GB peak; built, closed, checked wired and
+//!   evaluated against the reference for three seeds and an invalid instance in 1,223 s with a 30.2 GB peak.
 
 use ark_bn254::Fr;
 use ark_ff::{AdditiveGroup, BigInteger, Field, PrimeField};

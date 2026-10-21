@@ -29,10 +29,10 @@
 //! Every congruence holds over the integers for every hint ([`crate::nonnative::Nn::congruence`]). The affine
 //! formulas are the group law when their slopes are determined, that is when the x-coordinates differ: each
 //! addition checks `x2 != x1` (canonical coordinates, `x2 + p - x1 != p`), and the combined step also `x3 != xP`.
-//! Doubling never occurs alone (no `y = 0` case). Starting from a table point and adding table points, every
-//! accumulator is a curve point by induction (`Q` is checked on the curve; secp256k1 has cofactor 1), so the end
-//! point is `k1 G + k2 phi(G) + k3 Q + k4 phi(Q) = u1 G + u2 Q`, which is not the point at infinity (an affine
-//! result exists). A sum hitting an excluded case (equal x-coordinates) makes `valid = 0`: for honest random
+//! Doubling never occurs alone (no `y = 0` case). Starting from the curve point `Off` and adding table points,
+//! every accumulator is a curve point by induction (`Q` is checked on the curve; secp256k1 has cofactor 1), so
+//! the end point less `2^DIGITS Off` is `k1 G + k2 phi(G) + k3 Q + k4 phi(Q) = u1 G + u2 Q`, which is not the
+//! point at infinity (an affine result of that last addition exists). A sum hitting an excluded case (equal x-coordinates) makes `valid = 0`: for honest random
 //! instances this has negligible probability, so it is a completeness limitation, never a soundness one. The
 //! loop starts from a fixed point `Off` of unknown discrete logarithm ([`offset_point`]) and subtracts the
 //! constant `2^DIGITS Off` at the end, so no partial sum is the point at infinity (starting from a table point
