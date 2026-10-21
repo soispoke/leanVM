@@ -28,3 +28,4 @@ tikv-jemallocator.workspace = true
 
 [dev-dependencies]
 keccak = "0.2"
+alloy-rlp = "0.3"

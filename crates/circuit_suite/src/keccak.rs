@@ -10,8 +10,8 @@
 //! A row adds two bits and a carry. Its sum is a three-input XOR when one input is a carry, and its carry is an
 //! AND (or an OR) when the third input is a constant. Keccak has exactly one nonlinear gate a state bit a round,
 //! `~b & c` in chi, so a round needs at least 1,600 AND rows; everything else is XOR, and the point is to make
-//! every XOR row take three inputs with no conversion rows. A round costs `3 * 1600 + 320` rows plus about 70
-//! (`Stats`): 5,191 rows a round in the steady state, 3.24 a state bit.
+//! every XOR row take three inputs with no conversion rows. A round costs `3 * 1600 + 320` rows plus about 43
+//! (`Stats`): 5,163 rows a round in the steady state, 3.23 a state bit.
 //!
 //! * **chi, one AND/OR row a bit.** With `b = p1 ^ a1` and `c = p2 ^ a2` (`p` the rows' positive bits, `a` the
 //!   negations the wires carry for free), `~b & c` is `p1 p2` plus a linear part. When `a1 != a2` the AND row
@@ -28,17 +28,19 @@
 //!   chi row of five bits is a 5-cycle and has one pair with equal negations at best; it is put where each
 //!   output column gets exactly one, which is then that column's chain start. A theta row with a free slot sets
 //!   its output's negation with a constant one; the full rows `a ^ k ^ D` take it from `D`, whose polarity is
-//!   chosen per `(x, z)` by a small local search over the chi rows' patterns; a `D` both of whose polarities
-//!   are needed costs one more row.
+//!   chosen per `(x, z)` by simulated annealing over the chi rows' patterns; a `D` both of whose polarities
+//!   are needed costs one more row. Round 0 of every permutation takes a fixed pattern, so the later rounds
+//!   see the same search problem in every permutation and the (cached) search runs once per round.
 //!
 //! So a round is 1,600 AND/OR rows, 1,600 chain rows (chi XOR and column parity at once), 1,600 theta rows and
-//! 320 `D` rows, plus about 65 `D` columns needing both polarities and 6 chi outputs of three terms past their
+//! 320 `D` rows, plus about 40 `D` columns needing both polarities and 3 chi outputs of three terms past their
 //! column's first. The first round of a permutation computes its column parities from scratch, and absorbing a
-//! block costs about 700 rows; a permutation is about 125,000 rows (125,790 for `keccak_f` with every output
-//! reduced). The last round of a hash computes only the 256 output bits. `Keccak256OneKiB` (8 blocks) is
-//! 1,008,174 rows with its 8,192 input rows and the 512 public rows, closing on 2^20.
+//! block costs about one row a rate bit (a carry absorbed into a two-term bit is folded with one row); a
+//! permutation is about 124,000 rows (125,135 for `keccak_f` with every output reduced). The last round of a
+//! hash computes only the 256 output bits. `Keccak256OneKiB` (8 blocks) is 1,003,539 rows with its 8,192 input
+//! rows and the 512 public rows, closing on 2^20.
 //!
-//! This layout's own floor is 5,120 rows a round (three rows a state bit and `D`), and it is within 1.4% of it.
+//! This layout's own floor is 5,120 rows a round (three rows a state bit and `D`), and it is within 0.9% of it.
 //! The only floor proven is 1,600 nonlinear rows a round; a cheaper layout would have to fold the column
 //! parities or `D` into rows that already have three inputs, and we know of none.
 
@@ -278,6 +280,17 @@ fn pattern(bad: usize, x: usize) -> bool {
 /// The column parities of `lanes`, chaining through each column; a column's first bit is reduced to one wire
 /// (and kept so), and so is any other that is not one bit and at most one carry.
 fn parity_chain(c: &mut Ckt, lanes: &mut [Lin], stats: &mut Stats) -> Vec<Wire> {
+    // A bit with two carries (a chi output and an absorbed carry): one row folds a carry with its bits, so it
+    // is again one bit and one carry.
+    for l in lanes.iter_mut() {
+        while l.carries.len() > 1 {
+            let kc = l.carries.pop().unwrap();
+            let x = l.bits.pop().unwrap_or_else(|| l.carries.pop().unwrap());
+            let y = l.bits.pop().unwrap_or(Wire::ZERO);
+            let (s, _) = c.fa(x, y, kc);
+            l.bits.push(s);
+        }
+    }
     let mut out = Vec::with_capacity(320);
     for x in 0..5 {
         for z in 0..64 {
@@ -312,26 +325,29 @@ fn parity_chain(c: &mut Ckt, lanes: &mut [Lin], stats: &mut Stats) -> Vec<Wire> 
 type Patterns = (Vec<usize>, Vec<bool>);
 
 fn choose_patterns(fixed: &[Option<bool>], needed: &[bool]) -> Patterns {
-    // The search depends only on its arguments, which repeat from permutation to permutation.
-    thread_local! {
-        static CACHE: std::cell::RefCell<HashMap<Vec<u8>, Patterns>> = Default::default();
-    }
+    // The search depends only on its arguments, which repeat from permutation to permutation (from round 1
+    // on, every permutation's rounds see the same arguments, round 0 being canonical).
+    static CACHE: std::sync::OnceLock<std::sync::Mutex<HashMap<Vec<u8>, Patterns>>> = std::sync::OnceLock::new();
+    let cache = CACHE.get_or_init(Default::default);
     let key: Vec<u8> = fixed
         .iter()
         .zip(needed)
         .map(|(f, &n)| if !n { 3 } else { f.map_or(2, |b| b as u8) })
         .collect();
-    if let Some(hit) = CACHE.with(|c| c.borrow().get(&key).cloned()) {
+    if let Some(hit) = cache.lock().unwrap().get(&key).cloned() {
         return hit;
     }
     let result = search_patterns(fixed, needed);
-    CACHE.with(|c| c.borrow_mut().insert(key, result.clone()));
+    cache.lock().unwrap().insert(key, result.clone());
     result
 }
 
-fn search_patterns(fixed: &[Option<bool>], needed: &[bool]) -> (Vec<usize>, Vec<bool>) {
-    let mut bad: Vec<usize> = (0..320).map(|r| r / 64).collect();
-    let mut comp = vec![false; 320];
+/// The canonical patterns: row `(y, z)`'s equal pair at output `y`, no complement.
+fn canonical_patterns() -> Patterns {
+    ((0..320).map(|r| r / 64).collect(), vec![false; 320])
+}
+
+fn search_patterns(fixed: &[Option<bool>], needed: &[bool]) -> Patterns {
     // For each chi row, its five post-pi bits' pre-pi origin (bit, D node), when fixed.
     let mut members: Vec<Vec<(usize, usize, bool)>> = vec![Vec::new(); 320];
     for x in 0..5 {
@@ -346,6 +362,23 @@ fn search_patterns(fixed: &[Option<bool>], needed: &[bool]) -> (Vec<usize>, Vec<
             }
         }
     }
+    // Simulated annealing from four seeds in parallel, keeping the best.
+    let runs: Vec<(i64, Patterns)> = std::thread::scope(|scope| {
+        let handles: Vec<_> = (0..4u64)
+            .map(|seed| {
+                let members = &members;
+                scope.spawn(move || anneal(members, seed))
+            })
+            .collect();
+        handles.into_iter().map(|h| h.join().unwrap()).collect()
+    });
+    runs.into_iter().min_by_key(|r| r.0).unwrap().1
+}
+
+/// One annealing run: its cost (`D` columns needing both polarities, plus three-term chi outputs past a
+/// column's first) and patterns.
+fn anneal(members: &[Vec<(usize, usize, bool)>], seed: u64) -> (i64, Patterns) {
+    let (mut bad, mut comp) = canonical_patterns();
     // Requests per D node and polarity.
     let mut count = vec![[0u32; 2]; 320];
     let req = |bad: usize, comp: bool, xx: usize, f: bool| (pattern(bad, xx) ^ comp ^ f) as usize;
@@ -355,12 +388,11 @@ fn search_patterns(fixed: &[Option<bool>], needed: &[bool]) -> (Vec<usize>, Vec<
         }
     }
     let cost = |count: &[[u32; 2]], node: usize| (count[node][0] > 0 && count[node][1] > 0) as i64;
-    // Change row `r` from `from` to `to` (bad position, complement); returns the cost delta, the change applied.
-    // A column (x, z) with `n` rows' equal pairs costs `n - 1` rows (a three-term chi output past the first).
     let mut cols = vec![0u32; 320];
     for r in 0..320 {
         cols[64 * bad[r] + r % 64] += 1;
     }
+    // Change row `r` from `from` to `to` (bad position, complement); returns the cost delta, the change applied.
     let apply = |count: &mut [[u32; 2]], cols: &mut [u32], r: usize, from: (usize, bool), to: (usize, bool)| -> i64 {
         let mut delta = 0;
         for &(xx, node, f) in &members[r] {
@@ -378,20 +410,19 @@ fn search_patterns(fixed: &[Option<bool>], needed: &[bool]) -> (Vec<usize>, Vec<
         }
         delta
     };
-    // Simulated annealing over single-row moves, keeping the best.
     let total = |count: &[[u32; 2]], cols: &[u32]| -> i64 {
         (0..320).map(|n| cost(count, n)).sum::<i64>() + cols.iter().map(|&n| n.saturating_sub(1) as i64).sum::<i64>()
     };
     let mut current = total(&count, &cols);
     let (mut best, mut best_bad, mut best_comp) = (current, bad.clone(), comp.clone());
-    let mut rng = 0x2545_f491_4f6c_dd1du64;
+    let mut rng = 0x2545_f491_4f6c_dd1du64 ^ seed.wrapping_mul(0x9e37_79b9_7f4a_7c15);
     let mut next = || {
         rng ^= rng << 13;
         rng ^= rng >> 7;
         rng ^= rng << 17;
         rng
     };
-    const STEPS: usize = 100_000;
+    const STEPS: usize = 3_000_000;
     for step in 0..STEPS {
         if best == 0 {
             break;
@@ -419,13 +450,21 @@ fn search_patterns(fixed: &[Option<bool>], needed: &[bool]) -> (Vec<usize>, Vec<
             apply(&mut count, &mut cols, r, to, from);
         }
     }
-    let (bad, comp) = (best_bad, best_comp);
-    (bad, comp)
+    (best, (best_bad, best_comp))
 }
 
 /// One round on `st`. `out_lanes`, when given, are the only output lanes needed (the others are left zero);
 /// `chain` computes the output's column parities.
-fn round(c: &mut Ckt, st: State, rc: u64, out_lanes: Option<&[bool; 25]>, chain: bool, stats: &mut Stats) -> State {
+#[allow(clippy::too_many_arguments)]
+fn round(
+    c: &mut Ckt,
+    st: State,
+    rc: u64,
+    out_lanes: Option<&[bool; 25]>,
+    chain: bool,
+    canonical: bool,
+    stats: &mut Stats,
+) -> State {
     let State { mut lanes, parity } = st;
     stats.rounds += 1;
     // Which post-pi lanes (chi inputs) and so which pre-pi bits are needed.
@@ -478,7 +517,11 @@ fn round(c: &mut Ckt, st: State, rc: u64, out_lanes: Option<&[bool; 25]>, chain:
             }
         })
         .collect();
-    let (bad, comp) = choose_patterns(&fixed, &needed);
+    let (bad, comp) = if canonical {
+        canonical_patterns()
+    } else {
+        choose_patterns(&fixed, &needed)
+    };
     let desired = |j: usize| -> bool {
         let (xx, yy, zz) = ((j / 64) % 5, j / 320, j % 64);
         let r = 64 * yy + zz;
@@ -587,7 +630,15 @@ impl Lin {
 pub fn permute(c: &mut Ckt, mut st: State, out_lanes: Option<&[bool; 25]>, chain: bool, stats: &mut Stats) -> State {
     for (r, &rc) in RC.iter().enumerate() {
         let last = r + 1 == RC.len();
-        st = round(c, st, rc, if last { out_lanes } else { None }, !last || chain, stats);
+        st = round(
+            c,
+            st,
+            rc,
+            if last { out_lanes } else { None },
+            !last || chain,
+            r == 0,
+            stats,
+        );
     }
     st
 }
@@ -648,6 +699,41 @@ pub fn sponge(c: &mut Ckt, blocks: &[Vec<Wire>], digests: &[usize], stats: &mut 
         );
         if digests.contains(&(i + 1)) {
             out.push((0..256).map(|j| st.bit(c, j)).collect());
+        }
+    }
+    out
+}
+
+/// As [`sponge`], but for each block count in `digests`, the 256 bits `digest ^ against` (zero where they
+/// agree): each is one row from the state's two-term bits, the XOR folded into the row that forms the bit.
+pub fn sponge_diff(
+    c: &mut Ckt,
+    blocks: &[Vec<Wire>],
+    digests: &[usize],
+    against: &[Wire],
+    stats: &mut Stats,
+) -> Vec<Vec<Wire>> {
+    let last = *digests.last().expect("a digest");
+    assert!(last >= 1 && last <= blocks.len() && against.len() == 256);
+    let mut st = State::zero();
+    let mut out = Vec::new();
+    for (i, block) in blocks[..last].iter().enumerate() {
+        st.absorb(block);
+        settle(c, &mut st, stats);
+        let final_block = i + 1 == last;
+        st = permute(
+            c,
+            st,
+            if final_block { Some(&DIGEST_LANES) } else { None },
+            false,
+            stats,
+        );
+        if digests.contains(&(i + 1)) {
+            out.push(
+                (0..256)
+                    .map(|j| reduce(c, &st.lanes[j].plus(against[j]), None))
+                    .collect(),
+            );
         }
     }
     out
@@ -857,7 +943,7 @@ pub(crate) mod tests {
         let ins = c.inputs(STATE);
         let before = c.rows();
         let mut stats = Stats::default();
-        let mut st = round(&mut c, State::from_wires(&ins), rc, None, true, &mut stats);
+        let mut st = round(&mut c, State::from_wires(&ins), rc, None, true, false, &mut stats);
         let outs: Vec<Wire> = (0..STATE).map(|i| st.bit(&mut c, i)).collect();
         let par = st.parity.clone().unwrap();
         let rows = c.rows() - before;
@@ -1041,11 +1127,11 @@ pub(crate) mod tests {
         let ins = c2.inputs(STATE);
         let mut st = State::from_wires(&ins);
         let mut s2 = Stats::default();
-        st = round(&mut c2, st, RC[0], None, true, &mut s2);
+        st = round(&mut c2, st, RC[0], None, true, true, &mut s2);
         let r1 = c2.rows();
         let mut s3 = Stats::default();
         for &rc in &RC[1..] {
-            st = round(&mut c2, st, rc, None, true, &mut s3);
+            st = round(&mut c2, st, rc, None, true, false, &mut s3);
         }
         let per_round = (c2.rows() - r1) as f64 / 23.0;
         println!(
@@ -1055,7 +1141,7 @@ pub(crate) mod tests {
             c.rows(),
         );
         println!(
-            "  per steady round: {per_round:.1} rows (= 5 x 1600 + 320 + {:.1} D columns needing both polarities \
+            "  per steady round: {per_round:.1} rows (= 3 x 1600 + 320 + {:.1} D columns needing both polarities \
              + {:.1} extra three-term chi bits a round)",
             s3.d_both as f64 / 23.0,
             s3.extra_three as f64 / 23.0

@@ -894,6 +894,7 @@ dependencies = [
 name = "circuit_suite"
 version = "0.1.0"
 dependencies = [
+ "alloy-rlp",
  "ark-bn254",
  "ark-ff 0.5.0",
  "bincode",
