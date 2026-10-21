@@ -25,3 +25,6 @@ k256 = { version = "0.13", features = ["ecdsa", "arithmetic"] }
 ark-bn254 = "0.5"
 ark-ff = "0.5"
 tikv-jemallocator.workspace = true
+
+[dev-dependencies]
+keccak = "0.2"

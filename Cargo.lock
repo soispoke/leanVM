@@ -901,6 +901,7 @@ dependencies = [
  "fiat_shamir",
  "flock",
  "k256",
+ "keccak",
  "num-bigint",
  "num-traits",
  "parallel",
