@@ -2167,6 +2167,24 @@ dependencies = [
 ]
 
 [[package]]
+name = "packed_format"
+version = "0.1.0"
+dependencies = [
+ "bincode",
+ "circuit_suite",
+ "fiat_shamir",
+ "flock",
+ "leanvm_core",
+ "parallel",
+ "pcs",
+ "primitives",
+ "rand 0.9.4",
+ "serde_json",
+ "tikv-jemallocator",
+ "tracing",
+]
+
+[[package]]
 name = "parallel"
 version = "0.1.0"
 dependencies = [
