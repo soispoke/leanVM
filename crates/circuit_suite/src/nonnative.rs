@@ -835,21 +835,18 @@ impl<'a> Nn<'a> {
 
     /// The canonical residue of `sum of terms` modulo `p`: a hint `r < p` and the congruence `terms - r = 0`.
     pub fn reduce(&mut self, m: &Modulus, terms: &[Term]) -> Int {
-        let rv = self.value_of(|| {
-            let p = BigInt::from(m.p.clone());
-            let mut e = BigInt::zero();
-            for t in terms {
-                e += match t {
-                    Term::Mul(a, b, s) => BigInt::from(a.val() * b.val()) << *s,
-                    Term::Sq(a, s) => BigInt::from(a.val() * a.val()) << *s,
-                    Term::Lin(a, k) => BigInt::from(a.val().clone()) * k,
-                    Term::Scaled(a, k) => BigInt::from(a.val().clone()) * k,
-                    Term::Const(k) => k.clone(),
-                };
-            }
-            ((e % &p + &p) % &p).to_biguint().unwrap()
-        });
-        let r = self.residue_hint(m, || rv.unwrap());
+        self.reduce_to(m, terms, true)
+    }
+
+    /// A residue of `sum of terms` modulo `p` by a hint and the congruence `terms - r = 0`: canonical (`r < p`
+    /// range-checked) or not (`r` any value of `bits` bits: the residue class is still forced).
+    pub fn reduce_to(&mut self, m: &Modulus, terms: &[Term], canonical: bool) -> Int {
+        let rv = self.value_of(|| eval_terms(terms, &m.p));
+        let r = if canonical {
+            self.residue_hint(m, || rv.unwrap())
+        } else {
+            self.hint(m.bits, || rv.unwrap())
+        };
         let mut all_terms: Vec<Term> = terms.iter().map(clone_term).collect();
         all_terms.push(Term::Lin(&r, -1));
         let ok = self.congruence(m, &all_terms);
@@ -925,6 +922,22 @@ impl<'a> Nn<'a> {
     pub fn eqmod(&mut self, m: &Modulus, a: &Int, b: &Int) -> Wire {
         self.congruence(m, &[Term::Lin(a, 1), Term::Lin(b, -1)])
     }
+}
+
+/// The canonical residue of a sum of terms with values.
+pub fn eval_terms(terms: &[Term], p: &BigUint) -> BigUint {
+    let p = BigInt::from(p.clone());
+    let mut e = BigInt::zero();
+    for t in terms {
+        e += match t {
+            Term::Mul(a, b, s) => BigInt::from(a.val() * b.val()) << *s,
+            Term::Sq(a, s) => BigInt::from(a.val() * a.val()) << *s,
+            Term::Lin(a, k) => BigInt::from(a.val().clone()) * k,
+            Term::Scaled(a, k) => BigInt::from(a.val().clone()) * k,
+            Term::Const(k) => k.clone(),
+        };
+    }
+    ((e % &p + &p) % &p).to_biguint().unwrap()
 }
 
 fn clone_term<'a>(t: &Term<'a>) -> Term<'a> {
