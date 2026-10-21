@@ -157,6 +157,13 @@ fn main() {
         report["description_bytes"] = data.len().into();
         if let Some(dir) = &out {
             std::fs::write(format!("{dir}/{}.qcd", b.name), &data).unwrap();
+            // An instance for the independent evaluator: the input bits packed low first, and the statement.
+            let mut packed = vec![0u8; valid.inputs.len().div_ceil(8)];
+            for (i, &bit) in valid.inputs.iter().enumerate() {
+                packed[i / 8] |= (bit as u8) << (i % 8);
+            }
+            std::fs::write(format!("{dir}/{}.inputs", b.name), packed).unwrap();
+            std::fs::write(format!("{dir}/{}.statement", b.name), valid.statement).unwrap();
         }
         let t = Instant::now();
         let index = Index::new(&b.circuit);
