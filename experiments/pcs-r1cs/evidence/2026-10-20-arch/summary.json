@@ -95,7 +95,8 @@
   "cycles_per_app": 2189433.625,
   "log_committed": 29.234,
   "code_len": 261272,
-  "proven": false,
-  "negative_guest_cases": 3
+  "proven": true,
+  "negative_guest_cases": 3,
+  "execution_gas": 488
  }
 ]
