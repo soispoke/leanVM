@@ -24,6 +24,13 @@ class Validation(unittest.TestCase):
     def test_complete_matrix(self):
         validate(records(), 1, 1)
 
+    def test_vm_transcript_has_its_own_clients(self):
+        rows = [dict(r, interface="r1cs-vm", fan_in=4 * r["fan_in"], execution_gas=4 * r["fan_in"] * 61, client_us=3.0, serial_warm_us=10.0)
+                for r in records() if r["interface"] == "r1cs"]
+        validate(rows, 1, 1, fans=(4, 8), interfaces=("r1cs-vm",))
+        with self.assertRaises(ValueError):
+            validate(rows[1:], 1, 1, fans=(4, 8), interfaces=("r1cs-vm",))
+
     def test_missing_duplicate_and_mismatched_rows(self):
         good = records()
         bad = [good[:-1], good + [good[0]], []]

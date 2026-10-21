@@ -16,10 +16,14 @@ MATCHED = ("client_us", "witness_us", "piop_prove_us", "opening_prove_us", "admi
 TOTAL = (*MATCHED[:1], *MATCHED[-2:], "hint_prep_us", "aggregate_prove_us", "aggregate_verify_us", "evm_with_context_us", "coverage_us")
 
 
-def validate(rows, processes, samples):
+# Expected peak memory (GB) of one run, from the Arch measurements: the Keccak R1CS control dominates.
+PEAK_GB = {1: 12, 2: 24, 4: 50, 8: 90}
+
+
+def validate(rows, processes, samples, fans=(1, 2), interfaces=("pcs", "r1cs")):
     """Reject missing, duplicated, mismatched or non-finite sample records."""
     import math
-    expected = {(p, f, s, m) for p in range(processes) for f in (1, 2) for s in range(samples + 1) for m in ("pcs", "r1cs")}
+    expected = {(p, f, s, m) for p in range(processes) for f in fans for s in range(samples + 1) for m in interfaces}
     actual = {}
     for row in rows:
         key = (row["process"], row["fan_in"], row["sample"], row["interface"])
@@ -38,7 +42,8 @@ def validate(rows, processes, samples):
     if actual.keys() != expected:
         raise ValueError(f"missing samples: {expected - actual.keys()}")
     for p, f, s, m in expected:
-        if m != "pcs":
+        # Only the Keccak paths share client proofs; `r1cs-vm` proves on its own transcript.
+        if m != "pcs" or "r1cs" not in interfaces:
             continue
         a, b = actual[p, f, s, "pcs"], actual[p, f, s, "r1cs"]
         if any(a[k] != b[k] for k in MATCHED):
@@ -56,7 +61,13 @@ def main():
     parser.add_argument("--output", required=True, type=Path)
     parser.add_argument("--processes", type=int, default=3)
     parser.add_argument("--samples", type=int, default=3)
+    parser.add_argument("--fan-ins", default="1,2", help="comma-separated batch sizes, e.g. 1,2,4,8")
+    parser.add_argument("--interfaces", default="pcs,r1cs", help="any of pcs, r1cs (Keccak transcript), r1cs-vm (BLAKE2s)")
     args = parser.parse_args()
+    fans = tuple(int(f) for f in args.fan_ins.split(","))
+    interfaces = tuple(args.interfaces.split(","))
+    if not set(interfaces) <= {"pcs", "r1cs", "r1cs-vm"} or not set(fans) <= set(PEAK_GB):
+        parser.error("unknown interface or batch size")
     if args.processes < 1 or args.samples < 1:
         parser.error("processes and samples must be positive")
     out = args.output.resolve()
@@ -70,7 +81,7 @@ def main():
         "dirty": bool(subprocess.check_output(["git", "status", "--porcelain", "--untracked-files=no"], cwd=ROOT)),
         "platform": platform.platform(), "rustc": subprocess.check_output(["rustc", "--version"], text=True).strip(),
         "workers": {"LEANVM_NUM_THREADS": "8", "efficiency_workers": "upstream default"},
-        "processes": args.processes, "samples": args.samples, "sources": digest_sources(),
+        "processes": args.processes, "samples": args.samples, "fan_ins": fans, "interfaces": interfaces, "sources": digest_sources(),
         "scope": "serial prototype stages; native coverage adapter; no application state or block execution proving",
     }
     if platform.system() == "Darwin":
@@ -101,26 +112,36 @@ def main():
 
     try:
         run("clippy", ["cargo", "clippy", "--locked", "--release", "-p", "rec_aggregation", "--all-targets", "--", "-D", "warnings"], 12)
-        run("unit", ["cargo", "test", "--locked", "--release", "-p", "rec_aggregation", "--example", "comparison"], 12)
+        run("unit", ["cargo", "test", "--locked", "--release", "-p", "rec_aggregation", "--examples"], 12)
         run("build", ["cargo", "build", "--locked", "--release", "-p", "rec_aggregation", "--examples"], 12)
         rows = []
         for process in range(args.processes):
-            for fan, binary in [(1, "comparison"), (2, "batch")]:
-                command = [f"target/release/examples/{binary}", "--samples", str(args.samples), "--seed", str(902+1000*process+100*fan)]
+            for fan in fans:
+                binary = "comparison" if fan == 1 else "batch"
+                # The same seed gives every interface the same applications.
+                base = [f"target/release/examples/{binary}", "--samples", str(args.samples), "--seed", str(902+1000*process+100*fan)]
                 if fan > 1:
-                    command += ["--fan-in", str(fan)]
-                records = run(f"fan{fan}-process{process}", command, 35)
-                if any(r.get("kind") == "capacity" for r in records):
-                    raise ValueError("requested measurement exceeds backend capacity")
-                rows.extend(dict(r, process=process, fan_in=fan) for r in records if r.get("kind") == "sample")
-                (out / "samples.json").write_text(json.dumps(rows, indent=2) + "\n")
-        validate(rows, args.processes, args.samples)
+                    base += ["--fan-in", str(fan)]
+                keccak = [m for m in ("pcs", "r1cs") if m in interfaces]
+                runs = []
+                if keccak:
+                    only = [] if len(keccak) == 2 else ["--pcs"] if keccak == ["pcs"] else ["--full" if fan == 1 else "--r1cs"]
+                    runs.append((f"fan{fan}-process{process}", base + only, PEAK_GB[fan] if "r1cs" in keccak else PEAK_GB[fan] // 2 + 4))
+                if "r1cs-vm" in interfaces:
+                    runs.append((f"fan{fan}-vm-process{process}", base + ["--oracle", "blake2s"], PEAK_GB[fan] // 2 + 4))
+                for name, command, gb in runs:
+                    records = run(name, command, gb)
+                    if any(r.get("kind") == "capacity" for r in records):
+                        raise ValueError("requested measurement exceeds backend capacity")
+                    rows.extend(dict(r, process=process, fan_in=fan) for r in records if r.get("kind") == "sample")
+                    (out / "samples.json").write_text(json.dumps(rows, indent=2) + "\n")
+        validate(rows, args.processes, args.samples, fans, interfaces)
         if digest_sources() != manifest["sources"]:
             raise ValueError("sources changed during measurement")
         summary = {}
-        for fan in (1, 2):
+        for fan in fans:
             summary[str(fan)] = {}
-            for mode in ("pcs", "r1cs"):
+            for mode in interfaces:
                 samples = [r for r in rows if r["fan_in"] == fan and r["interface"] == mode and not r["warmup"]]
                 keys = [k for k, v in samples[0].items() if type(v) in (float, int)]
                 summary[str(fan)][mode] = {"n": len(samples), "metrics": {k: {"median": statistics.median(r[k] for r in samples),

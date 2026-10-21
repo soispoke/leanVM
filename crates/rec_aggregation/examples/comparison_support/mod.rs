@@ -1,4 +1,6 @@
 //! Matched standalone-opening aggregation and circuit claims.
+#[path = "apps.rs"]
+pub(crate) mod apps;
 #[path = "keccak.rs"]
 mod keccak;
 #[allow(dead_code)]

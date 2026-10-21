@@ -43,6 +43,8 @@
 //! `cpu::layout` of the inner program and the summary of a real `cpu::verify`
 //! run, so there is no hand-mirrored copy of the protocol to drift.
 
+pub mod tree;
+
 use bincode::Options as _;
 use pcs::whir::{MAX_LOG_INV_RATE, MIN_LOG_INV_RATE};
 use std::collections::{BTreeMap, BTreeSet};
@@ -321,18 +323,23 @@ pub struct DeferredClaim {
 impl DeferredClaim {
     /// What a leaf defers: the all-zeros point on each polynomial, where the
     /// value is just the table's first entry.
-    fn leaf() -> Self {
+    fn leaf(bytecode: &Bytecode) -> Self {
         Self::recompute(
-            vec![F192::ZERO; bytecode_vars()],
+            bytecode,
+            vec![F192::ZERO; bytecode.vars()],
             vec![F192::ZERO; 2 * flock::hash::K_LOG],
         )
         .expect("the all-zeros point has the right shape")
     }
 
     /// Evaluate the three fixed polynomials at `bytecode_point` / `matrix_point`.
-    fn recompute(bytecode_point: Vec<F192>, matrix_point: Vec<F192>) -> Result<Self, AggregateVerifyError> {
+    fn recompute(
+        bytecode: &Bytecode,
+        bytecode_point: Vec<F192>,
+        matrix_point: Vec<F192>,
+    ) -> Result<Self, AggregateVerifyError> {
         let klog = flock::hash::K_LOG;
-        if bytecode_point.len() != bytecode_vars() || matrix_point.len() != 2 * klog {
+        if bytecode_point.len() != bytecode.vars() || matrix_point.len() != 2 * klog {
             return Err(AggregateVerifyError::MalformedClaim);
         }
         // Every leaf defers the all-zeros point, where the bytecode polynomial is
@@ -342,10 +349,10 @@ impl DeferredClaim {
         // being O(circuit) either way.
         let zero_point = bytecode_point.iter().chain(&matrix_point).all(|x| *x == F192::ZERO);
         let bytecode_value = if zero_point {
-            F192::from(stacked_bytecode()[0])
+            F192::from(bytecode.table[0])
         } else {
             let sp = tracing::info_span!("bytecode mle").entered();
-            let value = mle_eval_par(stacked_bytecode(), &bytecode_point);
+            let value = mle_eval_par(&bytecode.table, &bytecode_point);
             drop(sp);
             value
         };
@@ -400,8 +407,21 @@ fn lane_hash(lanes: impl Iterator<Item = u64>) -> [F192; 2] {
 /// lanes each, whence the assert, the guest being unable to hash a third), then
 /// all three lanes of each deferred cell.
 fn statement_digest(signers_hash: [F192; 2], da_digest: [u8; 32], defer: &DeferredClaim) -> [F192; 2] {
-    let seed = leanvm_core::cpu::fs_seed(unified_guest());
-    let da_digest = pack_hash_state(&da_digest);
+    seeded_statement_digest(
+        leanvm_core::cpu::fs_seed(unified_guest()),
+        signers_hash,
+        pack_hash_state(&da_digest),
+        defer,
+    )
+}
+
+/// [`statement_digest`] for a node whose children are proofs of the program `seed` names.
+fn seeded_statement_digest(
+    seed: [F192; 2],
+    signers_hash: [F192; 2],
+    da_digest: [F192; 2],
+    defer: &DeferredClaim,
+) -> [F192; 2] {
     let header = [
         seed[0],
         seed[1],
@@ -757,7 +777,7 @@ impl EthereumProof {
             sphincs_signers,
             da_roots,
             // The wire carries no value, only the points to derive it from.
-            defer: DeferredClaim::recompute(bytecode_point, matrix_point)?,
+            defer: DeferredClaim::recompute(unified_bytecode(), bytecode_point, matrix_point)?,
             proof,
         })
     }
@@ -782,7 +802,11 @@ impl EthereumProof {
         // to be the true evaluations, or the recursion below proves nothing about
         // the fixed polynomials.
         let _s = tracing::info_span!("Recompute deferred claims").entered();
-        let defer = DeferredClaim::recompute(self.defer.bytecode_point.clone(), self.defer.matrix_point.clone())?;
+        let defer = DeferredClaim::recompute(
+            unified_bytecode(),
+            self.defer.bytecode_point.clone(),
+            self.defer.matrix_point.clone(),
+        )?;
         drop(_s);
         if defer != self.defer {
             return Err(AggregateVerifyError::MalformedClaim);
@@ -794,33 +818,48 @@ impl EthereumProof {
         Ok(())
     }
 }
-/// The stacked bytecode polynomial of the aggregation guest: the one fixed
-/// table every node's bytecode claims are about. Cached, because verification
-/// evaluates it and building it walks the whole program.
-fn stacked_bytecode() -> &'static [F64] {
-    static TABLE: std::sync::OnceLock<Vec<F64>> = std::sync::OnceLock::new();
-    TABLE.get_or_init(|| leanvm_core::cpu::layout::bytecode_table(&unified_guest().prog))
-}
-
-/// The slots of the stacked bytecode that are not structurally zero.
+/// A program's stacked bytecode polynomial, the fixed table its deferred bytecode
+/// claims are about, with the slots of it that are not structurally zero.
 ///
 /// Eight encoding columns sit inside sixteen stacking slots, so half the
 /// table is zero and contributes nothing to any round of the batching sumcheck.
-/// Read off the table rather than from the column count, so an all-zero column
-/// at the edge only ever shrinks the window.
-fn bytecode_window() -> Range<usize> {
-    static WINDOW: std::sync::OnceLock<Range<usize>> = std::sync::OnceLock::new();
-    WINDOW
-        .get_or_init(|| {
-            let table = stacked_bytecode();
-            let kbc = bytecode_vars() - leanvm_core::leaf::N_BYTECODE_SELECTORS;
-            let live = |s: usize| table[s << kbc..(s + 1) << kbc].iter().any(|v| *v != F64::ZERO);
-            let slots = 1 << leanvm_core::leaf::N_BYTECODE_SELECTORS;
-            let start = (0..slots).find(|&s| live(s)).expect("the bytecode is not all zero");
-            let end = (0..slots).rfind(|&s| live(s)).expect("the bytecode is not all zero") + 1;
-            start..end
-        })
-        .clone()
+/// The window is read off the table rather than from the column count, so an
+/// all-zero column at the edge only ever shrinks it.
+pub(crate) struct Bytecode {
+    table: Vec<F64>,
+    window: Range<usize>,
+}
+
+impl Bytecode {
+    pub(crate) fn of(program: &Program) -> Self {
+        let table = leanvm_core::cpu::layout::bytecode_table(&program.prog);
+        let kbc = table.len().trailing_zeros() as usize - leanvm_core::leaf::N_BYTECODE_SELECTORS;
+        let live = |s: usize| table[s << kbc..(s + 1) << kbc].iter().any(|v| *v != F64::ZERO);
+        let slots = 1 << leanvm_core::leaf::N_BYTECODE_SELECTORS;
+        let start = (0..slots).find(|&s| live(s)).expect("the bytecode is not all zero");
+        let end = (0..slots).rfind(|&s| live(s)).expect("the bytecode is not all zero") + 1;
+        Self {
+            table,
+            window: start..end,
+        }
+    }
+
+    /// Variables of a bytecode claim's point: the log row count plus the stacking
+    /// selectors.
+    fn vars(&self) -> usize {
+        self.table.len().trailing_zeros() as usize
+    }
+}
+
+/// The aggregation guest's bytecode. Cached, because verification evaluates it
+/// and building it walks the whole program.
+fn unified_bytecode() -> &'static Bytecode {
+    static TABLE: std::sync::OnceLock<Bytecode> = std::sync::OnceLock::new();
+    TABLE.get_or_init(|| Bytecode::of(unified_guest()))
+}
+
+fn stacked_bytecode() -> &'static [F64] {
+    &unified_bytecode().table
 }
 
 /// One round message against a K-valued table: `bt` is the bytecode itself, so
@@ -883,12 +922,6 @@ fn slot_weights(points: &[Vec<F192>], lambdas: &[F192], r_row: &[F192], kbc: usi
         }
     }
     weights
-}
-
-/// Variables of a bytecode claim's point: the log row count plus the stacking
-/// selectors.
-fn bytecode_vars() -> usize {
-    stacked_bytecode().len().trailing_zeros() as usize
 }
 
 /// Below this a parallel dispatch costs more than the loop it replaces.
@@ -1012,12 +1045,13 @@ fn weighted_eq_table(points: &[Vec<F192>], lambdas: &[F192], vars: usize, active
 /// is an eq table on each side. Returns the guest hints and the single claim
 /// per polynomial they reduce to.
 fn aggregate_deferred_claims(
+    bytecode: &Bytecode,
     subproofs: &[DeferredSubproof],
     carried_claims: &[&DeferredClaim],
 ) -> (SubHints, DeferredClaim) {
     let child_count = subproofs.len();
     assert_eq!(child_count, carried_claims.len(), "one carried claim per child");
-    let kbcv = bytecode_vars();
+    let kbcv = bytecode.vars();
     let klog = flock::hash::K_LOG;
 
     let mut transcript = FiatShamirState::from_label(RECURSION_AGG_LABEL);
@@ -1081,7 +1115,7 @@ fn aggregate_deferred_claims(
     // message, and folding LSB-first pairs entries within a slot, so the window's
     // blocks stay aligned all the way down.
     let n_slots = 1 << leanvm_core::leaf::N_BYTECODE_SELECTORS;
-    let slot_window = bytecode_window();
+    let slot_window = bytecode.window.clone();
     let kbc = kbcv - leanvm_core::leaf::N_BYTECODE_SELECTORS;
     let mut wt = weighted_eq_table(
         &points,
@@ -1093,7 +1127,7 @@ fn aggregate_deferred_claims(
     // to exist as `2^kbcv` extension elements (three times the memory traffic),
     // and base-by-extension is cheaper than extension-by-extension. Every later
     // round is extension-valued anyway.
-    let bc = &stacked_bytecode()[(slot_window.start << kbc)..(slot_window.end << kbc)];
+    let bc = &bytecode.table[(slot_window.start << kbc)..(slot_window.end << kbc)];
     let mut bt = {
         let msg = round_msg_base(bc, &wt);
         let r = absorb_round(&mut transcript, &mut bscr, &mut r_bc, &mut brun, msg);
@@ -2281,7 +2315,7 @@ pub(crate) fn aggregate_tampered(
     drop(_span);
 
     let defer = if children.is_empty() {
-        let leaf = DeferredClaim::leaf();
+        let leaf = DeferredClaim::leaf(unified_bytecode());
         hints.push(
             "leaf_defer",
             vec![leaf.bytecode_value, leaf.matrix_a_value, leaf.matrix_b_value],
@@ -2289,7 +2323,7 @@ pub(crate) fn aggregate_tampered(
         leaf
     } else {
         let _span = tracing::info_span!("Batch deferred claims").entered();
-        let (agg_hints, reduced) = aggregate_deferred_claims(&subs, &carried);
+        let (agg_hints, reduced) = aggregate_deferred_claims(unified_bytecode(), &subs, &carried);
         for (name, entry) in agg_hints {
             hints.push(name, entry);
         }
@@ -4892,7 +4926,7 @@ def main():
     #[test]
     fn leaf_claim_matches_the_general_path() {
         let klog = flock::hash::K_LOG;
-        let leaf = DeferredClaim::leaf();
+        let leaf = DeferredClaim::leaf(unified_bytecode());
         let general = {
             let bytecode_value = mle_eval_par(stacked_bytecode(), &leaf.bytecode_point);
             let eq_r = pcs::whir::build_eq_table_ext(&leaf.matrix_point[..klog]);

@@ -7,137 +7,18 @@
 #[allow(dead_code)]
 #[path = "comparison_support/mod.rs"]
 mod shared;
-use fiat_shamir::transcript::{Proof, RawProof};
-use flock::{
-    membership::{DEPTH, Secret, Statement},
-    quotient::{self, Index, Oracle, Table, circuit, opening},
-};
+use flock::membership::DEPTH;
 use leanvm_core::cpu;
-use primitives::field::{F64, F192};
 use rand::{RngCore, SeedableRng, rngs::StdRng};
-use serde::{Deserialize, Serialize};
-use shared::*;
+use serde::Serialize;
+use shared::{apps::*, *};
 use std::{path::Path, time::Instant};
 
-const LOG_ROWS: usize = 20;
-/// The baseline PCS rate; the verifier rejects any other, all being 128-bit but trading proof size for speed.
-const LOG_INV_RATE: usize = 2;
-
-#[derive(Serialize, Deserialize)]
-struct Witness {
-    x: [u8; 32],
-    siblings: Vec<[u8; 32]>,
-    directions: u32,
-}
-/// One application's client proof, as a node receives it.
-#[derive(Serialize, Deserialize)]
-struct Client {
-    y: [u8; 32],
-    root: [u8; 32],
-    piop: Proof,
-    openings: [Proof; 3],
-}
-struct Setup {
-    circuit: circuit::Circuit,
-    index: Index,
-    wiring: opening::Committed,
-    app_id: [u8; 32],
-}
-fn setup() -> Setup {
-    let circuit = circuit::membership();
-    let index = Index::new(&circuit);
-    let wiring = opening::commit(index.table());
-    let app_id = r1cs::identity(&circuit);
-    Setup {
-        circuit,
-        index,
-        wiring,
-        app_id,
-    }
-}
-fn arg(args: &[String], name: &str) -> String {
-    args.windows(2)
-        .find(|p| p[0] == name)
-        .map(|p| p[1].clone())
-        .unwrap_or_else(|| panic!("missing {name}"))
-}
 fn read<T: serde::de::DeserializeOwned>(path: impl AsRef<Path>) -> T {
     bincode::deserialize(&std::fs::read(path).expect("read artifact")).expect("decode artifact")
 }
 fn write(path: impl AsRef<Path>, value: &impl Serialize) {
     std::fs::write(path, bincode::serialize(value).unwrap()).expect("write artifact");
-}
-fn statement(c: &Client) -> Statement {
-    Statement { y: c.y, root: c.root }
-}
-/// Whether the aggregate checks the PIOP, and the PIOP's random oracle.
-fn interface(args: &[String]) -> (bool, Oracle) {
-    match arg(args, "--interface").as_str() {
-        "pcs" => (false, Oracle::Keccak),
-        "r1cs" => (true, Oracle::Keccak),
-        "r1cs-vm" => (true, Oracle::Blake2s),
-        other => panic!("unknown interface {other}"),
-    }
-}
-
-/// Native admission: the PIOP and all three openings, returning the aggregate's inputs.
-fn admit<'a>(
-    s: &'a Setup,
-    layouts: &'a [opening::Layout; 2],
-    oracle: Oracle,
-    c: &Client,
-) -> Option<(Vec<Opened<'a>>, Vec<RawProof>)> {
-    let (roots, claims) = quotient::verify_with(oracle, &s.wiring.root, &statement(c), &c.piop, LOG_ROWS).ok()?;
-    let opened: Vec<Opened> = [
-        (&layouts[0], roots[0], vec![claims.witness]),
-        (&s.index.table().layout, s.wiring.root, vec![claims.wiring]),
-        (&layouts[1], roots[1], vec![claims.quotient, claims.sum]),
-    ]
-    .into_iter()
-    .zip(&c.openings)
-    .map(|((layout, root, claims), proof)| Opened {
-        layout,
-        root,
-        claims,
-        proof: proof.clone(),
-    })
-    .collect();
-    let raws = opened
-        .iter()
-        .map(|o| opening::verification_trace(o.layout, &o.root, &o.claims, &o.proof))
-        .collect::<Option<Vec<_>>>()?;
-    Some((opened, raws))
-}
-fn layouts() -> [opening::Layout; 2] {
-    [quotient::witness_layout(LOG_ROWS), quotient::quotient_layout(LOG_ROWS)]
-}
-/// The aggregate's public input: the ordered list of per-application claims.
-fn public(s: &Setup, full: bool, clients: &[Client], admitted: &[(Vec<Opened>, Vec<RawProof>)]) -> [F192; 2] {
-    let claims: Vec<_> = clients
-        .iter()
-        .zip(admitted)
-        .map(|(c, (opened, _))| {
-            if full {
-                r1cs::public_claim(&s.app_id, &statement(c))
-            } else {
-                pcs_public(opened)
-            }
-        })
-        .collect();
-    batch_public(&claims)
-}
-fn program(s: &Setup, (full, oracle): (bool, Oracle), admitted: &[(Vec<Opened>, Vec<RawProof>)]) -> cpu::Program {
-    let (opened, raws) = &admitted[0];
-    for (_, rs) in admitted {
-        for (a, b) in rs.iter().zip(raws) {
-            assert_eq!(
-                a.stream.len(),
-                b.stream.len(),
-                "every application has the compiled shape"
-            );
-        }
-    }
-    build(opened, raws, &s.wiring.root, &s.app_id, full, oracle, admitted.len())
 }
 
 fn main() {
@@ -146,7 +27,7 @@ fn main() {
         Some("workload") => {
             let mut rng = StdRng::seed_from_u64(arg(&args, "--seed").parse().unwrap());
             let n: usize = arg(&args, "--fan-in").parse().unwrap();
-            assert!(n >= 2, "a batch aggregates at least two applications");
+            assert!(n >= 1, "a workload has at least one application");
             let witnesses: Vec<Witness> = (0..n)
                 .map(|_| {
                     let mut bytes = || {
@@ -164,48 +45,23 @@ fn main() {
             write(arg(&args, "--out"), &witnesses);
         }
         Some("clients") => {
+            // What an application's device does: witness, PIOP and openings, then the node's admission.
             let (_, oracle) = interface(&args);
             let s = setup();
+            let layouts = layouts();
             let mut rng = StdRng::from_os_rng();
             let witnesses: Vec<Witness> = read(arg(&args, "--workload"));
             let clients: Vec<Client> = witnesses
                 .iter()
                 .map(|w| {
-                    let secret = Secret {
-                        x: w.x,
-                        siblings: w.siblings.clone().try_into().expect("Merkle depth"),
-                        directions: w.directions,
-                    };
-                    let st = secret.statement();
-                    let cells = s.circuit.cells(&circuit::membership_inputs(&secret));
-                    let masks = std::array::from_fn(|_| std::array::from_fn(|_| F64(rng.next_u64())));
-                    let mut committed = Vec::new();
-                    let mut commit = |table: &Table| {
-                        let c = opening::commit(table);
-                        let root = c.root;
-                        committed.push(c);
-                        root
-                    };
-                    let p = quotient::prove_with(
-                        oracle,
-                        &s.circuit,
-                        &s.index,
-                        &s.wiring.root,
-                        &st,
-                        &cells,
-                        &masks,
-                        &mut commit,
+                    let (client, [witness_us, piop_us, opening_us]) = prove_client(&s, oracle, w, &mut rng);
+                    let t = Instant::now();
+                    assert!(admit(&s, &layouts, oracle, &client).is_some(), "an honest client proof is admitted");
+                    println!(
+                        "{}",
+                        serde_json::json!({"kind": "client", "interface": arg(&args, "--interface"), "witness_us": witness_us, "piop_us": piop_us, "opening_us": opening_us, "client_us": witness_us + piop_us + opening_us, "admission_us": elapsed(t), "peak_rss_kib": peak_rss_kib()})
                     );
-                    Client {
-                        y: st.y,
-                        root: st.root,
-                        piop: p.proof,
-                        openings: [
-                            opening::open(&p.witness, &committed[0], std::slice::from_ref(&p.claims.witness)),
-                            opening::open(s.index.table(), &s.wiring, std::slice::from_ref(&p.claims.wiring)),
-                            opening::open(&p.quotient, &committed[1], &[p.claims.quotient, p.claims.sum]),
-                        ],
-                    }
+                    client
                 })
                 .collect();
             write(arg(&args, "--out"), &clients);
