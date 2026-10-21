@@ -93,42 +93,52 @@ pub fn blake2s_native(message: &[u8]) -> [u8; 32] {
     primitives::hash::hash(message)
 }
 
-/// BLAKE2s of a private 1,024-byte message.
-pub struct Blake2sOneKiB;
+/// BLAKE2s of a private message of `$bytes` bytes, the digest in bytes 0..32 of the statement.
+macro_rules! blake2s_workload {
+    ($ty:ident, $name:literal, $bytes:expr) => {
+        pub struct $ty;
+
+        impl Workload for $ty {
+            const NAME: &'static str = $name;
+
+            fn build(c: &mut Ckt) -> Vec<Wire> {
+                let message = c.inputs(8 * $bytes);
+                let mut public = blake2s(c, &message);
+                public.resize(PUBLIC_BITS, Wire::ZERO);
+                public
+            }
+
+            fn instance(seed: u64) -> Instance {
+                let message: Vec<u8> = (0..$bytes)
+                    .map(|i: usize| {
+                        (seed
+                            .wrapping_mul(0x9E37_79B9_7F4A_7C15)
+                            .wrapping_add(i as u64 * 0xD1B5_4A32_D192_ED03)
+                            >> 56) as u8
+                    })
+                    .collect();
+                let mut statement = [0u8; 64];
+                statement[..32].copy_from_slice(&blake2s_native(&message));
+                Instance {
+                    inputs: bytes_to_bits(&message),
+                    statement,
+                }
+            }
+
+            fn invalid_instance(_: u64) -> Option<Instance> {
+                None
+            }
+        }
+    };
+}
 
 pub const MESSAGE_BYTES: usize = 1024;
-
-impl Workload for Blake2sOneKiB {
-    const NAME: &'static str = "blake2s-1kib";
-
-    fn build(c: &mut Ckt) -> Vec<Wire> {
-        let message = c.inputs(8 * MESSAGE_BYTES);
-        let mut public = blake2s(c, &message);
-        public.resize(PUBLIC_BITS, Wire::ZERO);
-        public
-    }
-
-    fn instance(seed: u64) -> Instance {
-        let message: Vec<u8> = (0..MESSAGE_BYTES)
-            .map(|i| {
-                (seed
-                    .wrapping_mul(0x9E37_79B9_7F4A_7C15)
-                    .wrapping_add(i as u64 * 0xD1B5_4A32_D192_ED03)
-                    >> 56) as u8
-            })
-            .collect();
-        let mut statement = [0u8; 64];
-        statement[..32].copy_from_slice(&blake2s_native(&message));
-        Instance {
-            inputs: bytes_to_bits(&message),
-            statement,
-        }
-    }
-
-    fn invalid_instance(_: u64) -> Option<Instance> {
-        None
-    }
-}
+blake2s_workload!(Blake2sOneKiB, "blake2s-1kib", MESSAGE_BYTES);
+// The same statement at other lengths, for how proving scales with rows.
+blake2s_workload!(Blake2s64, "blake2s-64b", 64);
+blake2s_workload!(Blake2s256, "blake2s-256b", 256);
+blake2s_workload!(Blake2s4KiB, "blake2s-4kib", 4096);
+blake2s_workload!(Blake2s16KiB, "blake2s-16kib", 16384);
 
 #[cfg(test)]
 mod tests {

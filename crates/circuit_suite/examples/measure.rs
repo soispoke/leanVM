@@ -2,7 +2,7 @@
 //! circuit format. One JSON line a statement.
 //!
 //! `measure [--prove] [--seed S] [--out DIR] NAME...`; the names are the workloads' `NAME`s, or `membership`.
-use circuit_suite::{Circuit, Ckt, Instance, Src, Workload, describe, read_statement};
+use circuit_suite::{Circuit, Ckt, Instance, Src, Workload, blake2s, describe, read_statement};
 use flock::membership::Statement;
 use flock::quotient::{self, Index, Oracle, Table, opening};
 use primitives::field::F64;
@@ -95,7 +95,11 @@ fn membership(seed: u64) -> Built {
 fn get(name: &str, seed: u64) -> Built {
     match name {
         "membership" => membership(seed),
-        n if n == circuit_suite::blake2s::Blake2sOneKiB::NAME => build::<circuit_suite::blake2s::Blake2sOneKiB>(seed),
+        n if n == blake2s::Blake2sOneKiB::NAME => build::<blake2s::Blake2sOneKiB>(seed),
+        n if n == blake2s::Blake2s64::NAME => build::<blake2s::Blake2s64>(seed),
+        n if n == blake2s::Blake2s256::NAME => build::<blake2s::Blake2s256>(seed),
+        n if n == blake2s::Blake2s4KiB::NAME => build::<blake2s::Blake2s4KiB>(seed),
+        n if n == blake2s::Blake2s16KiB::NAME => build::<blake2s::Blake2s16KiB>(seed),
         other => panic!("unknown statement {other}"),
     }
 }
