@@ -18,6 +18,7 @@ import QuotientSecurity.Joint
 import QuotientSecurity.Statement
 import QuotientSecurity.R1CS
 import QuotientSecurity.Format
+import QuotientSecurity.Described
 
 /-- info: 'QuotientSecurity.verifier_rbrKnowledgeSoundness' depends on axioms: [propext, Classical.choice, Quot.sound] -/
 #guard_msgs in
@@ -454,3 +455,67 @@ import QuotientSecurity.Format
 /-- info: 'QuotientSecurity.Instance.cellsOf_toN' depends on axioms: [propext, Classical.choice, Quot.sound] -/
 #guard_msgs in
 #print axioms QuotientSecurity.Instance.cellsOf_toN
+
+/-- info: 'QuotientSecurity.Desc.eval_gate' depends on axioms: [propext, Quot.sound] -/
+#guard_msgs in
+#print axioms QuotientSecurity.Desc.eval_gate
+
+/-- info: 'QuotientSecurity.Desc.eval_satisfies' depends on axioms: [propext, Quot.sound] -/
+#guard_msgs in
+#print axioms QuotientSecurity.Desc.eval_satisfies
+
+/-- info: 'QuotientSecurity.Desc.gate_enc' depends on axioms: [propext, Quot.sound] -/
+#guard_msgs in
+#print axioms QuotientSecurity.Desc.gate_enc
+
+/-- info: 'QuotientSecurity.Desc.regionWeightN_cellOf' depends on axioms: [propext, Classical.choice, Quot.sound] -/
+#guard_msgs in
+#print axioms QuotientSecurity.Desc.regionWeightN_cellOf
+
+/-- info: 'QuotientSecurity.Desc.wordSum_pack' depends on axioms: [propext, Classical.choice, Quot.sound] -/
+#guard_msgs in
+#print axioms QuotientSecurity.Desc.wordSum_pack
+
+/-- info: 'QuotientSecurity.Desc.pack_injective' depends on axioms: [propext, Classical.choice, Quot.sound] -/
+#guard_msgs in
+#print axioms QuotientSecurity.Desc.pack_injective
+
+/-- info: 'QuotientSecurity.Desc.bitIndex_of' depends on axioms: [propext, Quot.sound] -/
+#guard_msgs in
+#print axioms QuotientSecurity.Desc.bitIndex_of
+
+/-- info: 'QuotientSecurity.Desc.fiberPerm_reach' depends on axioms: [propext, Classical.choice, Quot.sound] -/
+#guard_msgs in
+#print axioms QuotientSecurity.Desc.fiberPerm_reach
+
+/-- info: 'QuotientSecurity.Desc.wiringOf_reach' depends on axioms: [propext, Classical.choice, Quot.sound] -/
+#guard_msgs in
+#print axioms QuotientSecurity.Desc.wiringOf_reach
+
+/-- info: 'QuotientSecurity.Desc.wiringOf_wired' depends on axioms: [propext, Classical.choice, Quot.sound] -/
+#guard_msgs in
+#print axioms QuotientSecurity.Desc.wiringOf_wired
+
+/-- info: 'QuotientSecurity.InstanceN.statement_of_relation' depends on axioms: [propext, Classical.choice, Quot.sound] -/
+#guard_msgs in
+#print axioms QuotientSecurity.InstanceN.statement_of_relation
+
+/-- info: 'QuotientSecurity.InstanceN.statementBits_of_relation' depends on axioms: [propext, Classical.choice, Quot.sound] -/
+#guard_msgs in
+#print axioms QuotientSecurity.InstanceN.statementBits_of_relation
+
+/-- info: 'QuotientSecurity.InstanceN.circuit_soundness' depends on axioms: [propext, Classical.choice, Quot.sound] -/
+#guard_msgs in
+#print axioms QuotientSecurity.InstanceN.circuit_soundness
+
+/-- info: 'QuotientSecurity.InstanceN.circuit_soundness_bits' depends on axioms: [propext, Classical.choice, Quot.sound] -/
+#guard_msgs in
+#print axioms QuotientSecurity.InstanceN.circuit_soundness_bits
+
+/-- info: 'QuotientSecurity.Desc.exists_instanceOf' depends on axioms: [propext, Classical.choice, Quot.sound] -/
+#guard_msgs in
+#print axioms QuotientSecurity.Desc.exists_instanceOf
+
+/-- info: 'QuotientSecurity.Desc.soundness_ofRows' depends on axioms: [propext, Classical.choice, Quot.sound] -/
+#guard_msgs in
+#print axioms QuotientSecurity.Desc.soundness_ofRows
