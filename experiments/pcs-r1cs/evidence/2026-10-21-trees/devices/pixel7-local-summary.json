@@ -1,0 +1,116 @@
+{
+ "device": {
+  "model": "",
+  "android": "",
+  "soc": "",
+  "kernel": "Linux f344a92685ef 6.12.85+deb13-cloud-amd64 #1 SMP PREEMPT_DYNAMIC Debian 6.12.85-1 (2026-04-30) x86_64 x86_64 x86_64 GNU/Linux",
+  "memory": "MemTotal:       263918156 kB",
+  "cpu_features": [
+   "abm",
+   "aes",
+   "apic",
+   "avx",
+   "avx2",
+   "avx512bw",
+   "avx512cd",
+   "avx512dq",
+   "avx512f",
+   "avx512vl",
+   "bmi1",
+   "bmi2",
+   "clflush",
+   "cmov",
+   "constant_tsc",
+   "cpuid",
+   "cpuid_fault",
+   "cx16",
+   "cx8",
+   "de",
+   "f16c",
+   "fma",
+   "fpu",
+   "fxsr",
+   "ht",
+   "hypervisor",
+   "lahf_lm",
+   "lm",
+   "mca",
+   "mce",
+   "mmx",
+   "movbe",
+   "msr",
+   "mtrr",
+   "nopl",
+   "nx",
+   "pae",
+   "pat",
+   "pge",
+   "pni",
+   "popcnt",
+   "pse",
+   "pse36",
+   "pti",
+   "sep",
+   "sse",
+   "sse2",
+   "sse4_1",
+   "sse4_2",
+   "ssse3",
+   "syscall",
+   "tsc",
+   "tsc_known_freq",
+   "x2apic",
+   "xsave",
+   "xtopology"
+  ],
+  "threads": 8
+ },
+ "summary": {
+  "pcs": {
+   "client_us": {
+    "median": 141729267.374,
+    "min": 141729267.374,
+    "max": 141729267.374
+   },
+   "piop_us": {
+    "median": 107550968.53,
+    "min": 107550968.53,
+    "max": 107550968.53
+   },
+   "opening_us": {
+    "median": 34162435.727000006,
+    "min": 34162435.727000006,
+    "max": 34162435.727000006
+   },
+   "admission_us": {
+    "median": 114615.085,
+    "min": 114615.085,
+    "max": 114615.085
+   },
+   "peak_rss_mib": 3186.92578125
+  },
+  "r1cs-vm": {
+   "client_us": {
+    "median": 142137248.61,
+    "min": 142137248.61,
+    "max": 142137248.61
+   },
+   "piop_us": {
+    "median": 107849172.434,
+    "min": 107849172.434,
+    "max": 107849172.434
+   },
+   "opening_us": {
+    "median": 34271950.009,
+    "min": 34271950.009,
+    "max": 34271950.009
+   },
+   "admission_us": {
+    "median": 110340.219,
+    "min": 110340.219,
+    "max": 110340.219
+   },
+   "peak_rss_mib": 3186.5546875
+  }
+ }
+}

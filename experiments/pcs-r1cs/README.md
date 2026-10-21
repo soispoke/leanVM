@@ -64,6 +64,12 @@ The Keccak circuit removes 572,000 heap accesses per application and cuts the R1
 
 The [Track A challenge](challenge/README.md) freezes everything but the prover: the candidate build only runs the timed aggregate, and the frozen baseline build makes the hidden workload and the client proofs and verifies the result. Its pilot is recorded in the [Arch evidence](evidence/2026-10-20-arch/README.md).
 
+## Trees, a native Keccak circuit and real-hardware kits
+
+[`aggregation::tree`](../../crates/rec_aggregation/src/aggregation/tree.rs) proves a root over proofs of any leaf program: it runs the recursion guest's own `verify_sub` on each leaf, batches their deferred claims with `aggregate_claims`, and publishes a statement over the leaf program's seed, the ordered leaf public inputs and the batched claim, which verification recomputes against the leaf bytecode. The deferred-claim code now takes a bytecode table as a parameter; the upstream guest's path is unchanged (`aggregate_two_to_one` and `leaf_claim_matches_the_general_path` pass). The `tree` example proves leaves of matched applications and a root over them, and checks that reordered, changed, dropped or forged leaves, a moved claim and a foreign leaf program are rejected. Leaves must stay within the recursion guest's 2^22 to 2^28 window, so a leaf holds up to eight PCS or BLAKE2s R1CS applications and two Keccak R1CS ones. On Arch ([evidence](evidence/2026-10-21-trees/README.md)) a root verifies each leaf in about 260,000 cycles, and 4 × 4 trees cost the same for PCS and the BLAKE2s R1CS path: 1.04M root cycles at 2^25.08 committed.
+
+[`flock::keccak`](../../crates/flock/src/keccak.rs) is the circuit a native Keccak instruction would prove; [the design note](KECCAK-INSTRUCTION.md) gives its tests, cost and the integration still needed. [`bench/`](bench/README.md) holds the Pixel 7 client-proving driver, the static Android build and the Mac command lines.
+
 ## Published-branch evidence
 
 The [review validation record](evidence/2026-10-20-review/README.md) retains fresh measurements, exact source/environment provenance and regression logs for the cleaned code. Fixed public seeds generate benchmark fixtures, not production secrets.

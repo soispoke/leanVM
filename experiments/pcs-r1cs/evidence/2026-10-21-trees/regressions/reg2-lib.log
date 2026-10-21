@@ -1,0 +1,63 @@
+test aggregation::tests::aggregate_hints_bind ... ignored
+test aggregation::tests::aggregate_rejects_a_bad_signature ... ignored
+test aggregation::tests::aggregate_statement_binds ... ignored
+test aggregation::tests::aggregate_three_levels ... ignored
+test aggregation::tests::da_blob_proof ... ignored
+test aggregation::tests::invalid_blob_sizes_are_rejected ... ok
+test aggregation::tests::invalid_da_selections_are_rejected_before_building_the_proof ... ok
+test aggregation::tests::keygen_and_verification_hash_domains_are_disjoint ... ok
+test aggregation::tests::signature_claims_keep_the_wire_layout ... ok
+test aggregation::tests::signature_tweaks_align_with_distinct_domains ... ok
+test aggregation::tests::max_keys_bound_is_exclusive ... ok
+test signers_cache::tests::signer_seed_uses_more_than_one_byte ... ok
+test hash_chain::blake2s_hash_chain ... ok
+test aggregation::tests::malformed_raw_signature_is_an_error ... ok
+test aggregation::tests::malformed_raw_sphincs_signature_is_an_error ... ok
+test aggregation::tests::every_guest_blake2s_metadata_cell_is_written_first ... ok
+test aggregation::tests::leaf_claim_matches_the_general_path ... ok
+test aggregation::tests::guest_merkle_children_bind_every_link ... ok
+test aggregation::tests::da_row_shape_checks_power_of_two_boundaries ... ok
+test aggregation::tests::guest_compiles_reproducibly ... ok
+test aggregation::tests::guest_column_selectors_match_native_eq ... ok
+test aggregation::tests::ceil_log_hints_enforce_rounding_and_floor ... ok
+test aggregation::tests::a_node_may_publish_less_than_it_covers has been running for over 60 seconds
+test aggregation::tests::aggregate_many_leaf_index_groups has been running for over 60 seconds
+test aggregation::tests::aggregate_mixed_leaf has been running for over 60 seconds
+test aggregation::tests::aggregate_mixed_two_to_one has been running for over 60 seconds
+test aggregation::tests::aggregate_one_key_two_messages has been running for over 60 seconds
+test aggregation::tests::aggregate_one_scheme_per_child has been running for over 60 seconds
+test aggregation::tests::aggregate_one_signer has been running for over 60 seconds
+test aggregation::tests::aggregate_one_sphincs_signer has been running for over 60 seconds
+test aggregation::tests::aggregate_overlapping_signers has been running for over 60 seconds
+test aggregation::tests::aggregate_two_leaf_indices has been running for over 60 seconds
+test aggregation::tests::aggregate_two_to_one has been running for over 60 seconds
+test aggregation::tests::aggregate_with_a_da_payload has been running for over 60 seconds
+test aggregation::tests::da_guest_bounds_coverage_slots has been running for over 60 seconds
+test aggregation::tests::da_guest_checks_commitment_and_codewords has been running for over 60 seconds
+test aggregation::tests::da_guest_hashes_root_lists has been running for over 60 seconds
+test aggregation::tests::da_root_lists_merge_two_and_three has been running for over 60 seconds
+test aggregation::tests::da_roots_accumulate_and_can_be_selected_or_omitted has been running for over 60 seconds
+test aggregation::tests::da_row_count_is_a_run_time_parameter has been running for over 60 seconds
+test aggregation::tests::no_payload_publishes_the_empty_root_list has been running for over 60 seconds
+test aggregation::tests::raw_signatures_follow_the_table_not_the_leaf_indices has been running for over 60 seconds
+test aggregation::tests::da_guest_bounds_coverage_slots ... ok
+test aggregation::tests::da_guest_checks_commitment_and_codewords ... ok
+test aggregation::tests::aggregate_one_key_two_messages ... ok
+test aggregation::tests::no_payload_publishes_the_empty_root_list ... ok
+test aggregation::tests::raw_signatures_follow_the_table_not_the_leaf_indices ... ok
+test aggregation::tests::aggregate_one_sphincs_signer ... ok
+test aggregation::tests::aggregate_mixed_leaf ... ok
+test aggregation::tests::aggregate_one_signer ... ok
+test aggregation::tests::aggregate_many_leaf_index_groups ... ok
+test aggregation::tests::aggregate_with_a_da_payload ... ok
+test aggregation::tests::da_guest_hashes_root_lists ... ok
+test aggregation::tests::aggregate_mixed_two_to_one ... ok
+test aggregation::tests::aggregate_overlapping_signers ... ok
+test aggregation::tests::aggregate_one_scheme_per_child ... ok
+test aggregation::tests::aggregate_two_to_one ... ok
+test aggregation::tests::a_node_may_publish_less_than_it_covers ... ok
+test aggregation::tests::aggregate_two_leaf_indices ... ok
+test aggregation::tests::da_row_count_is_a_run_time_parameter ... ok
+test aggregation::tests::da_root_lists_merge_two_and_three ... ok
+test aggregation::tests::da_roots_accumulate_and_can_be_selected_or_omitted ... ok
+test result: ok. 37 passed; 0 failed; 5 ignored; 0 measured; 0 filtered out; finished in 2794.10s

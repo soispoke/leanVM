@@ -1,0 +1,3 @@
+test aggregation::tests::aggregate_two_to_one ... ok
+test aggregation::tests::leaf_claim_matches_the_general_path ... ok
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 40 filtered out; finished in 89.22s
