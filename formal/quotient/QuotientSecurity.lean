@@ -17,6 +17,7 @@ import QuotientSecurity.Sequence
 import QuotientSecurity.Joint
 import QuotientSecurity.Statement
 import QuotientSecurity.R1CS
+import QuotientSecurity.Format
 
 /-- info: 'QuotientSecurity.verifier_rbrKnowledgeSoundness' depends on axioms: [propext, Classical.choice, Quot.sound] -/
 #guard_msgs in
@@ -341,3 +342,115 @@ import QuotientSecurity.R1CS
 /-- info: 'QuotientSecurity.Instance.r1cs_soundness' depends on axioms: [propext, Classical.choice, Quot.sound] -/
 #guard_msgs in
 #print axioms QuotientSecurity.Instance.r1cs_soundness
+
+/-- info: 'QuotientSecurity.firstRound_fits_iff' depends on axioms: [propext, Classical.choice, Quot.sound] -/
+#guard_msgs in
+#print axioms QuotientSecurity.firstRound_fits_iff
+
+/-- info: 'QuotientSecurity.rbrError_le_n' depends on axioms: [propext, Classical.choice, Quot.sound] -/
+#guard_msgs in
+#print axioms QuotientSecurity.rbrError_le_n
+
+/-- info: 'QuotientSecurity.rbrError_first_gt' depends on axioms: [propext, Classical.choice, Quot.sound] -/
+#guard_msgs in
+#print axioms QuotientSecurity.rbrError_first_gt
+
+/-- info: 'QuotientSecurity.knowledgeSoundness_bits_n' depends on axioms: [propext, Classical.choice, Quot.sound] -/
+#guard_msgs in
+#print axioms QuotientSecurity.knowledgeSoundness_bits_n
+
+/-- info: 'QuotientSecurity.Params.ofCantor_identity_eq' depends on axioms: [propext, Classical.choice, Quot.sound] -/
+#guard_msgs in
+#print axioms QuotientSecurity.Params.ofCantor_identity_eq
+
+/-- info: 'QuotientSecurity.Params.ofCantor_identity_n' depends on axioms: [propext, Classical.choice, Quot.sound] -/
+#guard_msgs in
+#print axioms QuotientSecurity.Params.ofCantor_identity_n
+
+/-- info: 'QuotientSecurity.Params.ofCantor_identity_le_64' depends on axioms: [propext, Classical.choice, Quot.sound] -/
+#guard_msgs in
+#print axioms QuotientSecurity.Params.ofCantor_identity_le_64
+
+/-- info: 'QuotientSecurity.knowledgeSoundness_ofCantor_n' depends on axioms: [propext, Classical.choice, Quot.sound] -/
+#guard_msgs in
+#print axioms QuotientSecurity.knowledgeSoundness_ofCantor_n
+
+/-- info: 'QuotientSecurity.exists_instance_n' depends on axioms: [propext, Classical.choice, Quot.sound] -/
+#guard_msgs in
+#print axioms QuotientSecurity.exists_instance_n
+
+/-- info: 'QuotientSecurity.membershipPub_hPub_n' depends on axioms: [propext, Classical.choice, Quot.sound] -/
+#guard_msgs in
+#print axioms QuotientSecurity.membershipPub_hPub_n
+
+/-- info: 'QuotientSecurity.natDegree_membershipPub_le_n' depends on axioms: [propext, Classical.choice, Quot.sound] -/
+#guard_msgs in
+#print axioms QuotientSecurity.natDegree_membershipPub_le_n
+
+/-- info: 'QuotientSecurity.knowledgeSoundness_membership_n' depends on axioms: [propext, Classical.choice, Quot.sound] -/
+#guard_msgs in
+#print axioms QuotientSecurity.knowledgeSoundness_membership_n
+
+/-- info: 'QuotientSecurity.membership_target_n' depends on axioms: [propext, Classical.choice, Quot.sound] -/
+#guard_msgs in
+#print axioms QuotientSecurity.membership_target_n
+
+/-- info: 'QuotientSecurity.regionWeightN_twenty' depends on axioms: [propext, Classical.choice, Quot.sound] -/
+#guard_msgs in
+#print axioms QuotientSecurity.regionWeightN_twenty
+
+/-- info: 'QuotientSecurity.zkError_le_n' depends on axioms: [propext, Classical.choice, Quot.sound] -/
+#guard_msgs in
+#print axioms QuotientSecurity.zkError_le_n
+
+/-- info: 'QuotientSecurity.InstanceN.sat_iff' depends on axioms: [propext, Classical.choice, Quot.sound] -/
+#guard_msgs in
+#print axioms QuotientSecurity.InstanceN.sat_iff
+
+/-- info: 'QuotientSecurity.InstanceN.soundness' depends on axioms: [propext, Classical.choice, Quot.sound] -/
+#guard_msgs in
+#print axioms QuotientSecurity.InstanceN.soundness
+
+/-- info: 'QuotientSecurity.InstanceN.exists_instance' depends on axioms: [propext, Classical.choice, Quot.sound] -/
+#guard_msgs in
+#print axioms QuotientSecurity.InstanceN.exists_instance
+
+/-- info: 'QuotientSecurity.InstanceN.r1cs_iff_relation' depends on axioms: [propext, Classical.choice, Quot.sound] -/
+#guard_msgs in
+#print axioms QuotientSecurity.InstanceN.r1cs_iff_relation
+
+/-- info: 'QuotientSecurity.InstanceN.exists_r1cs_iff_relation' depends on axioms: [propext, Classical.choice, Quot.sound] -/
+#guard_msgs in
+#print axioms QuotientSecurity.InstanceN.exists_r1cs_iff_relation
+
+/-- info: 'QuotientSecurity.InstanceN.r1cs_aux_unique' depends on axioms: [propext, Classical.choice, Quot.sound] -/
+#guard_msgs in
+#print axioms QuotientSecurity.InstanceN.r1cs_aux_unique
+
+/-- info: 'QuotientSecurity.InstanceN.r1cs_soundness' depends on axioms: [propext, Classical.choice, Quot.sound] -/
+#guard_msgs in
+#print axioms QuotientSecurity.InstanceN.r1cs_soundness
+
+/-- info: 'QuotientSecurity.InstanceN.honest_legal' depends on axioms: [propext, Classical.choice, Quot.sound] -/
+#guard_msgs in
+#print axioms QuotientSecurity.InstanceN.honest_legal
+
+/-- info: 'QuotientSecurity.InstanceN.zero_knowledge' depends on axioms: [propext, Classical.choice, Quot.sound] -/
+#guard_msgs in
+#print axioms QuotientSecurity.InstanceN.zero_knowledge
+
+/-- info: 'QuotientSecurity.InstanceN.completeness' depends on axioms: [propext, Classical.choice, Quot.sound] -/
+#guard_msgs in
+#print axioms QuotientSecurity.InstanceN.completeness
+
+/-- info: 'QuotientSecurity.InstanceN.honest_messages_fit' depends on axioms: [propext, Classical.choice, Quot.sound] -/
+#guard_msgs in
+#print axioms QuotientSecurity.InstanceN.honest_messages_fit
+
+/-- info: 'QuotientSecurity.Instance.relation_toN' depends on axioms: [propext, Classical.choice, Quot.sound] -/
+#guard_msgs in
+#print axioms QuotientSecurity.Instance.relation_toN
+
+/-- info: 'QuotientSecurity.Instance.cellsOf_toN' depends on axioms: [propext, Classical.choice, Quot.sound] -/
+#guard_msgs in
+#print axioms QuotientSecurity.Instance.cellsOf_toN
