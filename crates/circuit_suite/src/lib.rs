@@ -102,12 +102,14 @@ pub struct Ckt {
     b: Builder,
     /// A carry read as a bit: row `r`'s carry is the bit of row `to_sum[r]`.
     to_sum: HashMap<u32, u32>,
-    /// A bit read as a carry: row `r`'s bit is the carry of row `to_carry[r]`.
+    /// A bit read as a carry: row `r`'s bit is the carry of row `to_carry[r]`, whose bit is its negation.
     to_carry: HashMap<u32, u32>,
     /// A negated wire made positive.
     positive: HashMap<Wire, Wire>,
     /// The input rows, which read their own bit and two zeros.
     input_rows: std::collections::HashSet<u32>,
+    /// Rows made only to convert a wire: a negation made positive, a carry read as a bit or a bit as a carry.
+    pub conversions: [usize; 3],
 }
 
 impl Default for Ckt {
@@ -124,6 +126,7 @@ impl Ckt {
             to_carry: HashMap::new(),
             positive: HashMap::new(),
             input_rows: std::collections::HashSet::new(),
+            conversions: [0; 3],
         }
     }
 
@@ -171,8 +174,11 @@ impl Ckt {
         }
         // The bit of a row reading `w` and a one.
         let r = match w.kind {
-            Kind::Sum(r) => self.row(Src::Row(r), Src::One, Src::Zero),
-            Kind::Carry(r) => self.row(Src::One, Src::Zero, Src::Row(r)),
+            Kind::Sum(r) => self.flip_row(r),
+            Kind::Carry(r) => {
+                self.conversions[0] += 1;
+                self.row(Src::One, Src::Zero, Src::Row(r))
+            }
             Kind::Const(_) => unreachable!(),
         };
         let p = Wire {
@@ -181,6 +187,28 @@ impl Ckt {
         };
         self.positive.insert(w, p);
         p
+    }
+
+    /// The row `x + 1` for row `r`'s bit `x`: its bit is `not x` and its carry `x`, so it serves both a negation
+    /// and a bit read as a carry.
+    fn flip_row(&mut self, r: u32) -> u32 {
+        if let Some(&c) = self.to_carry.get(&r) {
+            return c;
+        }
+        self.conversions[2] += 1;
+        let c = self.row(Src::Row(r), Src::One, Src::Zero);
+        self.to_carry.insert(r, c);
+        self.positive.insert(
+            Wire {
+                kind: Kind::Sum(r),
+                neg: true,
+            },
+            Wire {
+                kind: Kind::Sum(c),
+                neg: false,
+            },
+        );
+        c
     }
 
     /// A source for an `x` or `y` slot, from a positive bit or constant.
@@ -194,6 +222,7 @@ impl Ckt {
                 let s = match self.to_sum.get(&r) {
                     Some(&s) => s,
                     None => {
+                        self.conversions[1] += 1;
                         let s = self.row(Src::Zero, Src::Zero, Src::Row(r));
                         self.to_sum.insert(r, s);
                         s
@@ -211,17 +240,7 @@ impl Ckt {
             Kind::Const(false) => Src::Zero,
             Kind::Const(true) => self.b.carry_one(),
             Kind::Carry(r) => Src::Row(r),
-            Kind::Sum(r) => {
-                let c = match self.to_carry.get(&r) {
-                    Some(&c) => c,
-                    None => {
-                        let c = self.row(Src::Row(r), Src::Row(r), Src::Zero);
-                        self.to_carry.insert(r, c);
-                        c
-                    }
-                };
-                Src::Row(c)
-            }
+            Kind::Sum(r) => Src::Row(self.flip_row(r)),
         }
     }
 
