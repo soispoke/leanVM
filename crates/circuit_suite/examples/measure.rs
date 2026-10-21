@@ -98,6 +98,8 @@ fn get(name: &str, seed: u64) -> Built {
         n if n == blake2s::Blake2sOneKiB::NAME => build::<blake2s::Blake2sOneKiB>(seed),
         n if n == circuit_suite::sha256::Sha256OneKiB::NAME => build::<circuit_suite::sha256::Sha256OneKiB>(seed),
         n if n == circuit_suite::shielded::ShieldedTransfer::NAME => build::<circuit_suite::shielded::ShieldedTransfer>(seed),
+        n if n == circuit_suite::keccak::Keccak256OneKiB::NAME => build::<circuit_suite::keccak::Keccak256OneKiB>(seed),
+        n if n == circuit_suite::mpt::MptStorageProof::NAME => build::<circuit_suite::mpt::MptStorageProof>(seed),
         n if n == blake2s::Blake2s64::NAME => build::<blake2s::Blake2s64>(seed),
         n if n == blake2s::Blake2s256::NAME => build::<blake2s::Blake2s256>(seed),
         n if n == blake2s::Blake2s4KiB::NAME => build::<blake2s::Blake2s4KiB>(seed),
