@@ -287,6 +287,7 @@ pub(crate) fn prove_reduction(index: &Index, witness: &Prepared, ps: &mut Prover
     let stack = &witness.stack;
     let mut claims = Vec::new();
     let mut index_claims = Vec::new();
+    let zerocheck_span = tracing::info_span!("Native zerocheck").entered();
     let r = ps.sample_vec(l);
     let c = parallel::map_collect(n, |i| cols[2][i] + cols[3][i]);
     let (point, _, _, _) = zerocheck::prove_tables(
@@ -298,11 +299,15 @@ pub(crate) fn prove_reduction(index: &Index, witness: &Prepared, ps: &mut Prover
         &mut |_| (F192::ZERO, F192::ZERO),
         ps,
     );
+    drop(zerocheck_span);
+    let gate_span = tracing::info_span!("Native gate evaluations").entered();
     let weights = eq_table(&point);
     for col in 0..4 {
         send_field(stack, l, col, &point, &weights, ps, &mut claims);
     }
     drop(weights);
+    drop(gate_span);
+    let leaves_span = tracing::info_span!("Native copy leaves").entered();
     let alpha = ps.sample();
     let beta = ps.sample();
     let leaf = |k: usize, permuted: bool| {
@@ -310,7 +315,11 @@ pub(crate) fn prove_reduction(index: &Index, witness: &Prepared, ps: &mut Prover
     };
     let ids = parallel::map_collect(4 * n, |k| leaf(k, false));
     let sigma = parallel::map_collect(4 * n, |k| leaf(k, true));
+    drop(leaves_span);
+    let product_span = tracing::info_span!("Native copy product").entered();
     let product = gkr::prove_product_triple([ids, sigma, vec![F192::ONE]], ps, RootShape::Distinct);
+    drop(product_span);
+    let copy_span = tracing::info_span!("Native copy evaluations").entered();
     let rho = &product.point[..l];
     let weights = eq_table(rho);
     for col in 0..4 {
@@ -326,9 +335,12 @@ pub(crate) fn prove_reduction(index: &Index, witness: &Prepared, ps: &mut Prover
         });
     }
     drop(weights);
+    drop(copy_span);
+    let public_span = tracing::info_span!("Native public evaluation").entered();
     let point = ps.sample_vec(index.public_log);
     let weights = eq_table(&point);
     send_field(stack, l, 3, &point, &weights, ps, &mut claims);
+    drop(public_span);
     (claims, index_claims)
 }
 pub(crate) fn prove_index_open(index: &Index, claims: &[Claim], ps: &mut ProverState) {
