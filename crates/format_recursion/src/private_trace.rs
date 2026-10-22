@@ -20,6 +20,106 @@ pub struct Lowered {
     /// The verifier fixes these anchors and constants before the original outputs.
     pub fixed_public: Vec<F192>,
     pub original_public_len: usize,
+    schedule: Vec<WitnessStep>,
+}
+
+// A setup-owned straight-line program computes fresh helper values. It does not
+// change the circuit or omit constraints; every variable keeps its original ID.
+#[derive(Clone, Copy)]
+enum PackedWord {
+    Fixed(u64),
+    Variable(usize),
+}
+impl PackedWord {
+    fn get(self, values: &[F192]) -> u64 {
+        match self {
+            Self::Fixed(word) => word,
+            Self::Variable(at) => values[at].c0,
+        }
+    }
+}
+#[derive(Clone, Copy)]
+enum ValueStep {
+    Constant(F192),
+    Add(usize, usize),
+    MultiplyAdd(usize, usize, usize),
+    Limb(usize, usize),
+    Bit(usize, usize),
+    CompressionOutput(usize),
+}
+struct CompressionStep {
+    cv: [usize; 4],
+    message: [usize; 8],
+    counter: PackedWord,
+    flags: PackedWord,
+}
+enum WitnessStep {
+    Value(ValueStep),
+    // Boxing keeps the much more common scalar steps small.
+    Compression(Box<CompressionStep>),
+}
+struct WitnessSchedule {
+    steps: Vec<WitnessStep>,
+    public: Vec<usize>,
+    variables: usize,
+}
+pub(crate) struct PreparedWitness {
+    pub values: Vec<F192>,
+    pub compressions: Vec<Compression>,
+    pub public: Vec<F192>,
+}
+impl WitnessSchedule {
+    fn evaluate(&self, witness: &Trace) -> PreparedWitness {
+        let mut values = Vec::with_capacity(self.variables);
+        values.extend([F192::ZERO, F192::ONE]);
+        values.extend(witness.nodes.iter().map(|node| node.value));
+        let mut compressions = Vec::new();
+        let mut output = [0u32; 8];
+        for step in &self.steps {
+            match step {
+                WitnessStep::Value(step) => {
+                    let value = match *step {
+                        ValueStep::Constant(value) => value,
+                        ValueStep::Add(a, b) => values[a] + values[b],
+                        ValueStep::MultiplyAdd(a, b, c) => values[a] * values[b] + values[c],
+                        ValueStep::Limb(at, limb) => {
+                            let x = values[at];
+                            F192::new([x.c0, x.c1, x.c2][limb], 0, 0)
+                        }
+                        ValueStep::Bit(at, bit) => {
+                            let x = values[at];
+                            F192::new(([x.c0, x.c1, x.c2][bit / 64] >> (bit % 64)) & 1, 0, 0)
+                        }
+                        ValueStep::CompressionOutput(word) => {
+                            F192::new(pack32(output[2 * word], output[2 * word + 1]), 0, 0)
+                        }
+                    };
+                    values.push(value);
+                }
+                WitnessStep::Compression(compression) => {
+                    let CompressionStep {
+                        cv,
+                        message,
+                        counter,
+                        flags,
+                    } = **compression;
+                    let initial = std::array::from_fn(|i| (values[cv[i / 2]].c0 >> (32 * (i % 2))) as u32);
+                    let message = std::array::from_fn(|i| (values[message[i / 2]].c0 >> (32 * (i % 2))) as u32);
+                    let counter = counter.get(&values);
+                    let flags = flags.get(&values);
+                    output = blake2s_compress(&initial, &message, counter, flags as u32, (flags >> 32) as u32);
+                    compressions.push((initial, message, counter, flags as u32, (flags >> 32) as u32));
+                }
+            }
+        }
+        assert_eq!(values.len(), self.variables, "setup-owned witness schedule");
+        let public = self.public.iter().map(|&at| values[at]).collect();
+        PreparedWitness {
+            values,
+            compressions,
+            public,
+        }
+    }
 }
 
 #[derive(Clone, Copy, Debug)]
@@ -349,6 +449,7 @@ impl VariableSet {
 }
 
 struct Compiler {
+    schedule: Vec<WitnessStep>,
     rows: Vec<[usize; 4]>,
     values: Vec<F192>,
     constants: HashMap<(u64, u64, u64), usize>,
@@ -382,7 +483,8 @@ fn pack32(a: u32, b: u32) -> u64 {
 }
 
 impl Compiler {
-    fn variable(&mut self, value: F192) -> usize {
+    fn variable(&mut self, value: F192, step: ValueStep) -> usize {
+        self.schedule.push(WitnessStep::Value(step));
         let at = self.values.len();
         self.values.push(value);
         at
@@ -391,7 +493,7 @@ impl Compiler {
         if let Some(&at) = self.constants.get(&key(value)) {
             return at;
         }
-        let at = self.variable(value);
+        let at = self.variable(value, ValueStep::Constant(value));
         self.constants.insert(key(value), at);
         self.constant_variables.insert(at);
         self.public.push(at);
@@ -415,7 +517,7 @@ impl Compiler {
         out
     }
     fn add(&mut self, a: usize, b: usize) -> usize {
-        let out = self.variable(self.values[a] + self.values[b]);
+        let out = self.variable(self.values[a] + self.values[b], ValueStep::Add(a, b));
         self.rows.push([a, 1, b, out]);
         out
     }
@@ -432,7 +534,10 @@ impl Compiler {
                 continue;
             }
             let coefficient = self.constant(basis(i));
-            let out = self.variable(self.values[bit] * self.values[coefficient] + self.values[acc]);
+            let out = self.variable(
+                self.values[bit] * self.values[coefficient] + self.values[acc],
+                ValueStep::MultiplyAdd(bit, coefficient, acc),
+            );
             self.rows.push([bit, coefficient, acc, out]);
             acc = out;
         }
@@ -450,7 +555,10 @@ impl Compiler {
                 self.rows.push([mid, y, lo, target]);
             } else {
                 let y2 = self.constant(F192::new(0, 0, 1));
-                let partial = self.variable(self.values[lo] + self.values[mid] * self.values[y]);
+                let partial = self.variable(
+                    self.values[lo] + self.values[mid] * self.values[y],
+                    ValueStep::MultiplyAdd(mid, y, lo),
+                );
                 self.rows.push([mid, y, lo, partial]);
                 self.rows.push([hi, y2, partial, target]);
             }
@@ -477,12 +585,15 @@ impl Compiler {
                 if i * 64 >= self.widths[source] {
                     0
                 } else {
-                    let variable = self.variable(F192::new(native[i], 0, 0));
+                    let variable = self.variable(F192::new(native[i], 0, 0), ValueStep::Limb(source + 2, i));
                     let bits = (self.widths[source] - 64 * i).min(64);
                     if bits < 64 {
                         let mut projection: Vec<_> = (0..bits)
                             .map(|bit| {
-                                let b = self.variable(F192::new((native[i] >> bit) & 1, 0, 0));
+                                let b = self.variable(
+                                    F192::new((native[i] >> bit) & 1, 0, 0),
+                                    ValueStep::Bit(source + 2, 64 * i + bit),
+                                );
                                 self.boolean(b);
                                 b
                             })
@@ -528,8 +639,18 @@ impl Compiler {
             let flags = self.values[words[13]].c0;
             let compression = (initial, message, counter, flags as u32, (flags >> 32) as u32);
             let output = blake2s_compress(&initial, &message, counter, flags as u32, (flags >> 32) as u32);
-            let outputs: [usize; 4] =
-                std::array::from_fn(|i| self.variable(F192::new(pack32(output[2 * i], output[2 * i + 1]), 0, 0)));
+            self.schedule.push(WitnessStep::Compression(Box::new(CompressionStep {
+                cv: std::array::from_fn(|i| words[i]),
+                message: std::array::from_fn(|i| words[4 + i]),
+                counter: PackedWord::Variable(words[12]),
+                flags: PackedWord::Variable(words[13]),
+            })));
+            let outputs: [usize; 4] = std::array::from_fn(|i| {
+                self.variable(
+                    F192::new(pack32(output[2 * i], output[2 * i + 1]), 0, 0),
+                    ValueStep::CompressionOutput(i),
+                )
+            });
             self.connectors.push(std::array::from_fn(|i| match i {
                 0..4 => words[i],
                 4..8 => outputs[i - 4],
@@ -558,7 +679,10 @@ impl Compiler {
         }
         let mut bits: Vec<_> = (0..self.widths[source])
             .map(|i| {
-                let bit = self.variable(F192::new((limbs[i / 64] >> (i % 64)) & 1, 0, 0));
+                let bit = self.variable(
+                    F192::new((limbs[i / 64] >> (i % 64)) & 1, 0, 0),
+                    ValueStep::Bit(source + 2, i),
+                );
                 self.boolean(bit);
                 bit
             })
@@ -598,7 +722,7 @@ impl Compiler {
                     let width = (self.widths[source] - 64 * limb).min(64);
                     let mut bits: Vec<_> = (0..width)
                         .map(|i| {
-                            let bit = self.variable(F192::new((value >> i) & 1, 0, 0));
+                            let bit = self.variable(F192::new((value >> i) & 1, 0, 0), ValueStep::Bit(variable, i));
                             self.boolean(bit);
                             bit
                         })
@@ -668,18 +792,27 @@ impl Compiler {
             // decide circuit shape. A fixed prefix yields a fixed CV for the
             // first nonconstant block, preserving the exact BLAKE2s chaining.
             let fixed = cv.iter().chain(&words).all(|v| self.constant_variables.contains(v));
+            let retain = !fixed || (self.compressions.is_empty() && block + 1 == count);
+            if retain {
+                self.schedule.push(WitnessStep::Compression(Box::new(CompressionStep {
+                    cv,
+                    message: words,
+                    counter: PackedWord::Fixed(counter),
+                    flags: PackedWord::Fixed(u64::from(flag)),
+                })));
+            }
             let outputs: [usize; 4] = std::array::from_fn(|i| {
                 let value = F192::new(pack32(output[2 * i], output[2 * i + 1]), 0, 0);
                 if fixed {
                     self.constant(value)
                 } else {
-                    self.variable(value)
+                    self.variable(value, ValueStep::CompressionOutput(i))
                 }
             });
             // The existing private bridge requires a nonempty compression
             // schedule. Retain one valid fixed terminal block when necessary;
             // subsequent fixed blocks need no additional compression proof.
-            if !fixed || (self.compressions.is_empty() && block + 1 == count) {
+            if retain {
                 let t = self.constant(F192::new(counter, 0, 0));
                 let flags = self.constant(F192::new(u64::from(flag), 0, 0));
                 self.connectors.push(std::array::from_fn(|i| match i {
@@ -722,6 +855,7 @@ pub fn lower(program: &Trace, witness: &Trace) -> Option<Lowered> {
 pub struct PreparedProgram {
     program: Trace,
     analysis: Analysis,
+    schedule: Option<WitnessSchedule>,
 }
 
 struct Analysis {
@@ -733,10 +867,26 @@ struct Analysis {
 impl PreparedProgram {
     pub fn new(program: Trace) -> Option<Self> {
         let analysis = analyze(&program, Limits::default())?;
-        Some(Self { program, analysis })
+        Some(Self {
+            program,
+            analysis,
+            schedule: None,
+        })
     }
-    pub(crate) fn lower_setup(&self) -> Option<Lowered> {
-        lower_analyzed(&self.program, &self.program, &self.analysis)
+    pub(crate) fn lower_setup(&mut self) -> Option<Lowered> {
+        let mut lower = lower_analyzed(&self.program, &self.program, &self.analysis)?;
+        self.schedule = Some(WitnessSchedule {
+            steps: std::mem::take(&mut lower.schedule),
+            public: lower.circuit.public.clone(),
+            variables: lower.circuit.variables,
+        });
+        Some(lower)
+    }
+    pub(crate) fn prepare_witness(&self, witness: &Trace) -> Option<PreparedWitness> {
+        if !self.program.same_program(witness) {
+            return None;
+        }
+        Some(self.schedule.as_ref()?.evaluate(witness))
     }
     pub fn lower(&self, witness: &Trace) -> Option<Lowered> {
         if !self.program.same_program(witness) {
@@ -815,6 +965,7 @@ fn analyze(program: &Trace, limits: Limits) -> Option<Analysis> {
 fn lower_analyzed(program: &Trace, witness: &Trace, analysis: &Analysis) -> Option<Lowered> {
     let Analysis { widths, fused, skipped } = analysis;
     let mut c = Compiler {
+        schedule: Vec::new(),
         rows: Vec::new(),
         values: vec![F192::ZERO, F192::ONE],
         constants: HashMap::from([(key(F192::ZERO), 0), (key(F192::ONE), 1)]),
@@ -868,7 +1019,10 @@ fn lower_analyzed(program: &Trace, witness: &Trace, analysis: &Analysis) -> Opti
                     let out = if step == 63 {
                         z
                     } else {
-                        c.variable(c.values[value] * c.values[value])
+                        c.variable(
+                            c.values[value] * c.values[value],
+                            ValueStep::MultiplyAdd(value, value, 0),
+                        )
                     };
                     c.rows.push([value, value, 0, out]);
                     value = out;
@@ -963,6 +1117,7 @@ fn lower_analyzed(program: &Trace, witness: &Trace, analysis: &Analysis) -> Opti
         c.public.push(s.0 + 2);
     }
     Some(Lowered {
+        schedule: c.schedule,
         circuit: Circuit {
             variables: c.values.len(),
             rows: c.rows,
@@ -1036,11 +1191,25 @@ mod tests {
             t
         }
         let template = witness(0);
-        let prepared = PreparedProgram::new(copy_trace(&template)).unwrap();
+        let mut prepared = PreparedProgram::new(copy_trace(&template)).unwrap();
+        assert!(prepared.prepare_witness(&template).is_none());
+        prepared.lower_setup().unwrap();
         for seed in 1..9 {
             let fresh = witness(seed);
             let reference = lower(&template, &fresh).unwrap();
             let cached = prepared.lower(&fresh).unwrap();
+            let fast = prepared.prepare_witness(&fresh).unwrap();
+            assert_eq!(fast.values, reference.values);
+            assert_eq!(fast.compressions, reference.compressions);
+            assert_eq!(
+                fast.public,
+                reference
+                    .circuit
+                    .public
+                    .iter()
+                    .map(|&v| reference.values[v])
+                    .collect::<Vec<_>>()
+            );
             assert!(rows_hold(&cached) && connectors_hold(&cached));
             assert_eq!(reference.circuit.rows, cached.circuit.rows);
             assert_eq!(reference.circuit.public, cached.circuit.public);
@@ -1051,20 +1220,83 @@ mod tests {
             let mut altered = copy_trace(&fresh);
             altered.public.reverse();
             assert!(prepared.lower(&altered).is_none());
+            assert!(prepared.prepare_witness(&altered).is_none());
             altered = copy_trace(&fresh);
             let constant = altered.nodes.iter_mut().find(|node| node.op == Op::Constant).unwrap();
             constant.value += F192::ONE;
             assert!(prepared.lower(&altered).is_none());
+            assert!(prepared.prepare_witness(&altered).is_none());
             altered = copy_trace(&fresh);
             altered.checks.push((S(0), S(1)));
             assert!(prepared.lower(&altered).is_none());
+            assert!(prepared.prepare_witness(&altered).is_none());
             altered = copy_trace(&fresh);
             altered.nodes[0].op = Op::Constant;
             assert!(prepared.lower(&altered).is_none());
+            assert!(prepared.prepare_witness(&altered).is_none());
             altered = copy_trace(&fresh);
             altered.nodes[altered.public[0].0].value += F192::new(0, 0, 1);
             let bad = prepared.lower(&altered).unwrap();
             assert!(!rows_hold(&bad) || !connectors_hold(&bad));
+        }
+    }
+
+    #[test]
+    fn witness_schedule_matches_all_helper_values_for_hashes_projections_and_frobenius() {
+        fn witness(seed: u64) -> Trace {
+            trace::start();
+            let x = S::input(F192::new(seed.wrapping_mul(31), seed ^ 71, seed.wrapping_add(91)));
+            let y = S::input(F192::new(seed.wrapping_add(17), seed.wrapping_mul(23), seed ^ 37));
+            let selector = S::input(F192::new(seed & 1, 0, 0));
+            let wide = S::select(selector, (x * y).frobenius() + x, y);
+            let packed = S::pack(&[(x.slice(5, 17), 17), (y.slice(11, 31), 31), (wide.slice(0, 144), 144)]);
+            // Fold a fixed full block before a private unaligned tail.
+            let mut parts = vec![(S::c(F192::new(19, 23, 0)), 16); 4];
+            parts.extend([(packed, 24), (y, 17)]);
+            let digest = trace::hash(&parts);
+            let fixed = trace::hash(&[(S::u(71), 8)]);
+            let empty = trace::hash(&[]);
+            // A range-checked word unused by a hash needs fallback compression typing.
+            let unused = S::input(F192::new(seed, 0, 0));
+            unused.assert_eq(unused.slice(0, 64));
+            let mut trace = trace::take();
+            trace.public.extend(digest);
+            trace.public.extend(fixed);
+            trace.public.extend(empty);
+            trace.public.push(wide);
+            trace
+        }
+        let template = witness(0);
+        let mut prepared = PreparedProgram::new(copy_trace(&template)).unwrap();
+        prepared.lower_setup().unwrap();
+        for seed in [0, 1, 17, 0x123456789abcdef, u64::MAX] {
+            let fresh = witness(seed);
+            let compare = |trace: &Trace| {
+                let reference = lower(&template, trace).unwrap();
+                let fast = prepared.prepare_witness(trace).unwrap();
+                assert_eq!(reference.values, fast.values);
+                assert_eq!(reference.compressions, fast.compressions);
+                assert_eq!(
+                    reference
+                        .circuit
+                        .public
+                        .iter()
+                        .map(|&v| reference.values[v])
+                        .collect::<Vec<_>>(),
+                    fast.public
+                );
+                reference
+            };
+            let reference = compare(&fresh);
+            assert!(rows_hold(&reference) && connectors_hold(&reference));
+            for at in (0..fresh.nodes.len()).step_by(7) {
+                if matches!(fresh.nodes[at].op, Op::Constant) {
+                    continue;
+                }
+                let mut bad = copy_trace(&fresh);
+                bad.nodes[at].value += F192::new(3, 5, 7);
+                compare(&bad);
+            }
         }
     }
 

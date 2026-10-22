@@ -25,7 +25,7 @@ impl Setup {
     /// Preprocess a fixed program independently of subsequent witnesses.
     #[tracing::instrument(skip_all, name = "Private setup")]
     pub fn new(program: Trace) -> Option<Self> {
-        let prepared = private_trace::PreparedProgram::new(program)?;
+        let mut prepared = private_trace::PreparedProgram::new(program)?;
         // The constructor's canonical witness is owned by the prepared program.
         let lower = prepared.lower_setup()?;
         let bridge = PrivateBridge::new(lower.circuit, lower.connectors)?;
@@ -49,16 +49,9 @@ impl Setup {
 
     #[tracing::instrument(skip_all, name = "Private prove")]
     pub fn prove(&self, witness: &Trace, outputs: &[F192]) -> Option<Proof> {
-        let lower = tracing::info_span!("Compile witness").in_scope(|| self.program.lower(witness))?;
+        let lower = tracing::info_span!("Compile witness").in_scope(|| self.program.prepare_witness(witness))?;
         let public = self.public_values(outputs)?;
-        if lower
-            .circuit
-            .public
-            .iter()
-            .map(|&v| lower.values[v])
-            .collect::<Vec<_>>()
-            != public
-        {
+        if lower.public != public {
             return None;
         }
         let proof = self.bridge.prove(&lower.values, &lower.compressions, &self.context)?;
@@ -182,6 +175,14 @@ mod tests {
             let proof = setup.prove(&witness, &public).unwrap();
             assert!(setup.verify(&public, &proof));
             let bytes = encode(&proof).unwrap();
+            // The fresh witness schedule must preserve the original prover's
+            // complete deterministic transcript, not just accepted outputs.
+            let reference = setup.program.lower(&witness).unwrap();
+            let reference_proof = setup
+                .bridge
+                .prove(&reference.values, &reference.compressions, &setup.context)
+                .unwrap();
+            assert_eq!(encode(&reference_proof).unwrap(), bytes);
             assert!(setup.verify_bytes(&public, &bytes));
             assert!(!setup.verify_bytes(&public, &bytes[..bytes.len() - 1]));
             let mut appended = bytes.clone();
