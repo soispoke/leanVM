@@ -6,7 +6,7 @@ use crate::{
     native_verifier::{self, Claim},
     private_bridge::PrivateBridge,
     trace::{self, S, Trace, digest_constant, hash},
-    verifier::{Transcript, eq, powers, verify_basis_opening},
+    verifier::{Transcript, eq, powers, verify_basis_opening_lanes},
 };
 use fiat_shamir::{
     merkle::{Hash, hash_to_scalars},
@@ -99,7 +99,7 @@ pub(crate) fn verify(bridge: &PrivateBridge, index_root: [S; 2], public: &[S], t
         });
     let qlog = stride + bridge.block_log;
     assert_eq!(flock.suffix_point.len(), qlog);
-    verify_basis_opening(t, bridge.stack_log, root, target, |at| {
+    verify_basis_opening_lanes(t, bridge.stack_log, bridge.committed_lanes(), root, target, |at| {
         let ring =
             selector(bridge.q_offset, qlog, at) * flock_trace::ring_weight(&flock.suffix_point, &at[..qlog], &map);
         claims

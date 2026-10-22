@@ -57,6 +57,15 @@ pub struct PrivateBridge {
 }
 
 impl PrivateBridge {
+    /// Only whole initial WHIR lanes containing circuit/hash data are stored.
+    /// The omitted suffix is zero and is authenticated by WHIR's existing
+    /// leading-zero leaf convention. Shape is fixed by trusted preprocessing.
+    pub fn committed_lanes(&self) -> usize {
+        let q_log = K_LOG - LOG_PACKING + self.block_log;
+        let lane_words = 1usize << (self.stack_log - INITIAL_FOLDING_FACTOR);
+        (self.q_offset + (1usize << q_log)).div_ceil(lane_words)
+    }
+
     pub fn new(mut circuit: Circuit, io_variables: Vec<[usize; 18]>) -> Option<Self> {
         if io_variables.is_empty()
             || io_variables.len() > MAX_BLOCKS
@@ -196,10 +205,12 @@ impl PrivateBridge {
         let mut values = values.to_vec();
         values.extend(self.padding.map(|x| F192::new(x, 0, 0)));
         let public = self.index.public_values(&values);
-        let witness = tracing::info_span!("Arithmetic witness").in_scope(|| native_arithmetic::prepare(&self.index, &values));
+        let witness =
+            tracing::info_span!("Arithmetic witness").in_scope(|| native_arithmetic::prepare(&self.index, &values));
         let (z, a, b, lincheck) = tracing::info_span!("Hash witness")
             .in_scope(|| generate_witness_with_ab_packed_and_lincheck(blocks, self.block_log));
-        let mut stack = vec![F64::ZERO; 1 << self.stack_log];
+        let lane_words = 1usize << (self.stack_log - INITIAL_FOLDING_FACTOR);
+        let mut stack = vec![F64::ZERO; self.committed_lanes() * lane_words];
         stack[..witness.stack.len()].copy_from_slice(&witness.stack);
         for (dest, &word) in stack[self.q_offset..].iter_mut().zip(&z) {
             *dest = F64(word);
@@ -211,8 +222,7 @@ impl PrivateBridge {
         let (native_claims, index_claims) = tracing::info_span!("Arithmetic reduction")
             .in_scope(|| native_arithmetic::prove_reduction(&self.index, &witness, &mut ps));
         let reduced = tracing::info_span!("Hash reduction").in_scope(|| {
-            Blake2sSetup::new(self.n_blocks.max(MIN_BLOCKS))
-                .prove_reduction_precomputed(&z, &a, &b, &lincheck, &mut ps)
+            Blake2sSetup::new(self.n_blocks.max(MIN_BLOCKS)).prove_reduction_precomputed(&z, &a, &b, &lincheck, &mut ps)
         });
         let point = ps.sample_vec(self.block_log);
         let weights = eq_table(&point);
@@ -280,7 +290,7 @@ impl PrivateBridge {
             &mut vs,
             &config,
             self.stack_log,
-            1 << INITIAL_FOLDING_FACTOR,
+            self.committed_lanes(),
             &root,
             &claims,
             &ring,

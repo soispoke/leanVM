@@ -158,7 +158,17 @@ impl<'a> Transcript<'a> {
                     word.assert_eq(S::u(0));
                 }
             }
-            let mut node = hash(&leaf.iter().map(|&w| (w, 8)).collect::<Vec<_>>());
+            let mut node = hash(
+                &leaf
+                    .iter()
+                    .enumerate()
+                    .map(|(i, &w)| {
+                        // Omitted lanes are already constrained to zero above.
+                        // Expose that fixed prefix to compiler constant folding.
+                        (if base && i < lanes - live_lanes { S::u(0) } else { w }, 8)
+                    })
+                    .collect::<Vec<_>>(),
+            );
             for (level, sibling) in path.path.iter().enumerate() {
                 let sibling = hash_to_scalars(sibling).map(|x| {
                     let word = S::input(x);
@@ -345,6 +355,19 @@ pub(crate) fn verify_basis_opening(
 ) {
     let config = pcs::whir::config_for_rate(log_n, 1).expect("supported WHIR shape");
     verify_basis_opening_inner(t, &config, log_n, 1 << config.initial_k, root, target, basis);
+}
+
+pub(crate) fn verify_basis_opening_lanes(
+    t: &mut Transcript<'_>,
+    log_n: usize,
+    live_lanes: usize,
+    root: [S; 2],
+    target: S,
+    basis: impl Fn(&[S]) -> S,
+) {
+    let config = pcs::whir::config_for_rate(log_n, 1).expect("supported WHIR shape");
+    assert!((1..=1 << config.initial_k).contains(&live_lanes));
+    verify_basis_opening_inner(t, &config, log_n, live_lanes, root, target, basis);
 }
 
 fn verify_basis_opening_inner(
