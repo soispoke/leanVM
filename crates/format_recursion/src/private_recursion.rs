@@ -17,6 +17,7 @@ pub struct Setup {
     pub bridge: PrivateBridge,
     program: private_trace::PreparedProgram,
     fixed_public: Vec<F192>,
+    raw_fixed_len: usize,
     outputs: usize,
     context: Hash,
 }
@@ -25,16 +26,42 @@ impl Setup {
     /// Preprocess a fixed program independently of subsequent witnesses.
     #[tracing::instrument(skip_all, name = "Private setup")]
     pub fn new(program: Trace) -> Option<Self> {
+        Self::new_with_context(program, primitives::hash::hash(b"format-private-recursion-v1"))
+    }
+
+    pub(crate) fn new_with_context(program: Trace, context: Hash) -> Option<Self> {
+        Self::new_inner(program, context, None)
+    }
+
+    pub(crate) fn new_closed(program: Trace, context: Hash, public_capacity: usize) -> Option<Self> {
+        Self::new_inner(program, context, Some(public_capacity))
+    }
+
+    fn new_inner(program: Trace, context: Hash, public_capacity: Option<usize>) -> Option<Self> {
         let mut prepared = private_trace::PreparedProgram::new(program)?;
         // The constructor's canonical witness is owned by the prepared program.
-        let lower = prepared.lower_setup()?;
-        let bridge = PrivateBridge::new(lower.circuit, lower.connectors)?;
+        let mut lower = prepared.lower_setup()?;
+        let raw_fixed_len = lower.fixed_public.len();
+        let bridge = if let Some(capacity) = public_capacity {
+            if capacity < raw_fixed_len {
+                return None;
+            }
+            lower.circuit.public.splice(
+                raw_fixed_len..raw_fixed_len,
+                std::iter::repeat_n(0, capacity - raw_fixed_len),
+            );
+            lower.fixed_public.resize(capacity, F192::ZERO);
+            PrivateBridge::new_padded(lower.circuit, lower.connectors)?
+        } else {
+            PrivateBridge::new(lower.circuit, lower.connectors)?
+        };
         Some(Self {
             bridge,
             program: prepared,
             fixed_public: lower.fixed_public,
+            raw_fixed_len,
             outputs: lower.original_public_len,
-            context: primitives::hash::hash(b"format-private-recursion-v1"),
+            context,
         })
     }
 
@@ -49,7 +76,13 @@ impl Setup {
 
     #[tracing::instrument(skip_all, name = "Private prove")]
     pub fn prove(&self, witness: &Trace, outputs: &[F192]) -> Option<Proof> {
-        let lower = tracing::info_span!("Compile witness").in_scope(|| self.program.prepare_witness(witness))?;
+        let mut lower = tracing::info_span!("Compile witness").in_scope(|| self.program.prepare_witness(witness))?;
+        if self.fixed_public.len() != self.raw_fixed_len {
+            lower.public.splice(
+                self.raw_fixed_len..self.raw_fixed_len,
+                std::iter::repeat_n(F192::ZERO, self.fixed_public.len() - self.raw_fixed_len),
+            );
+        }
         let public = self.public_values(outputs)?;
         if lower.public != public {
             return None;

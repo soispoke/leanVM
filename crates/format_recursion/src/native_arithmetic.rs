@@ -25,6 +25,14 @@ pub struct Circuit {
     pub public: Vec<usize>,
 }
 
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct ArithmeticShape {
+    pub log_rows: usize,
+    pub public_log: usize,
+    pub public_len: usize,
+    pub index_log_inv_rate: usize,
+}
+
 pub struct Index {
     pub root: Hash,
     pub log_rows: usize,
@@ -93,6 +101,14 @@ impl Index {
             sigma,
             stack,
             data,
+        }
+    }
+    pub fn verifier_shape(&self) -> ArithmeticShape {
+        ArithmeticShape {
+            log_rows: self.log_rows,
+            public_log: self.public_log,
+            public_len: self.circuit.public.len(),
+            index_log_inv_rate: self.index_log_inv_rate,
         }
     }
     pub fn public_values(&self, values: &[F192]) -> Vec<F192> {

@@ -3,7 +3,7 @@
 //! No request table or intermediate chaining values enter the serialized proof.
 //! This composition is tested engineering, not a formal security certificate.
 
-use crate::native_arithmetic::{self, Circuit, Index};
+use crate::native_arithmetic::{self, ArithmeticShape, Circuit, Index};
 use fiat_shamir::{
     merkle::Hash,
     transcript::{Challenger, Proof, ProverState, Receiver, Transmitter, VerifierState},
@@ -54,7 +54,7 @@ fn copy_compact_native(destination: &mut [F64], source: &[F64], log_rows: usize)
     }
 }
 
-/// The order is CV[4], output[4], message[8], counter, flags.
+/// The order is `CV[4]`, `output[4]`, `message[8]`, counter, flags.
 pub fn io_words(block: &Compression, output: &[u32; 8]) -> [u64; 18] {
     let (h, m, t, f0, f1) = block;
     let pack = |a: u32, b: u32| u64::from(a) | (u64::from(b) << 32);
@@ -66,6 +66,76 @@ pub fn io_words(block: &Compression, output: &[u32; 8]) -> [u64; 18] {
         17 => pack(*f0, *f1),
         _ => unreachable!(),
     })
+}
+
+/// Fixed verifier metadata, without a commitment or prover allocation.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct PrivateShape {
+    pub index: ArithmeticShape,
+    pub n_blocks: usize,
+    pub block_log: usize,
+    pub connector_start: usize,
+    pub q_offset: usize,
+    pub stack_log: usize,
+}
+
+impl PrivateShape {
+    pub fn for_circuit(rows: usize, public_len: usize, n_blocks: usize) -> Option<Self> {
+        if n_blocks == 0 || n_blocks > MAX_BLOCKS || public_len < 2 {
+            return None;
+        }
+        let full_public = public_len.checked_add(18)?;
+        let public_rows = full_public.checked_next_power_of_two()?;
+        let blocks = n_blocks.max(MIN_BLOCKS).checked_next_power_of_two()?;
+        let block_log = blocks.trailing_zeros() as usize;
+        let connector_start = public_rows.checked_add(rows)?.checked_next_multiple_of(blocks)?;
+        let count = connector_start.checked_add(6 * blocks)?;
+        let log_rows = (count.checked_next_power_of_two()?.trailing_zeros() as usize).max(13);
+        if log_rows > native_arithmetic::MAX_LOG_ROWS {
+            return None;
+        }
+        let q_log = K_LOG - LOG_PACKING + block_log;
+        let (q_offset, stack_log) = joint_layout(log_rows, q_log);
+        Some(Self {
+            index: ArithmeticShape {
+                log_rows,
+                public_log: public_rows.trailing_zeros() as usize,
+                public_len: full_public,
+                index_log_inv_rate: INDEX_LOG_INV_RATE,
+            },
+            n_blocks,
+            block_log,
+            connector_start,
+            q_offset,
+            stack_log,
+        })
+    }
+
+    pub fn committed_lanes(&self) -> usize {
+        let q_log = K_LOG - LOG_PACKING + self.block_log;
+        let lane_words = 1usize << (self.stack_log - INITIAL_FOLDING_FACTOR);
+        (self.q_offset + (1usize << q_log)).div_ceil(lane_words)
+    }
+
+    pub(crate) fn compact_native_offset(&self, offset: usize, low_log: usize) -> usize {
+        let n = 1usize << self.index.log_rows;
+        assert!(low_log <= self.index.log_rows, "native claim exceeds its column");
+        let slot = offset / n;
+        let within = offset % n;
+        assert!(slot < 16 && slot % 4 < 3, "claim addresses an unused native limb slot");
+        let width = 1usize << low_log;
+        assert!(
+            offset.is_multiple_of(width) && within + width <= n,
+            "unaligned native claim"
+        );
+        (3 * (slot / 4) + slot % 4) * n + within
+    }
+
+    pub(crate) fn connector_offset(&self, slot: usize, limb: usize) -> usize {
+        assert!(slot < 18 && limb < 3, "invalid connector coordinate");
+        let n = 1usize << self.index.log_rows;
+        (3 * (slot / 6) + limb) * n + self.connector_start + ((slot % 6) << self.block_log)
+    }
 }
 
 /// Trusted preprocessing for a fixed native circuit and compression schedule.
@@ -88,13 +158,30 @@ impl PrivateBridge {
     /// Only whole initial WHIR lanes containing circuit/hash data are stored.
     /// The omitted suffix is zero and is authenticated by WHIR's existing
     /// leading-zero leaf convention. Shape is fixed by trusted preprocessing.
-    pub fn committed_lanes(&self) -> usize {
-        let q_log = K_LOG - LOG_PACKING + self.block_log;
-        let lane_words = 1usize << (self.stack_log - INITIAL_FOLDING_FACTOR);
-        (self.q_offset + (1usize << q_log)).div_ceil(lane_words)
+    pub fn verifier_shape(&self) -> PrivateShape {
+        PrivateShape {
+            index: self.index.verifier_shape(),
+            n_blocks: self.n_blocks,
+            block_log: self.block_log,
+            connector_start: self.connector_start,
+            q_offset: self.q_offset,
+            stack_log: self.stack_log,
+        }
     }
 
-    pub fn new(mut circuit: Circuit, io_variables: Vec<[usize; 18]>) -> Option<Self> {
+    pub fn committed_lanes(&self) -> usize {
+        self.verifier_shape().committed_lanes()
+    }
+
+    pub fn new(circuit: Circuit, io_variables: Vec<[usize; 18]>) -> Option<Self> {
+        Self::new_inner(circuit, io_variables, false)
+    }
+
+    pub(crate) fn new_padded(circuit: Circuit, io_variables: Vec<[usize; 18]>) -> Option<Self> {
+        Self::new_inner(circuit, io_variables, true)
+    }
+
+    fn new_inner(mut circuit: Circuit, io_variables: Vec<[usize; 18]>, padded: bool) -> Option<Self> {
         if io_variables.is_empty()
             || io_variables.len() > MAX_BLOCKS
             || circuit.public.len() < 2
@@ -111,8 +198,9 @@ impl PrivateBridge {
         }
         let variables = circuit.variables;
         let public_len = circuit.public.len();
-        let n_blocks = io_variables.len();
-        let count = n_blocks.max(MIN_BLOCKS).next_power_of_two();
+        let actual_blocks = io_variables.len();
+        let count = actual_blocks.max(MIN_BLOCKS).next_power_of_two();
+        let n_blocks = if padded { count } else { actual_blocks };
         let block_log = count.trailing_zeros() as usize;
         let padding_block = padding_block();
         let padding = io_words(
@@ -168,23 +256,11 @@ impl PrivateBridge {
     /// Translate only native witness claims; permutation-index claims use a
     /// different four-column layout and must never pass through this mapping.
     pub(crate) fn compact_native_offset(&self, offset: usize, low_log: usize) -> usize {
-        let n = 1usize << self.index.log_rows;
-        assert!(low_log <= self.index.log_rows, "native claim exceeds its column");
-        let slot = offset / n;
-        let within = offset % n;
-        assert!(slot < 16 && slot % 4 < 3, "claim addresses an unused native limb slot");
-        let width = 1usize << low_log;
-        assert!(
-            offset.is_multiple_of(width) && within + width <= n,
-            "unaligned native claim"
-        );
-        (3 * (slot / 4) + slot % 4) * n + within
+        self.verifier_shape().compact_native_offset(offset, low_log)
     }
 
     pub(crate) fn connector_offset(&self, slot: usize, limb: usize) -> usize {
-        assert!(slot < 18 && limb < 3, "invalid connector coordinate");
-        let n = 1usize << self.index.log_rows;
-        (3 * (slot / 6) + limb) * n + self.connector_start + ((slot % 6) << self.block_log)
+        self.verifier_shape().connector_offset(slot, limb)
     }
 
     pub(crate) fn public(&self, public: &[F192]) -> Option<Vec<F192>> {
@@ -242,7 +318,7 @@ impl PrivateBridge {
         claims
     }
     pub fn prove(&self, values: &[F192], blocks: &[Compression], context: &Hash) -> Option<Proof> {
-        if values.len() != self.variables || blocks.len() != self.n_blocks {
+        if values.len() != self.variables || blocks.len() != self.io_variables.len() {
             return None;
         }
         for (block, variables) in blocks.iter().zip(&self.io_variables) {

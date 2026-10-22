@@ -55,6 +55,18 @@ pub fn take() -> Trace {
     TRACE.with(|t| std::mem::take(&mut *t.borrow_mut()))
 }
 
+pub(crate) fn check_count() -> usize {
+    TRACE.with(|t| t.borrow().checks.len())
+}
+
+/// Gate existing equations only; arithmetic and hash computation remain bound.
+pub(crate) fn gate_checks_since(start: usize, enabled: S) {
+    let checks = TRACE.with(|t| t.borrow_mut().checks.split_off(start));
+    for (left, right) in checks {
+        (enabled * (left + right)).assert_eq(S::u(0));
+    }
+}
+
 pub fn mark(name: &str) {
     TRACE.with(|t| {
         let mut t = t.borrow_mut();

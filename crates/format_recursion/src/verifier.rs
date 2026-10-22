@@ -20,6 +20,7 @@ pub struct Child {
 pub(crate) struct Transcript<'a> {
     proof: std::borrow::Cow<'a, RawProof>,
     compressed: Option<&'a Proof>,
+    placeholder: bool,
     state: [S; 2],
     cursor: usize,
     phase: usize,
@@ -31,6 +32,7 @@ impl<'a> Transcript<'a> {
         Self {
             proof: std::borrow::Cow::Borrowed(proof),
             compressed: None,
+            placeholder: false,
             state,
             cursor: 0,
             phase: 0,
@@ -45,11 +47,28 @@ impl<'a> Transcript<'a> {
                 merkle: Vec::new(),
             }),
             compressed: Some(proof),
+            placeholder: false,
             state,
             cursor: 0,
             phase: 0,
         }
     }
+    /// Generate dummy inputs for a branch whose verification equations the
+    /// caller explicitly disables. This does not accept or verify a proof.
+    pub(crate) fn placeholder(state: [S; 2]) -> Self {
+        Self {
+            proof: std::borrow::Cow::Owned(RawProof {
+                stream: Vec::new(),
+                merkle: Vec::new(),
+            }),
+            compressed: None,
+            placeholder: true,
+            state,
+            cursor: 0,
+            phase: 0,
+        }
+    }
+
     pub(crate) fn round(&mut self, n: usize, claim: S, equality: S) -> Vec<S> {
         assert!(n >= 2);
         let mut coefficients = vec![S::u(0)];
@@ -66,7 +85,11 @@ impl<'a> Transcript<'a> {
         S::pack(&[(h[0], 128), (h[1], 64)])
     }
     fn raw(&mut self) -> S {
-        let x = S::input(self.proof.stream[self.cursor]);
+        let x = S::input(if self.placeholder {
+            F192::ZERO
+        } else {
+            self.proof.stream[self.cursor]
+        });
         self.cursor += 1;
         x
     }
@@ -121,7 +144,18 @@ impl<'a> Transcript<'a> {
         live_lanes: usize,
     ) -> Vec<Vec<S>> {
         let expanded;
-        let paths = if let Some(proof) = self.compressed {
+        let paths = if self.placeholder {
+            expanded = queries
+                .iter()
+                .map(|query| fiat_shamir::merkle::RawMerklePath {
+                    leaf_index: query.value().c0 as usize,
+                    leaf_data: vec![primitives::field::F64::ZERO; if base { lanes } else { 3 * lanes }],
+                    path: vec![[0; 32]; depth],
+                })
+                .collect::<Vec<_>>();
+            self.phase += queries.len();
+            expanded.as_slice()
+        } else if let Some(proof) = self.compressed {
             let root_bytes = fiat_shamir::merkle::scalars_to_hash(&root.map(S::value)).expect("canonical root");
             let query_values: Vec<_> = queries.iter().map(|q| q.value().c0 as usize).collect();
             let row_words = if base { live_lanes } else { 3 * lanes };
@@ -195,6 +229,9 @@ impl<'a> Transcript<'a> {
         rows
     }
     pub(crate) fn finish(&self) {
+        if self.placeholder {
+            return;
+        }
         assert_eq!(self.cursor, self.proof.stream.len(), "all scalars consumed");
         assert_eq!(
             self.phase,

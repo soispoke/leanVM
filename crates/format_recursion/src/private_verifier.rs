@@ -4,7 +4,7 @@
 use crate::{
     flock_trace,
     native_verifier::{self, Claim},
-    private_bridge::{JOINT_LOG_INV_RATE, PrivateBridge},
+    private_bridge::{JOINT_LOG_INV_RATE, PrivateBridge, PrivateShape},
     trace::{self, S, Trace, digest_constant, hash},
     verifier::{Transcript, eq, powers, verify_basis_opening_lanes_rate},
 };
@@ -40,6 +40,10 @@ fn claim_eval(claim: &Claim, at: &[S]) -> S {
 /// Complete private bridge label, with the child verification key supplied as
 /// symbolic digest words. Circuit dimensions remain fixed by trusted metadata.
 pub(crate) fn label(bridge: &PrivateBridge, index_root: [S; 2], context: [S; 2], public: &[S]) -> Vec<(S, usize)> {
+    label_shape(bridge.verifier_shape(), index_root, context, public)
+}
+
+pub(crate) fn label_shape(bridge: PrivateShape, index_root: [S; 2], context: [S; 2], public: &[S]) -> Vec<(S, usize)> {
     let mut label = literal(b"format-private-bridge-v5");
     label.extend(index_root.map(|x| (x, 16)));
     label.extend(context.map(|x| (x, 16)));
@@ -65,8 +69,12 @@ pub(crate) fn label(bridge: &PrivateBridge, index_root: [S; 2], context: [S; 2],
 /// Append complete verification equations to an active trace. `public` includes
 /// the bridge's pinned padding words. The caller seeds and finishes `t`.
 pub(crate) fn verify(bridge: &PrivateBridge, index_root: [S; 2], public: &[S], t: &mut Transcript<'_>) {
+    verify_shape(bridge.verifier_shape(), index_root, public, t);
+}
+
+pub(crate) fn verify_shape(bridge: PrivateShape, index_root: [S; 2], public: &[S], t: &mut Transcript<'_>) {
     let root = t.root();
-    let (mut claims, index_claims) = native_verifier::reduce(&bridge.index, public, t);
+    let (mut claims, index_claims) = native_verifier::reduce_shape(bridge.index, public, t);
     for claim in &mut claims {
         claim.offset = bridge.compact_native_offset(claim.offset, claim.point.len());
     }

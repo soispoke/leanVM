@@ -2,7 +2,7 @@
 //! Records every arithmetic, transcript and Merkle verification equation; this
 //! is implementation evidence, not a formal proof of the argument.
 use crate::{
-    native_arithmetic::Index,
+    native_arithmetic::{ArithmeticShape, Index},
     trace::{self, S, Trace, digest_constant, hash},
     verifier::{Transcript, eq, kernel, powers, verify_basis_opening, verify_basis_opening_lanes_rate},
 };
@@ -161,7 +161,11 @@ pub(crate) fn verify(index: &Index, public: &[S], t: &mut Transcript<'_>) {
 /// Native zerocheck/copy/public reduction. The caller owns commitment and
 /// opening composition, allowing arithmetic and hash arguments to share a stack.
 pub(crate) fn reduce(index: &Index, public: &[S], t: &mut Transcript<'_>) -> (Vec<Claim>, Vec<Claim>) {
-    assert_eq!(public.len(), index.shape().2);
+    reduce_shape(index.verifier_shape(), public, t)
+}
+
+pub(crate) fn reduce_shape(index: ArithmeticShape, public: &[S], t: &mut Transcript<'_>) -> (Vec<Claim>, Vec<Claim>) {
+    assert_eq!(public.len(), index.public_len);
     assert!(public.len() >= 2);
     public[0].assert_eq(S::u(0));
     public[1].assert_eq(S::u(1));
