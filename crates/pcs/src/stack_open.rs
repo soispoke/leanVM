@@ -292,8 +292,14 @@ pub fn open_batch_mixed_whir_stacked(
     // filled from the ring-switch outputs and the point claims, then feeds
     // round 0's message while it is still hot, so nothing re-reads the buffer.
     let lane_block = 1usize << (log_n - config.initial_k);
-    let (b_stack, message) = tracing::info_span!("Basis")
-        .in_scope(|| basis::build(stack, lane_block, point_claims, lambdas_pd, ring, &rs_outputs));
+    let weight = tracing::info_span!("Basis").in_scope(|| {
+        if let Some(weight) = basis::hybrid(stack, lane_block, point_claims, lambdas_pd, ring, &rs_outputs) {
+            super::whir::InitialWeight::Hybrid(weight)
+        } else {
+            let (basis, message) = basis::build(stack, lane_block, point_claims, lambdas_pd, ring, &rs_outputs);
+            super::whir::InitialWeight::Dense(basis, Some(message))
+        }
+    });
 
     // 4. One WHIR over the full stack against the combined claim (the
     //    stack is borrowed by the prover; no copy).
@@ -301,7 +307,7 @@ pub fn open_batch_mixed_whir_stacked(
         config,
         log_n,
         stack,
-        super::whir::InitialWeight::Dense(b_stack, Some(message)),
+        weight,
         target,
         &prover_data.codeword,
         &prover_data.merkle_tree,
@@ -482,6 +488,17 @@ mod tests {
                 dst.copy_from_slice(&expected[start..start + dst.len()]);
             });
             assert_eq!(message, expected_message);
+            let hybrid = basis::hybrid(&stack, lane_block, &claims, &lambdas, &ring, &rs_outputs).unwrap();
+            let mut reconstructed = vec![F192::ZERO; stack.len()];
+            reconstructed[hybrid.offset..hybrid.offset + hybrid.dense.len()].copy_from_slice(&hybrid.dense);
+            for w in hybrid.points {
+                for (lane, c) in w.lanes.into_iter().enumerate() {
+                    for (x, &b) in w.block.iter().enumerate() {
+                        reconstructed[lane * lane_block + w.offset + x] += c * b;
+                    }
+                }
+            }
+            assert_eq!(reconstructed, expected);
         }
     }
 

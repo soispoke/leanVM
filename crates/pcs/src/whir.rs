@@ -42,6 +42,9 @@ pub use super::whir_config::{default_config, udr_queries};
 pub use crate::whir_induce::*;
 use crate::whir_ntt_ext::*;
 
+mod hybrid;
+pub(crate) use hybrid::{HybridWeight, PartialLaneWeight};
+
 /// Why a WHIR opening was rejected.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum VerifyError {
@@ -1283,6 +1286,7 @@ pub fn recursive_prover_with_lane_weights(
 pub(crate) enum InitialWeight<'w> {
     Dense(Vec<F192>, Option<SumcheckMessage>),
     Lanes(&'w [LaneWeight]),
+    Hybrid(HybridWeight),
 }
 
 pub(crate) fn recursive_prover_with_prepared_basis(
@@ -1368,6 +1372,9 @@ pub(crate) fn recursive_prover_with_prepared_basis(
         }
         InitialWeight::Lanes(weights) => {
             sumcheck_span.in_scope(|| lane_rounds(witness, weights, target, lane_block, initial_k, ps))
+        }
+        InitialWeight::Hybrid(weights) => {
+            sumcheck_span.in_scope(|| hybrid::rounds(witness, weights, target, lane_block, initial_k, ps))
         }
     };
     drop(sumcheck_span);
