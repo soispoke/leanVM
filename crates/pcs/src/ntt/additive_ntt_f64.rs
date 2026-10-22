@@ -876,8 +876,30 @@ fn butterfly_lanes(top: &mut [F64], bot: &mut [F64], twiddle: F64) {
             bot[last] = v + new_u;
         }
     }
+    #[cfg(all(
+        target_arch = "x86_64",
+        target_feature = "pclmulqdq",
+        not(all(target_feature = "vpclmulqdq", target_feature = "avx2"))
+    ))]
+    {
+        let pairs = top.len() / 2;
+        // SAFETY: pclmulqdq is enabled, and each pair lies in both rows.
+        unsafe {
+            for i in 0..pairs {
+                butterfly_lanes_pclmul_pair(top.as_mut_ptr().add(2 * i), bot.as_mut_ptr().add(2 * i), twiddle.0);
+            }
+        }
+        if top.len() % 2 == 1 {
+            let lane = top.len() - 1;
+            let v = bot[lane];
+            let new_u = top[lane] + v * twiddle;
+            top[lane] = new_u;
+            bot[lane] = v + new_u;
+        }
+    }
     #[cfg(not(any(
         all(target_arch = "aarch64", target_feature = "aes"),
+        all(target_arch = "x86_64", target_feature = "pclmulqdq"),
         all(target_arch = "x86_64", target_feature = "vpclmulqdq", target_feature = "avx2")
     )))]
     {
@@ -887,6 +909,43 @@ fn butterfly_lanes(top: &mut [F64], bot: &mut [F64], twiddle: F64) {
             top[lane] = new_u;
             bot[lane] = v + new_u;
         }
+    }
+}
+
+/// Two butterflies using scalar carry-less products and a shared vector reduction.
+///
+/// # Safety
+/// Requires pclmulqdq and two readable/writable values in each row.
+#[cfg(all(
+    target_arch = "x86_64",
+    target_feature = "pclmulqdq",
+    not(all(target_feature = "vpclmulqdq", target_feature = "avx2"))
+))]
+#[inline]
+#[target_feature(enable = "pclmulqdq")]
+unsafe fn butterfly_lanes_pclmul_pair(top: *mut F64, bot: *mut F64, twiddle: u64) {
+    use core::arch::x86_64::*;
+    // SAFETY: caller guarantees target features and both complete lane pairs.
+    unsafe {
+        let u = _mm_loadu_si128(top.cast());
+        let v = _mm_loadu_si128(bot.cast());
+        let t = _mm_set1_epi64x(twiddle as i64);
+        let p0 = _mm_clmulepi64_si128::<0x00>(v, t);
+        let p1 = _mm_clmulepi64_si128::<0x11>(v, t);
+        let lo = _mm_unpacklo_epi64(p0, p1);
+        let hi = _mm_unpackhi_epi64(p0, p1);
+        let spill = _mm_xor_si128(
+            _mm_xor_si128(_mm_srli_epi64::<63>(hi), _mm_srli_epi64::<61>(hi)),
+            _mm_srli_epi64::<60>(hi),
+        );
+        let x = _mm_xor_si128(hi, spill);
+        let f = _mm_xor_si128(
+            _mm_xor_si128(x, _mm_slli_epi64::<1>(x)),
+            _mm_xor_si128(_mm_slli_epi64::<3>(x), _mm_slli_epi64::<4>(x)),
+        );
+        let new_u = _mm_xor_si128(u, _mm_xor_si128(lo, f));
+        _mm_storeu_si128(top.cast(), new_u);
+        _mm_storeu_si128(bot.cast(), _mm_xor_si128(v, new_u));
     }
 }
 
