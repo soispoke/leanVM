@@ -101,10 +101,10 @@ impl Index {
 }
 
 #[derive(Clone)]
-struct Claim {
-    offset: usize,
-    point: Vec<F192>,
-    value: F192,
+pub(crate) struct Claim {
+    pub offset: usize,
+    pub point: Vec<F192>,
+    pub value: F192,
 }
 fn claim_eval(claim: &Claim, at: &[F192]) -> F192 {
     let mut v = eq_eval(&claim.point, &at[..claim.point.len()]);
@@ -246,15 +246,20 @@ fn verify_open(root: &Hash, l: usize, claims: &[Claim], vs: &mut VerifierState<'
 
 /// Prove the fixed multiply-add circuit. Public values, index and caller context
 /// enter the transcript before the witness commitment and all random checks.
-pub fn prove(index: &Index, values: &[F192], context: &Hash) -> Proof {
-    let l = index.log_rows;
-    let n = 1 << l;
-    let public = index.public_values(values);
-    let mut ps = ProverState::from_label(&label(index, &public, context));
+pub(crate) struct Prepared {
+    pub stack: Vec<F64>,
+    cols: [Vec<F192>; 4],
+}
+pub(crate) fn prepare(index: &Index, values: &[F192]) -> Prepared {
     let cols = index.columns(values);
     let stack = stack_columns(&cols);
-    let (commitment, data) = whir::commit(&stack, l + 4, whir::INITIAL_FOLDING_FACTOR, 1);
-    ps.add_root(&commitment.root);
+    Prepared { stack, cols }
+}
+pub(crate) fn prove_reduction(index: &Index, witness: &Prepared, ps: &mut ProverState) -> (Vec<Claim>, Vec<Claim>) {
+    let l = index.log_rows;
+    let n = 1 << l;
+    let cols = &witness.cols;
+    let stack = &witness.stack;
     let mut claims = Vec::new();
     let mut index_claims = Vec::new();
     let r = ps.sample_vec(l);
@@ -266,10 +271,10 @@ pub fn prove(index: &Index, values: &[F192], context: &Hash) -> Proof {
         &r,
         F192::ZERO,
         &mut |_| (F192::ZERO, F192::ZERO),
-        &mut ps,
+        ps,
     );
     for col in 0..4 {
-        send_field(&stack, l, col, &point, &mut ps, &mut claims);
+        send_field(stack, l, col, &point, ps, &mut claims);
     }
     let alpha = ps.sample();
     let beta = ps.sample();
@@ -278,10 +283,10 @@ pub fn prove(index: &Index, values: &[F192], context: &Hash) -> Proof {
     };
     let ids = parallel::map_collect(4 * n, |k| leaf(k, false));
     let sigma = parallel::map_collect(4 * n, |k| leaf(k, true));
-    let product = gkr::prove_product_triple([ids, sigma, vec![F192::ONE]], &mut ps, RootShape::Distinct);
+    let product = gkr::prove_product_triple([ids, sigma, vec![F192::ONE]], ps, RootShape::Distinct);
     let rho = &product.point[..l];
     for col in 0..4 {
-        send_field(&stack, l, col, rho, &mut ps, &mut claims);
+        send_field(stack, l, col, rho, ps, &mut claims);
     }
     for col in 0..4 {
         let value = base_eval(&index.stack[col * n..], rho);
@@ -293,62 +298,64 @@ pub fn prove(index: &Index, values: &[F192], context: &Hash) -> Proof {
         });
     }
     let point = ps.sample_vec(index.public_log);
-    send_field(&stack, l, 3, &point, &mut ps, &mut claims);
-    open(&stack, &data, l + 4, &claims, &mut ps);
-    open(&index.stack, &index.data, l + 2, &index_claims, &mut ps);
+    send_field(stack, l, 3, &point, ps, &mut claims);
+    (claims, index_claims)
+}
+pub(crate) fn prove_index_open(index: &Index, claims: &[Claim], ps: &mut ProverState) {
+    open(&index.stack, &index.data, index.log_rows + 2, claims, ps);
+}
+pub(crate) fn verify_index_open(index: &Index, claims: &[Claim], vs: &mut VerifierState<'_>) -> bool {
+    verify_open(&index.root, index.log_rows + 2, claims, vs)
+}
+pub fn prove(index: &Index, values: &[F192], context: &Hash) -> Proof {
+    let l = index.log_rows;
+    let public = index.public_values(values);
+    let mut ps = ProverState::from_label(&label(index, &public, context));
+    let witness = prepare(index, values);
+    let (commitment, data) = whir::commit(&witness.stack, l + 4, whir::INITIAL_FOLDING_FACTOR, 1);
+    ps.add_root(&commitment.root);
+    let (claims, index_claims) = prove_reduction(index, &witness, &mut ps);
+    open(&witness.stack, &data, l + 4, &claims, &mut ps);
+    prove_index_open(index, &index_claims, &mut ps);
     ps.into_proof()
 }
 
 /// Verify against a trusted index. This verifier does not read witness values
 /// or walk the arithmetic circuit or its permutation.
-pub fn verify(index: &Index, public: &[F192], context: &Hash, proof: &Proof) -> bool {
+pub(crate) fn verify_reduction(
+    index: &Index,
+    public: &[F192],
+    vs: &mut VerifierState<'_>,
+) -> Option<(Vec<Claim>, Vec<Claim>)> {
     if public.len() != index.circuit.public.len() || public[..2] != [F192::ZERO, F192::ONE] {
-        return false;
+        return None;
     }
     let l = index.log_rows;
     let n = 1 << l;
-    let mut vs = VerifierState::from_label(&label(index, public, context), proof);
-    let Some(root) = vs.next_root().ok() else {
-        return false;
-    };
     let mut claims = Vec::new();
     let mut index_claims = Vec::new();
     let r = vs.sample_vec(l);
     if r.contains(&F192::ONE) {
-        return false;
+        return None;
     }
-    let Some((point, target)) = zerocheck::verify_tables(&r, F192::ZERO, &mut vs).ok() else {
-        return false;
-    };
-    let gate: Option<Vec<_>> = (0..4)
-        .map(|col| read_field(l, col, &point, &mut vs, &mut claims))
-        .collect();
-    let Some(gate) = gate else {
-        return false;
-    };
+    let (point, target) = zerocheck::verify_tables(&r, F192::ZERO, vs).ok()?;
+    let gate: Option<Vec<_>> = (0..4).map(|col| read_field(l, col, &point, vs, &mut claims)).collect();
+    let gate = gate?;
     if gate[0] * gate[1] + gate[2] + gate[3] != target {
-        return false;
+        return None;
     }
     let alpha = vs.sample();
     let beta = vs.sample();
-    let Some(product) = gkr::verify_product_triple(l + 2, &mut vs, RootShape::Distinct).ok() else {
-        return false;
-    };
+    let product = gkr::verify_product_triple(l + 2, vs, RootShape::Distinct).ok()?;
     if product.roots[0] != product.roots[1] || product.roots[2] != F192::ONE {
-        return false;
+        return None;
     }
     let (rho, role_point) = product.point.split_at(l);
-    let values: Option<Vec<_>> = (0..4)
-        .map(|col| read_field(l, col, rho, &mut vs, &mut claims))
-        .collect();
-    let Some(values) = values else {
-        return false;
-    };
+    let values: Option<Vec<_>> = (0..4).map(|col| read_field(l, col, rho, vs, &mut claims)).collect();
+    let values = values?;
     let mut sigmas = Vec::new();
     for col in 0..4 {
-        let Some(value) = vs.next_scalar().ok() else {
-            return false;
-        };
+        let value = vs.next_scalar().ok()?;
         sigmas.push(value);
         index_claims.push(Claim {
             offset: col * n,
@@ -367,21 +374,29 @@ pub fn verify(index: &Index, public: &[F192], context: &Hash, proof: &Proof) -> 
         b += e * (alpha + sigmas[col] + beta * values[col]);
     }
     if product.values != [a, b, F192::ONE] {
-        return false;
+        return None;
     }
     let point = vs.sample_vec(index.public_log);
-    let Some(value) = read_field(l, 3, &point, &mut vs, &mut claims) else {
-        return false;
-    };
+    let value = read_field(l, 3, &point, vs, &mut claims)?;
     let expected = eq_table(&point)
         .iter()
         .zip(public)
         .fold(F192::ZERO, |acc, (&e, &v)| acc + e * v);
     if value != expected {
-        return false;
+        return None;
     }
-    verify_open(&root, l + 4, &claims, &mut vs)
-        && verify_open(&index.root, l + 2, &index_claims, &mut vs)
+    Some((claims, index_claims))
+}
+pub fn verify(index: &Index, public: &[F192], context: &Hash, proof: &Proof) -> bool {
+    let mut vs = VerifierState::from_label(&label(index, public, context), proof);
+    let Some(root) = vs.next_root().ok() else {
+        return false;
+    };
+    let Some((claims, index_claims)) = verify_reduction(index, public, &mut vs) else {
+        return false;
+    };
+    verify_open(&root, index.log_rows + 4, &claims, &mut vs)
+        && verify_index_open(index, &index_claims, &mut vs)
         && vs.finish().is_ok()
 }
 
