@@ -10,7 +10,7 @@ use crate::{
 };
 use flock::hash::{Compression, blake2s_compress, param_iv};
 use primitives::field::F192;
-use std::collections::{BTreeMap, BTreeSet};
+use std::collections::HashMap;
 
 pub struct Lowered {
     pub circuit: Circuit,
@@ -324,11 +324,35 @@ impl Lowered {
     }
 }
 
+/// Dense variable identities permit constant-time membership without tree
+/// allocation. This set never determines circuit traversal or variable order.
+#[derive(Default)]
+struct VariableSet(Vec<bool>);
+impl VariableSet {
+    fn insert(&mut self, at: usize) -> bool {
+        if at >= self.0.len() {
+            self.0.resize(at + 1, false);
+        }
+        !std::mem::replace(&mut self.0[at], true)
+    }
+    fn contains(&self, at: &usize) -> bool {
+        self.0.get(*at).copied().unwrap_or(false)
+    }
+    fn extend(&mut self, values: impl IntoIterator<Item = usize>) {
+        for at in values {
+            self.insert(at);
+        }
+    }
+    fn anchors() -> Self {
+        Self(vec![true, true])
+    }
+}
+
 struct Compiler {
     rows: Vec<[usize; 4]>,
     values: Vec<F192>,
-    constants: BTreeMap<(u64, u64, u64), usize>,
-    constant_variables: BTreeSet<usize>,
+    constants: HashMap<(u64, u64, u64), usize>,
+    constant_variables: VariableSet,
     public: Vec<usize>,
     bits: Vec<Option<Vec<usize>>>,
     limb_bits: Vec<[Option<Vec<usize>>; 3]>,
@@ -336,9 +360,9 @@ struct Compiler {
     widths: Vec<usize>,
     limbs: Vec<Option<[usize; 3]>>,
     pending_limbs: Vec<usize>,
-    typed: BTreeSet<usize>,
-    booleans: BTreeSet<usize>,
-    differences: BTreeMap<(usize, usize), usize>,
+    typed: VariableSet,
+    booleans: VariableSet,
+    differences: HashMap<(usize, usize), usize>,
     connectors: Vec<[usize; 18]>,
     compressions: Vec<Compression>,
 }
@@ -487,14 +511,15 @@ impl Compiler {
     /// standard hash invocation: no fixed-IV or final-flag claim is made.
     /// Outputs remain private and otherwise unused.
     fn constrain_unused_limbs(&mut self) {
-        let pending: Vec<_> = self
+        let mut pending: Vec<_> = self
             .pending_limbs
             .iter()
             .copied()
             .filter(|v| !self.typed.contains(v))
-            .collect::<BTreeSet<_>>()
-            .into_iter()
             .collect();
+        // Preserve the previous ascending traversal exactly, including aliases.
+        pending.sort_unstable();
+        pending.dedup();
         for chunk in pending.chunks(14) {
             let words: [usize; 14] = std::array::from_fn(|i| *chunk.get(i).unwrap_or(&0));
             let initial = std::array::from_fn(|i| (self.values[words[i / 2]].c0 >> (32 * (i % 2))) as u32);
@@ -752,8 +777,8 @@ pub fn lower_with_limits(program: &Trace, witness: &Trace, limits: Limits) -> Op
     let mut c = Compiler {
         rows: Vec::new(),
         values: vec![F192::ZERO, F192::ONE],
-        constants: BTreeMap::from([(key(F192::ZERO), 0), (key(F192::ONE), 1)]),
-        constant_variables: BTreeSet::from([0, 1]),
+        constants: HashMap::from([(key(F192::ZERO), 0), (key(F192::ONE), 1)]),
+        constant_variables: VariableSet::anchors(),
         public: vec![0, 1],
         bits: vec![None; program.nodes.len()],
         limb_bits: vec![std::array::from_fn(|_| None); program.nodes.len()],
@@ -761,9 +786,9 @@ pub fn lower_with_limits(program: &Trace, witness: &Trace, limits: Limits) -> Op
         widths,
         limbs: vec![None; program.nodes.len()],
         pending_limbs: Vec::new(),
-        typed: BTreeSet::from([0, 1]),
-        booleans: BTreeSet::new(),
-        differences: BTreeMap::new(),
+        typed: VariableSet::anchors(),
+        booleans: VariableSet::default(),
+        differences: HashMap::new(),
         connectors: Vec::new(),
         compressions: Vec::new(),
     };
@@ -954,6 +979,36 @@ mod tests {
     }
     fn public(t: &Trace) -> Vec<F192> {
         t.public.iter().map(|s| t.nodes[s.0].value).collect()
+    }
+
+    #[test]
+    fn lookup_tables_preserve_variable_and_constraint_order() {
+        trace::start();
+        let selector = S::input(F192::ONE);
+        let mut parts = Vec::new();
+        for i in 0..20 {
+            let input = S::input(F192::new(i + 17, 0, 0));
+            input.assert_eq(input.slice(0, 64));
+            let constant = S::u(i + 37);
+            let left = S::select(selector, input, constant);
+            let right = S::select(selector, constant, input);
+            parts.extend([(left, 8), (right, 8)]);
+        }
+        let result = trace::hash(&parts);
+        let mut program = trace::take();
+        program.public = result.to_vec();
+        let reference = lower(&program, &program).unwrap();
+        // Each lowering instantiates independently seeded hash tables. Neither
+        // iteration order nor hash seeds may affect any generated artifact.
+        for _ in 0..8 {
+            let repeated = lower(&program, &program).unwrap();
+            assert_eq!(reference.circuit.rows, repeated.circuit.rows);
+            assert_eq!(reference.circuit.public, repeated.circuit.public);
+            assert_eq!(reference.values, repeated.values);
+            assert_eq!(reference.connectors, repeated.connectors);
+            assert_eq!(reference.compressions, repeated.compressions);
+            assert_eq!(reference.fixed_public, repeated.fixed_public);
+        }
     }
 
     #[test]
