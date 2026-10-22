@@ -38,6 +38,15 @@ pub trait Channel {
     fn challenge(&mut self) -> S;
 }
 
+impl Channel for crate::verifier::Transcript<'_> {
+    fn scalar(&mut self) -> S {
+        self.next()
+    }
+    fn challenge(&mut self) -> S {
+        self.sample()
+    }
+}
+
 pub struct SliceClaim {
     pub suffix_point: Vec<S>,
     pub s_hat_v: Vec<S>,
@@ -479,5 +488,36 @@ mod tests {
         trace::start();
         reduce(setup.m(), &mut NativeChannel(VerifierState::from_label(label, &bad)));
         assert!(!trace::take().satisfied());
+    }
+
+    #[test]
+    fn reduction_records_its_transcript_hashes_and_has_fixed_program() {
+        parallel::init();
+        let label = b"symbolic-flock-bound-transcript";
+        let run = |word: u32| {
+            let mut blocks = vec![padding_block(); 8];
+            blocks[0].1[0] = word;
+            let setup = Blake2sSetup::new(blocks.len());
+            let (z, a, b, lin) = generate_witness_with_ab_packed_and_lincheck(&blocks, setup.n_blocks_log());
+            let mut ps = ProverState::from_label(label);
+            let expected = setup.prove_reduction_precomputed(&z, &a, &b, &lin, &mut ps);
+            let proof = ps.into_proof();
+            trace::start();
+            let state = trace::digest_constant(&primitives::hash::hash(label));
+            let mut channel = crate::verifier::Transcript::from_state(&proof, state);
+            let actual = reduce(setup.m(), &mut channel);
+            channel.finish();
+            assert_eq!(
+                actual.s_hat_v.iter().map(|s| s.value()).collect::<Vec<_>>(),
+                expected.s_hat_v
+            );
+            let t = trace::take();
+            assert!(t.satisfied());
+            assert!(t.hash_compressions() > 0);
+            t
+        };
+        let first = run(17);
+        let second = run(19);
+        assert!(first.same_program(&second), "proof contents must remain circuit inputs");
     }
 }
