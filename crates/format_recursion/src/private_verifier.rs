@@ -128,7 +128,7 @@ fn record_impl(
     let context = hash_to_scalars(context).map(S::input);
     let index_root = hash_to_scalars(index_root).map(|x| if dynamic { S::input(x) } else { S::c(x) });
     for x in context.into_iter().chain(index_root) {
-        x.slice(128, 64).assert_eq(S::u(0));
+        x.assert_eq(x.slice(0, 128));
     }
     let output = hash(&label(bridge, index_root, context, &values));
     let mut t = Transcript::from_state(proof, output);

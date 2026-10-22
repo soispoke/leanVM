@@ -81,7 +81,7 @@ impl<'a> Transcript<'a> {
     pub(crate) fn root(&mut self) -> [S; 2] {
         let h = [self.next(), self.next()];
         for a in h {
-            a.slice(128, 64).assert_eq(S::u(0));
+            a.assert_eq(a.slice(0, 128));
         }
         h
     }

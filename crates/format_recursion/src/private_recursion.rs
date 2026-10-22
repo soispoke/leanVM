@@ -125,7 +125,7 @@ pub fn leaf(start: &Hash, n: usize) -> Option<Trace> {
     trace::start();
     let mut digest = fiat_shamir::merkle::hash_to_scalars(start).map(S::input);
     for x in digest {
-        x.slice(128, 64).assert_eq(S::u(0));
+        x.assert_eq(x.slice(0, 128));
     }
     for _ in 0..n {
         digest = hash(&[(S::u(0x43), 1), (digest[0], 16), (digest[1], 16)]);
@@ -145,7 +145,7 @@ pub fn node(left: (&Setup, &Hash, &Proof), right: (&Setup, &Hash, &Proof)) -> Op
     for (setup, digest, proof) in [left, right] {
         let words = fiat_shamir::merkle::hash_to_scalars(digest).map(S::input);
         for word in words {
-            word.slice(128, 64).assert_eq(S::u(0));
+            word.assert_eq(word.slice(0, 128));
         }
         setup.append_verification(&words, proof)?;
         digests.push(words);
