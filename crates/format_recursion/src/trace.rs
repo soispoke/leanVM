@@ -208,6 +208,57 @@ pub struct Lowered {
 }
 
 impl Trace {
+    /// Concatenate fixed verifier circuits, keeping every child's public output.
+    pub fn concatenate(traces: &[Trace]) -> Self {
+        let mut out = Self::default();
+        for (child, trace) in traces.iter().enumerate() {
+            let offset = out.nodes.len();
+            let shift = |s: S| S(s.0 + offset);
+            for node in &trace.nodes {
+                let op = match &node.op {
+                    Op::Constant => Op::Constant,
+                    Op::Input => Op::Input,
+                    Op::Add(a, b) => Op::Add(shift(*a), shift(*b)),
+                    Op::Mul(a, b) => Op::Mul(shift(*a), shift(*b)),
+                    Op::Frobenius(a) => Op::Frobenius(shift(*a)),
+                    Op::Slice(a, start, len) => Op::Slice(shift(*a), *start, *len),
+                    Op::Pack(parts) => Op::Pack(parts.iter().map(|&(s, n)| (shift(s), n)).collect()),
+                    Op::Hash(parts) => Op::Hash(parts.iter().map(|&(s, n)| (shift(s), n)).collect()),
+                    Op::HashHigh(a) => Op::HashHigh(shift(*a)),
+                    Op::Select(bit, a, b) => Op::Select(shift(*bit), shift(*a), shift(*b)),
+                };
+                out.nodes.push(Node { op, value: node.value });
+            }
+            out.checks
+                .extend(trace.checks.iter().map(|&(a, b)| (shift(a), shift(b))));
+            out.public.extend(trace.public.iter().copied().map(shift));
+            out.sections.extend(
+                trace
+                    .sections
+                    .iter()
+                    .map(|(name, at)| (format!("child-{child}/{name}"), at + offset)),
+            );
+        }
+        out
+    }
+    /// Bind an ordered list of child claims using the comparison harness encoding.
+    pub fn bind_batch(self) -> Self {
+        assert!(self.public.len().is_multiple_of(2) && !self.public.is_empty());
+        let claims = self.public.clone();
+        TRACE.with(|t| *t.borrow_mut() = self);
+        let domain = digest_constant(&primitives::hash::hash(b"matched-application-batch-v1"));
+        let mut parts = vec![
+            (domain[0], 16),
+            (domain[1], 16),
+            (S::u((claims.len() / 2) as u64), 16),
+            (S::u(0), 16),
+        ];
+        parts.extend(claims.into_iter().map(|s| (s, 16)));
+        let public = hash(&parts);
+        let mut out = take();
+        out.public = public.to_vec();
+        out
+    }
     pub fn operation_counts(&self) -> std::collections::BTreeMap<&'static str, usize> {
         let mut out = std::collections::BTreeMap::new();
         for n in &self.nodes {
@@ -393,6 +444,35 @@ impl Trace {
 mod tests {
     use super::*;
     use circuit_suite::read_statement;
+
+    #[test]
+    fn concatenation_preserves_all_dependencies_checks_and_outputs() {
+        let traces: Vec<_> = (0..2)
+            .map(|i| {
+                start();
+                let x = S::input(F192::new(i + 3, 0, 0));
+                let y = x * x + S::u(1);
+                let f = y.frobenius();
+                let bit = x.slice(0, 1);
+                let choice = S::select(bit, y, f);
+                let packed = S::pack(&[(choice.slice(0, 64), 64)]);
+                let output = hash(&[(packed, 8)]);
+                y.assert_eq(S::c(y.value()));
+                let mut t = take();
+                t.public = output.to_vec();
+                t
+            })
+            .collect();
+        let joined = Trace::concatenate(&traces);
+        assert_eq!(joined.nodes.len(), traces.iter().map(|t| t.nodes.len()).sum::<usize>());
+        let values: Vec<_> = joined.nodes.iter().map(|n| n.value).collect();
+        let public: Vec<_> = joined.public.iter().map(|s| values[s.0]).collect();
+        assert_eq!(crate::replay::requests(&joined, &values, &public).unwrap().len(), 2);
+        let bound = joined.bind_batch();
+        let values: Vec<_> = bound.nodes.iter().map(|n| n.value).collect();
+        let public: Vec<_> = bound.public.iter().map(|s| values[s.0]).collect();
+        assert_eq!(crate::replay::requests(&bound, &values, &public).unwrap().len(), 3);
+    }
 
     #[test]
     fn field_operations_match_native_and_bind_their_inputs() {

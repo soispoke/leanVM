@@ -22,19 +22,19 @@ use primitives::{
 };
 
 const LABEL: &[u8] = b"format-recursion-public-hash-batch-v1";
-const MAX_COMPRESSIONS: usize = 1 << 16;
+pub const MAX_COMPRESSIONS: usize = 1 << 16;
 // The pinned WHIR configuration needs at least fifteen committed variables.
 const MIN_COMPRESSIONS: usize = 128;
 // Packed F64 words: CV, output, message, counter, flags. All public I/O is covered.
 const IO_SLOTS: [usize; 18] = [0, 1, 2, 3, 4, 5, 6, 7, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19];
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
 pub struct Request {
     pub message: Vec<u8>,
     pub digest: Hash,
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
 pub struct BatchProof {
     /// Outputs of non-final compressions, in request and block order.
     /// The verifier uses these as advice and authenticates them through Flock.

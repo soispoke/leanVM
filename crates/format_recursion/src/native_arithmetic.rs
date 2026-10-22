@@ -1,0 +1,436 @@
+//! Experimental native-field multiply-add circuit argument.
+//! Uses the existing table zerocheck, permutation GKR and WHIR opening code.
+//! This composition has tests, not a Lean soundness or implementation proof.
+
+use fiat_shamir::{
+    merkle::Hash,
+    transcript::{Challenger, Proof, ProverState, Receiver, Transmitter, VerifierState},
+};
+use flock::zerocheck;
+use leanvm_core::gkr::{self, RootShape};
+use pcs::whir::{self, ProverData};
+use primitives::{
+    field::{F64, F192},
+    multilinear::{eq_eval, eq_table},
+};
+
+/// A row enforces z = x*y + u. Variables zero and one are pinned public anchors.
+#[derive(Clone)]
+pub struct Circuit {
+    pub variables: usize,
+    pub rows: Vec<[usize; 4]>,
+    pub public: Vec<usize>,
+}
+
+pub struct Index {
+    pub root: Hash,
+    pub log_rows: usize,
+    pub public_log: usize,
+    circuit: Circuit,
+    rows: Vec<[usize; 4]>,
+    sigma: Vec<u32>,
+    stack: Vec<F64>,
+    data: ProverData,
+}
+
+impl Index {
+    pub fn new(circuit: Circuit) -> Self {
+        assert_eq!(&circuit.public[..2], &[0, 1]);
+        assert!(circuit.variables >= 2);
+        assert!(
+            circuit
+                .public
+                .iter()
+                .chain(circuit.rows.iter().flatten())
+                .all(|&v| v < circuit.variables)
+        );
+        let public_log = circuit.public.len().next_power_of_two().trailing_zeros() as usize;
+        let public_rows = 1 << public_log;
+        let count = public_rows + circuit.rows.len();
+        let log_rows = (count.next_power_of_two().trailing_zeros() as usize).max(13);
+        assert!(log_rows <= 22, "bounded experimental index");
+        let n = 1 << log_rows;
+        let mut rows: Vec<_> = circuit.public.iter().map(|&v| [v, 1, 0, v]).collect();
+        rows.resize(public_rows, [0, 1, 0, 0]);
+        rows.extend_from_slice(&circuit.rows);
+        rows.resize(n, [0, 0, 0, 0]);
+        let mut first = vec![None; circuit.variables];
+        let mut last = vec![0usize; circuit.variables];
+        let mut sigma = vec![0u32; 4 * n];
+        for role in 0..4 {
+            for (r, row) in rows.iter().enumerate() {
+                let at = r + role * n;
+                let v = row[role];
+                if let Some(start) = first[v] {
+                    sigma[last[v]] = at as u32;
+                    sigma[at] = start as u32;
+                } else {
+                    first[v] = Some(at);
+                    sigma[at] = at as u32;
+                }
+                last[v] = at;
+            }
+        }
+        let stack: Vec<_> = sigma.iter().map(|&v| F64(v as u64)).collect();
+        let (commitment, data) = whir::commit(&stack, log_rows + 2, whir::INITIAL_FOLDING_FACTOR, 1);
+        Self {
+            root: commitment.root,
+            log_rows,
+            public_log,
+            circuit,
+            rows,
+            sigma,
+            stack,
+            data,
+        }
+    }
+    pub fn public_values(&self, values: &[F192]) -> Vec<F192> {
+        self.circuit.public.iter().map(|&v| values[v]).collect()
+    }
+    pub fn shape(&self) -> (usize, usize, usize) {
+        (
+            self.circuit.variables,
+            self.circuit.rows.len(),
+            self.circuit.public.len(),
+        )
+    }
+    fn columns(&self, values: &[F192]) -> [Vec<F192>; 4] {
+        assert_eq!(values.len(), self.circuit.variables);
+        std::array::from_fn(|role| self.rows.iter().map(|row| values[row[role]]).collect())
+    }
+}
+
+#[derive(Clone)]
+struct Claim {
+    offset: usize,
+    point: Vec<F192>,
+    value: F192,
+}
+fn claim_eval(claim: &Claim, at: &[F192]) -> F192 {
+    let mut v = eq_eval(&claim.point, &at[..claim.point.len()]);
+    let selector = claim.offset >> claim.point.len();
+    for (i, &x) in at[claim.point.len()..].iter().enumerate() {
+        v *= if (selector >> i) & 1 == 1 { x } else { F192::ONE + x };
+    }
+    v
+}
+fn label(index: &Index, public: &[F192], context: &Hash) -> Vec<u8> {
+    let mut out = b"format-native-arithmetic-v1".to_vec();
+    out.extend_from_slice(&index.root);
+    out.extend_from_slice(context);
+    for n in [index.log_rows, index.public_log, public.len()] {
+        out.extend_from_slice(&(n as u64).to_le_bytes());
+    }
+    for x in public {
+        for limb in [x.c0, x.c1, x.c2] {
+            out.extend_from_slice(&limb.to_le_bytes());
+        }
+    }
+    out
+}
+fn stack_columns(cols: &[Vec<F192>; 4]) -> Vec<F64> {
+    let n = cols[0].len();
+    let mut stack = vec![F64::ZERO; 16 * n];
+    for (col, values) in cols.iter().enumerate() {
+        for (r, x) in values.iter().enumerate() {
+            for (limb, v) in [x.c0, x.c1, x.c2].into_iter().enumerate() {
+                stack[(col * 4 + limb) * n + r] = F64(v);
+            }
+        }
+    }
+    stack
+}
+fn base_eval(table: &[F64], point: &[F192]) -> F192 {
+    let eq = eq_table(point);
+    whir::inner_product_base_ext(&table[..eq.len()], &eq)
+}
+fn send_field(
+    stack: &[F64],
+    l: usize,
+    col: usize,
+    point: &[F192],
+    ps: &mut ProverState,
+    claims: &mut Vec<Claim>,
+) -> F192 {
+    let n = 1 << l;
+    let mut value = F192::ZERO;
+    let mut basis = F192::ONE;
+    for limb in 0..3 {
+        let offset = (col * 4 + limb) * n;
+        let v = base_eval(&stack[offset..], point);
+        ps.add_scalar(v);
+        claims.push(Claim {
+            offset,
+            point: point.to_vec(),
+            value: v,
+        });
+        value += basis * v;
+        basis *= F192::Y;
+    }
+    value
+}
+fn read_field(
+    l: usize,
+    col: usize,
+    point: &[F192],
+    vs: &mut VerifierState<'_>,
+    claims: &mut Vec<Claim>,
+) -> Option<F192> {
+    let mut value = F192::ZERO;
+    let mut basis = F192::ONE;
+    for limb in 0..3 {
+        let v = vs.next_scalar().ok()?;
+        claims.push(Claim {
+            offset: (col * 4 + limb) * (1 << l),
+            point: point.to_vec(),
+            value: v,
+        });
+        value += basis * v;
+        basis *= F192::Y;
+    }
+    Some(value)
+}
+fn open(stack: &[F64], data: &ProverData, l: usize, claims: &[Claim], ps: &mut ProverState) {
+    let lambda = ps.sample();
+    let mut power = F192::ONE;
+    let mut target = F192::ZERO;
+    let mut weights = vec![F192::ZERO; stack.len()];
+    for claim in claims {
+        target += power * claim.value;
+        for (dest, eq) in weights[claim.offset..].iter_mut().zip(eq_table(&claim.point)) {
+            *dest += power * eq;
+        }
+        power *= lambda;
+    }
+    let config = whir::config_for_rate(l, 1).unwrap();
+    whir::recursive_prover_with_basis(
+        &config,
+        l,
+        stack,
+        weights,
+        target,
+        &data.codeword,
+        &data.merkle_tree,
+        ps,
+    );
+}
+fn verify_open(root: &Hash, l: usize, claims: &[Claim], vs: &mut VerifierState<'_>) -> bool {
+    let lambda = vs.sample();
+    let mut power = F192::ONE;
+    let mut target = F192::ZERO;
+    let mut powers = Vec::new();
+    for claim in claims {
+        target += power * claim.value;
+        powers.push(power);
+        power *= lambda;
+    }
+    let Ok(config) = whir::config_for_rate(l, 1) else {
+        return false;
+    };
+    whir::recursive_verifier_with_basis_succinct(
+        &config,
+        l,
+        1 << whir::INITIAL_FOLDING_FACTOR,
+        target,
+        root,
+        |x| {
+            claims
+                .iter()
+                .zip(&powers)
+                .fold(F192::ZERO, |acc, (claim, &power)| acc + power * claim_eval(claim, x))
+        },
+        vs,
+    )
+    .is_ok()
+}
+
+/// Prove the fixed multiply-add circuit. Public values, index and caller context
+/// enter the transcript before the witness commitment and all random checks.
+pub fn prove(index: &Index, values: &[F192], context: &Hash) -> Proof {
+    let l = index.log_rows;
+    let n = 1 << l;
+    let public = index.public_values(values);
+    let mut ps = ProverState::from_label(&label(index, &public, context));
+    let cols = index.columns(values);
+    let stack = stack_columns(&cols);
+    let (commitment, data) = whir::commit(&stack, l + 4, whir::INITIAL_FOLDING_FACTOR, 1);
+    ps.add_root(&commitment.root);
+    let mut claims = Vec::new();
+    let mut index_claims = Vec::new();
+    let r = ps.sample_vec(l);
+    let c: Vec<_> = cols[2].iter().zip(&cols[3]).map(|(&u, &z)| u + z).collect();
+    let (point, _, _, _) = zerocheck::prove_tables(
+        cols[0].clone(),
+        cols[1].clone(),
+        c,
+        &r,
+        F192::ZERO,
+        &mut |_| (F192::ZERO, F192::ZERO),
+        &mut ps,
+    );
+    for col in 0..4 {
+        send_field(&stack, l, col, &point, &mut ps, &mut claims);
+    }
+    let alpha = ps.sample();
+    let beta = ps.sample();
+    let leaf = |k: usize, permuted: bool| {
+        alpha + F192::new(if permuted { index.sigma[k] as u64 } else { k as u64 }, 0, 0) + beta * cols[k / n][k % n]
+    };
+    let ids = parallel::map_collect(4 * n, |k| leaf(k, false));
+    let sigma = parallel::map_collect(4 * n, |k| leaf(k, true));
+    let product = gkr::prove_product_triple([ids, sigma, vec![F192::ONE]], &mut ps, RootShape::Distinct);
+    let rho = &product.point[..l];
+    for col in 0..4 {
+        send_field(&stack, l, col, rho, &mut ps, &mut claims);
+    }
+    for col in 0..4 {
+        let value = base_eval(&index.stack[col * n..], rho);
+        ps.add_scalar(value);
+        index_claims.push(Claim {
+            offset: col * n,
+            point: rho.to_vec(),
+            value,
+        });
+    }
+    let point = ps.sample_vec(index.public_log);
+    send_field(&stack, l, 3, &point, &mut ps, &mut claims);
+    open(&stack, &data, l + 4, &claims, &mut ps);
+    open(&index.stack, &index.data, l + 2, &index_claims, &mut ps);
+    ps.into_proof()
+}
+
+/// Verify against a trusted index. This verifier does not read witness values
+/// or walk the arithmetic circuit or its permutation.
+pub fn verify(index: &Index, public: &[F192], context: &Hash, proof: &Proof) -> bool {
+    if public.len() != index.circuit.public.len() || public[..2] != [F192::ZERO, F192::ONE] {
+        return false;
+    }
+    let l = index.log_rows;
+    let n = 1 << l;
+    let mut vs = VerifierState::from_label(&label(index, public, context), proof);
+    let Some(root) = vs.next_root().ok() else {
+        return false;
+    };
+    let mut claims = Vec::new();
+    let mut index_claims = Vec::new();
+    let r = vs.sample_vec(l);
+    if r.contains(&F192::ONE) {
+        return false;
+    }
+    let Some((point, target)) = zerocheck::verify_tables(&r, F192::ZERO, &mut vs).ok() else {
+        return false;
+    };
+    let gate: Option<Vec<_>> = (0..4)
+        .map(|col| read_field(l, col, &point, &mut vs, &mut claims))
+        .collect();
+    let Some(gate) = gate else {
+        return false;
+    };
+    if gate[0] * gate[1] + gate[2] + gate[3] != target {
+        return false;
+    }
+    let alpha = vs.sample();
+    let beta = vs.sample();
+    let Some(product) = gkr::verify_product_triple(l + 2, &mut vs, RootShape::Distinct).ok() else {
+        return false;
+    };
+    if product.roots[0] != product.roots[1] || product.roots[2] != F192::ONE {
+        return false;
+    }
+    let (rho, role_point) = product.point.split_at(l);
+    let values: Option<Vec<_>> = (0..4)
+        .map(|col| read_field(l, col, rho, &mut vs, &mut claims))
+        .collect();
+    let Some(values) = values else {
+        return false;
+    };
+    let mut sigmas = Vec::new();
+    for col in 0..4 {
+        let Some(value) = vs.next_scalar().ok() else {
+            return false;
+        };
+        sigmas.push(value);
+        index_claims.push(Claim {
+            offset: col * n,
+            point: rho.to_vec(),
+            value,
+        });
+    }
+    let id = rho
+        .iter()
+        .enumerate()
+        .fold(F192::ZERO, |acc, (i, &x)| acc + x * F192::new(1 << i, 0, 0));
+    let mut a = F192::ZERO;
+    let mut b = F192::ZERO;
+    for (col, e) in eq_table(role_point).into_iter().enumerate() {
+        a += e * (alpha + id + F192::new((col * n) as u64, 0, 0) + beta * values[col]);
+        b += e * (alpha + sigmas[col] + beta * values[col]);
+    }
+    if product.values != [a, b, F192::ONE] {
+        return false;
+    }
+    let point = vs.sample_vec(index.public_log);
+    let Some(value) = read_field(l, 3, &point, &mut vs, &mut claims) else {
+        return false;
+    };
+    let expected = eq_table(&point)
+        .iter()
+        .zip(public)
+        .fold(F192::ZERO, |acc, (&e, &v)| acc + e * v);
+    if value != expected {
+        return false;
+    }
+    verify_open(&root, l + 4, &claims, &mut vs)
+        && verify_open(&index.root, l + 2, &index_claims, &mut vs)
+        && vs.finish().is_ok()
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    #[test]
+    fn native_circuit_proves_and_rejects_gate_public_and_transcript_changes() {
+        parallel::init();
+        let circuit = Circuit {
+            variables: 6,
+            rows: vec![[2, 3, 0, 4], [4, 1, 2, 5]],
+            public: vec![0, 1, 5],
+        };
+        let index = Index::new(circuit);
+        let x = F192::new(17, 3, 91);
+        let y = F192::new(41, 52, 2);
+        let values = vec![F192::ZERO, F192::ONE, x, y, x * y, x * y + x];
+        let public = index.public_values(&values);
+        let context = [17; 32];
+        let proof = prove(&index, &values, &context);
+        assert!(verify(&index, &public, &context, &proof));
+        let mut bad_public = public.clone();
+        bad_public[2] += F192::ONE;
+        assert!(!verify(&index, &bad_public, &context, &proof));
+        assert!(!verify(&index, &public, &[18; 32], &proof));
+        for at in [0, 2, proof.stream.len() - 1] {
+            let mut bad = proof.clone();
+            bad.stream[at] += F192::ONE;
+            assert!(!verify(&index, &public, &context, &bad));
+        }
+        let mut bad = proof.clone();
+        bad.stream.push(F192::ZERO);
+        assert!(!verify(&index, &public, &context, &bad));
+        let mut bad = proof.clone();
+        bad.stream.pop();
+        assert!(!verify(&index, &public, &context, &bad));
+        let wrong_index = Index::new(Circuit {
+            variables: 6,
+            rows: vec![[2, 3, 0, 4], [4, 1, 3, 5]],
+            public: vec![0, 1, 5],
+        });
+        assert!(!verify(&wrong_index, &public, &context, &proof));
+        let mut wrong_anchors = public.clone();
+        wrong_anchors[0] = F192::ONE;
+        assert!(!verify(&index, &wrong_anchors, &context, &proof));
+        let mut bad_values = values.clone();
+        bad_values[4] += F192::ONE;
+        let bad = prove(&index, &bad_values, &context);
+        assert!(!verify(&index, &public, &context, &bad));
+    }
+}

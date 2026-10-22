@@ -8,7 +8,20 @@ use format_recursion::Child;
 use primitives::field::F64;
 use rand::{RngCore, SeedableRng, rngs::StdRng};
 
+#[allow(dead_code)]
+pub struct Fixture {
+    pub child: Child,
+    pub proved: quotient::Proved,
+    pub index: Index,
+    pub wiring: opening::Committed,
+    pub committed: Vec<opening::Committed>,
+    pub openings: Vec<fiat_shamir::transcript::Proof>,
+    pub app_id: [u8; 32],
+}
 pub fn child(seed: u64) -> Child {
+    fixture(seed).child
+}
+pub fn fixture(seed: u64) -> Fixture {
     let mut c = Ckt::new();
     let a = c.inputs(64);
     let b = c.inputs(64);
@@ -42,7 +55,7 @@ pub fn child(seed: u64) -> Child {
             root
         },
     );
-    let openings = [
+    let openings = vec![
         opening::open(&p.witness, &committed[0], std::slice::from_ref(&p.claims.witness)),
         opening::open(index.table(), &wiring, std::slice::from_ref(&p.claims.wiring)),
         opening::open(
@@ -52,23 +65,50 @@ pub fn child(seed: u64) -> Child {
         ),
     ];
     let raw: [RawProof; 3] = [
-        opening::verification_trace(&p.witness.layout, &committed[0].root, &[p.claims.witness], &openings[0]).unwrap(),
-        opening::verification_trace(&index.table().layout, &wiring.root, &[p.claims.wiring], &openings[1]).unwrap(),
+        opening::verification_trace(
+            &p.witness.layout,
+            &committed[0].root,
+            std::slice::from_ref(&p.claims.witness),
+            &openings[0],
+        )
+        .unwrap(),
+        opening::verification_trace(
+            &index.table().layout,
+            &wiring.root,
+            std::slice::from_ref(&p.claims.wiring),
+            &openings[1],
+        )
+        .unwrap(),
         opening::verification_trace(
             &p.quotient.layout,
             &committed[1].root,
-            &[p.claims.quotient, p.claims.sum],
+            &[p.claims.quotient.clone(), p.claims.sum.clone()],
             &openings[2],
         )
         .unwrap(),
     ];
     // Native acceptance is checked before compiling, rather than treated as a circuit input.
     quotient::verify_with(Oracle::Blake2s, &wiring.root, &statement, &p.proof, circuit.log_rows).unwrap();
-    Child {
+    let mut identity = b"structured-r1cs-v1/gf64/upstream-tower/full-adder-6/copy/public-8x128".to_vec();
+    identity.extend(quotient::domain::beta()[1].0.to_le_bytes());
+    identity.extend((circuit.log_rows as u64).to_le_bytes());
+    for s in &circuit.sigma {
+        identity.extend(s.to_le_bytes());
+    }
+    let child = Child {
         log_rows: circuit.log_rows,
         index_root: wiring.root,
         statement,
-        piop: p.proof,
+        piop: p.proof.clone(),
         openings: raw,
+    };
+    Fixture {
+        child,
+        proved: p,
+        index,
+        wiring,
+        committed,
+        openings,
+        app_id: primitives::hash::hash(&identity),
     }
 }

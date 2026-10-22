@@ -23,6 +23,7 @@ serde.workspace = true
 tracing.workspace = true
 
 [dev-dependencies]
+format_recursion = { path = "../format_recursion" }
 fiat_shamir.workspace = true
 bench.workspace = true
 evm = { path = "../evm" }

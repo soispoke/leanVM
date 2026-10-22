@@ -366,6 +366,14 @@ fn verify_opening(layout: &Layout, root: [S; 2], claims: &[(Vec<S>, S)], proof: 
 }
 
 pub fn record(child: &Child) -> Trace {
+    record_with_identity(child, None)
+}
+
+pub fn record_bound(child: &Child, app_id: &Hash) -> Trace {
+    record_with_identity(child, Some(app_id))
+}
+
+fn record_with_identity(child: &Child, app_id: Option<&Hash>) -> Trace {
     trace::start();
     trace::mark("piop");
     let statement = child.statement.halves().map(|x| S::input(x).slice(0, 128));
@@ -405,8 +413,16 @@ pub fn record(child: &Child) -> Trace {
         &[reduced.quotient, (sum_point, reduced.sum)],
         &child.openings[2],
     );
+    let output = if let Some(id) = app_id {
+        let id = digest_constant(id);
+        let mut parts = vec![(id[0], 16), (id[1], 16)];
+        parts.extend(statement.iter().map(|&s| (s, 16)));
+        hash(&parts)
+    } else {
+        public
+    };
     let mut trace = trace::take();
-    trace.public = public.to_vec();
+    trace.public = output.to_vec();
     trace
 }
 
