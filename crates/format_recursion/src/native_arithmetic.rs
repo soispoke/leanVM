@@ -205,8 +205,14 @@ fn copy_leaves(cols: &[Vec<F192>; 4], sigma: &[u32], alpha: F192, beta: F192) ->
     let n = cols[0].len();
     assert!(cols.iter().all(|column| column.len() == n));
     assert_eq!(sigma.len(), 4 * n);
-    let mut ids = vec![F192::ZERO; 4 * n];
-    let mut permuted = vec![F192::ZERO; 4 * n];
+    // SAFETY: chunks_mut2 covers every position of both vectors, and each
+    // loop iteration writes both outputs before either vector is read.
+    let (mut ids, mut permuted) = unsafe {
+        (
+            primitives::uninit_vec::<F192>(4 * n),
+            primitives::uninit_vec::<F192>(4 * n),
+        )
+    };
     parallel::chunks_mut2(&mut ids, &mut permuted, 256, |chunk, ids, permuted| {
         let start = chunk * 256;
         for (i, (id, permuted)) in ids.iter_mut().zip(permuted).enumerate() {
@@ -278,7 +284,26 @@ fn read_field(
     }
     Some(value)
 }
+/// Claims are accumulated in their original order. Only disjoint rows within
+/// one claim run in parallel, preserving exact overlap and transcript behavior.
+fn accumulate_weights(weights: &mut [F192], offset: usize, equality: &[F192], power: F192) {
+    let destination = &mut weights[offset..offset + equality.len()];
+    if equality.len() < 4096 {
+        for (out, &eq) in destination.iter_mut().zip(equality) {
+            *out += power * eq;
+        }
+    } else {
+        parallel::chunks_mut(destination, 256, |chunk, out| {
+            let first = chunk * 256;
+            for (out, &eq) in out.iter_mut().zip(&equality[first..]) {
+                *out += power * eq;
+            }
+        });
+    }
+}
+
 fn open(stack: &[F64], data: &ProverData, l: usize, log_inv_rate: usize, claims: &[Claim], ps: &mut ProverState) {
+    let weights_span = tracing::info_span!("Native opening weights").entered();
     let lambda = ps.sample();
     let mut power = F192::ONE;
     let mut target = F192::ZERO;
@@ -291,11 +316,10 @@ fn open(stack: &[F64], data: &ProverData, l: usize, log_inv_rate: usize, claims:
             eq = eq_table(&claim.point);
             previous_point = Some(&claim.point);
         }
-        for (dest, &value) in weights[claim.offset..].iter_mut().zip(&eq) {
-            *dest += power * value;
-        }
+        accumulate_weights(&mut weights, claim.offset, &eq, power);
         power *= lambda;
     }
+    drop(weights_span);
     let config = whir::config_for_rate(l, log_inv_rate).unwrap();
     whir::recursive_prover_with_basis(
         &config,
@@ -571,6 +595,32 @@ mod tests {
                 assert_eq!(ids[i], common + F192::new(i as u64, 0, 0));
                 assert_eq!(permuted[i], common + F192::new(sigma[i] as u64, 0, 0));
             }
+        }
+    }
+
+    #[test]
+    fn parallel_opening_weights_preserve_overlapping_claim_accumulation() {
+        parallel::init();
+        let mut rng = primitives::test_rng::Rng::new(0xB45152);
+        let mut got = vec![F192::ONE; 32768];
+        let mut expected = got.clone();
+        for (offset, length) in [
+            (0usize, 8192usize),
+            (4096, 4096),
+            (257, 257),
+            (4097, 4097),
+            (8192, 8192),
+            (0, 32768),
+        ] {
+            let equality: Vec<_> = (0..length)
+                .map(|_| F192::new(rng.next_u64(), rng.next_u64(), rng.next_u64()))
+                .collect();
+            let power = F192::new(rng.next_u64(), rng.next_u64(), rng.next_u64());
+            accumulate_weights(&mut got, offset, &equality, power);
+            for (out, &eq) in expected[offset..].iter_mut().zip(&equality) {
+                *out += power * eq;
+            }
+            assert_eq!(got, expected, "offset={offset} length={length}");
         }
     }
 
