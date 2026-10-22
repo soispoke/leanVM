@@ -4,6 +4,7 @@ use flock::membership::Scalar;
 use primitives::field::F192;
 use std::{
     cell::RefCell,
+    collections::HashMap,
     ops::{Add, Mul},
 };
 
@@ -35,15 +36,22 @@ pub struct Trace {
     pub sections: Vec<(String, usize)>,
 }
 
-thread_local! { static TRACE: RefCell<Trace> = RefCell::default(); }
+thread_local! {
+    static TRACE: RefCell<Trace> = RefCell::default();
+    // Only public constants are shared. Equal private input values must keep
+    // separate identities, and never determine the recorded program's shape.
+    static CONSTANTS: RefCell<HashMap<[u64; 3], S>> = RefCell::default();
+}
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct S(pub usize);
 
 pub fn start() {
+    CONSTANTS.with(|c| c.borrow_mut().clear());
     TRACE.with(|t| *t.borrow_mut() = Trace::default());
 }
 pub fn take() -> Trace {
+    CONSTANTS.with(|c| c.borrow_mut().clear());
     TRACE.with(|t| std::mem::take(&mut *t.borrow_mut()))
 }
 
@@ -72,7 +80,11 @@ impl S {
         node(Op::Input, value)
     }
     pub fn c(value: F192) -> Self {
-        node(Op::Constant, value)
+        CONSTANTS.with(|c| {
+            *c.borrow_mut()
+                .entry([value.c0, value.c1, value.c2])
+                .or_insert_with(|| node(Op::Constant, value))
+        })
     }
     pub fn u(value: u64) -> Self {
         Self::c(F192::new(value, 0, 0))
@@ -245,6 +257,7 @@ impl Trace {
     pub fn bind_batch(self) -> Self {
         assert!(self.public.len().is_multiple_of(2) && !self.public.is_empty());
         let claims = self.public.clone();
+        CONSTANTS.with(|c| c.borrow_mut().clear());
         TRACE.with(|t| *t.borrow_mut() = self);
         let domain = digest_constant(&primitives::hash::hash(b"matched-application-batch-v1"));
         let mut parts = vec![
@@ -446,6 +459,57 @@ mod tests {
     use circuit_suite::read_statement;
 
     #[test]
+    fn constants_share_only_public_values_and_reset_with_each_trace() {
+        start();
+        let value = F192::new(17, 23, 41);
+        let constant = S::c(value);
+        assert_eq!(S::c(value), constant);
+        let left = S::input(value);
+        let right = S::input(value);
+        assert_ne!(left, right);
+        assert_ne!(left, constant);
+        let first = take();
+        assert_eq!(first.nodes.len(), 3);
+        // Taking a trace clears the cache even without an explicit start.
+        let new_constant = S::c(F192::ONE);
+        assert_eq!(new_constant.0, 0);
+        assert_eq!(new_constant.value(), F192::ONE);
+        start();
+        let next = S::c(value);
+        assert_eq!(next.0, 0);
+        assert_eq!(next.value(), value);
+        assert_eq!(take().nodes.len(), 1);
+    }
+
+    #[test]
+    fn constant_sharing_keeps_recorded_operations_independent_of_input_values() {
+        let record = |value| {
+            start();
+            let input = S::input(value);
+            let a = input + S::u(17);
+            let b = input * S::u(17);
+            let c = input + S::c(F192::new(0, 1, 0));
+            let d = input * S::c(F192::new(0, 1, 0));
+            let mut trace = take();
+            trace.public.extend([a, b, c, d]);
+            trace
+        };
+        let first = record(F192::ZERO);
+        let second = record(F192::new(31, 37, 43));
+        assert_eq!(first.public, second.public);
+        assert_eq!(
+            first.nodes.iter().map(|n| &n.op).collect::<Vec<_>>(),
+            second.nodes.iter().map(|n| &n.op).collect::<Vec<_>>()
+        );
+        assert_eq!(first.nodes.iter().filter(|n| n.op == Op::Constant).count(), 2);
+        assert_eq!(first.nodes[first.public[0].0].value, F192::new(17, 0, 0));
+        assert_eq!(
+            second.nodes[second.public[1].0].value,
+            F192::new(31, 37, 43) * F192::new(17, 0, 0)
+        );
+    }
+
+    #[test]
     fn concatenation_preserves_all_dependencies_checks_and_outputs() {
         let traces: Vec<_> = (0..2)
             .map(|i| {
@@ -468,6 +532,13 @@ mod tests {
         let values: Vec<_> = joined.nodes.iter().map(|n| n.value).collect();
         let public: Vec<_> = joined.public.iter().map(|s| values[s.0]).collect();
         assert_eq!(crate::replay::requests(&joined, &values, &public).unwrap().len(), 2);
+        // Installing a detached trace must discard any unrelated active cache.
+        start();
+        for _ in 0..8 {
+            S::input(F192::ZERO);
+        }
+        S::u(0);
+        S::u(2);
         let bound = joined.bind_batch();
         let values: Vec<_> = bound.nodes.iter().map(|n| n.value).collect();
         let public: Vec<_> = bound.public.iter().map(|s| values[s.0]).collect();
