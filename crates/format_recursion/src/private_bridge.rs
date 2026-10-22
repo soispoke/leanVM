@@ -25,7 +25,7 @@ use primitives::{
 const SLOTS: [usize; 18] = [0, 1, 2, 3, 4, 5, 6, 7, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19];
 /// Candidate production WHIR profile for the joint private witness only.
 /// Native circuit-index openings retain their existing rate-1/2 profile.
-pub(crate) const JOINT_LOG_INV_RATE: usize = 3;
+pub(crate) const JOINT_LOG_INV_RATE: usize = 2;
 const MIN_BLOCKS: usize = 128;
 const MAX_BLOCKS: usize = 1 << 16;
 
