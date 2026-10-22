@@ -1,0 +1,13 @@
+
+running 3 tests
+test blake2s_tests::independent_hashlib_vectors ... ok
+test tests::parses_and_round_trips ... ok
+test tests::serde_uses_config_spellings ... ok
+
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+

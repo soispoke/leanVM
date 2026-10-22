@@ -1,0 +1,28 @@
+{
+  "created_utc": "2026-10-22T15:00:14.643051+00:00",
+  "measured_source": "f1b6626fc546956085f4512d8210f715e6dd256b",
+  "records_review": {
+    "original_manifest_files": 627,
+    "all_hashes_match": true,
+    "all_four_series_recomputed": true,
+    "all_excluded_warmups_checked": true,
+    "independent_hashlib_statements": true
+  },
+  "source_review": {
+    "reviewer": "/root/final_native_review",
+    "range": "19cbfc7ecb3b1ba1c49c10b8205248f1851b2df6..f1b6626fc546956085f4512d8210f715e6dd256b",
+    "findings": [],
+    "checked": [
+      "fused gate use counts",
+      "compression range typing",
+      "connector triple offsets in both verifiers",
+      "dense lookup determinism",
+      "cached program ownership and binding",
+      "deferred field reduction",
+      "copy fingerprints",
+      "compact witness claim coordinates",
+      "reported timing and assurance scope"
+    ],
+    "kind": "read-only source review, not a formal proof or independent cryptographic audit"
+  }
+}

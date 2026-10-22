@@ -1,0 +1,13 @@
+
+running 8 tests
+test r1cs_hashes::fs_chain::tests::finalizing_does_not_disturb_the_live_chain ... ok
+test r1cs_hashes::fs_chain::tests::blake2s_forked_chains_reproduce_the_native_transcript ... ok
+test r1cs_hashes::fs_chain::tests::fused_pow_squeeze_trace_matches_recorded_challenger ... ok
+test r1cs_hashes::fs_chain::tests::forked_chains_reproduce_the_native_transcript ... ok
+test r1cs_hashes::fs_chain::tests::row_count_matches_the_derived_inventory ... ok
+test r1cs_hashes::fs_chain::tests::sponge_finalize_matches_the_chained_challenger ... ok
+test r1cs_hashes::fs_chain::blake2s_tests::blake2s_physical_trace_matches_native_and_all_cv_links ... ok
+test r1cs_hashes::fs_chain::tests::every_finalize_matches_reference_blake3 ... ok
+
+test result: ok. 8 passed; 0 failed; 0 ignored; 0 measured; 80 filtered out; finished in 0.13s
+

@@ -1,0 +1,36 @@
+  [envelope rows live/target] b3 9281/9281 | b3b 8211/8211 | swap 2762/2762 | spread 742/742 | pow 118/118 | family 1024/1024 | el600 12645/12645 | el602 4192/4192 | el500 132/132 | el400 250/250 | el0 9708/9708 | el700 126/126 | el701 16384/16384 | el601 96/96 | el8 68/68 | el808 4412/4412 | el318 1616/1616 | el880 742/742 | el881 1134/1134 | el882 742/742 | el1008 116/116 | publics 2174/4266 | acc_chain 118/160 | acc_main 0/1152 | pass 0/96 | app 10/10
+  [envelope rows live/target] b3 9281/9281 | b3b 8211/8211 | swap 2762/2762 | spread 742/742 | pow 118/118 | family 1024/1024 | el600 12645/12645 | el602 4192/4192 | el500 132/132 | el400 250/250 | el0 9708/9708 | el700 126/126 | el701 16384/16384 | el601 96/96 | el8 68/68 | el808 4412/4412 | el318 1616/1616 | el880 742/742 | el881 1134/1134 | el882 742/742 | el1008 116/116 | publics 2174/4266 | acc_chain 118/160 | acc_main 0/1152 | pass 0/96 | app 10/10
+  [envelope rows live/target] b3 16035/16035 | b3b 15411/15411 | swap 7294/7294 | spread 558/558 | pow 1888/1888 | family 1024/1024 | el600 15097/15097 | el602 12662/12662 | el500 554/554 | el400 1016/1016 | el0 11918/11918 | el700 1076/1076 | el701 16384/16384 | el601 192/192 | el8 1806/1806 | el808 2544/2544 | el318 3580/3580 | el880 558/558 | el881 1540/1540 | el882 2232/2232 | el1008 764/764 | publics 3455/4266 | acc_chain 118/160 | acc_main 864/1152 | pass 0/96 | app 10/10
+
+THE 2->1 RECURSION NODE (two children + 43 folds, ONE proof)
+  children: dense_m 30 / mu 23, one circuit, distinct FS points
+  regions: 2x the complete deferred verifier (swap assembly, shared slots)
+         + the fold region; CONNECTED: all points, z_partial lows, sigma fully,
+         and the matrix/element EVAL VALUES to the children's bound advice —
+         lagrange lows DERIVED in-circuit from each child's z_skip wire
+  outer: BLAKE rows 31446 across [16035, 15411] | nu 14 | dense_m 30 | mu 23 (cell slots: 331 gate + 1 public)
+  PER PROOF (online): child tapes 32 + witgen/trace 38 + witness asm 1 + prove 4448 = 4520 ms | verify 112 ms (DEFERRED 12 ms) | proof 312.6 KiB
+  SETUP: circuit build (per SHAPE, cacheable) 18789 ms | tape pins+locates (shape-stable) 102 ms
+
+{"record":"stage","kind":"leaf","ordinal":0,"setup_ms":6582.285211,"walk_ms":0.476033,"tapes_ms":0,"witgen_ms":14.253993,"prove_ms":162.98791,"builder_verify_ms":0,"online_wall_ms":177.84735300000003,"proof_bytes":345246}
+{"record":"stage","kind":"leaf","ordinal":1,"setup_ms":0.28856,"walk_ms":0.284722,"tapes_ms":0,"witgen_ms":3.999298,"prove_ms":126.304107,"builder_verify_ms":0,"online_wall_ms":130.693996,"proof_bytes":345246}
+{"record":"stage","kind":"first_level","ordinal":2,"setup_ms":4745.211956,"walk_ms":20.018964,"tapes_ms":12.12804,"witgen_ms":0.94655,"prove_ms":3699.473062,"builder_verify_ms":94.08405,"online_wall_ms":0,"proof_bytes":320062}
+{"record":"stage","kind":"leaf","ordinal":3,"setup_ms":1.2707640000000002,"walk_ms":0.12421700000000001,"tapes_ms":0,"witgen_ms":3.9245850000000004,"prove_ms":147.306562,"builder_verify_ms":0,"online_wall_ms":151.360082,"proof_bytes":345246}
+{"record":"stage","kind":"leaf","ordinal":4,"setup_ms":0.287765,"walk_ms":0.140349,"tapes_ms":0,"witgen_ms":3.687333,"prove_ms":127.210654,"builder_verify_ms":0,"online_wall_ms":131.044325,"proof_bytes":345246}
+{"record":"stage","kind":"first_level","ordinal":5,"setup_ms":4656.667493000001,"walk_ms":23.645397,"tapes_ms":13.778341,"witgen_ms":0.908466,"prove_ms":3549.7005550000003,"builder_verify_ms":93.609051,"online_wall_ms":0,"proof_bytes":320062}
+{"record":"stage","kind":"base","ordinal":6,"setup_ms":18788.713591,"walk_ms":38.119291,"tapes_ms":32.25619,"witgen_ms":1.497746,"prove_ms":4447.744696,"builder_verify_ms":112.457267,"online_wall_ms":0,"proof_bytes":320062}
+  [envelope rows live/target] b3 9281/9281 | b3b 8211/8211 | swap 2762/2762 | spread 742/742 | pow 118/118 | family 1024/1024 | el600 12645/12645 | el602 4192/4192 | el500 132/132 | el400 250/250 | el0 9708/9708 | el700 126/126 | el701 16384/16384 | el601 96/96 | el8 68/68 | el808 4412/4412 | el318 1616/1616 | el880 742/742 | el881 1134/1134 | el882 742/742 | el1008 116/116 | publics 2174/4266 | acc_chain 118/160 | acc_main 0/1152 | pass 0/96 | app 10/10
+  [envelope rows live/target] b3 9281/9281 | b3b 8211/8211 | swap 2762/2762 | spread 742/742 | pow 118/118 | family 1024/1024 | el600 12645/12645 | el602 4192/4192 | el500 132/132 | el400 250/250 | el0 9708/9708 | el700 126/126 | el701 16384/16384 | el601 96/96 | el8 68/68 | el808 4412/4412 | el318 1616/1616 | el880 742/742 | el881 1134/1134 | el882 742/742 | el1008 116/116 | publics 2174/4266 | acc_chain 118/160 | acc_main 0/1152 | pass 0/96 | app 10/10
+  [envelope rows live/target] b3 9281/9281 | b3b 8211/8211 | swap 2762/2762 | spread 742/742 | pow 118/118 | family 1024/1024 | el600 12645/12645 | el602 4192/4192 | el500 132/132 | el400 250/250 | el0 9708/9708 | el700 126/126 | el701 16384/16384 | el601 96/96 | el8 68/68 | el808 4412/4412 | el318 1616/1616 | el880 742/742 | el881 1134/1134 | el882 742/742 | el1008 116/116 | publics 2174/4266 | acc_chain 118/160 | acc_main 0/1152 | pass 0/96 | app 10/10
+  [envelope rows live/target] b3 16035/16035 | b3b 15411/15411 | swap 7294/7294 | spread 558/558 | pow 1888/1888 | family 1024/1024 | el600 15097/15097 | el602 12662/12662 | el500 554/554 | el400 1016/1016 | el0 11918/11918 | el700 1076/1076 | el701 16384/16384 | el601 192/192 | el8 1806/1806 | el808 2544/2544 | el318 3580/3580 | el880 558/558 | el881 1540/1540 | el882 2232/2232 | el1008 764/764 | publics 3455/4266 | acc_chain 118/160 | acc_main 864/1152 | pass 0/96 | app 10/10
+
+THE 2->1 RECURSION NODE (two children + 43 folds, ONE proof)
+  children: dense_m 30 / mu 23, one circuit, distinct FS points
+  regions: 2x the complete deferred verifier (swap assembly, shared slots)
+         + the fold region; CONNECTED: all points, z_partial lows, sigma fully,
+         and the matrix/element EVAL VALUES to the children's bound advice —
+         lagrange lows DERIVED in-circuit from each child's z_skip wire
+  outer: BLAKE rows 31446 across [16035, 15411] | nu 14 | dense_m 30 | mu 23 (cell slots: 331 gate + 1 public)
+  PER PROOF (online): child tapes 34 + witgen/trace 31 + witness asm 1 + prove 4813 = 4879 ms | verify 106 ms (DEFERRED 12 ms) | proof 312.6 KiB
+  SETUP: circuit build (per SHAPE, cacheable) 18988 ms | tape pins+locates (shape-stable) 119 ms
+

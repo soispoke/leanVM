@@ -2,6 +2,8 @@
 
 **Latest:** the [private native-field prototype](PRIVATE.md) now has repeated comparisons with leanVM and a full-length eight-leaf run. Repeated matched runs measure a two-child parent at 1.042 s to prepare and prove versus leanVM's 1.097 s. Native roots remain slower at four and eight leaves (1.700/1.581 s versus 1.097/1.100 s), with faster Rust verification and larger proofs. The full-length native root takes 1.67 s to prove, 6.15 ms to verify and 336,984 total bytes. Each level still has its own trusted circuit and key; recursive closure under one submitted verifier and a formal composition proof remain open. The results below preserve the original full-adder experiments.
 
+The [Succinct Flock baseline adapted to BLAKE2s](FLOCK_BASELINE.md) completes three repeated towers with independent consumer verification. Its workload and timing boundaries differ from the matched native/leanVM series.
+
 ## Earlier full-adder backend
 
 **Result: the direct implementation exceeds the current quotient backend's capacity. No recursive outer proof was produced.** This experiment removes leanVM from the verifier being compiled, rather than reusing its recursive verifier or hash instruction.

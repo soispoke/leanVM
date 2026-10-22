@@ -1,0 +1,4 @@
+
+thread 'main' (313425) panicked at crates/flock-core/src/circuit/builder.rs:565:9:
+slot 0 exceeded its 2^14 row capacity
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace

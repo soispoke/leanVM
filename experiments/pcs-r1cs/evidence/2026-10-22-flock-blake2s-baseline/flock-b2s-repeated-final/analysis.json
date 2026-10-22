@@ -1,0 +1,275 @@
+{
+  "schema": 1,
+  "validated": true,
+  "scope": "three repeated warm-in-process complete Flock BLAKE2s adapted towers; independent consumer verified each root and rejected nine mutations per trial",
+  "shared_vk_setup": {
+    "record": "shared_vk_setup",
+    "vk_setup_ms": 142402.151019,
+    "trials": 3,
+    "same_process": true,
+    "excluded_warmups": 0,
+    "policy": "one independently generated immutable VK; full Tower::prove per trial"
+  },
+  "metrics": {
+    "full_prove_ms_including_setup": {
+      "median": 209422.075041,
+      "min": 208090.990389,
+      "max": 213933.607099,
+      "all": [
+        208090.990389,
+        213933.607099,
+        209422.075041
+      ]
+    },
+    "root_discharge_ms": {
+      "median": 10164.964779,
+      "min": 10136.081537999999,
+      "max": 10442.491003000001,
+      "all": [
+        10164.964779,
+        10136.081537999999,
+        10442.491003000001
+      ]
+    },
+    "consumer_verify_ms": {
+      "median": 10337.048636000001,
+      "min": 10311.578513,
+      "max": 10349.477119,
+      "all": [
+        10337.048636000001,
+        10311.578513,
+        10349.477119
+      ]
+    },
+    "proof_bytes": {
+      "median": 321150,
+      "min": 321150,
+      "max": 321150,
+      "all": [
+        321150,
+        321150,
+        321150
+      ]
+    },
+    "bundle_bytes": {
+      "median": 414354,
+      "min": 414354,
+      "max": 414354,
+      "all": [
+        414354,
+        414354,
+        414354
+      ]
+    },
+    "all_stage_online_ms": {
+      "median": 44574.042369,
+      "min": 43867.796041999994,
+      "max": 45359.79027,
+      "all": [
+        43867.796041999994,
+        45359.79027,
+        44574.042369
+      ]
+    },
+    "root_online_wall_ms": {
+      "median": 13392.431149,
+      "min": 13366.105024999999,
+      "max": 14050.185874,
+      "all": [
+        13366.105024999999,
+        14050.185874,
+        13392.431149
+      ]
+    },
+    "root_prove_ms": {
+      "median": 1892.598201,
+      "min": 1829.5589410000002,
+      "max": 1902.047609,
+      "all": [
+        1902.047609,
+        1829.5589410000002,
+        1892.598201
+      ]
+    },
+    "root_setup_ms": {
+      "median": 50130.896377,
+      "min": 50044.550567999984,
+      "max": 51431.775456999996,
+      "all": [
+        50044.550567999984,
+        51431.775456999996,
+        50130.896377
+      ]
+    },
+    "root_replica_checks_ms": {
+      "median": 11425.781185,
+      "min": 11390.555908,
+      "max": 12142.859032,
+      "all": [
+        11390.555908,
+        12142.859032,
+        11425.781185
+      ]
+    },
+    "root_accumulator_self_discharge_ms": {
+      "median": 6668.391518,
+      "min": 6638.152642,
+      "max": 6980.150935000001,
+      "all": [
+        6638.152642,
+        6980.150935000001,
+        6668.391518
+      ]
+    },
+    "root_builder_call_ms_including_setup_and_self_checks": {
+      "median": 64106.06344500001,
+      "min": 64005.09061,
+      "max": 66071.559108,
+      "all": [
+        64005.09061,
+        66071.559108,
+        64106.06344500001
+      ]
+    }
+  },
+  "process_wall_seconds": 837.6660652689898,
+  "wait4_max_rss_kib": 8088420,
+  "sampled_group_peak_rss_bytes": 8239783936,
+  "source_git": {
+    "revision": "554435d5a5b4f9ee0ba93942fd3c38ad6d227306",
+    "dirty": false
+  },
+  "tooling_git": {
+    "revision": "85e81e09fac36f6b69c1bdb5c0a74c2f4047414b",
+    "dirty": true
+  },
+  "harness_sha256": "47c306c9564f159c56aab5a871e95d889f98f74e4025c07d45ac2cff34164ab6",
+  "expected_h_end": [
+    3620222995,
+    1411925537,
+    1038527873,
+    3662268406,
+    1279865766,
+    2773383471,
+    2254932969,
+    1634072919,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0
+  ],
+  "trials": [
+    {
+      "record": "summary",
+      "trial": 0,
+      "construction": "succinct-flock-blake2s-adaptation",
+      "profile": "Chain128",
+      "statement": "sequential-BLAKE2s256-on-64-byte-state-output-zero-extended",
+      "leaves": 8,
+      "blocks_per_leaf": 256,
+      "total_compressions": 2048,
+      "full_prove_ms_including_setup": 208090.990389,
+      "root_discharge_ms": 10164.964779,
+      "consumer_verify_ms": 10337.048636000001,
+      "proof_bytes": 321150,
+      "bundle_bytes": 414354,
+      "mutation_rejections": 9,
+      "verified": true,
+      "root": {
+        "record": "stage",
+        "trial": 0,
+        "kind": "spine",
+        "ordinal": 14,
+        "builder_call_ms_including_setup_and_self_checks": 64005.09061,
+        "setup_ms": 50044.550567999984,
+        "walk_ms": 37.396232000000005,
+        "tapes_ms": 34.792078,
+        "witgen_ms": 1.311398,
+        "prove_ms": 1902.047609,
+        "replica_checks_ms": 11390.555908,
+        "accumulator_self_discharge_ms": 6638.152642,
+        "builder_verify_ms": 50.404576,
+        "online_wall_ms": 13366.105024999999,
+        "proof_bytes": 321150
+      },
+      "all_stage_call_ms": 207696.134355,
+      "all_stage_online_ms": 43867.796041999994
+    },
+    {
+      "record": "summary",
+      "trial": 1,
+      "construction": "succinct-flock-blake2s-adaptation",
+      "profile": "Chain128",
+      "statement": "sequential-BLAKE2s256-on-64-byte-state-output-zero-extended",
+      "leaves": 8,
+      "blocks_per_leaf": 256,
+      "total_compressions": 2048,
+      "full_prove_ms_including_setup": 213933.607099,
+      "root_discharge_ms": 10136.081537999999,
+      "consumer_verify_ms": 10311.578513,
+      "proof_bytes": 321150,
+      "bundle_bytes": 414354,
+      "mutation_rejections": 9,
+      "verified": true,
+      "root": {
+        "record": "stage",
+        "trial": 1,
+        "kind": "spine",
+        "ordinal": 14,
+        "builder_call_ms_including_setup_and_self_checks": 66071.559108,
+        "setup_ms": 51431.775456999996,
+        "walk_ms": 41.869376,
+        "tapes_ms": 34.421272,
+        "witgen_ms": 1.474411,
+        "prove_ms": 1829.5589410000002,
+        "replica_checks_ms": 12142.859032,
+        "accumulator_self_discharge_ms": 6980.150935000001,
+        "builder_verify_ms": 49.54177,
+        "online_wall_ms": 14050.185874,
+        "proof_bytes": 321150
+      },
+      "all_stage_call_ms": 213545.582195,
+      "all_stage_online_ms": 45359.79027
+    },
+    {
+      "record": "summary",
+      "trial": 2,
+      "construction": "succinct-flock-blake2s-adaptation",
+      "profile": "Chain128",
+      "statement": "sequential-BLAKE2s256-on-64-byte-state-output-zero-extended",
+      "leaves": 8,
+      "blocks_per_leaf": 256,
+      "total_compressions": 2048,
+      "full_prove_ms_including_setup": 209422.075041,
+      "root_discharge_ms": 10442.491003000001,
+      "consumer_verify_ms": 10349.477119,
+      "proof_bytes": 321150,
+      "bundle_bytes": 414354,
+      "mutation_rejections": 9,
+      "verified": true,
+      "root": {
+        "record": "stage",
+        "trial": 2,
+        "kind": "spine",
+        "ordinal": 14,
+        "builder_call_ms_including_setup_and_self_checks": 64106.06344500001,
+        "setup_ms": 50130.896377,
+        "walk_ms": 38.983743000000004,
+        "tapes_ms": 33.695232999999995,
+        "witgen_ms": 1.370794,
+        "prove_ms": 1892.598201,
+        "replica_checks_ms": 11425.781185,
+        "accumulator_self_discharge_ms": 6668.391518,
+        "builder_verify_ms": 49.266048,
+        "online_wall_ms": 13392.431149,
+        "proof_bytes": 321150
+      },
+      "all_stage_call_ms": 209107.950687,
+      "all_stage_online_ms": 44574.042369
+    }
+  ]
+}

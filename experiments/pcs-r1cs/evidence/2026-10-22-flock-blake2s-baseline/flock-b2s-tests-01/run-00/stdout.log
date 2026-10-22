@@ -1,0 +1,11 @@
+
+running 1 test
+test tower::hash::tests::blake2s_tower_hash_gadget_matches_native_personalized_hashes ... FAILED
+
+failures:
+
+failures:
+    tower::hash::tests::blake2s_tower_hash_gadget_matches_native_personalized_hashes
+
+test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 87 filtered out; finished in 17.39s
+

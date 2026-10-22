@@ -8,6 +8,8 @@ Those recursive trees use leanVM's recursive verifier and Flock hash support. Th
 
 Start with the [full Linux measurements](evidence/2026-10-22-full/README.md), [compact descriptions](format/compact/README.md), and [formal scope](../../formal/quotient/README.md). This is a research prototype, not an audited implementation or a protocol recommendation.
 
+The [Succinct Flock baseline adapted to BLAKE2s](recursion/FLOCK_BASELINE.md) also completes three repeated recursive towers. Its sequential chain workload differs from the matched native/leanVM tree, so its times are reported separately.
+
 ## What the comparison measures
 
 The optimized PCS path uses a Keccak application transcript. The optimized R1CS path uses leanVM's native BLAKE2s transcript; its client proof bytes therefore differ. They keep the same application circuit, inputs, field, quotient relation and opening protocol. The [hash decision](HASH-DECISION.md) explains this protocol choice. The R1CS Keccak control retains the identical client proof used by PCS, at a higher aggregate cost.

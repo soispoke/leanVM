@@ -1,0 +1,7 @@
+
+running 2 tests
+test r1cs_hashes::fs_chain::blake2s_tests::blake2s_physical_trace_matches_native_and_all_cv_links ... ok
+test r1cs_hashes::fs_chain::tests::blake2s_forked_chains_reproduce_the_native_transcript ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 85 filtered out; finished in 0.01s
+

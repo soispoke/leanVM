@@ -1,0 +1,64 @@
+{
+  "schema": 1,
+  "status": "complete",
+  "source_revision": "554435d5a5b4f9ee0ba93942fd3c38ad6d227306",
+  "source_clean": true,
+  "feature_library": {
+    "receipt": "flock-b2s-tests-02/result.json",
+    "stdout": "flock-b2s-tests-02/run-00/stdout.log",
+    "passed": 63,
+    "ignored": 24,
+    "scope": "before telemetry, repeated CLI and expanded example mutations; cryptographic implementation unchanged afterward"
+  },
+  "final_default_library": {
+    "receipt": "flock-default-tests-final/result.json",
+    "stdout": "flock-default-tests-final/run-00/stdout.log",
+    "passed": 63,
+    "ignored": 24
+  },
+  "final_release_build": "flock-b2s-build-final/result.json",
+  "clippy": {
+    "exitcode": 0,
+    "log": "flock-b2s-clippy-final.log",
+    "log_sha256": "4a26398d1df2d880c2afbef9a7308f4782cd5690de489ff34e1d73bb52eadeca",
+    "command": [
+      "cargo",
+      "clippy",
+      "--no-deps",
+      "--locked",
+      "-p",
+      "flock-prover",
+      "--features",
+      "blake2s-tower",
+      "--lib",
+      "--example",
+      "tower_blake2s",
+      "--",
+      "-D",
+      "warnings"
+    ],
+    "scope": "package lib and example; dependencies excluded; preexisting dependency warnings retained"
+  },
+  "benchmark": "flock-b2s-repeated-final/result.json",
+  "analysis_script": "flock-b2s-analyze.py",
+  "analysis_result": "flock-b2s-repeated-final/analysis.json",
+  "assertions": [
+    "all 396 explicit source files and frozen executable unchanged",
+    "three complete 8x256 towers; 45 material stages",
+    "three independent consumer verifications using shared independently generated immutable VK",
+    "nine mutation rejects per trial",
+    "hashlib BLAKE2s independently reproduces every 2048-compression endpoint",
+    "stage counts/ordinals/timers/proof byte accounting consistent"
+  ],
+  "frozen_inputs": "flock-b2s-final-inputs",
+  "runner_used_sha256": "47c306c9564f159c56aab5a871e95d889f98f74e4025c07d45ac2cff34164ab6",
+  "runner_archive": "flock-b2s-final-inputs/bench-research-used.py",
+  "tooling_change_note": "Shared checkout advanced during measurement. Python executed the runner loaded at invocation; archived exact old revision85e81e09 gitblob matches receipt hash. Source-bound application inputs and binary did not change.",
+  "policy": "warm-in-process with shared VK; first trial retained; no excluded warmup; full per-trial shape setup and all checks retained",
+  "limitations": [
+    "different chain workload from tagged 2->1 native/leanVM benchmark",
+    "experimental BLAKE2s adaptation of upstream Flock, not original unchanged or official recursion.fast score",
+    "no new formal-verification, zero-knowledge or security-theorem claim",
+    "root bundles consumer-verified in memory and not saved as files"
+  ]
+}

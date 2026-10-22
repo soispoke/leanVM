@@ -1,0 +1,14 @@
+{
+  "pid": 304778,
+  "command": [
+    "/root/.rustup/toolchains/1.99.1-x86_64-unknown-linux-gnu/bin/cargo",
+    "test",
+    "--locked",
+    "-p",
+    "flock-merkle",
+    "--features",
+    "hash-count",
+    "--lib"
+  ],
+  "started_utc": "2026-10-22T14:25:58.234906+00:00"
+}

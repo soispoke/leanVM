@@ -1,0 +1,1 @@
+During the development compile, CPUs 52–55 were found overlapping another mission’s certificate run. Our cargo process 292300 and its current threads/descendants were moved to CPUs 44–47 on 2026-10-22. This run is correctness evidence, not a performance result.

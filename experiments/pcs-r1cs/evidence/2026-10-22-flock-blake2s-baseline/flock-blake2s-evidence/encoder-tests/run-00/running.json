@@ -1,0 +1,16 @@
+{
+  "pid": 291104,
+  "command": [
+    "/root/.rustup/toolchains/1.99.1-x86_64-unknown-linux-gnu/bin/cargo",
+    "test",
+    "--locked",
+    "--release",
+    "-p",
+    "flock-prover",
+    "--lib",
+    "r1cs_hashes::blake2s::tests",
+    "--",
+    "--test-threads=1"
+  ],
+  "started_utc": "2026-10-22T14:13:56.319617+00:00"
+}

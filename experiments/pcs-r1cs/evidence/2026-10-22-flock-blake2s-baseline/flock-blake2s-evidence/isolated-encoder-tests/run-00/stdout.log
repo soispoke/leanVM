@@ -1,0 +1,17 @@
+
+running 12 tests
+test r1cs_hashes::blake2s::tests::batch_major_partial_zeroes_dummy_rows ... ok
+test r1cs_hashes::blake2s::tests::batch_major_witness_matches_row_major_transposed ... ok
+test r1cs_hashes::blake2s::tests::fused_lincheck_matches_separate ... ok
+test r1cs_hashes::blake2s::tests::generate_witness_with_ab_packed_matches_apply ... ok
+test r1cs_hashes::blake2s::tests::honest_witness_satisfies_r1cs ... ok
+test r1cs_hashes::blake2s::tests::io_schema_covers_every_unpinned_input ... ok
+test r1cs_hashes::blake2s::tests::lincheck_circuit_matches_sparse ... ok
+test r1cs_hashes::blake2s::tests::mutated_witness_fails ... ok
+test r1cs_hashes::blake2s::tests::output_matches_native_and_high_is_zero ... ok
+test r1cs_hashes::blake2s::tests::prove_fast_ligerito_roundtrip ... ignored
+test r1cs_hashes::blake2s::tests::tampered_outputs_params_and_helpers_rejected ... ok
+test r1cs_hashes::blake2s::tests::walker_const_pin_matches_r1cs ... ok
+
+test result: ok. 11 passed; 0 failed; 1 ignored; 0 measured; 73 filtered out; finished in 24.88s
+

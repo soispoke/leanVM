@@ -1,0 +1,81 @@
+{
+  "status": "component_complete",
+  "created_utc": "2026-10-22T14:31:21.955932+00:00",
+  "revision": "a5b27f92ca30ad24192049410cf5d3de6b26167c",
+  "scope": "Native Merkle and flock-core BLAKE2s adaptation only; complete recursive baseline requires tower and transcript gates",
+  "spec": {
+    "leaf": "BLAKE2s256(data,personal=FlockLf0)",
+    "parent": "BLAKE2s256(left32||right32,personal=FlockNd0)",
+    "iv": "IV[0] XOR 0x01010020; IV[6..8] XOR little-endian personalization words",
+    "counters": "Cumulative payload bytes; final f0=0xffffffff; f1=0",
+    "rng": "BLAKE2s256(seed32||LE64(counter))",
+    "nonce_seed": "BLAKE2s256(seed32||LE32(nonce))",
+    "public_binding": "Only Blake2s mode changes to B2s; legacy SHA256 and Blake3 retain B3 public commitments"
+  },
+  "checks": {
+    "merkle-final-tests": {
+      "receipt": "/root/yukon-autoresearch/workspaces/leanr1cs-parity-20261022/merkle-final-tests/result.json",
+      "ok": true,
+      "files_unchanged": true,
+      "tooling_git": {
+        "revision": "e7b766b5d13a2c11b0307f83a8808e401282846e",
+        "dirty": true
+      },
+      "affinity": [
+        24,
+        25,
+        26,
+        27
+      ],
+      "median_wall_seconds": 2.443519805005053
+    },
+    "core-final-b2s": {
+      "receipt": "/root/yukon-autoresearch/workspaces/leanr1cs-parity-20261022/core-final-b2s/result.json",
+      "ok": true,
+      "files_unchanged": true,
+      "tooling_git": {
+        "revision": "f9b95b49b01301d9ee2e61b6e4e2fff734e313a8",
+        "dirty": false
+      },
+      "affinity": [
+        24,
+        25,
+        26,
+        27
+      ],
+      "median_wall_seconds": 4.931544403007138
+    },
+    "core-final-matrix": {
+      "receipt": "/root/yukon-autoresearch/workspaces/leanr1cs-parity-20261022/core-final-matrix/result.json",
+      "ok": true,
+      "files_unchanged": true,
+      "tooling_git": {
+        "revision": "e7b766b5d13a2c11b0307f83a8808e401282846e",
+        "dirty": true
+      },
+      "affinity": [
+        24,
+        25,
+        26,
+        27
+      ],
+      "median_wall_seconds": 18.955318258987973
+    },
+    "core-merkle-final-clippy": {
+      "receipt": "/root/yukon-autoresearch/workspaces/leanr1cs-parity-20261022/core-merkle-final-clippy/result.json",
+      "ok": true,
+      "files_unchanged": true,
+      "tooling_git": {
+        "revision": "f9b95b49b01301d9ee2e61b6e4e2fff734e313a8",
+        "dirty": false
+      },
+      "affinity": [
+        24,
+        25,
+        26,
+        27
+      ],
+      "median_wall_seconds": 2.7215806000021985
+    }
+  }
+}

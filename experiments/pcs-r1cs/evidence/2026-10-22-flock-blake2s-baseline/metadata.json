@@ -1,0 +1,27 @@
+{
+  "source_revision": "554435d5a5b4f9ee0ba93942fd3c38ad6d227306",
+  "binary_sha256": "6714ce77567fe06e13e478b0f827dde28dfafe9b997425822a61e319f41c2fd2",
+  "tooling_revision": "85e81e09fac36f6b69c1bdb5c0a74c2f4047414b",
+  "runner_sha256": "47c306c9564f159c56aab5a871e95d889f98f74e4025c07d45ac2cff34164ab6",
+  "tracked_files": 396,
+  "policy": "three complete 8x256 towers in one process; shared independently generated immutable VK; no discarded trial or warmup; warm-in-process; retain all shape setup and checks",
+  "cpus": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15
+  ],
+  "threads": 16
+}

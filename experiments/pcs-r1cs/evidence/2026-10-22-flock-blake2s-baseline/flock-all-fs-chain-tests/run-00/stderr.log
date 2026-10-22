@@ -1,0 +1,101 @@
+warning: unused imports: `__m512i`, `_mm512_bslli_epi128`, `_mm512_clmulepi64_epi128`, `_mm512_extracti32x4_epi32`, `_mm512_loadu_si512`, `_mm512_set_epi64`, `_mm512_setzero_si512`, and `_mm512_xor_si512`
+ --> crates/flock-field/src/gf2_128/x86_64.rs:2:14
+  |
+2 |     __m128i, __m512i, _mm_clmulepi64_si128, _mm_extract_epi64, _mm_set_epi64x, _mm_slli_si128,
+  |              ^^^^^^^
+3 |     _mm_xor_si128, _mm512_bslli_epi128, _mm512_clmulepi64_epi128, _mm512_extracti32x4_epi32,
+  |                    ^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^^^^^^^
+4 |     _mm512_loadu_si512, _mm512_set_epi64, _mm512_setzero_si512, _mm512_xor_si512,
+  |     ^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^
+  |
+  = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: `flock-field` (lib) generated 1 warning (run `cargo fix --lib -p flock-field` to apply 1 suggestion)
+   Compiling flock-merkle v0.1.0 (/root/yukon-autoresearch/workspaces/leanr1cs-parity-20261022/flock-blake2s/crates/flock-merkle)
+   Compiling flock-core v0.1.0 (/root/yukon-autoresearch/workspaces/leanr1cs-parity-20261022/flock-blake2s/crates/flock-core)
+   Compiling flock-prover v0.1.0 (/root/yukon-autoresearch/workspaces/leanr1cs-parity-20261022/flock-blake2s/crates/flock-prover)
+warning: unused import: `challenger::FsChallenger`
+  --> crates/flock-prover/src/tower/mod.rs:57:5
+   |
+57 |     challenger::FsChallenger,
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+   = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused import: `HashKind`
+  --> crates/flock-prover/src/tower/fl_node.rs:43:75
+   |
+43 |         EnvTail, F128, FamilyTransposeTileGate, FamilyTransposeTileTable, HashKind, LeafOuter,
+   |                                                                           ^^^^^^^^
+
+warning: unused import: `flock_merkle::HashKind`
+    --> crates/flock-prover/src/tower/fold_region.rs:1215:9
+     |
+1215 |     use flock_merkle::HashKind;
+     |         ^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `HashKind`
+ --> crates/flock-prover/src/tower/gates_blake3.rs:8:20
+  |
+8 |     flock_merkle::{HashKind, merkle_tree},
+  |                    ^^^^^^^^
+
+warning: unused imports: `CHUNK_END`, `CHUNK_START`, `PARENT`, `cw`, and `pack_params`
+  --> crates/flock-prover/src/tower/geometry.rs:13:5
+   |
+13 |     CHUNK_END, CHUNK_START, F128, F256, HashKind, OpenLevel, PARENT, PcsParams, ShapeBuilder, Wire,
+   |     ^^^^^^^^^  ^^^^^^^^^^^                                   ^^^^^^
+14 |     cw, pack_params,
+   |     ^^  ^^^^^^^^^^^
+
+warning: unused import: `HashKind`
+  --> crates/flock-prover/src/tower/node.rs:51:75
+   |
+51 |         F128, FamilyTransposeTileGate, FamilyTransposeTileTable, FoldPub, HashKind, LeafOuter,
+   |                                                                           ^^^^^^^^
+
+warning: unused import: `challenger::FsChallenger`
+  --> crates/flock-prover/src/tower/query.rs:19:9
+   |
+19 |         challenger::FsChallenger,
+   |         ^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused imports: `CHUNK_END`, `CHUNK_START`, and `PARENT`
+  --> crates/flock-prover/src/tower/query.rs:35:9
+   |
+35 |         CHUNK_END, CHUNK_START, CollapsedSlots, F128, F256, Lvl, MacGate, MacGate256, MixedProof,
+   |         ^^^^^^^^^  ^^^^^^^^^^^
+36 |         OpenLevel, PARENT, PcsParams, PrefixGate, PrefixGate256, ResidualAccGate256,
+   |                    ^^^^^^
+
+warning: unused variable: `iv`
+   --> crates/flock-prover/src/tower/geometry.rs:494:5
+    |
+494 |     iv: [Wire; 2],
+    |     ^^ help: if this is intentional, prefix it with an underscore: `_iv`
+    |
+    = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused variable: `iv`
+    --> crates/flock-prover/src/tower/query.rs:1177:5
+     |
+1177 |     iv: [Wire; 2],
+     |     ^^ help: if this is intentional, prefix it with an underscore: `_iv`
+
+warning: constant `CHAIN_FLAGS` is never used
+   --> crates/flock-prover/src/tower/chain.rs:278:18
+    |
+278 | pub(super) const CHAIN_FLAGS: u32 = CHUNK_START | CHUNK_END | ROOT;
+    |                  ^^^^^^^^^^^
+    |
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: constant `PARENT` is never used
+  --> crates/flock-prover/src/tower/gates_blake3.rs:20:18
+   |
+20 | pub(super) const PARENT: u32 = 1 << 2;
+   |                  ^^^^^^
+
+warning: `flock-prover` (lib test) generated 12 warnings (run `cargo fix --lib -p flock-prover --tests` to apply 10 suggestions)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 16.75s
+     Running unittests src/lib.rs (/root/yukon-autoresearch/workspaces/leanr1cs-parity-20261022/flock-transcript-target/debug/deps/flock_prover-e3e3230a9583ed62)

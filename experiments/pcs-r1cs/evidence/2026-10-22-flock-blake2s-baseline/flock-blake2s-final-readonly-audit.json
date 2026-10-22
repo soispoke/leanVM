@@ -1,0 +1,51 @@
+{
+  "created_utc": "2026-10-22T14:49:26.900363+00:00",
+  "scope": "Final read-only audit of in-progress source, not independent execution certificate",
+  "source_revision": "a5b27f92ca30ad24192049410cf5d3de6b26167c",
+  "source_dirty": true,
+  "yukon_revision": "85e81e09fac36f6b69c1bdb5c0a74c2f4047414b",
+  "yukon_matches_upstream": true,
+  "geometry": {
+    "outer_dense_floor_m": 30,
+    "row_capacity_log2_nu": 15,
+    "rows_per_table_capacity": 32768,
+    "committed_lanes": 63,
+    "embedded_slim_initial_k": 6,
+    "max_lanes": 64
+  },
+  "upstream_unchanged": {
+    "crates/flock-core/configs/ligerito/m30_slim.toml": true,
+    "crates/flock-core/configs/ligerito/m22_fast.toml": true,
+    "crates/flock-core/src/pcs/commit.rs": true
+  },
+  "checks_preserved": "All active RS/PCS query/grinding schedules and native/circuit consistency checks retained. B2s feature explicitly chooses supported RS variant; AG not supported. No new disable or skip option found in reviewed diff.",
+  "endpoint": {
+    "definition": "state starts64zero bytes; repeat2048: state=hashlib.blake2s(state).digest()+bytes(32)",
+    "h_end_bytes": "1338c8d72146285481ade63df6c749daa633494c2f794ea5e98b678657f965610000000000000000000000000000000000000000000000000000000000000000",
+    "h_end_u32_le": [
+      3620222995,
+      1411925537,
+      1038527873,
+      3662268406,
+      1279865766,
+      2773383471,
+      2254932969,
+      1634072919,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ]
+  },
+  "comparability": [
+    "Flock Chain128 adaptation runs sequential 64-byte-state BLAKE2s with zero-extended32-byte digest, F128 packing/F256 folding and Ligerito.",
+    "Local candidate/leanVM comparison uses tagged32-byte BLAKE2s chain plus tagged balanced-tree nodes and WHIR. Absolute numbers need distinct workload/backend labels; cannot infer architecture speedup by dividing Flock tower time against local2to1 time.",
+    "Shared-VK repeated trials reconstructTower each time but retain process-globalshape/matrix caches and pooledbuffers: label warm in-process trials, distinguish firstcoldtrial/setup.",
+    "Builder self-verification/replica/discharge time is real work but not proof generation kernel; disclose timing scope.",
+    "Static circuit/registry digest BLAKE3 retained; claimBLAKE2s computation/Merkle/transcript, not eliminationofallBLAKE3 assumptions."
+  ]
+}

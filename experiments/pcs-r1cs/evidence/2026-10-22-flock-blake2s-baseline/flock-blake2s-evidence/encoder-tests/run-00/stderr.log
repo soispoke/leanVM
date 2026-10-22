@@ -1,0 +1,115 @@
+   Compiling crossbeam-utils v0.8.21
+   Compiling shlex v1.3.0
+   Compiling find-msvc-tools v0.1.9
+   Compiling version_check v0.9.5
+   Compiling cc v1.2.62
+   Compiling generic-array v0.14.7
+   Compiling typenum v1.20.0
+   Compiling rayon-core v1.13.0
+   Compiling either v1.16.0
+   Compiling cfg-if v1.0.4
+   Compiling hashbrown v0.17.1
+   Compiling crossbeam-epoch v0.9.18
+   Compiling equivalent v1.0.2
+   Compiling crossbeam-deque v0.8.6
+   Compiling cpufeatures v0.2.17
+   Compiling cpufeatures v0.3.0
+   Compiling sha2-asm v0.6.4
+   Compiling blake3 v1.8.5
+   Compiling crypto-common v0.1.7
+   Compiling block-buffer v0.10.4
+   Compiling digest v0.10.7
+   Compiling constant_time_eq v0.4.2
+   Compiling arrayvec v0.7.6
+   Compiling arrayref v0.3.9
+   Compiling rayon v1.12.0
+   Compiling sha2 v0.10.9
+   Compiling indexmap v2.14.0
+   Compiling serde_spanned v0.6.9
+   Compiling toml_datetime v0.6.11
+   Compiling winnow v0.7.15
+   Compiling toml_write v0.1.2
+   Compiling flock-field v0.1.0 (/root/yukon-autoresearch/workspaces/leanr1cs-parity-20261022/flock-blake2s/crates/flock-field)
+warning: unused imports: `__m512i`, `_mm512_bslli_epi128`, `_mm512_clmulepi64_epi128`, `_mm512_extracti32x4_epi32`, `_mm512_loadu_si512`, `_mm512_set_epi64`, `_mm512_setzero_si512`, and `_mm512_xor_si512`
+ --> crates/flock-field/src/gf2_128/x86_64.rs:2:14
+  |
+2 |     __m128i, __m512i, _mm_clmulepi64_si128, _mm_extract_epi64, _mm_set_epi64x, _mm_slli_si128,
+  |              ^^^^^^^
+3 |     _mm_xor_si128, _mm512_bslli_epi128, _mm512_clmulepi64_epi128, _mm512_extracti32x4_epi32,
+  |                    ^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^^^^^^^
+4 |     _mm512_loadu_si512, _mm512_set_epi64, _mm512_setzero_si512, _mm512_xor_si512,
+  |     ^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^
+  |
+  = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+   Compiling bincode v1.3.3
+warning: `flock-field` (lib) generated 1 warning (run `cargo fix --lib -p flock-field` to apply 1 suggestion)
+   Compiling rand_core v0.9.5
+   Compiling flock-parallel v0.1.0 (/root/yukon-autoresearch/workspaces/leanr1cs-parity-20261022/flock-blake2s/crates/flock-parallel)
+   Compiling flock-transcript v0.1.0 (/root/yukon-autoresearch/workspaces/leanr1cs-parity-20261022/flock-blake2s/crates/flock-transcript)
+error[E0004]: non-exhaustive patterns: `HashKind::Blake2s` not covered
+   --> crates/flock-transcript/src/challenger.rs:618:26
+    |
+618 |             state: match kind {
+    |                          ^^^^ pattern `HashKind::Blake2s` not covered
+    |
+note: `HashKind` defined here
+   --> crates/flock-hash/src/lib.rs:15:1
+    |
+ 15 | pub enum HashKind {
+    | ^^^^^^^^^^^^^^^^^
+ 16 |     Sha256,
+ 17 |     Blake2s,
+    |     ------- not covered
+    = note: the matched value is of type `HashKind`
+help: ensure that all possible cases are being handled by adding a match arm with a wildcard pattern or an explicit pattern as shown
+    |
+620 ~                 HashKind::Blake3 => FsState::Blake3(Box::new(Hasher::new())),
+621 ~                 HashKind::Blake2s => todo!(),
+    |
+
+error[E0004]: non-exhaustive patterns: `HashKind::Blake2s` not covered
+    --> crates/flock-transcript/src/challenger.rs:1113:11
+     |
+1113 |     match kind {
+     |           ^^^^ pattern `HashKind::Blake2s` not covered
+     |
+note: `HashKind` defined here
+    --> crates/flock-hash/src/lib.rs:15:1
+     |
+  15 | pub enum HashKind {
+     | ^^^^^^^^^^^^^^^^^
+  16 |     Sha256,
+  17 |     Blake2s,
+     |     ------- not covered
+     = note: the matched value is of type `HashKind`
+help: ensure that all possible cases are being handled by adding a match arm with a wildcard pattern or an explicit pattern as shown
+     |
+1124 ~         },
+1125 +         HashKind::Blake2s => todo!()
+     |
+
+error[E0004]: non-exhaustive patterns: `HashKind::Blake2s` not covered
+    --> crates/flock-transcript/src/challenger.rs:1255:11
+     |
+1255 |     match kind {
+     |           ^^^^ pattern `HashKind::Blake2s` not covered
+     |
+note: `HashKind` defined here
+    --> crates/flock-hash/src/lib.rs:15:1
+     |
+  15 | pub enum HashKind {
+     | ^^^^^^^^^^^^^^^^^
+  16 |     Sha256,
+  17 |     Blake2s,
+     |     ------- not covered
+     = note: the matched value is of type `HashKind`
+help: ensure that all possible cases are being handled by adding a match arm with a wildcard pattern or an explicit pattern as shown
+     |
+1258 ~             .find(|&n| pow_has_leading_zero_bits(state_digest, n, bits, kind)),
+1259 ~         HashKind::Blake2s => todo!(),
+     |
+
+For more information about this error, try `rustc --explain E0004`.
+error: could not compile `flock-transcript` (lib) due to 3 previous errors
+warning: build failed, waiting for other jobs to finish...

@@ -625,5 +625,6 @@
   "main-compact-plan-build/run-00/result.json": "43ee12d50e1b9eae72f0ad9c1ce4c455fbb93a7e13c93ab18ed177a5b7064f29",
   "main-compact-plan-build/run-00/running.json": "f31bdd68f9b1ba9043d3f737956ed929f413fa6215fb582ec0c35a5f7511ae49",
   "main-compact-plan-build/run-00/stderr.log": "841cb0e2981ee41760fa996d0db8133786690450792c5252f535f494fcbe637b",
-  "main-compact-plan-build/run-00/events.jsonl": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  "main-compact-plan-build/run-00/events.jsonl": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "final-review.json": "0a9b1330c9d4fcaeff54d9f93a39dca303e5086641b86a0f2734a6064c8cc10d"
 }

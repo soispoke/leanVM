@@ -1,0 +1,381 @@
+{
+  "scope": "Read-only parameter audit, not an overall security theorem",
+  "date_utc": "2026-10-22T14:37:46.501949+00:00",
+  "upstream_revision": "b684b1258e4b1f202bec24afd660ace851b09e5e",
+  "label": "upstream Chain128 profile adapted to BLAKE2s",
+  "profiles": {
+    "m22_fast": {
+      "path": "crates/flock-core/configs/ligerito/m22_fast.toml",
+      "sha256": "5597cf3b757c76d1df25f8dacc79b9e474839c0310831c1d45ed6bf7d3cc37bd",
+      "byte_identical_to_upstream": true,
+      "m": 22,
+      "log_n": 15,
+      "initial_k": 6,
+      "legacy_target_security_bits": 100,
+      "analysis_version": "f256_split_johnson_two_point_ood_query128_c3_algebraic_row_union_over_bchks25_thm_4_6",
+      "field": "f256",
+      "configured_hash_before_runtime_override": "blake3",
+      "runtime_hash_override": "blake2s",
+      "regime": [
+        "johnson_ood",
+        "johnson_ood",
+        "johnson_ood"
+      ],
+      "eta": [
+        0.02,
+        0.02,
+        0.02
+      ],
+      "queries": [
+        244,
+        79,
+        48
+      ],
+      "total_queries": 371,
+      "log_inv_rates": [
+        1,
+        3,
+        5
+      ],
+      "log_msg_cols": [
+        9,
+        6,
+        3
+      ],
+      "log_num_interleaved": [
+        6,
+        4,
+        4
+      ],
+      "query_grinding_bits": [
+        16,
+        16,
+        16
+      ],
+      "fold_grinding_bits": [
+        0,
+        0,
+        0
+      ],
+      "claim_batch_grinding_bits": [
+        6,
+        7,
+        8
+      ],
+      "consistency_batch_grinding_bits": [
+        9,
+        9,
+        10
+      ],
+      "ood_explicit_samples": [
+        1,
+        2,
+        2
+      ],
+      "query_work_normalized_bits_computed_from_formula": [
+        128.1816460319758,
+        128.2284774109194,
+        128.57769883302473
+      ],
+      "toml_rounded_mca_bits": [
+        219.0,
+        223.8,
+        225.8
+      ],
+      "toml_rounded_ood_bits": [
+        238.3,
+        238.1,
+        237.1
+      ],
+      "toml_rounded_claim_bits_before_grinding": [
+        122.9,
+        121.9,
+        120.9
+      ],
+      "toml_rounded_sumcheck_bits": [
+        249.9,
+        248.9,
+        247.9
+      ],
+      "toml_rounded_consistency_bits_before_grinding": [
+        119.9,
+        119.0,
+        118.3
+      ]
+    },
+    "m30_fast": {
+      "path": "crates/flock-core/configs/ligerito/m30_fast.toml",
+      "sha256": "e85a345667f9a78e07d206faaf6bcb36964203a547046fa339029c9b7cd42ecb",
+      "byte_identical_to_upstream": true,
+      "m": 30,
+      "log_n": 23,
+      "initial_k": 6,
+      "legacy_target_security_bits": 100,
+      "analysis_version": "f256_split_johnson_two_point_ood_query128_c3_algebraic_row_union_over_bchks25_thm_4_6",
+      "field": "f256",
+      "configured_hash_before_runtime_override": "blake3",
+      "runtime_hash_override": "blake2s",
+      "regime": [
+        "johnson_ood",
+        "johnson_ood",
+        "johnson_ood",
+        "johnson_ood",
+        "johnson_ood"
+      ],
+      "eta": [
+        0.02,
+        0.02,
+        0.02,
+        0.02,
+        0.02
+      ],
+      "queries": [
+        244,
+        79,
+        48,
+        35,
+        29
+      ],
+      "total_queries": 435,
+      "log_inv_rates": [
+        1,
+        3,
+        5,
+        7,
+        9
+      ],
+      "log_msg_cols": [
+        17,
+        14,
+        11,
+        8,
+        5
+      ],
+      "log_num_interleaved": [
+        6,
+        4,
+        4,
+        4,
+        4
+      ],
+      "query_grinding_bits": [
+        16,
+        16,
+        16,
+        16,
+        16
+      ],
+      "fold_grinding_bits": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "claim_batch_grinding_bits": [
+        6,
+        7,
+        8,
+        9,
+        10
+      ],
+      "consistency_batch_grinding_bits": [
+        9,
+        9,
+        10,
+        11,
+        12
+      ],
+      "ood_explicit_samples": [
+        1,
+        2,
+        2,
+        2,
+        2
+      ],
+      "query_work_normalized_bits_computed_from_formula": [
+        128.1816460319758,
+        128.2284774109194,
+        128.57769883302473,
+        128.2001449666912,
+        130.88100088219346
+      ],
+      "toml_rounded_mca_bits": [
+        211.0,
+        215.8,
+        217.8,
+        219.0,
+        217.0
+      ],
+      "toml_rounded_ood_bits": [
+        237.3,
+        236.4,
+        234.9,
+        233.5,
+        232.4
+      ],
+      "toml_rounded_claim_bits_before_grinding": [
+        122.9,
+        121.9,
+        120.9,
+        119.9,
+        118.9
+      ],
+      "toml_rounded_sumcheck_bits": [
+        249.9,
+        248.9,
+        247.9,
+        246.9,
+        245.9
+      ],
+      "toml_rounded_consistency_bits_before_grinding": [
+        119.9,
+        119.0,
+        118.3,
+        117.3,
+        116.5
+      ]
+    },
+    "m30_slim": {
+      "path": "crates/flock-core/configs/ligerito/m30_slim.toml",
+      "sha256": "06a832339543c03db677b4260ebd3ac67ed32a10050864d76c440d1610873390",
+      "byte_identical_to_upstream": true,
+      "m": 30,
+      "log_n": 23,
+      "initial_k": 6,
+      "legacy_target_security_bits": 100,
+      "analysis_version": "f256_split_johnson_two_point_ood_query128_c3_algebraic_row_union_over_bchks25_thm_4_6",
+      "field": "f256",
+      "configured_hash_before_runtime_override": "blake3",
+      "runtime_hash_override": "blake2s",
+      "regime": [
+        "johnson_ood",
+        "johnson_ood",
+        "johnson_ood",
+        "johnson_ood",
+        "johnson_ood"
+      ],
+      "eta": [
+        0.02,
+        0.02,
+        0.02,
+        0.02,
+        0.02
+      ],
+      "queries": [
+        119,
+        60,
+        41,
+        32,
+        27
+      ],
+      "total_queries": 279,
+      "log_inv_rates": [
+        2,
+        4,
+        6,
+        8,
+        10
+      ],
+      "log_msg_cols": [
+        17,
+        14,
+        11,
+        8,
+        5
+      ],
+      "log_num_interleaved": [
+        6,
+        4,
+        4,
+        4,
+        4
+      ],
+      "query_grinding_bits": [
+        16,
+        16,
+        16,
+        16,
+        16
+      ],
+      "fold_grinding_bits": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "claim_batch_grinding_bits": [
+        6,
+        7,
+        8,
+        9,
+        10
+      ],
+      "consistency_batch_grinding_bits": [
+        9,
+        10,
+        11,
+        11,
+        12
+      ],
+      "ood_explicit_samples": [
+        1,
+        2,
+        2,
+        2,
+        2
+      ],
+      "query_work_normalized_bits_computed_from_formula": [
+        128.26656012440228,
+        129.33812125667538,
+        130.22088298053325,
+        131.18278625332067,
+        131.7302129992293
+      ],
+      "toml_rounded_mca_bits": [
+        210.8,
+        215.1,
+        216.7,
+        216.5,
+        214.5
+      ],
+      "toml_rounded_ood_bits": [
+        236.3,
+        235.4,
+        233.9,
+        232.5,
+        231.4
+      ],
+      "toml_rounded_claim_bits_before_grinding": [
+        122.4,
+        121.4,
+        120.4,
+        119.4,
+        118.4
+      ],
+      "toml_rounded_sumcheck_bits": [
+        249.4,
+        248.4,
+        247.4,
+        246.4,
+        245.4
+      ],
+      "toml_rounded_consistency_bits_before_grinding": [
+        119.5,
+        118.8,
+        117.8,
+        117.0,
+        116.0
+      ]
+    }
+  },
+  "notes": [
+    "Chain128 selects Fast leaf and Slim outer, never Fast100/Slim100.",
+    "Feature raises outer envelope floor m29 to m30 and loads official embedded m30 security table; no weakened query or grinding schedule.",
+    "Legacy target_security_bits=100 does not select query100 analysis: Fast/Slim require exact query128 analysis identity.",
+    "Validator independently requires each Johnson query component including work-normalized PoW strictly above128 bits, MCA and OOD strictly above128 bits, and Appendix C.3 algebraic components strictly below2^-128 after configured grinding. These component checks do not constitute an end-to-end128-bit theorem or independent audit.",
+    "PcsParams enables strict per_challenge_128 zerocheck, lincheck, element, opening, Product-GKR and matrix-fold policies for Fast/Slim. Matrix folding uses1-bit combination and2-bit sumcheck grinding.",
+    "BLAKE2s compression-duplex adaptation is new; mathematical security of the composed adaptation is not formally verified. Static registry/circuit identifiers retain BLAKE3."
+  ]
+}

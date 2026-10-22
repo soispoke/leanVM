@@ -2,6 +2,8 @@
 
 The latest native candidate matches leanVM on the measured two-child parent, but remains slower on deeper trees. It verifies faster in Rust and has larger proofs. These local implementation measurements use the same tagged hash-chain statement, with a separate trusted circuit and key at each level.
 
+A separate [Succinct Flock baseline adapted to BLAKE2s](FLOCK_BASELINE.md) is now measured. It uses a different sequential chain workload and is not a matched speed comparison.
+
 ## Construction
 
 The outer proof combines native GF(2^192) arithmetic constraints, Flock's batched BLAKE2s argument and WHIR openings. A shared committed connector table binds the arithmetic verifier and hash argument to the same inputs and outputs. Hash messages and intermediate chaining values stay in the witness; the proof contains no separate request table. This is not a zero-knowledge claim.

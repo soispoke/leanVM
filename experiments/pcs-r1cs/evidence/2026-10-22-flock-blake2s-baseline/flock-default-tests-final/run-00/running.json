@@ -1,0 +1,15 @@
+{
+  "pid": 321134,
+  "command": [
+    "/root/.rustup/toolchains/1.99.1-x86_64-unknown-linux-gnu/bin/cargo",
+    "test",
+    "--locked",
+    "--release",
+    "-p",
+    "flock-prover",
+    "--lib",
+    "--",
+    "--test-threads=4"
+  ],
+  "started_utc": "2026-10-22T14:54:17.176734+00:00"
+}

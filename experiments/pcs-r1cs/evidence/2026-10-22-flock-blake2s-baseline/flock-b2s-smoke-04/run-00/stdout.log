@@ -1,0 +1,84 @@
+  [envelope rows live/target] b3 9281/9281 | b3b 8211/8211 | swap 2762/2762 | spread 742/742 | pow 118/118 | family 1024/1024 | el600 12645/12645 | el602 4192/4192 | el500 132/132 | el400 250/250 | el0 9708/9708 | el700 76/76 | el701 16434/16434 | el601 96/96 | el8 68/68 | el808 4412/4412 | el318 1616/1616 | el880 742/742 | el881 1134/1134 | el882 742/742 | el1008 116/116 | publics 2174/4266 | acc_chain 118/160 | acc_main 0/1152 | pass 0/96 | app 10/10
+  [envelope rows live/target] b3 9281/9281 | b3b 8211/8211 | swap 2762/2762 | spread 742/742 | pow 118/118 | family 1024/1024 | el600 12645/12645 | el602 4192/4192 | el500 132/132 | el400 250/250 | el0 9708/9708 | el700 76/76 | el701 16434/16434 | el601 96/96 | el8 68/68 | el808 4412/4412 | el318 1616/1616 | el880 742/742 | el881 1134/1134 | el882 742/742 | el1008 116/116 | publics 2174/4266 | acc_chain 118/160 | acc_main 0/1152 | pass 0/96 | app 10/10
+  [envelope rows live/target] b3 9281/9281 | b3b 8211/8211 | swap 2762/2762 | spread 742/742 | pow 118/118 | family 1024/1024 | el600 12645/12645 | el602 4192/4192 | el500 132/132 | el400 250/250 | el0 9708/9708 | el700 76/76 | el701 16434/16434 | el601 96/96 | el8 68/68 | el808 4412/4412 | el318 1616/1616 | el880 742/742 | el881 1134/1134 | el882 742/742 | el1008 116/116 | publics 2174/4266 | acc_chain 118/160 | acc_main 0/1152 | pass 0/96 | app 10/10
+  [envelope rows live/target] b3 9281/9281 | b3b 8211/8211 | swap 2762/2762 | spread 742/742 | pow 118/118 | family 1024/1024 | el600 12645/12645 | el602 4192/4192 | el500 132/132 | el400 250/250 | el0 9708/9708 | el700 76/76 | el701 16434/16434 | el601 96/96 | el8 68/68 | el808 4412/4412 | el318 1616/1616 | el880 742/742 | el881 1134/1134 | el882 742/742 | el1008 116/116 | publics 2174/4266 | acc_chain 118/160 | acc_main 0/1152 | pass 0/96 | app 10/10
+  [envelope rows live/target] b3 19885/19885 | b3b 11791/11791 | swap 7294/7294 | spread 558/558 | pow 1943/1943 | family 1024/1024 | el600 15113/15113 | el602 14084/14084 | el500 602/602 | el400 1017/1017 | el0 11918/11918 | el700 120/120 | el701 17340/17340 | el601 192/192 | el8 1806/1806 | el808 2544/2544 | el318 3580/3580 | el880 558/558 | el881 1540/1540 | el882 2232/2232 | el1008 764/764 | publics 3462/4266 | acc_chain 118/160 | acc_main 866/1152 | pass 0/96 | app 10/10
+
+THE 2->1 RECURSION NODE (two children + 43 folds, ONE proof)
+  children: dense_m 30 / mu 24, one circuit, distinct FS points
+  regions: 2x the complete deferred verifier (swap assembly, shared slots)
+         + the fold region; CONNECTED: all points, z_partial lows, sigma fully,
+         and the matrix/element EVAL VALUES to the children's bound advice —
+         lagrange lows DERIVED in-circuit from each child's z_skip wire
+  outer: BLAKE rows 31676 across [19885, 11791] | nu 15 | dense_m 30 | mu 24 (cell slots: 331 gate + 1 public)
+  PER PROOF (online): child tapes 25 + witgen/trace 37 + witness asm 2 + prove 1752 = 1816 ms | verify 48 ms (DEFERRED 12 ms) | proof 313.6 KiB
+  SETUP: circuit build (per SHAPE, cacheable) 31780 ms | tape pins+locates (shape-stable) 186 ms
+
+  [envelope rows live/target] b3 20807/20807 | b3b 11791/11791 | swap 7294/7294 | spread 558/558 | pow 2034/2034 | family 1024/1024 | el600 15139/15139 | el602 14411/14411 | el500 602/602 | el400 1104/1104 | el0 11918/11918 | el700 120/120 | el701 17340/17340 | el601 192/192 | el8 1806/1806 | el808 2544/2544 | el318 3712/3712 | el880 558/558 | el881 1540/1540 | el882 2232/2232 | el1008 764/764 | publics 3472/4266 | acc_chain 118/160 | acc_main 866/1152 | pass 95/96 | app 10/10
+
+THE 2->1 RECURSION NODE (two children + 44 folds, ONE proof)
+  children: dense_m 30 / mu 24, one circuit, distinct FS points
+  regions: 2x the complete deferred verifier (swap assembly, shared slots)
+         + the fold region; CONNECTED: all points, z_partial lows, sigma fully,
+         and the matrix/element EVAL VALUES to the children's bound advice —
+         lagrange lows DERIVED in-circuit from each child's z_skip wire
+  outer: BLAKE rows 32598 across [20807, 11791] | nu 15 | dense_m 30 | mu 24 (cell slots: 331 gate + 1 public)
+  PER PROOF (online): child tapes 26 + witgen/trace 39 + witness asm 1 + prove 1868 = 1935 ms | verify 50 ms (DEFERRED 13 ms) | proof 313.6 KiB
+  SETUP: circuit build (per SHAPE, cacheable) 49606 ms | tape pins+locates (shape-stable) 119 ms
+
+  [envelope rows live/target] b3 20807/20807 | b3b 11791/11791 | swap 7294/7294 | spread 558/558 | pow 2034/2034 | family 1024/1024 | el600 15139/15139 | el602 14411/14411 | el500 602/602 | el400 1104/1104 | el0 11918/11918 | el700 120/120 | el701 17340/17340 | el601 192/192 | el8 1806/1806 | el808 2544/2544 | el318 3712/3712 | el880 558/558 | el881 1540/1540 | el882 2232/2232 | el1008 764/764 | publics 3472/4266 | acc_chain 118/160 | acc_main 866/1152 | pass 95/96 | app 10/10
+
+THE 2->1 RECURSION NODE (two children + 44 folds, ONE proof)
+  children: dense_m 30 / mu 24, one circuit, distinct FS points
+  regions: 2x the complete deferred verifier (swap assembly, shared slots)
+         + the fold region; CONNECTED: all points, z_partial lows, sigma fully,
+         and the matrix/element EVAL VALUES to the children's bound advice —
+         lagrange lows DERIVED in-circuit from each child's z_skip wire
+  outer: BLAKE rows 32598 across [20807, 11791] | nu 15 | dense_m 30 | mu 24 (cell slots: 331 gate + 1 public)
+  PER PROOF (online): child tapes 34 + witgen/trace 43 + witness asm 2 + prove 1652 = 1731 ms | verify 49 ms (DEFERRED 11 ms) | proof 313.6 KiB
+  SETUP: circuit build (per SHAPE, cacheable) 49368 ms | tape pins+locates (shape-stable) 109 ms
+
+{"record":"stage","kind":"leaf","ordinal":0,"builder_call_ms_including_setup_and_self_checks":6510.516289,"setup_ms":6366.692852,"walk_ms":0.357128,"tapes_ms":0,"witgen_ms":13.609298,"prove_ms":111.01857299999999,"builder_verify_ms":0,"online_wall_ms":125.12284400000001,"proof_bytes":345246}
+{"record":"stage","kind":"leaf","ordinal":1,"builder_call_ms_including_setup_and_self_checks":87.77980600000001,"setup_ms":0.30741,"walk_ms":0.284602,"tapes_ms":0,"witgen_ms":4.213921,"prove_ms":64.04307700000001,"builder_verify_ms":0,"online_wall_ms":68.647052,"proof_bytes":345246}
+{"record":"stage","kind":"first_level","ordinal":2,"builder_call_ms_including_setup_and_self_checks":10683.903987000002,"setup_ms":4639.241497000001,"walk_ms":27.408383,"tapes_ms":19.161821999999997,"witgen_ms":0.865521,"prove_ms":2083.857067,"builder_verify_ms":46.012588,"online_wall_ms":2233.339075,"proof_bytes":321150}
+{"record":"stage","kind":"leaf","ordinal":3,"builder_call_ms_including_setup_and_self_checks":90.036195,"setup_ms":1.2493379999999998,"walk_ms":0.14080700000000002,"tapes_ms":0,"witgen_ms":4.955949,"prove_ms":66.135491,"builder_verify_ms":0,"online_wall_ms":71.23800399999999,"proof_bytes":345246}
+{"record":"stage","kind":"leaf","ordinal":4,"builder_call_ms_including_setup_and_self_checks":83.686671,"setup_ms":0.304918,"walk_ms":0.14111500000000002,"tapes_ms":0,"witgen_ms":4.757737,"prove_ms":61.176932,"builder_verify_ms":0,"online_wall_ms":66.08056900000001,"proof_bytes":345246}
+{"record":"stage","kind":"first_level","ordinal":5,"builder_call_ms_including_setup_and_self_checks":8910.308269,"setup_ms":4779.775178999999,"walk_ms":27.731420999999997,"tapes_ms":19.697124,"witgen_ms":0.8797940000000001,"prove_ms":1392.520309,"builder_verify_ms":42.276135,"online_wall_ms":1539.7437419999999,"proof_bytes":321150}
+{"record":"stage","kind":"leaf","ordinal":6,"builder_call_ms_including_setup_and_self_checks":87.798604,"setup_ms":1.507954,"walk_ms":0.15733000000000003,"tapes_ms":0,"witgen_ms":4.935656,"prove_ms":64.072588,"builder_verify_ms":0,"online_wall_ms":69.174345,"proof_bytes":345246}
+{"record":"stage","kind":"leaf","ordinal":7,"builder_call_ms_including_setup_and_self_checks":74.73804100000001,"setup_ms":0.5409299999999999,"walk_ms":0.123994,"tapes_ms":0,"witgen_ms":3.890864,"prove_ms":53.565228,"builder_verify_ms":0,"online_wall_ms":57.585791,"proof_bytes":345246}
+{"record":"stage","kind":"first_level","ordinal":8,"builder_call_ms_including_setup_and_self_checks":9045.392921999999,"setup_ms":4868.188918999999,"walk_ms":27.848698000000002,"tapes_ms":19.773487,"witgen_ms":1.196145,"prove_ms":1420.7397349999999,"builder_verify_ms":41.829504,"online_wall_ms":1570.310557,"proof_bytes":321150}
+{"record":"stage","kind":"leaf","ordinal":9,"builder_call_ms_including_setup_and_self_checks":79.57188599999999,"setup_ms":0.851359,"walk_ms":0.14207,"tapes_ms":0,"witgen_ms":4.431007,"prove_ms":56.077065000000005,"builder_verify_ms":0,"online_wall_ms":60.657075,"proof_bytes":345246}
+{"record":"stage","kind":"leaf","ordinal":10,"builder_call_ms_including_setup_and_self_checks":74.33860200000001,"setup_ms":0.722874,"walk_ms":0.129815,"tapes_ms":0,"witgen_ms":4.1673860000000005,"prove_ms":52.708101,"builder_verify_ms":0,"online_wall_ms":57.010216,"proof_bytes":345246}
+{"record":"stage","kind":"first_level","ordinal":11,"builder_call_ms_including_setup_and_self_checks":9072.056988,"setup_ms":4834.47755,"walk_ms":27.441716000000003,"tapes_ms":19.817194,"witgen_ms":1.118393,"prove_ms":1465.7218730000002,"builder_verify_ms":45.057023,"online_wall_ms":1621.432812,"proof_bytes":321150}
+{"record":"stage","kind":"base","ordinal":12,"builder_call_ms_including_setup_and_self_checks":42331.907136,"setup_ms":31779.845538999998,"walk_ms":37.4195,"tapes_ms":24.954855000000002,"witgen_ms":1.553263,"prove_ms":1752.473631,"builder_verify_ms":47.615255000000005,"online_wall_ms":9909.576229,"proof_bytes":321150}
+{"record":"stage","kind":"spine","ordinal":13,"builder_call_ms_including_setup_and_self_checks":63962.121407,"setup_ms":49605.571607,"walk_ms":39.347742,"tapes_ms":26.102777,"witgen_ms":1.483354,"prove_ms":1867.772371,"builder_verify_ms":49.663009,"online_wall_ms":13753.274736,"proof_bytes":321150}
+{"record":"stage","kind":"spine","ordinal":14,"builder_call_ms_including_setup_and_self_checks":62923.02156,"setup_ms":49367.780236,"walk_ms":42.61694,"tapes_ms":34.211483,"witgen_ms":1.5050510000000001,"prove_ms":1652.179069,"builder_verify_ms":48.713443000000005,"online_wall_ms":12990.488604999999,"proof_bytes":321150}
+  [envelope rows live/target] b3 9281/9281 | b3b 8211/8211 | swap 2762/2762 | spread 742/742 | pow 118/118 | family 1024/1024 | el600 12645/12645 | el602 4192/4192 | el500 132/132 | el400 250/250 | el0 9708/9708 | el700 76/76 | el701 16434/16434 | el601 96/96 | el8 68/68 | el808 4412/4412 | el318 1616/1616 | el880 742/742 | el881 1134/1134 | el882 742/742 | el1008 116/116 | publics 2174/4266 | acc_chain 118/160 | acc_main 0/1152 | pass 0/96 | app 10/10
+  [envelope rows live/target] b3 9281/9281 | b3b 8211/8211 | swap 2762/2762 | spread 742/742 | pow 118/118 | family 1024/1024 | el600 12645/12645 | el602 4192/4192 | el500 132/132 | el400 250/250 | el0 9708/9708 | el700 76/76 | el701 16434/16434 | el601 96/96 | el8 68/68 | el808 4412/4412 | el318 1616/1616 | el880 742/742 | el881 1134/1134 | el882 742/742 | el1008 116/116 | publics 2174/4266 | acc_chain 118/160 | acc_main 0/1152 | pass 0/96 | app 10/10
+  [envelope rows live/target] b3 9281/9281 | b3b 8211/8211 | swap 2762/2762 | spread 742/742 | pow 118/118 | family 1024/1024 | el600 12645/12645 | el602 4192/4192 | el500 132/132 | el400 250/250 | el0 9708/9708 | el700 76/76 | el701 16434/16434 | el601 96/96 | el8 68/68 | el808 4412/4412 | el318 1616/1616 | el880 742/742 | el881 1134/1134 | el882 742/742 | el1008 116/116 | publics 2174/4266 | acc_chain 118/160 | acc_main 0/1152 | pass 0/96 | app 10/10
+  [envelope rows live/target] b3 19885/19885 | b3b 11791/11791 | swap 7294/7294 | spread 558/558 | pow 1943/1943 | family 1024/1024 | el600 15113/15113 | el602 14084/14084 | el500 602/602 | el400 1017/1017 | el0 11918/11918 | el700 120/120 | el701 17340/17340 | el601 192/192 | el8 1806/1806 | el808 2544/2544 | el318 3580/3580 | el880 558/558 | el881 1540/1540 | el882 2232/2232 | el1008 764/764 | publics 3462/4266 | acc_chain 118/160 | acc_main 866/1152 | pass 0/96 | app 10/10
+
+THE 2->1 RECURSION NODE (two children + 43 folds, ONE proof)
+  children: dense_m 30 / mu 24, one circuit, distinct FS points
+  regions: 2x the complete deferred verifier (swap assembly, shared slots)
+         + the fold region; CONNECTED: all points, z_partial lows, sigma fully,
+         and the matrix/element EVAL VALUES to the children's bound advice —
+         lagrange lows DERIVED in-circuit from each child's z_skip wire
+  outer: BLAKE rows 31676 across [19885, 11791] | nu 15 | dense_m 30 | mu 24 (cell slots: 331 gate + 1 public)
+  PER PROOF (online): child tapes 31 + witgen/trace 39 + witness asm 1 + prove 1776 = 1847 ms | verify 49 ms (DEFERRED 13 ms) | proof 313.6 KiB
+  SETUP: circuit build (per SHAPE, cacheable) 33100 ms | tape pins+locates (shape-stable) 106 ms
+
+  [envelope rows live/target] b3 20807/20807 | b3b 11791/11791 | swap 7294/7294 | spread 558/558 | pow 2034/2034 | family 1024/1024 | el600 15139/15139 | el602 14411/14411 | el500 602/602 | el400 1104/1104 | el0 11918/11918 | el700 120/120 | el701 17340/17340 | el601 192/192 | el8 1806/1806 | el808 2544/2544 | el318 3712/3712 | el880 558/558 | el881 1540/1540 | el882 2232/2232 | el1008 764/764 | publics 3472/4266 | acc_chain 118/160 | acc_main 866/1152 | pass 95/96 | app 10/10
+
+THE 2->1 RECURSION NODE (two children + 44 folds, ONE proof)
+  children: dense_m 30 / mu 24, one circuit, distinct FS points
+  regions: 2x the complete deferred verifier (swap assembly, shared slots)
+         + the fold region; CONNECTED: all points, z_partial lows, sigma fully,
+         and the matrix/element EVAL VALUES to the children's bound advice —
+         lagrange lows DERIVED in-circuit from each child's z_skip wire
+  outer: BLAKE rows 32598 across [20807, 11791] | nu 15 | dense_m 30 | mu 24 (cell slots: 331 gate + 1 public)
+  PER PROOF (online): child tapes 35 + witgen/trace 43 + witness asm 1 + prove 1840 = 1919 ms | verify 47 ms (DEFERRED 12 ms) | proof 313.6 KiB
+  SETUP: circuit build (per SHAPE, cacheable) 50046 ms | tape pins+locates (shape-stable) 119 ms
+
+{"record":"statement","h_start":[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],"h_end":[3620222995, 1411925537, 1038527873, 3662268406, 1279865766, 2773383471, 2254932969, 1634072919, 0, 0, 0, 0, 0, 0, 0, 0],"total_compressions":2048}
+{"record":"summary","construction":"succinct-flock-blake2s-adaptation","profile":"Chain128","statement":"sequential-BLAKE2s256-on-64-byte-state-output-zero-extended","leaves":8,"blocks_per_leaf":256,"total_compressions":2048,"full_prove_ms_including_setup":214342.749441,"root_discharge_ms":10177.773492,"vk_setup_ms":136997.735402,"consumer_verify_ms":10289.706629,"proof_bytes":321150,"bundle_bytes":414354,"mutation_rejections":3,"verified":true}

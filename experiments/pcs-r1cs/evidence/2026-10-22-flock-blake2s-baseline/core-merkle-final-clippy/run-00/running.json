@@ -1,0 +1,18 @@
+{
+  "pid": 311899,
+  "command": [
+    "/root/.rustup/toolchains/1.99.1-x86_64-unknown-linux-gnu/bin/cargo",
+    "clippy",
+    "--locked",
+    "-p",
+    "flock-merkle",
+    "-p",
+    "flock-core",
+    "--lib",
+    "--no-deps",
+    "--",
+    "-D",
+    "warnings"
+  ],
+  "started_utc": "2026-10-22T14:30:35.947396+00:00"
+}

@@ -1,0 +1,13 @@
+{
+  "pid": 310018,
+  "command": [
+    "/root/.rustup/toolchains/1.99.1-x86_64-unknown-linux-gnu/bin/cargo",
+    "test",
+    "--locked",
+    "-p",
+    "flock-core",
+    "--lib",
+    "ligerito_m22_roundtrip_over_hash_matrix"
+  ],
+  "started_utc": "2026-10-22T14:29:23.830058+00:00"
+}

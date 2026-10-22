@@ -1,0 +1,63 @@
+warning: unused imports: `__m512i`, `_mm512_bslli_epi128`, `_mm512_clmulepi64_epi128`, `_mm512_extracti32x4_epi32`, `_mm512_loadu_si512`, `_mm512_set_epi64`, `_mm512_setzero_si512`, and `_mm512_xor_si512`
+ --> crates/flock-field/src/gf2_128/x86_64.rs:2:14
+  |
+2 |     __m128i, __m512i, _mm_clmulepi64_si128, _mm_extract_epi64, _mm_set_epi64x, _mm_slli_si128,
+  |              ^^^^^^^
+3 |     _mm_xor_si128, _mm512_bslli_epi128, _mm512_clmulepi64_epi128, _mm512_extracti32x4_epi32,
+  |                    ^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^^^^^^^
+4 |     _mm512_loadu_si512, _mm512_set_epi64, _mm512_setzero_si512, _mm512_xor_si512,
+  |     ^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^
+  |
+  = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: `flock-field` (lib) generated 1 warning (run `cargo fix --lib -p flock-field` to apply 1 suggestion)
+   Compiling flock-core v0.1.0 (/root/yukon-autoresearch/workspaces/leanr1cs-parity-20261022/flock-blake2s/crates/flock-core)
+   Compiling flock-prover v0.1.0 (/root/yukon-autoresearch/workspaces/leanr1cs-parity-20261022/flock-blake2s/crates/flock-prover)
+warning: unused import: `PARENT`
+  --> crates/flock-prover/src/tower/mod.rs:88:61
+   |
+88 |             Blake3Gate, CHUNK_END, CHUNK_START, DOMAIN, IV, PARENT, ROOT, digest_words,
+   |                                                             ^^^^^^
+   |
+   = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused imports: `CHUNK_END`, `CHUNK_START`, and `ROOT`
+  --> crates/flock-prover/src/tower/chain.rs:44:21
+   |
+44 |         Blake3Gate, CHUNK_END, CHUNK_START, DOMAIN, F128, Online, PcsParams, ROOT, ShapeBuilder,
+   |                     ^^^^^^^^^  ^^^^^^^^^^^                                   ^^^^
+
+warning: unused import: `cw`
+  --> crates/flock-prover/src/tower/geometry.rs:14:84
+   |
+14 | use crate::tower::{F128, F256, HashKind, OpenLevel, PcsParams, ShapeBuilder, Wire, cw};
+   |                                                                                    ^^
+
+warning: unused import: `IV`
+  --> crates/flock-prover/src/tower/gkr.rs:15:39
+   |
+15 |         CHUNK_END, CHUNK_START, F128, IV, PdRec, ROOT, ShapeBuilder, UnionInstance, Wire,
+   |                                       ^^
+
+warning: unused import: `pack_params`
+  --> crates/flock-prover/src/tower/query.rs:40:49
+   |
+40 |         hash_to_digest, level_zero_ood_z_index, pack_params, slot_cached, squeeze_word_wire,
+   |                                                 ^^^^^^^^^^^
+
+warning: unused variable: `iv`
+   --> crates/flock-prover/src/tower/gkr.rs:407:5
+    |
+407 |     iv: [Wire; 2],
+    |     ^^ help: if this is intentional, prefix it with an underscore: `_iv`
+    |
+    = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused variable: `flags`
+   --> crates/flock-prover/src/tower/gkr.rs:420:9
+    |
+420 |     let flags = CHUNK_START | CHUNK_END | ROOT;
+    |         ^^^^^ help: if this is intentional, prefix it with an underscore: `_flags`
+
+warning: `flock-prover` (lib) generated 7 warnings (run `cargo fix --lib -p flock-prover` to apply 7 suggestions)
+    Finished `release` profile [optimized] target(s) in 50.14s

@@ -1,0 +1,59 @@
+{
+  "scope": "Independent read-only source audit of in-progress BLAKE2s adaptation; not a formal proof or completed standalone root verification",
+  "created_utc": "2026-10-22T14:35:00.529943+00:00",
+  "source_revision": "a5b27f92ca30ad24192049410cf5d3de6b26167c",
+  "source_dirty": true,
+  "file_sha256": {
+    "crates/flock-prover/src/tower/hash.rs": "839d763a08e5001af54ffcb188424f8fe84fa98a6adc5aeb127a0c46cd61243b",
+    "crates/flock-prover/src/tower/query.rs": "1ec595e7f57b2809684f4b0e6af7dd02cbd7d9ad25d4efdfea34841560b89091",
+    "crates/flock-prover/src/tower/geometry.rs": "574427f8e5414c24306e38f9a9053cf35ac8c1dc734d91ce2a555ca28603adb6",
+    "crates/flock-prover/src/tower/fs_chain.rs": "cdd219b9a2d69a10895743350baa17ce6cc45f1c5e34020c575251ed7778fbd1",
+    "crates/flock-prover/src/tower/config.rs": "7e7799ea644de1c6dbbf65d13a0c07f1660378d1391022d694ec4622c680373d",
+    "crates/flock-prover/src/tower/chain.rs": "76235c64ca6f5b8287f93d2b5c070e97fbdcf32ed0918dd71565d25f687da296",
+    "crates/flock-prover/src/tower/verify.rs": "01f2864788f43fffa504fefeaff08e35f99b75d9ead95772041d27ac3f90d873",
+    "crates/flock-prover/src/r1cs_hashes/fs_chain.rs": "0a998feb73ed42431ac3304ed8104b5350d71d03fadc4eed62e3d62c82a4175f",
+    "crates/flock-prover/src/r1cs_hashes/blake2s.rs": "fdc719d7db177f5e4901ce5cee3ad4409bb061b56e7f8bbb46165582724439ec",
+    "crates/flock-transcript/src/challenger.rs": "3a2f95222cf562ee6570a30ad5f5ac2cf804497ebf501ddf053a9012e02d6e43",
+    "crates/flock-core/src/union.rs": "c53c08d66d6bc6de41c0a1a9f8f68364895bd516c07d0acd8a4616aafa02259c",
+    "crates/flock-merkle/src/hashing.rs": "ce5dc2e88e68bc83e198d0d24b898cc26c80cf068920b5c111b7c560443c0040"
+  },
+  "findings": [
+    {
+      "status": "consistent",
+      "property": "Active RS Merkle/native/circuit personalized BLAKE2s semantics: leaf FlockLf0, parent FlockNd0, counters payload length, standard final flag."
+    },
+    {
+      "status": "consistent",
+      "property": "New IV/zero/parameter constants emitted with fixed_public_input through cw; digest-bound values checked by circuit.check_public."
+    },
+    {
+      "status": "consistent",
+      "property": "Public segment 1KiB leaf chunks and left-folded parents agree with native publics_digest_with_hash; bind selects B2s only in B2s mode, preserving historical SHA/B3."
+    },
+    {
+      "status": "consistent",
+      "property": "Transcript virtual wide outputs expand to two domain-separated real BLAKE2s compression rows; RowHi maps to second physical low output, not ABI zero slots. Squeeze-word remapping preserves source half."
+    },
+    {
+      "status": "consistent",
+      "property": "Recursive PoW checks select predicate from low physical row word1; nonce width and predicate mask constraints preserved."
+    },
+    {
+      "status": "unsupported_unreachable",
+      "property": "AG point-binding emitter still has BLAKE3-specific nonce/XOF semantics, but both leaf/outer AG selectors explicitly false with blake2s-tower. Must not claim B2s AG support."
+    },
+    {
+      "status": "test_only_mismatch",
+      "property": "Synthetic MerklePathGate composite oracle uses blake3_spec while Tree uses selected kind. Tower agent notified; production collapsed path does not use this oracle."
+    },
+    {
+      "status": "explicit_scope",
+      "property": "Sequential application statement hashes 64-byte state with standard BLAKE2s256 and zero-extends output, distinct from local tagged 32-byte balanced-tree workload."
+    },
+    {
+      "status": "explicit_assumption",
+      "property": "Static circuit/registry registration identifiers remain BLAKE3; no claim of eliminating every BLAKE3 assumption."
+    }
+  ],
+  "remaining_gate": "Complete recursive tower build, adversarial checks and serialized root verification against independent consumer VK; owned by tower/root lanes."
+}

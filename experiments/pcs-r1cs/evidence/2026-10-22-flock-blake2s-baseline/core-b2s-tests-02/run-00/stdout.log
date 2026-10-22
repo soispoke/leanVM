@@ -1,0 +1,8 @@
+
+running 3 tests
+test genus95_curve_code::sampling::blake2s_nonce_tests::nonce_seed_uses_blake2s ... ok
+test genus95_curve_code::rng::blake2s_tests::blake2s_rng_matches_independent_vectors_and_chunking ... ok
+test union::blake2s_publics_tests::blake2s_public_commitment_matches_chunk_fold_and_binds_all_words ... ok
+
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 437 filtered out; finished in 0.19s
+

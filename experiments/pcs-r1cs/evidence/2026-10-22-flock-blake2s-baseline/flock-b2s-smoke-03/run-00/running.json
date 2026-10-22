@@ -1,0 +1,9 @@
+{
+  "pid": 313425,
+  "command": [
+    "/root/yukon-autoresearch/workspaces/leanr1cs-parity-20261022/flock-tower-target/release/examples/tower_blake2s",
+    "4",
+    "256"
+  ],
+  "started_utc": "2026-10-22T14:34:51.680774+00:00"
+}

@@ -1,0 +1,17 @@
+{
+  "pid": 315412,
+  "command": [
+    "/root/.rustup/toolchains/1.99.1-x86_64-unknown-linux-gnu/bin/cargo",
+    "test",
+    "--locked",
+    "--release",
+    "-p",
+    "flock-prover",
+    "--features",
+    "blake2s-tower",
+    "--lib",
+    "--",
+    "--test-threads=1"
+  ],
+  "started_utc": "2026-10-22T14:41:22.056300+00:00"
+}

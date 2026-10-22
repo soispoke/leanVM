@@ -1,0 +1,66 @@
+{
+  "status": "complete_record_set",
+  "policy": "one independently generated immutable VK; full Tower::prove per trial",
+  "trials": [
+    {
+      "trial": 0,
+      "root_online_s": 13.366105025,
+      "root_prove_component_s": 1.902047609,
+      "root_setup_s": 50.044550567999984,
+      "root_replica_checks_s": 11.390555908,
+      "root_accumulator_self_discharge_s": 6.638152642,
+      "consumer_verify_s": 10.337048636000002,
+      "tower_creation_including_setup_s": 208.090990389,
+      "proof_bytes": 321150,
+      "bundle_bytes": 414354
+    },
+    {
+      "trial": 1,
+      "root_online_s": 14.050185874,
+      "root_prove_component_s": 1.8295589410000002,
+      "root_setup_s": 51.43177545699999,
+      "root_replica_checks_s": 12.142859032,
+      "root_accumulator_self_discharge_s": 6.980150935,
+      "consumer_verify_s": 10.311578513,
+      "tower_creation_including_setup_s": 213.933607099,
+      "proof_bytes": 321150,
+      "bundle_bytes": 414354
+    },
+    {
+      "trial": 2,
+      "root_online_s": 13.392431149,
+      "root_prove_component_s": 1.892598201,
+      "root_setup_s": 50.130896377,
+      "root_replica_checks_s": 11.425781185,
+      "root_accumulator_self_discharge_s": 6.668391518,
+      "consumer_verify_s": 10.349477119,
+      "tower_creation_including_setup_s": 209.422075041,
+      "proof_bytes": 321150,
+      "bundle_bytes": 414354
+    }
+  ],
+  "medians": {
+    "root_online_s": 13.392431149,
+    "root_prove_component_s": 1.892598201,
+    "root_setup_s": 50.130896377,
+    "root_replica_checks_s": 11.425781185,
+    "root_accumulator_self_discharge_s": 6.668391518,
+    "consumer_verify_s": 10.337048636000002,
+    "tower_creation_including_setup_s": 209.422075041,
+    "proof_bytes": 321150,
+    "bundle_bytes": 414354
+  },
+  "shared_vk_setup_s": 142.402151019,
+  "process_wall_s": 837.6660652689898,
+  "peak_rss_gib": 7.713718414306641,
+  "source": {
+    "revision": "554435d5a5b4f9ee0ba93942fd3c38ad6d227306",
+    "dirty": false
+  },
+  "tooling": {
+    "revision": "85e81e09fac36f6b69c1bdb5c0a74c2f4047414b",
+    "dirty": true
+  },
+  "runner_sha256": "47c306c9564f159c56aab5a871e95d889f98f74e4025c07d45ac2cff34164ab6",
+  "scope": "Warm shared-process BLAKE2s Flock adaptation; a sequential 64-byte-state chain, not the matched tagged tree. No formal security or official score claim."
+}

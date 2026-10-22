@@ -1,0 +1,45 @@
+
+running 35 tests
+test challenger::b3_chain_tests::chained_blake3_is_deterministic_and_binding ... ok
+test challenger::blake2s_domain_tests::fused_pow_binds_difficulty_nonce_and_continuation ... ok
+test challenger::b2s_chain_tests::chained_blake2s_is_deterministic_and_binding ... ok
+test challenger::blake2s_domain_tests::wide_output_has_two_real_disjoint_digests ... ok
+test challenger::b3_chain_tests::fused_pow_squeeze_prover_and_verifier_stay_in_lockstep ... ok
+test challenger::tests::fiat_shamir_challenger_different_domains_diverge ... ok
+test challenger::tests::fiat_shamir_challenger_different_observations_diverge ... ok
+test challenger::tests::fiat_shamir_challenger_hashes_diverge ... ok
+test challenger::tests::blake3_batched_pow_matches_scalar ... ok
+test challenger::tests::fiat_shamir_challenger_label_changes_output ... ok
+test challenger::tests::fiat_shamir_challenger_identical_scripts_produce_identical_output ... ok
+test challenger::tests::fiat_shamir_challenger_new_defaults_to_blake3 ... ok
+test challenger::b2s_chain_tests::fused_pow_squeeze_prover_and_verifier_stay_in_lockstep ... ok
+test challenger::tests::fiat_shamir_challenger_long_squeeze_is_prefix_stable ... ok
+test challenger::tests::fiat_shamir_challenger_pow_rejects_the_other_hash ... ok
+test challenger::tests::fiat_shamir_challenger_pow_zero_bits_requires_canonical_nonce ... ok
+test challenger::tests::fiat_shamir_challenger_sample_advances_state ... ok
+test challenger::tests::fiat_shamir_challenger_pow_rejects_wrong_nonce ... ok
+test challenger::tests::fiat_shamir_challenger_scalar_vs_slice_dont_collide ... ok
+test challenger::tests::fiat_shamir_challenger_two_scalars_dont_collide_with_one_slice_of_two ... ok
+test challenger::tests::observe_f256_is_canonical_coordinate_absorption ... ok
+test challenger::tests::random_challenger_is_deterministic_per_seed ... ok
+test challenger::tests::random_challenger_observe_is_noop ... ok
+test challenger::tests::random_challenger_pow_is_noop ... ok
+test challenger::tests::sample_f128_vec_matches_individual_samples ... ok
+test challenger::tests::sample_f256_is_one_double_width_squeeze ... ok
+test transcript_record::tests::duplex_stream_words_reconstruct_the_chained_challenger ... ok
+test transcript_record::tests::first_difference_names_the_op ... ok
+test challenger::tests::fiat_shamir_challenger_sample_one_vs_sample_vec_one_differ ... ok
+test transcript_record::tests::recording_a_fork_is_transparent_and_yields_two_chains ... ok
+test transcript_record::tests::recording_is_transparent ... ok
+test transcript_record::tests::stream_words_reconstruct_what_the_challenger_absorbs ... ok
+test transcript_record::tests::shape_records_kinds_and_lengths_in_order ... ok
+test challenger::tests::fiat_shamir_challenger_pow_roundtrip ... ok
+test challenger::tests::fiat_shamir_challenger_grind_returns_smallest_nonce ... ok
+
+test result: ok. 35 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.20s
+
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+

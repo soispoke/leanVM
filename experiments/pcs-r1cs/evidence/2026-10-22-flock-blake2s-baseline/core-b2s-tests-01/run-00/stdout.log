@@ -1,0 +1,7 @@
+
+running 2 tests
+test genus95_curve_code::sampling::blake2s_nonce_tests::nonce_seed_uses_blake2s ... ok
+test genus95_curve_code::rng::blake2s_tests::blake2s_rng_matches_independent_vectors_and_chunking ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 437 filtered out; finished in 0.00s
+

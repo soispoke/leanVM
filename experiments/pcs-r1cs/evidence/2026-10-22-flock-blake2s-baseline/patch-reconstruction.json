@@ -1,0 +1,8 @@
+{
+  "status": "all_frozen_sources_reconstructed",
+  "upstream_revision": "b684b1258e4b1f202bec24afd660ace851b09e5e",
+  "tracked_files_checked": 396,
+  "patch_bytes": 259712,
+  "created_utc": "2026-10-22T14:56:21.244169+00:00",
+  "scope": "Patch application and exact source hashes; no duplicate build or runtime measurement"
+}

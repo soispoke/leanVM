@@ -1,0 +1,75 @@
+    Checking serde_core v1.0.228
+    Checking crossbeam-utils v0.8.21
+    Checking typenum v1.20.0
+    Checking either v1.16.0
+    Checking cfg-if v1.0.4
+    Checking sha2-asm v0.6.4
+    Checking arrayvec v0.7.6
+    Checking crossbeam-epoch v0.9.18
+    Checking hashbrown v0.17.1
+    Checking crossbeam-deque v0.8.6
+    Checking rayon-core v1.13.0
+    Checking generic-array v0.14.7
+    Checking rayon v1.12.0
+    Checking arrayref v0.3.9
+    Checking equivalent v1.0.2
+    Checking cpufeatures v0.3.0
+    Checking constant_time_eq v0.4.2
+    Checking cpufeatures v0.2.17
+    Checking blake3 v1.8.5
+    Checking block-buffer v0.10.4
+    Checking crypto-common v0.1.7
+    Checking indexmap v2.14.0
+    Checking digest v0.10.7
+    Checking sha2 v0.10.9
+    Checking winnow v0.7.15
+    Checking serde v1.0.228
+    Checking toml_write v0.1.2
+    Checking rand_core v0.9.5
+    Checking flock-hash v0.1.0 (/root/yukon-autoresearch/workspaces/leanr1cs-parity-20261022/flock-blake2s/crates/flock-hash)
+    Checking toml_datetime v0.6.11
+    Checking serde_spanned v0.6.9
+    Checking flock-field v0.1.0 (/root/yukon-autoresearch/workspaces/leanr1cs-parity-20261022/flock-blake2s/crates/flock-field)
+    Checking bincode v1.3.3
+warning: unused imports: `__m512i`, `_mm512_bslli_epi128`, `_mm512_clmulepi64_epi128`, `_mm512_extracti32x4_epi32`, `_mm512_loadu_si512`, `_mm512_set_epi64`, `_mm512_setzero_si512`, and `_mm512_xor_si512`
+ --> crates/flock-field/src/gf2_128/x86_64.rs:2:14
+  |
+2 |     __m128i, __m512i, _mm_clmulepi64_si128, _mm_extract_epi64, _mm_set_epi64x, _mm_slli_si128,
+  |              ^^^^^^^
+3 |     _mm_xor_si128, _mm512_bslli_epi128, _mm512_clmulepi64_epi128, _mm512_extracti32x4_epi32,
+  |                    ^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^^^^^^^
+4 |     _mm512_loadu_si512, _mm512_set_epi64, _mm512_setzero_si512, _mm512_xor_si512,
+  |     ^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^
+  |
+  = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: `flock-field` (lib) generated 1 warning (run `cargo clippy --fix --lib -p flock-field -- --no-deps -D warnings` to apply 1 suggestion)
+    Checking flock-parallel v0.1.0 (/root/yukon-autoresearch/workspaces/leanr1cs-parity-20261022/flock-blake2s/crates/flock-parallel)
+    Checking flock-multilinear v0.1.0 (/root/yukon-autoresearch/workspaces/leanr1cs-parity-20261022/flock-blake2s/crates/flock-multilinear)
+    Checking flock-transcript v0.1.0 (/root/yukon-autoresearch/workspaces/leanr1cs-parity-20261022/flock-blake2s/crates/flock-transcript)
+    Checking flock-merkle v0.1.0 (/root/yukon-autoresearch/workspaces/leanr1cs-parity-20261022/flock-blake2s/crates/flock-merkle)
+error: using `chunks_exact_mut` with a constant chunk size
+   --> crates/flock-merkle/src/hashing.rs:240:33
+    |
+240 |     for (bytes, word) in digest.chunks_exact_mut(4).zip(state) {
+    |                                 ^^^^^^^^^^^^^^^^^^^ help: consider using `as_chunks_mut` instead: `as_chunks_mut::<4>().0.iter_mut()`
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.99.0/index.html#chunks_exact_to_as_chunks
+    = note: `-D clippy::chunks-exact-to-as-chunks` implied by `-D warnings`
+    = help: to override `-D warnings` add `#[allow(clippy::chunks_exact_to_as_chunks)]`
+
+error: using `chunks_exact` with a constant chunk size
+   --> crates/flock-merkle/src/hashing.rs:668:62
+    |
+668 |                 for (out, pair) in write.iter_mut().zip(read.chunks_exact(2)) {
+    |                                                              ^^^^^^^^^^^^^^^
+    |
+help: consider using `as_chunks::<2>()` instead
+   --> crates/flock-merkle/src/hashing.rs:668:62
+    |
+668 |                 for (out, pair) in write.iter_mut().zip(read.chunks_exact(2)) {
+    |                                                              ^^^^^^^^^^^^^^^
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.99.0/index.html#chunks_exact_to_as_chunks
+
+error: could not compile `flock-merkle` (lib) due to 2 previous errors
+warning: build failed, waiting for other jobs to finish...

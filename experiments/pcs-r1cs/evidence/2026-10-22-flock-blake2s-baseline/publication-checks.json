@@ -1,0 +1,17 @@
+{
+  "status": "passed",
+  "created_utc": "2026-10-22T15:16:53.703373+00:00",
+  "source_files_checked": 396,
+  "flock_summary_recomputed": true,
+  "patch_hash_matches": true,
+  "runner_hash_matches": true,
+  "clippy_log_hash_matches": true,
+  "local_links_checked": 60,
+  "recognized_credential_scan": "none",
+  "scope": "Archive and record consistency; no repeated prover run or formal security claim.",
+  "final_record_validator_controls": {
+    "flock": 9,
+    "matched_trees": 3,
+    "status": "passed"
+  }
+}

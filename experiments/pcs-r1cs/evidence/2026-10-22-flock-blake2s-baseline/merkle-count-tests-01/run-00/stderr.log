@@ -1,0 +1,3 @@
+   Compiling flock-merkle v0.1.0 (/root/yukon-autoresearch/workspaces/leanr1cs-parity-20261022/flock-blake2s/crates/flock-merkle)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 1.53s
+     Running unittests src/lib.rs (/root/yukon-autoresearch/workspaces/leanr1cs-parity-20261022/target-flock-merkle/debug/deps/flock_merkle-e79f29a760c42f9f)

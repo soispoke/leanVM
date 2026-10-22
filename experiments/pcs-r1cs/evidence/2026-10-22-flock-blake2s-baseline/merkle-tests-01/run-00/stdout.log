@@ -1,0 +1,32 @@
+
+running 27 tests
+test tests::blake3_batch_dispatch_agrees ... ok
+test hashing::tests::blake2s_personalized_vectors ... ok
+test tests::blake3_separates_leaf_and_parent_domains ... ok
+test hashing::tests::blake3_neon8_matches_crate ... ok
+test tests::cap_depth_formula ... ok
+test tests::cap_node_tamper_is_local ... ok
+test tests::cap_at_leaf_depth_is_the_leaf_layer ... ok
+test tests::cap_zero_is_the_classic_opening ... ok
+test tests::capped_proof_rejects_tampering ... ok
+test tests::capped_proof_rejects_wrong_length ... ok
+test tests::generic_entry_points_match_runtime_selection ... ok
+test tests::merkle_proof_rejects_tampered_path ... ok
+test tests::capped_proof_roundtrips_at_every_leaf_and_depth ... ok
+test tests::merkle_proof_rejects_the_other_hash ... ok
+test tests::merkle_proof_roundtrips_at_every_leaf ... ok
+test tests::one_leaf_root_is_the_leaf_hash ... ok
+test tests::merkle_proof_rejects_wrong_index ... ok
+test tests::blake3_batched_matches_scalar_spec ... ok
+test tests::parallel_matches_sequential ... ok
+test tests::primitives_match_reference_implementations ... ok
+test tests::power_of_two_assertion ... ok
+test tests::rejects_non_power_of_two - should panic ... ok
+test tests::root_changes_when_any_leaf_changes ... ok
+test tests::the_two_kinds_produce_different_roots ... ok
+test tests::two_leaves_matches_hand_computation ... ok
+test tests::parallel_matches_sequential_tail_shapes ... ok
+test hashing::tests::blake2s_batch_paths_match_scalar ... ok
+
+test result: ok. 27 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.41s
+

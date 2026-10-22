@@ -1,0 +1,4 @@
+
+thread 'main' (311433) panicked at crates/flock-prover/src/prover.rs:875:10:
+Ligerito default config; bump m for tiny instances: "no security config registered for (m=18, profile=fast). Add a TOML at configs/ligerito/m18_fast.toml and register it in EMBEDDED_CONFIGS, or call default_config explicitly for ad-hoc shapes."
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
