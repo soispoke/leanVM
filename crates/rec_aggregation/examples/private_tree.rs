@@ -29,7 +29,21 @@ fn main() {
     let plan = Plan::new(1, 0);
     let mut children = Vec::<(Hash, Proof)>::new();
     let leaf_program = recursive::leaf(&[0; 32], chain).unwrap();
-    let mut setup = Setup::new(leaf_program).expect("leaf fits experimental backend");
+    let bound = private_trace::allocation_bound(&leaf_program);
+    println!(
+        "{}",
+        serde_json::json!({"kind":"leaf_trace","nodes":leaf_program.nodes.len(),
+        "compressions":leaf_program.hash_compressions(),
+        "lowering_bound":bound.map(|b|serde_json::json!({"rows":b.rows,"variables":b.variables,"compressions":b.compressions}))})
+    );
+    let Some(mut setup) = Setup::new(leaf_program) else {
+        println!(
+            "{}",
+            serde_json::json!({"kind":"capacity_limit","level":0,"status":"incomplete",
+            "message":"leaf compiler or experimental index limit reached; no proof produced"})
+        );
+        std::process::exit(2);
+    };
     println!(
         "{}",
         serde_json::json!({"kind":"setup","level":0,"rows":1usize<<setup.bridge.index.log_rows,
