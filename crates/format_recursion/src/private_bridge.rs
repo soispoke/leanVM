@@ -131,10 +131,17 @@ impl PrivateBridge {
         let alignment = count;
         let connector_start = (public_rows + circuit.rows.len()).next_multiple_of(alignment);
         circuit.rows.resize(connector_start - public_rows, [0, 0, 0, 0]);
-        for slot in 0..18 {
+        let helper_start = circuit.variables;
+        circuit.variables = circuit.variables.checked_add(6 * count)?;
+        for group in 0..6 {
             for block in 0..count {
-                let v = io_variables.get(block).map_or(padding_variables[slot], |row| row[slot]);
-                circuit.rows.push([v, 1, 0, v]);
+                let inputs: [usize; 3] = std::array::from_fn(|col| {
+                    let slot = 6 * col + group;
+                    io_variables.get(block).map_or(padding_variables[slot], |row| row[slot])
+                });
+                circuit
+                    .rows
+                    .push([inputs[0], inputs[1], inputs[2], helper_start + group * count + block]);
             }
         }
         let required_rows = public_rows.checked_add(circuit.rows.len())?;
@@ -173,6 +180,12 @@ impl PrivateBridge {
         (3 * (slot / 4) + slot % 4) * n + within
     }
 
+    pub(crate) fn connector_offset(&self, slot: usize, limb: usize) -> usize {
+        assert!(slot < 18 && limb < 3, "invalid connector coordinate");
+        let n = 1usize << self.index.log_rows;
+        (3 * (slot / 6) + limb) * n + self.connector_start + ((slot % 6) << self.block_log)
+    }
+
     pub(crate) fn public(&self, public: &[F192]) -> Option<Vec<F192>> {
         if public.len() != self.public_len || public[..2] != [F192::ZERO, F192::ONE] {
             return None;
@@ -182,7 +195,7 @@ impl PrivateBridge {
         Some(full)
     }
     pub(crate) fn label(&self, public: &[F192], context: &Hash) -> Vec<u8> {
-        let mut out = b"format-private-bridge-v4".to_vec();
+        let mut out = b"format-private-bridge-v5".to_vec();
         out.extend_from_slice(&self.index.root);
         out.extend_from_slice(context);
         out.extend_from_slice(&R1CS_DIGEST);
@@ -208,12 +221,11 @@ impl PrivateBridge {
         out
     }
     pub(crate) fn claims(&self, point: &[F192], values: &[F192; 18]) -> Vec<StackClaim> {
-        let n = 1 << self.index.log_rows;
         let mut claims = Vec::new();
         for (slot, &value) in values.iter().enumerate() {
             for limb in 0..3 {
                 claims.push(StackClaim::Point {
-                    offset: limb * n + self.connector_start + (slot << self.block_log),
+                    offset: self.connector_offset(slot, limb),
                     low_point: point.to_vec(),
                     value: if limb == 0 { value } else { F192::ZERO },
                 });
@@ -244,9 +256,26 @@ impl PrivateBridge {
     }
     // Deliberately separate from the precheck so tests can prove malformed
     // witness bindings and exercise rejection by the argument verifier itself.
-    fn prove_unchecked(&self, values: &[F192], blocks: &[Compression], context: &Hash) -> Option<Proof> {
+    fn extend_values(&self, values: &[F192]) -> Vec<F192> {
         let mut values = values.to_vec();
         values.extend(self.padding.map(|x| F192::new(x, 0, 0)));
+        for group in 0..6 {
+            for block in 0..1usize << self.block_log {
+                let inputs: [F192; 3] = std::array::from_fn(|col| {
+                    let slot = 6 * col + group;
+                    let variable = self
+                        .io_variables
+                        .get(block)
+                        .map_or(self.variables + slot, |row| row[slot]);
+                    values[variable]
+                });
+                values.push(inputs[0] * inputs[1] + inputs[2]);
+            }
+        }
+        values
+    }
+    fn prove_unchecked(&self, values: &[F192], blocks: &[Compression], context: &Hash) -> Option<Proof> {
+        let values = self.extend_values(values);
         let public = self.index.public_values(&values);
         let witness =
             tracing::info_span!("Arithmetic witness").in_scope(|| native_arithmetic::prepare(&self.index, &values));
@@ -271,7 +300,7 @@ impl PrivateBridge {
         let weights = eq_table(&point);
         let mut bridge_values = [F192::ZERO; 18];
         for (slot, value) in bridge_values.iter_mut().enumerate() {
-            let offset = self.connector_start + (slot << self.block_log);
+            let offset = self.connector_offset(slot, 0);
             *value = whir::inner_product_base_ext(&stack[offset..offset + weights.len()], &weights);
             ps.add_scalar(*value);
         }
@@ -503,6 +532,43 @@ mod tests {
     }
 
     #[test]
+    fn connector_triples_keep_original_words_and_constrain_their_helpers() {
+        parallel::init();
+        let (circuit, io, values, _) = fixture(3, 37);
+        let bridge = PrivateBridge::new(circuit, io.clone()).unwrap();
+        let full = bridge.extend_values(&values);
+        let prepared = native_arithmetic::prepare(&bridge.index, &full);
+        let n = 1usize << bridge.index.log_rows;
+        let count = 1usize << bridge.block_log;
+        let read = |col: usize, row: usize| {
+            F192::new(
+                prepared.stack[(4 * col) * n + row].0,
+                prepared.stack[(4 * col + 1) * n + row].0,
+                prepared.stack[(4 * col + 2) * n + row].0,
+            )
+        };
+        for group in 0..6 {
+            for block in 0..count {
+                let row = bridge.connector_start + group * count + block;
+                for col in 0..3 {
+                    let slot = 6 * col + group;
+                    let expected = io
+                        .get(block)
+                        .map_or(F192::new(bridge.padding[slot], 0, 0), |v| values[v[slot]]);
+                    assert_eq!(read(col, row), expected);
+                }
+                assert_eq!(read(3, row), read(0, row) * read(1, row) + read(2, row));
+            }
+        }
+        let public = bridge.index.public_values(&full);
+        let mut bad = full;
+        bad[values.len() + 18] += F192::ONE;
+        let context = [93; 32];
+        let proof = native_arithmetic::prove(&bridge.index, &bad, &context);
+        assert!(!native_arithmetic::verify(&bridge.index, &public, &context, &proof));
+    }
+
+    #[test]
     fn compact_native_views_and_claims_preserve_every_used_limb() {
         let (circuit, io, _, _) = fixture(1, 7);
         let bridge = PrivateBridge::new(circuit, io).unwrap();
@@ -522,13 +588,20 @@ mod tests {
             }
         }
         assert!(compact[12 * n..].iter().all(|&x| x == F64::ZERO));
-        // Column-zero connector slices keep their original offsets.
+        let mut positions = std::collections::BTreeSet::new();
         for slot in 0..18 {
+            assert!(positions.insert((slot / 6, slot % 6)));
             for limb in 0..3 {
-                let offset = limb * n + bridge.connector_start + (slot << bridge.block_log);
-                assert_eq!(bridge.compact_native_offset(offset, bridge.block_log), offset);
+                let offset = (4 * (slot / 6) + limb) * n + bridge.connector_start + ((slot % 6) << bridge.block_log);
+                let compact_offset = bridge.connector_offset(slot, limb);
+                assert_eq!(bridge.compact_native_offset(offset, bridge.block_log), compact_offset);
+                assert_eq!(
+                    &compact[compact_offset..compact_offset + (1 << bridge.block_log)],
+                    &source[offset..offset + (1 << bridge.block_log)],
+                );
             }
         }
+        assert_eq!(positions.len(), 18);
         for (offset, low_log) in [
             (3 * n, 0),
             (7 * n, 0),
