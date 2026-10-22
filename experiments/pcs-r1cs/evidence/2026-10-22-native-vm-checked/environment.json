@@ -1,0 +1,7 @@
+{
+  "cpu_model": "Intel(R) Xeon(R) Gold 6230R CPU @ 2.10GHz",
+  "rustc": "rustc 1.99.1 (58cf8f9c3 2026-10-13)",
+  "rustflags": "-C target-cpu=native -C target-feature=+pclmulqdq",
+  "threads": 16,
+  "source_status": "?? experiments/pcs-r1cs/evidence/2026-10-22-native-arithmetic-dev/\n?? experiments/pcs-r1cs/evidence/2026-10-22-native-vm-checked/\n?? experiments/pcs-r1cs/evidence/2026-10-22-native-vm-comparison/\n"
+}

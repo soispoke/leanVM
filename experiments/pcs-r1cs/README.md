@@ -4,7 +4,7 @@ This research branch compares where an application's quotient PIOP is checked. *
 
 **Measured result:** with Keccak for PCS and native BLAKE2s for R1CS, aggregate proving cost is comparable on seven statements, batches of 1/2/4/8, and recursive trees. R1CS uses much less application-check execution gas. Compact generator descriptions cover all nine circuits in 0.9-16.1 kB per app. This does not establish a universal winner; the largest circuits still exceed this quotient prover's implementation limit.
 
-Those recursive trees use leanVM's recursive verifier and Flock hash support. A [separate attempt to compile the complete verifier into the generic full-adder format](recursion/README.md) exceeded the quotient backend's row limit inside its first opening verifier. A follow-up Flock adapter successfully batches all its hashes with explicit public I/O binding and native arithmetic replay, but even the circuit with hashes removed still exceeds the row limit. Efficient recursion without leanVM has not been demonstrated.
+Those recursive trees use leanVM's recursive verifier and Flock hash support. The [separate full-adder recursion experiment](recursion/README.md) exceeded the quotient backend's capacity. A [new native-field prototype](recursion/NATIVE.md) produces verified outer certificates by changing the arithmetic backend and binding Flock hash batches. Its matched comparison with leanVM reports complete proof size, verification time and memory. It has not demonstrated repeated self-recursion, and its new composition has no Lean soundness proof.
 
 Start with the [full Linux measurements](evidence/2026-10-22-full/README.md), [compact descriptions](format/compact/README.md), and [formal scope](../../formal/quotient/README.md). This is a research prototype, not an audited implementation or a protocol recommendation.
 
@@ -26,7 +26,7 @@ The new full run found and fixed a Falcon builder bug: two helpers shared a carr
 
 ## Reproduce
 
-Rust is pinned by `rust-toolchain.toml`. On an x86 host exposing `pclmulqdq`, use a fresh Cargo target directory and explicitly enable the feature. An old `target-cpu=native` cache can retain software arithmetic after a VM CPU configuration changes.
+The recorded Linux runs use Rust 1.99.1; the compiler version is saved with their evidence. On an x86 host exposing `pclmulqdq`, use a fresh Cargo target directory and explicitly enable the feature. An old `target-cpu=native` cache can retain software arithmetic after a VM CPU configuration changes.
 
 ```sh
 export PATH="$PWD/experiments/pcs-r1cs:$PATH"

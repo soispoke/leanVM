@@ -1,0 +1,30 @@
+   Compiling format_recursion v0.1.0 (/root/workspaces/mission-9abcee72/leanvm-opt/crates/format_recursion)
+    Finished `release` profile [optimized] target(s) in 10.81s
+     Running unittests src/lib.rs (/root/workspaces/mission-9abcee72/target-verified-pclmul/release/deps/format_recursion-2b75bcaa1dea0d3a)
+
+running 22 tests
+test public_plan::tests::projected_inputs_require_consistent_overlaps_and_isolation ... ok
+test public_plan::tests::repeated_hash_sources_and_lengths_are_bound ... ok
+test public_plan::tests::zero_tails_and_boolean_selection_are_checked ... ok
+test replay::tests::replay_cannot_stand_in_for_hash_verification ... ok
+test replay::tests::replay_checks_every_arithmetic_kind_and_public_output ... ok
+test trace::tests::concatenation_preserves_all_dependencies_checks_and_outputs ... ok
+test hash_batch::tests::binding_point_detects_every_io_column_including_padding ... ok
+test hash_batch::tests::public_io_matches_packed_flock_layout ... ok
+test trace::tests::merkle_selection_uses_the_constrained_bit ... ok
+test boolean_field::tests::sparse_base_maps_match_native_on_every_binary_basis_vector ... ok
+test trace::tests::nonzero_advice_is_constrained ... ok
+test native_recursion::tests::compression_chunks_have_fixed_order_and_boundaries ... ok
+test verifier::tests::merkle_paths_enforce_omitted_zero_lanes ... ok
+test hash_batch::tests::an_unbound_proof_of_unrelated_hashes_is_rejected ... ok
+test trace::tests::hashes_match_native_across_block_boundaries ... ok
+test hash_batch::tests::honest_and_adversarial_public_batch ... ok
+test native_recursion::tests::complete_certificate_binds_public_requests_context_and_components ... ok
+test native_arithmetic::tests::native_circuit_proves_and_rejects_gate_public_and_transcript_changes ... ok
+test trace::tests::field_operations_match_native_and_bind_their_inputs ... ok
+test boolean_field::tests::profile_multiplication_cutoffs_and_check_native_values ... ok
+test boolean_field::tests::windowed_linear_maps_match_native_on_a_complete_binary_basis ... ok
+test boolean_field::tests::five_product_matches_native_on_every_binary_basis_pair ... ok
+
+test result: ok. 22 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 5.29s
+

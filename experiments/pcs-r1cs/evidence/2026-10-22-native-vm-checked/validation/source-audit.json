@@ -1,0 +1,10 @@
+{
+  "source_manifest_matches": true,
+  "source_files": 288,
+  "formal_diff_from_published_parent": false,
+  "migration_deliverables_exist": {
+    "ARCH_HANDOFF.md": "True",
+    "job-started-c55791fc.json": "True",
+    "host-attestation.json": "True"
+  }
+}

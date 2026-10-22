@@ -1,0 +1,15 @@
+    Finished `release` profile [optimized] target(s) in 0.31s
+     Running unittests examples/recursion_comparison.rs (/root/workspaces/mission-9abcee72/target-verified-pclmul/release/examples/recursion_comparison-8ba1eac9e34931d7)
+
+running 8 tests
+test shared::keccak::tests::constants_match_the_specification ... ok
+test shared::generator_tests::source_edits_fail_closed ... ok
+test shared::r1cs::tests::elimination_matches_gate ... ok
+test shared::keccak::tests::reference_matches_sha3 ... ok
+test shared::r1cs::tests::malformed_shapes_and_wiring_are_rejected ... ok
+test shared::keccak::tests::emitted_permutation_matches_reference ... ok
+test shared::keccak::tests::round_is_exactly_the_reference_round ... ok
+test shared::keccak::tests::compiled_hash_matches_sha3 ... ok
+
+test result: ok. 8 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 9.53s
+

@@ -1,0 +1,3 @@
+{"kind":"public_plan","known_nodes":207781,"nodes":477889,"requests":10324}
+{"elapsed_ms":399,"kind":"native_setup","log_rows":19,"shape":[478080,205929,207783]}
+{"arithmetic_proof_bytes":522552,"hash_proof_bytes":269392,"kind":"native_recursion","prove_ms":1579,"public_hash_request_bytes":1469112,"status":"verified","trace_values_disclosed":false,"verify_ms":167}

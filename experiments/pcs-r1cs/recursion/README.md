@@ -1,5 +1,9 @@
 # A verifier in the generic circuit format
 
+**Latest:** a [native-field follow-up](NATIVE.md) now produces verified outer certificates and compares them with leanVM. It changes the arithmetic backend and has not demonstrated repeated self-recursion or established a formal composition proof. The results below preserve the earlier full-adder experiments.
+
+## Earlier full-adder backend
+
 **Result: the direct implementation exceeds the current quotient backend's capacity. No recursive outer proof was produced.** This experiment removes leanVM from the verifier being compiled, rather than reusing its recursive verifier or hash instruction.
 
 The child is a small circuit with 4,096 padded rows, two private 64-bit inputs, and public sum and XOR outputs. Its proof uses the existing quotient protocol, BLAKE2s transcript and all three WHIR openings. The compiler records the verifier as field operations and hashes, then lowers those operations into the existing full-adder format. Child proof contents and statement are inputs; the child circuit commitment and protocol parameters are fixed. Dynamic query bits control both the authenticated Merkle paths and the opening equations. No hash result is accepted as an unchecked hint.
