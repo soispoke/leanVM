@@ -145,13 +145,22 @@ fn label(index: &Index, public: &[F192], context: &Hash) -> Vec<u8> {
     }
     out
 }
-fn stack_columns(cols: &[Vec<F192>; 4]) -> Vec<F64> {
+fn stack_columns(cols: &[Vec<F192>; 4], column_stride: usize, capacity: usize) -> Vec<F64> {
+    assert!(column_stride == 3 || column_stride == 4);
     let n = cols[0].len();
-    let mut stack = vec![F64::ZERO; 16 * n];
+    let words = 4 * column_stride * n;
+    assert!(capacity >= words);
+    let mut stack = if capacity == words {
+        vec![F64::ZERO; words]
+    } else {
+        let mut stack = Vec::with_capacity(capacity);
+        stack.resize(words, F64::ZERO);
+        stack
+    };
     parallel::chunks_mut(&mut stack, n, |slot, dst| {
-        let limb = slot % 4;
+        let limb = slot % column_stride;
         if limb < 3 {
-            for (dest, value) in dst.iter_mut().zip(&cols[slot / 4]) {
+            for (dest, value) in dst.iter_mut().zip(&cols[slot / column_stride]) {
                 *dest = F64(match limb {
                     0 => value.c0,
                     1 => value.c1,
@@ -237,6 +246,7 @@ fn send_field(
     stack: &[F64],
     l: usize,
     col: usize,
+    column_stride: usize,
     point: &[F192],
     weights: &[F192],
     ps: &mut ProverState,
@@ -246,7 +256,7 @@ fn send_field(
     let mut value = F192::ZERO;
     let mut basis = F192::ONE;
     let columns = std::array::from_fn(|limb| {
-        let offset = (col * 4 + limb) * n;
+        let offset = (col * column_stride + limb) * n;
         &stack[offset..offset + weights.len()]
     });
     let evaluations: [F192; 3] = evaluate_base_columns(columns, weights);
@@ -370,14 +380,50 @@ pub(crate) struct Prepared {
 }
 pub(crate) fn prepare(index: &Index, values: &[F192]) -> Prepared {
     let cols = index.columns(values);
-    let stack = stack_columns(&cols);
+    let stack = stack_columns(&cols, 4, 16 << index.log_rows);
+    Prepared { stack, cols }
+}
+/// Build the twelve populated limbs directly for the private joint stack.
+/// The caller may take this stack, append its other committed tables and pass
+/// the resulting stack to `prove_reduction_compact` without copying the limbs.
+#[allow(dead_code)] // Also consumed by the separately integrated private bridge.
+pub(crate) fn prepare_compact(index: &Index, values: &[F192]) -> Prepared {
+    prepare_compact_with_capacity(index, values, 12 << index.log_rows)
+}
+/// Reserve the final joint length up front so that growing the taken stack
+/// does not reallocate or move its populated native limbs.
+#[allow(dead_code)] // Also consumed by the separately integrated private bridge.
+pub(crate) fn prepare_compact_with_capacity(index: &Index, values: &[F192], capacity: usize) -> Prepared {
+    let cols = index.columns(values);
+    let stack = stack_columns(&cols, 3, capacity);
     Prepared { stack, cols }
 }
 pub(crate) fn prove_reduction(index: &Index, witness: &Prepared, ps: &mut ProverState) -> (Vec<Claim>, Vec<Claim>) {
+    prove_reduction_with_stack(index, witness, &witness.stack, 4, ps)
+}
+/// Read twelve contiguous limbs from the joint commitment, while emitting the
+/// original sixteen-slot claim coordinates for the bridge's existing mapping.
+/// All populated limbs are read; no suffix or populated column is omitted.
+#[allow(dead_code)] // Also consumed by the separately integrated private bridge.
+pub(crate) fn prove_reduction_compact(
+    index: &Index,
+    witness: &Prepared,
+    stack: &[F64],
+    ps: &mut ProverState,
+) -> (Vec<Claim>, Vec<Claim>) {
+    prove_reduction_with_stack(index, witness, stack, 3, ps)
+}
+fn prove_reduction_with_stack(
+    index: &Index,
+    witness: &Prepared,
+    stack: &[F64],
+    column_stride: usize,
+    ps: &mut ProverState,
+) -> (Vec<Claim>, Vec<Claim>) {
     let l = index.log_rows;
     let n = 1 << l;
     let cols = &witness.cols;
-    let stack = &witness.stack;
+    assert!(stack.len() >= 4 * column_stride * n);
     let mut claims = Vec::new();
     let mut index_claims = Vec::new();
     let zerocheck_span = tracing::info_span!("Native zerocheck").entered();
@@ -396,7 +442,7 @@ pub(crate) fn prove_reduction(index: &Index, witness: &Prepared, ps: &mut Prover
     let gate_span = tracing::info_span!("Native gate evaluations").entered();
     let weights = eq_table(&point);
     for col in 0..4 {
-        send_field(stack, l, col, &point, &weights, ps, &mut claims);
+        send_field(stack, l, col, column_stride, &point, &weights, ps, &mut claims);
     }
     drop(weights);
     drop(gate_span);
@@ -412,7 +458,7 @@ pub(crate) fn prove_reduction(index: &Index, witness: &Prepared, ps: &mut Prover
     let rho = &product.point[..l];
     let weights = eq_table(rho);
     for col in 0..4 {
-        send_field(stack, l, col, rho, &weights, ps, &mut claims);
+        send_field(stack, l, col, column_stride, rho, &weights, ps, &mut claims);
     }
     let index_columns = std::array::from_fn(|col| &index.stack[col * n..(col + 1) * n]);
     let index_values: [F192; 4] = evaluate_base_columns(index_columns, &weights);
@@ -429,7 +475,7 @@ pub(crate) fn prove_reduction(index: &Index, witness: &Prepared, ps: &mut Prover
     let public_span = tracing::info_span!("Native public evaluation").entered();
     let point = ps.sample_vec(index.public_log);
     let weights = eq_table(&point);
-    send_field(stack, l, 3, &point, &weights, ps, &mut claims);
+    send_field(stack, l, 3, column_stride, &point, &weights, ps, &mut claims);
     drop(public_span);
     (claims, index_claims)
 }
@@ -622,6 +668,76 @@ mod tests {
                 *out += power * eq;
             }
             assert_eq!(got, expected, "offset={offset} length={length}");
+        }
+    }
+
+    #[test]
+    fn compact_preparation_and_reduction_preserve_every_limb_claim_and_transcript() {
+        parallel::init();
+        let index = Index::new(Circuit {
+            variables: 6,
+            rows: vec![[2, 3, 0, 4], [4, 1, 2, 5]],
+            public: vec![0, 1, 5],
+        });
+        let x = F192::new(17, 3, 91);
+        let y = F192::new(41, 52, 2);
+        let values = [F192::ZERO, F192::ONE, x, y, x * y, x * y + x];
+        let padded = prepare(&index, &values);
+        let minimal_compact = prepare_compact(&index, &values);
+        let n = 1 << index.log_rows;
+        let mut compact = prepare_compact_with_capacity(&index, &values, 16 * n);
+        assert_eq!(padded.stack.len(), 16 * n);
+        assert_eq!(compact.stack.len(), 12 * n);
+        assert_eq!(minimal_compact.stack, compact.stack);
+        for column in 0..4 {
+            for limb in 0..3 {
+                assert_eq!(
+                    padded.stack[(4 * column + limb) * n..(4 * column + limb + 1) * n],
+                    compact.stack[(3 * column + limb) * n..(3 * column + limb + 1) * n],
+                );
+            }
+            assert!(
+                padded.stack[(4 * column + 3) * n..(4 * column + 4) * n]
+                    .iter()
+                    .all(|&word| word == F64::ZERO)
+            );
+        }
+        let mut joint_stack = std::mem::take(&mut compact.stack);
+        let initial_pointer = joint_stack.as_ptr();
+        joint_stack.resize(16 * n, F64(0x12345678));
+        assert_eq!(initial_pointer, joint_stack.as_ptr());
+        let label = b"compact-native-equivalence-control";
+        let mut padded_ps = ProverState::from_label(label);
+        let mut compact_ps = ProverState::from_label(label);
+        let padded_claims = prove_reduction(&index, &padded, &mut padded_ps);
+        let compact_claims = prove_reduction_compact(&index, &compact, &joint_stack, &mut compact_ps);
+        let claim_tuples = |claims: Vec<Claim>| {
+            claims
+                .into_iter()
+                .map(|claim| (claim.offset, claim.point, claim.value))
+                .collect::<Vec<_>>()
+        };
+        assert_eq!(claim_tuples(padded_claims.0), claim_tuples(compact_claims.0));
+        assert_eq!(claim_tuples(padded_claims.1), claim_tuples(compact_claims.1));
+        let reference = padded_ps.into_proof();
+        assert_eq!(reference, compact_ps.into_proof());
+        let public = index.public_values(&values);
+        let mut vs = VerifierState::from_label(label, &reference);
+        assert!(verify_reduction(&index, &public, &mut vs).is_some());
+        assert!(vs.finish().is_ok());
+
+        // The last row is circuit padding, but it is still authenticated. Each
+        // one of the twelve populated limb columns must affect the reduction.
+        for slot in 0..12 {
+            let at = (slot + 1) * n - 1;
+            joint_stack[at] += F64::ONE;
+            let mut ps = ProverState::from_label(label);
+            prove_reduction_compact(&index, &compact, &joint_stack, &mut ps);
+            let altered = ps.into_proof();
+            assert_ne!(reference, altered, "slot={slot}");
+            let mut vs = VerifierState::from_label(label, &altered);
+            assert!(verify_reduction(&index, &public, &mut vs).is_none(), "slot={slot}");
+            joint_stack[at] += F64::ONE;
         }
     }
 
