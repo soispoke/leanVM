@@ -80,6 +80,8 @@ The [pinned recursion.fast relation](https://github.com/scaraven/recursion.fast/
 
 The tagged proof-system oracle adapter, concrete PCS/composition knowledge soundness, perfect completeness and executable extractor certificate also remain open. This is not an official recursion.fast entry. The pinned challenge uses Lean 4.34.1; these runs do not exercise its Lean verifier or official harness.
 
+Upstream status checked on 22 October at `scaraven/recursion.fast` revision `921bdbd`: v3 is frozen, the implementation moved to `v3/contract-archive`, and `main` is an ideation skeleton. These experiments retain their historical `15e4ae5` relation pin. The submissions repository still points to that pin and its setup guidance is stale. See the current [design record](https://github.com/scaraven/recursion.fast/tree/921bdbdefe561f2352ea321c1b0533b774722229/docs) for the archived design's lessons and unresolved problems.
+
 ## Reproduce
 
 ```bash
