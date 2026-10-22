@@ -10,7 +10,7 @@ use flock::zerocheck;
 use leanvm_core::gkr::{self, RootShape};
 use pcs::whir::{self, ProverData};
 use primitives::{
-    field::{F64, F192},
+    field::{F64, F192, F192Unreduced},
     multilinear::{eq_eval, eq_table},
 };
 
@@ -162,6 +162,71 @@ fn stack_columns(cols: &[Vec<F192>; 4]) -> Vec<F64> {
     });
     stack
 }
+/// Evaluate several base-field columns against one shared extension basis.
+/// Reduction is linear over XOR, so each window accumulates unreduced products
+/// and reduces once after the parallel reduction. Basis windows stay in cache.
+fn evaluate_base_columns<const C: usize>(columns: [&[F64]; C], weights: &[F192]) -> [F192; C] {
+    assert!(columns.iter().all(|column| column.len() == weights.len()));
+    const WINDOW: usize = 256;
+    let xor = |mut left: [F192Unreduced; C], right: [F192Unreduced; C]| {
+        for i in 0..C {
+            left[i] ^= right[i];
+        }
+        left
+    };
+    let window = |first: usize, end: usize| {
+        let mut sums = [F192Unreduced::ZERO; C];
+        for column in 0..C {
+            for (i, &weight) in weights.iter().enumerate().take(end).skip(first) {
+                let word = columns[column][i];
+                if word != F64::ZERO {
+                    sums[column] ^= weight.mul_base_unreduced(word);
+                }
+            }
+        }
+        sums
+    };
+    let sums = if weights.len() < 4096 {
+        window(0, weights.len())
+    } else {
+        parallel::map_reduce(
+            weights.len().div_ceil(WINDOW),
+            || [F192Unreduced::ZERO; C],
+            |i| window(i * WINDOW, ((i + 1) * WINDOW).min(weights.len())),
+            xor,
+        )
+    };
+    sums.map(F192Unreduced::reduce)
+}
+
+/// The two copy-product leaves differ only in the public cell address. Share
+/// their witness multiplication and avoid multiplying the fixed zero/one cells.
+fn copy_leaves(cols: &[Vec<F192>; 4], sigma: &[u32], alpha: F192, beta: F192) -> (Vec<F192>, Vec<F192>) {
+    let n = cols[0].len();
+    assert!(cols.iter().all(|column| column.len() == n));
+    assert_eq!(sigma.len(), 4 * n);
+    let mut ids = vec![F192::ZERO; 4 * n];
+    let mut permuted = vec![F192::ZERO; 4 * n];
+    parallel::chunks_mut2(&mut ids, &mut permuted, 256, |chunk, ids, permuted| {
+        let start = chunk * 256;
+        for (i, (id, permuted)) in ids.iter_mut().zip(permuted).enumerate() {
+            let at = start + i;
+            let value = cols[at / n][at % n];
+            let scaled = if value == F192::ZERO {
+                F192::ZERO
+            } else if value == F192::ONE {
+                beta
+            } else {
+                beta * value
+            };
+            let common = alpha + scaled;
+            *id = common + F192::new(at as u64, 0, 0);
+            *permuted = common + F192::new(sigma[at] as u64, 0, 0);
+        }
+    });
+    (ids, permuted)
+}
+
 fn send_field(
     stack: &[F64],
     l: usize,
@@ -174,9 +239,13 @@ fn send_field(
     let n = 1 << l;
     let mut value = F192::ZERO;
     let mut basis = F192::ONE;
-    for limb in 0..3 {
+    let columns = std::array::from_fn(|limb| {
         let offset = (col * 4 + limb) * n;
-        let v = whir::inner_product_base_ext(&stack[offset..offset + weights.len()], weights);
+        &stack[offset..offset + weights.len()]
+    });
+    let evaluations: [F192; 3] = evaluate_base_columns(columns, weights);
+    for (limb, v) in evaluations.into_iter().enumerate() {
+        let offset = (col * 4 + limb) * n;
         ps.add_scalar(v);
         claims.push(Claim {
             offset,
@@ -310,11 +379,7 @@ pub(crate) fn prove_reduction(index: &Index, witness: &Prepared, ps: &mut Prover
     let leaves_span = tracing::info_span!("Native copy leaves").entered();
     let alpha = ps.sample();
     let beta = ps.sample();
-    let leaf = |k: usize, permuted: bool| {
-        alpha + F192::new(if permuted { index.sigma[k] as u64 } else { k as u64 }, 0, 0) + beta * cols[k / n][k % n]
-    };
-    let ids = parallel::map_collect(4 * n, |k| leaf(k, false));
-    let sigma = parallel::map_collect(4 * n, |k| leaf(k, true));
+    let (ids, sigma) = copy_leaves(cols, &index.sigma, alpha, beta);
     drop(leaves_span);
     let product_span = tracing::info_span!("Native copy product").entered();
     let product = gkr::prove_product_triple([ids, sigma, vec![F192::ONE]], ps, RootShape::Distinct);
@@ -325,8 +390,9 @@ pub(crate) fn prove_reduction(index: &Index, witness: &Prepared, ps: &mut Prover
     for col in 0..4 {
         send_field(stack, l, col, rho, &weights, ps, &mut claims);
     }
-    for col in 0..4 {
-        let value = whir::inner_product_base_ext(&index.stack[col * n..(col + 1) * n], &weights);
+    let index_columns = std::array::from_fn(|col| &index.stack[col * n..(col + 1) * n]);
+    let index_values: [F192; 4] = evaluate_base_columns(index_columns, &weights);
+    for (col, value) in index_values.into_iter().enumerate() {
         ps.add_scalar(value);
         index_claims.push(Claim {
             offset: col * n,
@@ -452,6 +518,62 @@ pub fn verify(index: &Index, public: &[F192], context: &Hash, proof: &Proof) -> 
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]
+    fn deferred_native_evaluations_match_reference_for_dense_sparse_and_boundary_lengths() {
+        parallel::init();
+        let mut rng = primitives::test_rng::Rng::new(0xB4515);
+        for n in [0usize, 1, 255, 256, 257, 4095, 4096, 4097, 8192] {
+            let weights: Vec<_> = (0..n)
+                .map(|_| F192::new(rng.next_u64(), rng.next_u64(), rng.next_u64()))
+                .collect();
+            let columns: [Vec<_>; 4] = std::array::from_fn(|column| {
+                (0..n)
+                    .map(|i| {
+                        if column == 0 || (column == 1 && i % 3 != 0) {
+                            F64::ZERO
+                        } else {
+                            F64(rng.next_u64())
+                        }
+                    })
+                    .collect()
+            });
+            let got = evaluate_base_columns(columns.each_ref().map(Vec::as_slice), &weights);
+            for i in 0..4 {
+                assert_eq!(
+                    got[i],
+                    whir::inner_product_base_ext(&columns[i], &weights),
+                    "n={n} column={i}"
+                );
+            }
+        }
+    }
+
+    #[test]
+    fn shared_copy_fingerprints_match_reference_including_zero_one_and_extension_cells() {
+        parallel::init();
+        let mut rng = primitives::test_rng::Rng::new(0xC0B1);
+        for n in [1usize, 255, 256, 257, 8192] {
+            let cols: [Vec<_>; 4] = std::array::from_fn(|_| {
+                (0..n)
+                    .map(|i| match i % 4 {
+                        0 => F192::ZERO,
+                        1 => F192::ONE,
+                        _ => F192::new(rng.next_u64(), rng.next_u64(), rng.next_u64()),
+                    })
+                    .collect()
+            });
+            let sigma: Vec<_> = (0..4 * n).map(|i| ((i + 11) % (4 * n)) as u32).collect();
+            let alpha = F192::new(rng.next_u64(), rng.next_u64(), rng.next_u64());
+            let beta = F192::new(rng.next_u64(), rng.next_u64(), rng.next_u64());
+            let (ids, permuted) = copy_leaves(&cols, &sigma, alpha, beta);
+            for i in 0..4 * n {
+                let common = alpha + beta * cols[i / n][i % n];
+                assert_eq!(ids[i], common + F192::new(i as u64, 0, 0));
+                assert_eq!(permuted[i], common + F192::new(sigma[i] as u64, 0, 0));
+            }
+        }
+    }
+
     #[test]
     fn native_circuit_proves_and_rejects_gate_public_and_transcript_changes() {
         parallel::init();
