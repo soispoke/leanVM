@@ -350,13 +350,26 @@ impl Trace {
                 .all(|(a, b)| a.op == b.op && (!matches!(a.op, Op::Constant) || a.value == b.value))
     }
     pub fn lower(&self, row_limit: usize) -> Result<Lowered, (usize, usize)> {
+        self.lower_impl(row_limit, false)
+    }
+
+    /// Optimistic capacity diagnostic only. Hash outputs are unconstrained inputs.
+    /// The incomplete circuit is deliberately not returned to callers or proved.
+    pub fn lower_hash_advice_diagnostic(&self, row_limit: usize) -> Result<(usize, usize), (usize, usize)> {
+        self.lower_impl(row_limit, true)
+            .map(|lowered| (lowered.rows, lowered.circuit.log_rows))
+    }
+
+    fn lower_impl(&self, row_limit: usize, hash_advice: bool) -> Result<Lowered, (usize, usize)> {
         let mut c = Ckt::new();
         let mut values: Vec<Word> = Vec::new();
         let mut inputs = Vec::new();
         let mut stages = Vec::new();
         let mut hash_outputs: std::collections::HashMap<usize, Word> = std::collections::HashMap::new();
+        let mut rows_by_operation = std::collections::BTreeMap::new();
         for (index, node) in self.nodes.iter().enumerate() {
             let get = |s: S| &values[s.0];
+            let before = c.rows();
             let word = match &node.op {
                 Op::Constant => bits(node.value),
                 Op::Input => {
@@ -386,11 +399,19 @@ impl Trace {
                     w
                 }
                 Op::Hash(parts) => {
-                    let message: Word = parts
-                        .iter()
-                        .flat_map(|(a, n)| get(*a)[..8 * n].iter().copied())
-                        .collect();
-                    let digest = blake2s::blake2s(&mut c, &message);
+                    let digest = if hash_advice {
+                        let hi = self.nodes[index + 1].value;
+                        let mut advice = bits(node.value)[..128].to_vec();
+                        advice.extend_from_slice(&bits(hi)[..128]);
+                        inputs.extend(advice.iter().map(|w| w.as_const().unwrap()));
+                        c.inputs(256)
+                    } else {
+                        let message: Word = parts
+                            .iter()
+                            .flat_map(|(a, n)| get(*a)[..8 * n].iter().copied())
+                            .collect();
+                        blake2s::blake2s(&mut c, &message)
+                    };
                     hash_outputs.insert(index, digest[128..].to_vec());
                     let mut w = digest[..128].to_vec();
                     w.resize(192, Wire::ZERO);
@@ -404,7 +425,29 @@ impl Trace {
                 Op::Select(bit, a, b) => (0..192).map(|i| c.mux(get(*bit)[0], get(*b)[i], get(*a)[i])).collect(),
             };
             values.push(word);
+            let name = match &node.op {
+                Op::Mul(a, b) if a == b => "field_square",
+                Op::Mul(a, b)
+                    if matches!(self.nodes[a.0].op, Op::Constant) || matches!(self.nodes[b.0].op, Op::Constant) =>
+                {
+                    "constant_field_multiply"
+                }
+                Op::Mul(..) => "field_multiply",
+                Op::Add(..) => "field_add",
+                Op::Frobenius(..) => "frobenius",
+                Op::Select(..) => "select",
+                Op::Hash(..) if hash_advice => "hash_advice",
+                Op::Hash(..) => "hash",
+                Op::Input => "input",
+                _ => "layout",
+            };
+            *rows_by_operation.entry(name).or_insert(0usize) += c.rows() - before;
             if c.rows() > row_limit {
+                eprintln!(
+                    "{}",
+                    serde_json::json!({"kind":"partial_lowering_costs", "hash_advice":hash_advice,
+                    "nodes_lowered":index,"rows_by_operation":rows_by_operation})
+                );
                 return Err((index, c.rows()));
             }
             if index % 10000 == 0 {

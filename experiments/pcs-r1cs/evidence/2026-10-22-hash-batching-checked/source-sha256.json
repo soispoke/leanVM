@@ -1,0 +1,14 @@
+{
+  "Cargo.lock": "78239d64d926e291426e681305bad1484e395152104e725b68454f91957f2fc9",
+  "Cargo.toml": "f4a66e8ef69110ef5413f5c0a089923cf35943b4de3adef41bc094901783f66c",
+  "crates/format_recursion/Cargo.toml": "04b201d11ce71670b52c306bb69ce5184be103ea8fb338f7ae7953772f4c95e2",
+  "crates/format_recursion/examples/batched.rs": "72c6a716e8be2576ae7aab0cf647ae29079a86a035194e59cb336d51f01abc03",
+  "crates/format_recursion/examples/recursive.rs": "7a2eb71b206dcb9ecb7e685a413c459382343efb08bd420b1867f0d18c5505cb",
+  "crates/format_recursion/examples/support/mod.rs": "bc8f5d9c3a217d69392b210ee888c39f66f0021012ec6d780977dc3ae0b69a22",
+  "crates/format_recursion/src/hash_batch.rs": "12ba95f6f463ef62875d8eb60e97cc12b30662c5180a77ec855c250b6a114985",
+  "crates/format_recursion/src/lib.rs": "cc86176541554585ffe5afbbd3f52807b3a65e567809744af9cabc0e9b0f760a",
+  "crates/format_recursion/src/replay.rs": "6ae32b6f19be5c4f5752aaa4474bbe771d7e39a216baa29ed6352a1746828742",
+  "crates/format_recursion/src/trace.rs": "67d4e9f6dbb1af80aa3310d47e158cc99bc044914e6a4648e6a8352cfd99d70d",
+  "crates/format_recursion/src/verifier.rs": "aec4b2ffd6d586d375a887f345c1c626492c8d75a96eb91f3194eb90735432f8",
+  "experiments/pcs-r1cs/recursion/run.py": "51c410f21eb99209257d9355f2297cf7f4fb9f4428ea4b081656b64f7bd15520"
+}

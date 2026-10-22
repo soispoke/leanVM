@@ -28,6 +28,55 @@ The earlier recursion timings remain measurements of leanVM recursion, where Flo
 
 The result supports investigating a shared hash argument with explicit binding to the circuit's requests. It does not show that hash batching alone is enough: the verifier also performs substantial field arithmetic. A successful design must measure the hash argument, its binding checks, the remaining arithmetic, and the outer proof together. It would be additional shared proving and verification machinery beyond the small circuit-description decoder.
 
+## Follow-up: a working hash batch, with arithmetic still over capacity
+
+**The Flock hash adapter passes its tests, but standalone recursion still does not fit.** It proves all 17,795 compressions requested by the complete verifier trace in one Flock batch, without leanVM. A native checker validates the remaining trace operations. The values are disclosed; this checker is not a succinct recursive proof and is not zero knowledge.
+
+| Diagnostic, three fresh child proofs | Result |
+| --- | --- |
+| Complete trace with Flock hash proof and native arithmetic replay | All three accepted |
+| Corruptions of each complete certificate | 15 rejected per run, including a forged hash that arithmetic replay alone accepts |
+| Hash batch plus replay certificate construction, median | 739 ms |
+| Native certificate verification, median | 244 ms |
+| Encoded Flock proof plus intermediate chaining values | 508,176 to 511,184 bytes |
+| Disclosed trace values, excluding framing | 11,469,336 bytes |
+| Optimistic main circuit with hashes removed | Exceeded 8,388,608 rows at node 1,014 of 477,889 |
+| Rows at that stop | 8,413,267, including 7,952,984 for variable field multiplication |
+| Complete recursive outer proof | Not produced |
+
+These are shared-host component diagnostics, not recursive proving times or a comparison with leanPCS. Construction includes extracting requests, native arithmetic replay, context binding, Flock witness generation, commitment, reduction and opening. It excludes child proving, trace recording, Boolean lowering and negative tests. Verification includes replay, context binding and the Flock verifier. There is no warmup series. The final run used 16 workers, peaked at 1.48 GiB RSS and retained over 207 GiB available system memory.
+
+### What binds the hashes
+
+The adapter expands each hash into RFC 7693 compression requests. The message, byte counter, final-block and last-node flags, initial chaining value, every intermediate chaining value and the final digest are all bound. The verifier derives each block's chaining input from the preceding output, resets to the parameterized IV at each message boundary, and enforces padding. It does not trust prover-provided hash outputs or recompute each requested hash.
+
+After the public request table and the Flock witness commitment have entered the transcript, a random multilinear point selects an evaluation across compression instances. Eighteen packed-word claims cover every compression's public inputs and outputs, including padded instances. The existing mixed WHIR opening discharges these claims together with Flock's reduction claim against the same committed witness. The verifier also rejects unconsumed proof data. A mutation fixture demonstrates that a valid Flock proof of unrelated hashes is accepted without these binding claims and rejected with them.
+
+The surrounding native replay checks every non-hash operation against a trusted fixed trace program and checks the caller's expected statement digest. Three different child proofs have the same program and constants. This is a transparent prototype of the adapter's interface: public I/O and program digests are hashed natively to seed the transcript. Neither those seeding hashes nor the replay checker have been recursively proved. A compact circuit-to-coprocessor binding remains to be implemented for a recursive proof.
+
+### What remains
+
+Removing every hash constraint still leaves the main verifier circuit over capacity inside the first opening verifier. Variable field multiplication accounts for about 95% of rows in this partial compilation. This identifies another implementation bottleneck; it is not a count of the whole circuit or a lower bound on alternative designs. The capacity diagnostic also omits circuit-to-coprocessor binding costs, so it is deliberately optimistic and never returns a purported valid circuit to the prover.
+
+Practical standalone recursion requires addressing the remaining field arithmetic and proving its binding to the shared hash requests, then measuring a complete outer proof. The new adapter is tested Rust code. No Lean proof was added for it or for this composition; the published quotient and structured-R1CS theorems remain unchanged and do not establish the soundness of this new implementation. In particular, the random evaluation used for I/O binding is an additional probabilistic check, so the original numerical bound must not be asserted for the combined experiment without a composition proof.
+
+### Evidence and reproduction
+
+The [checked follow-up evidence](../evidence/2026-10-22-hash-batching-checked/stdout.jsonl) records all three runs and the capacity failure. Its [execution record](../evidence/2026-10-22-hash-batching-checked/result.json), validation logs, source hashes and source patch preserve the environment and implementation. The earlier development run remains in `2026-10-22-hash-batching`.
+
+```bash
+export CARGO_TARGET_DIR=/absolute/path/to/fresh-linux-target
+export RUSTFLAGS='-C target-cpu=native -C target-feature=+pclmulqdq'
+cargo build --release -p format_recursion --example batched
+LEANVM_NUM_THREADS=16 python3 experiments/pcs-r1cs/recursion/run.py \
+  --out /absolute/path/to/new-evidence --budget-gib 32 -- \
+  "$CARGO_TARGET_DIR/release/examples/batched" --repeat 3
+cargo test --release -p format_recursion --lib
+cargo clippy --release -p format_recursion --all-targets -- -D warnings
+```
+
+The eleven unit tests cover arithmetic replay, field and hash gadgets, zero-prefix Merkle lanes, public I/O layout, all packed I/O columns including padding, message lengths at block boundaries, adversarial public requests, malformed proofs, and the unbound-proof mutation fixture.
+
 ## Evidence and reproduction
 
 The [final diagnostic](../evidence/2026-10-22-recursion-checked/stdout.jsonl) and [execution record](../evidence/2026-10-22-recursion-checked/result.json) preserve the capacity failure explicitly. Earlier development diagnostics are retained in the adjacent `2026-10-22-recursion-trace`, `2026-10-22-recursion-capacity` and `2026-10-22-recursion` directories. Review added explicit checks for the omitted zero lanes restored in raw opening paths; the final recorded verifier includes those checks. The final diagnostic used less than 1 GiB process RSS and retained over 190 GiB available system memory. Source hashes, a patch against the published baseline and validation logs accompany the final record.

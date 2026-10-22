@@ -1,0 +1,12 @@
+{
+  "status": "component_tests_passed_recursion_still_over_capacity",
+  "samples": 3,
+  "complete_certificate_corruptions_rejected": 45,
+  "unit_tests_passed": 11,
+  "clippy_all_targets_passed": true,
+  "outer_recursive_snark_produced": false,
+  "lean_proofs_added": false,
+  "source_patch_base": "9ff6e1ccbf58d6536ba641659ae265ff2caca912",
+  "source_patch_sha256": "e2d9f961b70bfedbebead52ab154ae472d51b81ea204bf3f2c0662ff54f58ea6",
+  "timing_scope": "Public hash batch with transparent native arithmetic replay; excludes child generation and trace recording. Not recursive proving time."
+}

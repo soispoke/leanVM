@@ -1,0 +1,19 @@
+   Compiling format_recursion v0.1.0 (/root/workspaces/mission-9abcee72/leanvm-opt/crates/format_recursion)
+    Finished `release` profile [optimized] target(s) in 8.79s
+     Running unittests src/lib.rs (/root/workspaces/mission-9abcee72/target-verified-pclmul/release/deps/format_recursion-9b76d66635e6d09e)
+
+running 11 tests
+test replay::tests::replay_cannot_stand_in_for_hash_verification ... ok
+test replay::tests::replay_checks_every_arithmetic_kind_and_public_output ... ok
+test hash_batch::tests::binding_point_detects_every_io_column_including_padding ... ok
+test trace::tests::merkle_selection_uses_the_constrained_bit ... ok
+test hash_batch::tests::public_io_matches_packed_flock_layout ... ok
+test trace::tests::nonzero_advice_is_constrained ... ok
+test hash_batch::tests::an_unbound_proof_of_unrelated_hashes_is_rejected ... ok
+test verifier::tests::merkle_paths_enforce_omitted_zero_lanes ... ok
+test trace::tests::hashes_match_native_across_block_boundaries ... ok
+test hash_batch::tests::honest_and_adversarial_public_batch ... ok
+test trace::tests::field_operations_match_native_and_bind_their_inputs ... ok
+
+test result: ok. 11 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.12s
+
