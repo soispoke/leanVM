@@ -1,0 +1,13 @@
+   Compiling format_recursion v0.1.0 (/root/workspaces/mission-9abcee72/leanvm-opt/crates/format_recursion)
+    Finished `release` profile [optimized] target(s) in 6.11s
+     Running unittests src/lib.rs (/root/workspaces/mission-9abcee72/target-verified-pclmul/release/deps/format_recursion-9b76d66635e6d09e)
+
+running 5 tests
+test trace::tests::merkle_selection_uses_the_constrained_bit ... ok
+test trace::tests::nonzero_advice_is_constrained ... ok
+test verifier::tests::merkle_paths_enforce_omitted_zero_lanes ... ok
+test trace::tests::hashes_match_native_across_block_boundaries ... ok
+test trace::tests::field_operations_match_native_and_bind_their_inputs ... ok
+
+test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.13s
+

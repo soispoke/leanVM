@@ -1,0 +1,7 @@
+//! Experimental compilation of the complete quotient verifier into the Boolean circuit format.
+//! The child circuit and proof shapes are fixed; proof contents remain circuit inputs.
+
+pub mod trace;
+mod verifier;
+
+pub use verifier::{Child, record};

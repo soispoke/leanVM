@@ -1,0 +1,2 @@
+{"checks":1753,"child_log_rows":12,"elapsed_ms":1463,"fresh_proof_same_circuit":true,"hash_compressions":17795,"kind":"trace","negative_cases":16,"nodes":459411}
+{"elapsed_ms":1773,"kind":"capacity","nodes_lowered":943,"row_limit":8388608,"rows_so_far":8399399,"status":"row_limit_exceeded","total_nodes":459411}

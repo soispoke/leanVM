@@ -1,0 +1,543 @@
+use circuit_suite::{Ckt, Wire, Word, blake2s};
+use flock::membership::Scalar;
+use primitives::field::F192;
+use std::{
+    cell::RefCell,
+    ops::{Add, Mul},
+};
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum Op {
+    Constant,
+    Input,
+    Add(S, S),
+    Mul(S, S),
+    Frobenius(S),
+    Slice(S, usize, usize),
+    Pack(Vec<(S, usize)>),
+    Hash(Vec<(S, usize)>),
+    HashHigh(S),
+    Select(S, S, S),
+}
+
+#[derive(Clone)]
+pub struct Node {
+    pub op: Op,
+    pub value: F192,
+}
+
+#[derive(Default)]
+pub struct Trace {
+    pub nodes: Vec<Node>,
+    pub checks: Vec<(S, S)>,
+    pub public: Vec<S>,
+    pub sections: Vec<(String, usize)>,
+}
+
+thread_local! { static TRACE: RefCell<Trace> = RefCell::default(); }
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct S(pub usize);
+
+pub fn start() {
+    TRACE.with(|t| *t.borrow_mut() = Trace::default());
+}
+pub fn take() -> Trace {
+    TRACE.with(|t| std::mem::take(&mut *t.borrow_mut()))
+}
+
+pub fn mark(name: &str) {
+    TRACE.with(|t| {
+        let mut t = t.borrow_mut();
+        let at = t.nodes.len();
+        t.sections.push((name.to_owned(), at));
+    });
+}
+
+fn node(op: Op, value: F192) -> S {
+    TRACE.with(|t| {
+        let mut t = t.borrow_mut();
+        let id = S(t.nodes.len());
+        t.nodes.push(Node { op, value });
+        id
+    })
+}
+
+impl S {
+    pub fn value(self) -> F192 {
+        TRACE.with(|t| t.borrow().nodes[self.0].value)
+    }
+    pub fn input(value: F192) -> Self {
+        node(Op::Input, value)
+    }
+    pub fn c(value: F192) -> Self {
+        node(Op::Constant, value)
+    }
+    pub fn u(value: u64) -> Self {
+        Self::c(F192::new(value, 0, 0))
+    }
+    fn constant_value(self) -> Option<F192> {
+        TRACE.with(|t| {
+            let t = t.borrow();
+            matches!(t.nodes[self.0].op, Op::Constant).then_some(t.nodes[self.0].value)
+        })
+    }
+    pub fn slice(self, offset: usize, len: usize) -> Self {
+        assert!(len <= 192 && offset + len <= 192);
+        let x = self.value();
+        let limbs = [x.c0, x.c1, x.c2];
+        let mut out = [0u64; 3];
+        for i in 0..len {
+            out[i / 64] |= ((limbs[(offset + i) / 64] >> ((offset + i) % 64)) & 1) << (i % 64);
+        }
+        let value = F192::new(out[0], out[1], out[2]);
+        if self.constant_value().is_some() {
+            Self::c(value)
+        } else {
+            node(Op::Slice(self, offset, len), value)
+        }
+    }
+    pub fn pack(parts: &[(S, usize)]) -> Self {
+        assert!(parts.iter().map(|(_, n)| n).sum::<usize>() <= 192);
+        let mut out = [0u64; 3];
+        let mut offset = 0;
+        for &(s, n) in parts {
+            let x = s.value();
+            let limbs = [x.c0, x.c1, x.c2];
+            for i in 0..n {
+                out[(offset + i) / 64] |= ((limbs[i / 64] >> (i % 64)) & 1) << ((offset + i) % 64);
+            }
+            offset += n;
+        }
+        node(Op::Pack(parts.to_vec()), F192::new(out[0], out[1], out[2]))
+    }
+    pub fn select(bit: S, a: S, b: S) -> S {
+        assert!(bit.value() == F192::ZERO || bit.value() == F192::ONE);
+        node(
+            Op::Select(bit, a, b),
+            if bit.value() == F192::ZERO {
+                a.value()
+            } else {
+                b.value()
+            },
+        )
+    }
+    pub fn assert_eq(self, rhs: S) {
+        TRACE.with(|t| t.borrow_mut().checks.push((self, rhs)));
+    }
+}
+
+impl Add for S {
+    type Output = Self;
+    fn add(self, rhs: Self) -> Self {
+        if self == rhs {
+            return S::u(0);
+        }
+        match (self.constant_value(), rhs.constant_value()) {
+            (Some(a), Some(b)) => S::c(a + b),
+            (Some(F192::ZERO), _) => rhs,
+            (_, Some(F192::ZERO)) => self,
+            _ => node(Op::Add(self, rhs), self.value() + rhs.value()),
+        }
+    }
+}
+impl Mul for S {
+    type Output = Self;
+    fn mul(self, rhs: Self) -> Self {
+        match (self.constant_value(), rhs.constant_value()) {
+            (Some(a), Some(b)) => S::c(a * b),
+            (Some(F192::ZERO), _) | (_, Some(F192::ZERO)) => S::u(0),
+            (Some(F192::ONE), _) => rhs,
+            (_, Some(F192::ONE)) => self,
+            _ => node(Op::Mul(self, rhs), self.value() * rhs.value()),
+        }
+    }
+}
+impl Scalar for S {
+    fn constant(value: F192) -> Self {
+        S::c(value)
+    }
+    fn frobenius(self) -> Self {
+        if let Some(v) = self.constant_value() {
+            S::c(v.frobenius())
+        } else {
+            node(Op::Frobenius(self), self.value().frobenius())
+        }
+    }
+    fn is_nonzero(self) -> bool {
+        // Advice is constrained, never trusted as a native acceptance decision.
+        let inverse = S::input(self.value().inv());
+        (self * inverse).assert_eq(S::u(1));
+        true
+    }
+}
+
+pub fn hash(parts: &[(S, usize)]) -> [S; 2] {
+    let mut bytes = Vec::new();
+    for &(s, len) in parts {
+        assert!(len <= 24);
+        let x = s.value();
+        let words: Vec<u8> = [x.c0, x.c1, x.c2].iter().flat_map(|x| x.to_le_bytes()).collect();
+        bytes.extend_from_slice(&words[..len]);
+    }
+    let digest = primitives::hash::hash(&bytes);
+    let halves = fiat_shamir::merkle::hash_to_scalars(&digest);
+    let lo = node(Op::Hash(parts.to_vec()), halves[0]);
+    let hi = node(Op::HashHigh(lo), halves[1]);
+    [lo, hi]
+}
+
+pub fn digest_constant(bytes: &[u8; 32]) -> [S; 2] {
+    fiat_shamir::merkle::hash_to_scalars(bytes).map(S::c)
+}
+
+fn bits(value: F192) -> Word {
+    [value.c0, value.c1, value.c2]
+        .into_iter()
+        .flat_map(|v| (0..64).map(move |k| Wire::constant((v >> k) & 1 == 1)))
+        .collect()
+}
+
+fn xor(c: &mut Ckt, a: &[Wire], b: &[Wire]) -> Word {
+    c.xor_word(a, b)
+}
+
+fn clmul(c: &mut Ckt, a: &[Wire], b: &[Wire]) -> Word {
+    let n = a.len();
+    assert_eq!(n, b.len());
+    if n <= 4 {
+        let mut out = vec![Wire::ZERO; 2 * n];
+        for i in 0..n {
+            for j in 0..n {
+                let p = c.and(a[i], b[j]);
+                out[i + j] = c.xor(out[i + j], p);
+            }
+        }
+        return out;
+    }
+    let h = n / 2;
+    let low = clmul(c, &a[..h], &b[..h]);
+    let high = clmul(c, &a[h..], &b[h..]);
+    let aa = xor(c, &a[..h], &a[h..]);
+    let bb = xor(c, &b[..h], &b[h..]);
+    let middle = clmul(c, &aa, &bb);
+    let mut out = vec![Wire::ZERO; 2 * n];
+    for i in 0..n {
+        out[i] = c.xor(out[i], low[i]);
+        out[i + n] = c.xor(out[i + n], high[i]);
+        let cross = c.xor3(middle[i], low[i], high[i]);
+        out[i + h] = c.xor(out[i + h], cross);
+    }
+    out
+}
+
+fn base_mul(c: &mut Ckt, a: &[Wire], b: &[Wire]) -> Word {
+    let mut product = clmul(c, a, b);
+    for k in (64..128).rev() {
+        for shift in [0, 1, 3, 4] {
+            product[k - 64 + shift] = c.xor(product[k - 64 + shift], product[k]);
+        }
+    }
+    product[..64].to_vec()
+}
+
+fn linear(c: &mut Ckt, a: &[Wire], f: impl Fn(F192) -> F192) -> Word {
+    let mut out = vec![Wire::ZERO; 192];
+    for (i, &bit) in a.iter().enumerate() {
+        if bit == Wire::ZERO {
+            continue;
+        }
+        let mut limbs = [0u64; 3];
+        limbs[i / 64] = 1 << (i % 64);
+        let image = f(F192::new(limbs[0], limbs[1], limbs[2]));
+        for (j, limb) in [image.c0, image.c1, image.c2].into_iter().enumerate() {
+            let mut limb = limb;
+            while limb != 0 {
+                let k = limb.trailing_zeros() as usize;
+                limb &= limb - 1;
+                out[64 * j + k] = c.xor(out[64 * j + k], bit);
+            }
+        }
+    }
+    out
+}
+
+fn mul(c: &mut Ckt, a: &[Wire], b: &[Wire]) -> Word {
+    let aa: Vec<_> = a.chunks(64).collect();
+    let bb: Vec<_> = b.chunks(64).collect();
+    let diagonal: Vec<_> = (0..3).map(|i| base_mul(c, aa[i], bb[i])).collect();
+    let mut cross = Vec::new();
+    for (i, j) in [(0, 1), (0, 2), (1, 2)] {
+        let x = xor(c, aa[i], aa[j]);
+        let y = xor(c, bb[i], bb[j]);
+        let p = base_mul(c, &x, &y);
+        cross.push(
+            (0..64)
+                .map(|k| c.xor3(p[k], diagonal[i][k], diagonal[j][k]))
+                .collect::<Word>(),
+        );
+    }
+    let mut out = Vec::new();
+    for k in 0..64 {
+        out.push(c.xor(diagonal[0][k], cross[2][k]));
+    }
+    for k in 0..64 {
+        out.push(c.xor3(cross[0][k], cross[2][k], diagonal[2][k]));
+    }
+    for k in 0..64 {
+        out.push(c.xor3(cross[1][k], diagonal[1][k], diagonal[2][k]));
+    }
+    out
+}
+
+pub struct Lowered {
+    pub circuit: circuit_suite::Circuit,
+    pub sources: Vec<circuit_suite::Src>,
+    pub inputs: Vec<bool>,
+    pub rows: usize,
+    pub stages: Vec<(String, usize)>,
+}
+
+impl Trace {
+    pub fn operation_counts(&self) -> std::collections::BTreeMap<&'static str, usize> {
+        let mut out = std::collections::BTreeMap::new();
+        for n in &self.nodes {
+            let name = match &n.op {
+                Op::Constant => "constant",
+                Op::Input => "input_scalar",
+                Op::Add(..) => "field_add",
+                Op::Mul(a, b) if a == b => "field_square",
+                Op::Mul(a, b)
+                    if matches!(self.nodes[a.0].op, Op::Constant) || matches!(self.nodes[b.0].op, Op::Constant) =>
+                {
+                    "constant_field_multiply"
+                }
+                Op::Mul(..) => "field_multiply",
+                Op::Frobenius(..) => "frobenius",
+                Op::Slice(..) => "bit_slice",
+                Op::Pack(..) => "bit_pack",
+                Op::Hash(..) => "blake2s_call",
+                Op::HashHigh(..) => "hash_high_half",
+                Op::Select(..) => "select",
+            };
+            *out.entry(name).or_insert(0) += 1;
+        }
+        out
+    }
+
+    pub fn satisfied(&self) -> bool {
+        self.checks
+            .iter()
+            .all(|(a, b)| self.nodes[a.0].value == self.nodes[b.0].value)
+    }
+    pub fn hash_compressions(&self) -> usize {
+        self.nodes
+            .iter()
+            .map(|n| match &n.op {
+                Op::Hash(parts) => parts.iter().map(|(_, len)| len).sum::<usize>().div_ceil(64).max(1),
+                _ => 0,
+            })
+            .sum()
+    }
+    pub fn same_program(&self, other: &Self) -> bool {
+        self.nodes.len() == other.nodes.len()
+            && self.checks == other.checks
+            && self.public == other.public
+            && self
+                .nodes
+                .iter()
+                .zip(&other.nodes)
+                .all(|(a, b)| a.op == b.op && (!matches!(a.op, Op::Constant) || a.value == b.value))
+    }
+    pub fn lower(&self, row_limit: usize) -> Result<Lowered, (usize, usize)> {
+        let mut c = Ckt::new();
+        let mut values: Vec<Word> = Vec::new();
+        let mut inputs = Vec::new();
+        let mut stages = Vec::new();
+        let mut hash_outputs: std::collections::HashMap<usize, Word> = std::collections::HashMap::new();
+        for (index, node) in self.nodes.iter().enumerate() {
+            let get = |s: S| &values[s.0];
+            let word = match &node.op {
+                Op::Constant => bits(node.value),
+                Op::Input => {
+                    inputs.extend(bits(node.value).iter().map(|w| w.as_const().unwrap()));
+                    c.inputs(192)
+                }
+                Op::Add(a, b) => xor(&mut c, get(*a), get(*b)),
+                Op::Mul(a, b) if a == b => linear(&mut c, get(*a), |x| x * x),
+                Op::Mul(a, b) if matches!(self.nodes[a.0].op, Op::Constant) => {
+                    let k = self.nodes[a.0].value;
+                    linear(&mut c, get(*b), |x| x * k)
+                }
+                Op::Mul(a, b) if matches!(self.nodes[b.0].op, Op::Constant) => {
+                    let k = self.nodes[b.0].value;
+                    linear(&mut c, get(*a), |x| x * k)
+                }
+                Op::Mul(a, b) => mul(&mut c, get(*a), get(*b)),
+                Op::Frobenius(a) => linear(&mut c, get(*a), |x| x.frobenius()),
+                Op::Slice(a, offset, len) => {
+                    let mut w = get(*a)[*offset..offset + len].to_vec();
+                    w.resize(192, Wire::ZERO);
+                    w
+                }
+                Op::Pack(parts) => {
+                    let mut w: Word = parts.iter().flat_map(|(a, n)| get(*a)[..*n].iter().copied()).collect();
+                    w.resize(192, Wire::ZERO);
+                    w
+                }
+                Op::Hash(parts) => {
+                    let message: Word = parts
+                        .iter()
+                        .flat_map(|(a, n)| get(*a)[..8 * n].iter().copied())
+                        .collect();
+                    let digest = blake2s::blake2s(&mut c, &message);
+                    hash_outputs.insert(index, digest[128..].to_vec());
+                    let mut w = digest[..128].to_vec();
+                    w.resize(192, Wire::ZERO);
+                    w
+                }
+                Op::HashHigh(a) => {
+                    let mut w = hash_outputs.remove(&a.0).unwrap();
+                    w.resize(192, Wire::ZERO);
+                    w
+                }
+                Op::Select(bit, a, b) => (0..192).map(|i| c.mux(get(*bit)[0], get(*b)[i], get(*a)[i])).collect(),
+            };
+            values.push(word);
+            if c.rows() > row_limit {
+                return Err((index, c.rows()));
+            }
+            if index % 10000 == 0 {
+                stages.push((format!("node-{index}"), c.rows()));
+                eprintln!("lower node {index}/{}: {} rows", self.nodes.len(), c.rows());
+            }
+        }
+        let checks: Word = self
+            .checks
+            .iter()
+            .map(|(a, b)| c.eq(&values[a.0], &values[b.0]))
+            .collect();
+        let valid = c.all(&checks);
+        let mut public: Word = self
+            .public
+            .iter()
+            .flat_map(|s| values[s.0][..128].iter().copied())
+            .collect();
+        public.push(valid);
+        public.resize(512, Wire::ZERO);
+        let rows = c.rows();
+        let (circuit, sources) = c.finish(&public);
+        Ok(Lowered {
+            circuit,
+            sources,
+            inputs,
+            rows,
+            stages,
+        })
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use circuit_suite::read_statement;
+
+    #[test]
+    fn field_operations_match_native_and_bind_their_inputs() {
+        let mut state = 0x123456789abcdef0u64;
+        for _ in 0..8 {
+            let mut next = || {
+                state = state.wrapping_mul(6364136223846793005).wrapping_add(1);
+                state
+            };
+            let a = F192::new(next(), next(), next());
+            let b = F192::new(next(), next(), next());
+            start();
+            let x = S::input(a);
+            let y = S::input(b);
+            let z = x * y;
+            let q = x * x;
+            let f = x.frobenius();
+            z.assert_eq(S::c(a * b));
+            q.assert_eq(S::c(a * a));
+            f.assert_eq(S::c(a.frobenius()));
+            let constant_product = x * S::c(b);
+            constant_product.assert_eq(S::c(a * b));
+            let trace = take();
+            let lower = trace.lower(1 << 20).ok().unwrap();
+            lower.circuit.check_wired().unwrap();
+            let eval = |inputs: &[bool]| read_statement(&lower.circuit.values(inputs), &lower.sources)[0] & 1;
+            assert_eq!(eval(&lower.inputs), 1);
+            let mut bad = lower.inputs.clone();
+            bad[17] = !bad[17];
+            assert_eq!(eval(&bad), 0);
+        }
+    }
+
+    #[test]
+    fn hashes_match_native_across_block_boundaries() {
+        for len in [0usize, 1, 63, 64, 65, 128] {
+            start();
+            let bytes: Vec<u8> = (0..len).map(|i| i.wrapping_mul(37) as u8).collect();
+            let parts: Vec<_> = bytes
+                .chunks(24)
+                .map(|part| {
+                    let mut padded = [0u8; 24];
+                    padded[..part.len()].copy_from_slice(part);
+                    let word = |i| u64::from_le_bytes(padded[i..i + 8].try_into().unwrap());
+                    (S::input(F192::new(word(0), word(8), word(16))), part.len())
+                })
+                .collect();
+            let digest = hash(&parts);
+            let expected = digest_constant(&primitives::hash::hash(&bytes));
+            for i in 0..2 {
+                digest[i].assert_eq(expected[i]);
+            }
+            let trace = take();
+            let lower = trace.lower(1 << 20).ok().unwrap();
+            assert_eq!(
+                read_statement(&lower.circuit.values(&lower.inputs), &lower.sources)[0],
+                1
+            );
+        }
+    }
+
+    #[test]
+    fn merkle_selection_uses_the_constrained_bit() {
+        for bit in [0u64, 1] {
+            start();
+            let input = S::input(F192::new(bit, 0, 0));
+            let left = S::input(F192::new(0x1234, 0x5678, 0));
+            let right = S::input(F192::new(0x9abc, 0xdef0, 0));
+            let selected = S::select(input.slice(0, 1), left, right);
+            selected.assert_eq(S::c(if bit == 0 { left.value() } else { right.value() }));
+            let trace = take();
+            let lower = trace.lower(1 << 20).ok().unwrap();
+            assert_eq!(
+                read_statement(&lower.circuit.values(&lower.inputs), &lower.sources)[0],
+                1
+            );
+            let mut bad = lower.inputs.clone();
+            bad[0] = !bad[0];
+            assert_eq!(read_statement(&lower.circuit.values(&bad), &lower.sources)[0], 0);
+        }
+    }
+
+    #[test]
+    fn nonzero_advice_is_constrained() {
+        start();
+        let x = S::input(F192::new(17, 39, 7));
+        assert!(x.is_nonzero());
+        let trace = take();
+        let lower = trace.lower(1 << 20).ok().unwrap();
+        let valid = |inputs: &[bool]| read_statement(&lower.circuit.values(inputs), &lower.sources)[0];
+        assert_eq!(valid(&lower.inputs), 1);
+        let mut bad = lower.inputs.clone();
+        bad[192] = !bad[192];
+        assert_eq!(valid(&bad), 0);
+        start();
+        let zero = S::input(F192::ZERO);
+        assert!(zero.is_nonzero());
+        assert!(!take().satisfied());
+    }
+}

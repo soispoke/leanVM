@@ -1,0 +1,20 @@
+[package]
+name = "format_recursion"
+version.workspace = true
+edition.workspace = true
+publish = false
+
+[lints]
+workspace = true
+
+[dependencies]
+circuit_suite = { path = "../circuit_suite" }
+flock.workspace = true
+pcs.workspace = true
+primitives.workspace = true
+fiat_shamir.workspace = true
+parallel.workspace = true
+rand.workspace = true
+serde_json = "1"
+bincode.workspace = true
+tikv-jemallocator.workspace = true

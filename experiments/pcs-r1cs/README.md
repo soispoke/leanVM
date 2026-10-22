@@ -4,6 +4,8 @@ This research branch compares where an application's quotient PIOP is checked. *
 
 **Measured result:** with Keccak for PCS and native BLAKE2s for R1CS, aggregate proving cost is comparable on seven statements, batches of 1/2/4/8, and recursive trees. R1CS uses much less application-check execution gas. Compact generator descriptions cover all nine circuits in 0.9-16.1 kB per app. This does not establish a universal winner; the largest circuits still exceed this quotient prover's implementation limit.
 
+Those recursive trees use leanVM's recursive verifier and Flock hash support. A [separate attempt to compile the complete verifier into the generic full-adder format](recursion/README.md) exceeded the quotient backend's row limit inside its first opening verifier. Efficient recursion without leanVM has not been demonstrated.
+
 Start with the [full Linux measurements](evidence/2026-10-22-full/README.md), [compact descriptions](format/compact/README.md), and [formal scope](../../formal/quotient/README.md). This is a research prototype, not an audited implementation or a protocol recommendation.
 
 ## What the comparison measures

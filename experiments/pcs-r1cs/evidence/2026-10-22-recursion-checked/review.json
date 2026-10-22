@@ -1,0 +1,16 @@
+{
+  "status": "passed",
+  "capacity_is_not_a_proof": true,
+  "hash_and_operation_counts_checked": true,
+  "source_hashes": {
+    "Cargo.lock": "78239d64d926e291426e681305bad1484e395152104e725b68454f91957f2fc9",
+    "crates/format_recursion/Cargo.toml": "04b201d11ce71670b52c306bb69ce5184be103ea8fb338f7ae7953772f4c95e2",
+    "crates/format_recursion/examples/recursive.rs": "f7658b8b359a0cd575376684e5274792afb98403a9933348510d8e61844030d4",
+    "crates/format_recursion/src/lib.rs": "4569eb4822a27b9cf8514662dfb120b9a43f08664ad8f95b0f40d733395049d3",
+    "crates/format_recursion/src/trace.rs": "88db5cda4f92a602e22cd2cbf3b922eac27de7251c8de123693f9600aa357c53",
+    "crates/format_recursion/src/verifier.rs": "aec4b2ffd6d586d375a887f345c1c626492c8d75a96eb91f3194eb90735432f8",
+    "experiments/pcs-r1cs/recursion/run.py": "51c410f21eb99209257d9355f2297cf7f4fb9f4428ea4b081656b64f7bd15520"
+  },
+  "binary_sha256": "994037fb5be735ec337516a16bffc2c59c3c0c79338eb868841fe8408320ebed",
+  "min_available_gib": 191.1703643798828
+}

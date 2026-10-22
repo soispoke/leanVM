@@ -1,0 +1,15 @@
+{
+  "command": [
+    "/root/workspaces/mission-9abcee72/target-verified-pclmul/release/examples/recursive",
+    "--row-limit",
+    "8388608"
+  ],
+  "cwd": "/root/workspaces/mission-9abcee72/leanvm-opt",
+  "started_utc": "2026-10-22T08:46:24Z",
+  "kernel": "6.12.113+deb13-cloud-amd64",
+  "hostname": "21af93d7fe47",
+  "admission": "ok: 68.6 GiB used + 16.0 GiB expected; ceiling 200.0 GiB",
+  "source_commit": "5512720773082a9de6c256ce1e256b5adc2eb59a",
+  "binary_sha256": "de9842a1b2164a705ee9cf6d0a152510e6bfcd5db0d32cf18aeb0441a29b23a9",
+  "budget_gib": 16
+}
