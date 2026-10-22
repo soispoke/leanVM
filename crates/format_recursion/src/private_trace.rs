@@ -328,6 +328,7 @@ struct Compiler {
     rows: Vec<[usize; 4]>,
     values: Vec<F192>,
     constants: BTreeMap<(u64, u64, u64), usize>,
+    constant_variables: BTreeSet<usize>,
     public: Vec<usize>,
     bits: Vec<Option<Vec<usize>>>,
     limb_bits: Vec<[Option<Vec<usize>>; 3]>,
@@ -366,6 +367,7 @@ impl Compiler {
         }
         let at = self.variable(value);
         self.constants.insert(key(value), at);
+        self.constant_variables.insert(at);
         self.public.push(at);
         at
     }
@@ -551,10 +553,10 @@ impl Compiler {
             .skip(start / 64)
         {
             if self.limb_bits[source][limb].is_none() {
-                let bits = if variable <= 1 {
-                    let mut bits = vec![0; 64];
-                    bits[0] = variable;
-                    bits
+                let bits = if self.constant_variables.contains(&variable) {
+                    (0..64)
+                        .map(|i| ((self.values[variable].c0 >> i) & 1) as usize)
+                        .collect()
                 } else if limb * 64 >= self.widths[source] {
                     vec![0; 64]
                 } else {
@@ -627,19 +629,35 @@ impl Compiler {
             let flag = if block + 1 == count { u32::MAX } else { 0 };
             let compression = (native_cv, native_words, counter, flag, 0);
             let output = blake2s_compress(&native_cv, &native_words, counter, flag, 0);
-            let outputs: [usize; 4] =
-                std::array::from_fn(|i| self.variable(F192::new(pack32(output[2 * i], output[2 * i + 1]), 0, 0)));
-            let t = self.constant(F192::new(counter, 0, 0));
-            let flags = self.constant(F192::new(u64::from(flag), 0, 0));
-            self.connectors.push(std::array::from_fn(|i| match i {
-                0..4 => cv[i],
-                4..8 => outputs[i - 4],
-                8..16 => words[i - 8],
-                16 => t,
-                17 => flags,
-                _ => unreachable!(),
-            }));
-            self.compressions.push(compression);
+            // Only variable identities known to be public-pinned constants
+            // permit folding. Witness words (including zero-valued words) never
+            // decide circuit shape. A fixed prefix yields a fixed CV for the
+            // first nonconstant block, preserving the exact BLAKE2s chaining.
+            let fixed = cv.iter().chain(&words).all(|v| self.constant_variables.contains(v));
+            let outputs: [usize; 4] = std::array::from_fn(|i| {
+                let value = F192::new(pack32(output[2 * i], output[2 * i + 1]), 0, 0);
+                if fixed {
+                    self.constant(value)
+                } else {
+                    self.variable(value)
+                }
+            });
+            // The existing private bridge requires a nonempty compression
+            // schedule. Retain one valid fixed terminal block when necessary;
+            // subsequent fixed blocks need no additional compression proof.
+            if !fixed || (self.compressions.is_empty() && block + 1 == count) {
+                let t = self.constant(F192::new(counter, 0, 0));
+                let flags = self.constant(F192::new(u64::from(flag), 0, 0));
+                self.connectors.push(std::array::from_fn(|i| match i {
+                    0..4 => cv[i],
+                    4..8 => outputs[i - 4],
+                    8..16 => words[i - 8],
+                    16 => t,
+                    17 => flags,
+                    _ => unreachable!(),
+                }));
+                self.compressions.push(compression);
+            }
             self.typed.extend(outputs);
             cv = outputs;
             native_cv = output;
@@ -674,6 +692,7 @@ pub fn lower_with_limits(program: &Trace, witness: &Trace, limits: Limits) -> Op
         rows: Vec::new(),
         values: vec![F192::ZERO, F192::ONE],
         constants: BTreeMap::from([(key(F192::ZERO), 0), (key(F192::ONE), 1)]),
+        constant_variables: BTreeSet::from([0, 1]),
         public: vec![0, 1],
         bits: vec![None; program.nodes.len()],
         limb_bits: vec![std::array::from_fn(|_| None); program.nodes.len()],
@@ -696,6 +715,7 @@ pub fn lower_with_limits(program: &Trace, witness: &Trace, limits: Limits) -> Op
                 } else {
                     c.public.push(z);
                     c.constants.insert(key(node.value), z);
+                    c.constant_variables.insert(z);
                 }
             }
             Op::Input => (),
@@ -1028,6 +1048,69 @@ mod tests {
         ] {
             assert!(lower_with_limits(&t, &t, limits).is_none());
         }
+    }
+
+    #[test]
+    fn fixed_hash_prefixes_are_folded_but_private_zero_words_are_not() {
+        for bytes in [65usize, 128, 129, 256] {
+            trace::start();
+            let zero = S::u(0);
+            let private = S::input(F192::ZERO);
+            let mut parts = vec![(zero, 8); bytes / 8];
+            if !bytes.is_multiple_of(8) {
+                parts.push((zero, bytes % 8));
+            }
+            let final_index = parts.len() - 1;
+            parts[final_index].0 = private;
+            let outputs = trace::hash(&parts);
+            let mut t = trace::take();
+            t.public = outputs.to_vec();
+            let lowered = lower(&t, &t).unwrap();
+            assert!(rows_hold(&lowered) && connectors_hold(&lowered));
+            check_bound(&t, &lowered);
+            // Every complete fixed block is absent. A partial private source
+            // can also require typing its unused high limbs.
+            let native_hash_blocks = lowered
+                .compressions
+                .iter()
+                .filter(|block| block.2 == bytes as u64)
+                .count();
+            assert_eq!(native_hash_blocks, 1);
+            assert!(lowered.compressions.len() <= 2);
+            // The nonconstant block is retained even when its witness is zero.
+            let mut changed = copy_trace(&t);
+            changed.nodes[private.0].value = F192::ONE;
+            let alternate = lower(&t, &changed).unwrap();
+            assert_eq!(lowered.circuit.rows, alternate.circuit.rows);
+            assert_eq!(lowered.connectors, alternate.connectors);
+            assert!(!rows_hold(&alternate));
+            assert_eq!(
+                fiat_shamir::merkle::scalars_to_hash(&[t.nodes[outputs[0].0].value, t.nodes[outputs[1].0].value])
+                    .unwrap(),
+                primitives::hash::hash(&vec![0; bytes])
+            );
+        }
+    }
+
+    #[test]
+    fn fully_fixed_hashes_keep_one_bridge_block_and_bind_outputs() {
+        trace::start();
+        let zero = S::u(0);
+        let first = trace::hash(&[(zero, 8); 32]);
+        let second = trace::hash(&[(first[0], 16), (first[1], 16)]);
+        second[0].slice(5, 17);
+        let t = trace::take();
+        let lowered = lower(&t, &t).unwrap();
+        assert!(rows_hold(&lowered) && connectors_hold(&lowered));
+        assert_eq!(lowered.compressions.len(), 1);
+        assert_eq!(boolean_rows(&lowered), 0);
+        check_bound(&t, &lowered);
+        let mut changed = copy_trace(&t);
+        changed.nodes[first[0].0].value += F192::ONE;
+        let alternate = lower(&t, &changed).unwrap();
+        assert_eq!(lowered.circuit.rows, alternate.circuit.rows);
+        assert_eq!(lowered.connectors, alternate.connectors);
+        assert!(!rows_hold(&alternate));
     }
 
     #[test]
