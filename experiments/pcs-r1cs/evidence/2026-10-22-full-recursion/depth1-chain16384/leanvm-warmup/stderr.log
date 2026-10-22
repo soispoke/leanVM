@@ -1,0 +1,4 @@
+
+thread 'main' (432133) panicked at crates/rec_aggregation/examples/chain_tree_vm.rs:79:18:
+VM parent preparation: ChildOutOfRange { log_committed: 30 }
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace

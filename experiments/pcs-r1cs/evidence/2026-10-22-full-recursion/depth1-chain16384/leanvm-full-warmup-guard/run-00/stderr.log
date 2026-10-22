@@ -1,0 +1,8 @@
+Traceback (most recent call last):
+  File "/root/workspaces/mission-9abcee72/leanvm-opt/experiments/pcs-r1cs/recursion/run.py", line 92, in <module>
+    main()
+  File "/root/workspaces/mission-9abcee72/leanvm-opt/experiments/pcs-r1cs/recursion/run.py", line 32, in main
+    assert admission.returncode == 0, admission.stdout
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: queue: 105.5 GiB used + 96.0 GiB expected; ceiling 200.0 GiB
+

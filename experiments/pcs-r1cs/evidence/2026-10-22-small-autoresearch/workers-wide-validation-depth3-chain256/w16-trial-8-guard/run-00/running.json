@@ -1,0 +1,20 @@
+{
+  "pid": 495622,
+  "command": [
+    "/usr/bin/python3.12",
+    "/root/yukon-autoresearch/workspaces/leanr1cs-full-hunt-20261022/run-precise.py",
+    "--out",
+    "/root/yukon-autoresearch/workspaces/leanr1cs-full-hunt-20261022/workers-wide-validation-depth3-chain256/w16-trial-8",
+    "--budget-gib",
+    "8",
+    "--binary-source-commit",
+    "cb88d52698be5ef640d4d15d1dd5e6caa553c70e",
+    "--",
+    "/root/yukon-autoresearch/workspaces/leanr1cs-hunt-20261022-phase3/private_tree-schedule",
+    "--depth",
+    "3",
+    "--chain",
+    "256"
+  ],
+  "started_utc": "2026-10-22T19:30:24.491671+00:00"
+}

@@ -1,0 +1,1 @@
+{"stdout_line": 1, "event": {"status": "retained_profile_validated", "tree_processes": 96, "proof_records": 960, "source_files": 236, "baseline_binary_unchanged": true, "scope": "32 workers for measured four/eight-leaf cases on this host; retain 16 for two leaves"}}

@@ -1,0 +1,11 @@
+Diff in /root/yukon-autoresearch/workspaces/leanr1cs-full-hunt-20261022/stack/crates/format_recursion/src/native_arithmetic.rs:690:
+                 let expected: Vec<_> = cols
+                     .iter()
+                     .flat_map(|column| {
+-                        (0..stride).flat_map(move |limb| {
+-                            column.iter().map(move |x| F64([x.c0, x.c1, x.c2, 0][limb]))
+-                        })
++                        (0..stride).flat_map(move |limb| column.iter().map(move |x| F64([x.c0, x.c1, x.c2, 0][limb])))
+                     })
+                     .collect();
+                 for capacity in [expected.len(), expected.len() + n] {

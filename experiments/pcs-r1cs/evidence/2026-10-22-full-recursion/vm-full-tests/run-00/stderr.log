@@ -1,0 +1,3 @@
+   Compiling rec_aggregation v0.1.0 (/root/yukon-autoresearch/workspaces/leanr1cs-full-hunt-20261022/vm-full/crates/rec_aggregation)
+    Finished `release` profile [optimized] target(s) in 31.04s
+     Running unittests src/lib.rs (/root/yukon-autoresearch/workspaces/leanr1cs-full-hunt-20261022/target/release/deps/rec_aggregation-5a87817af9f86fd3)

@@ -1,0 +1,20 @@
+{
+  "pid": 487451,
+  "command": [
+    "/usr/bin/python3.12",
+    "/root/workspaces/mission-9abcee72/leanvm-opt/experiments/pcs-r1cs/recursion/run.py",
+    "--out",
+    "/root/yukon-autoresearch/workspaces/leanr1cs-full-hunt-20261022/stack-depth2-chain256/baseline-trial-6",
+    "--budget-gib",
+    "8",
+    "--binary-source-commit",
+    "cb88d52698be5ef640d4d15d1dd5e6caa553c70e",
+    "--",
+    "/root/yukon-autoresearch/workspaces/leanr1cs-hunt-20261022-phase3/private_tree-schedule",
+    "--depth",
+    "2",
+    "--chain",
+    "256"
+  ],
+  "started_utc": "2026-10-22T19:22:19.627050+00:00"
+}

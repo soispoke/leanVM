@@ -1,0 +1,8 @@
+{
+  "pid": 498647,
+  "command": [
+    "/usr/bin/python3.12",
+    "experiments/pcs-r1cs/evidence/2026-10-22-full-recursion/audit_partial.py"
+  ],
+  "started_utc": "2026-10-22T19:33:18.721747+00:00"
+}

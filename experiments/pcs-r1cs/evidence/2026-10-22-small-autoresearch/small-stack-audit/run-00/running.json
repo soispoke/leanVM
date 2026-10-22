@@ -1,0 +1,9 @@
+{
+  "pid": 502503,
+  "command": [
+    "/usr/bin/python3.12",
+    "/root/workspaces/mission-9abcee72/leanvm-opt/experiments/pcs-r1cs/evidence/2026-10-22-small-autoresearch/audit-series.py",
+    "stack"
+  ],
+  "started_utc": "2026-10-22T19:37:28.091549+00:00"
+}

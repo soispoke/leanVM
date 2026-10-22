@@ -1,0 +1,72 @@
+{
+  "2": {
+    "native": {
+      "trials": 3,
+      "medians": {
+        "root_preparation_proving_s": 1.3161767949999998,
+        "root_proving_s": 1.2355589519999999,
+        "root_verification_ms": 5.688687000000001,
+        "root_proof_bytes": 337880,
+        "setup_s": 7.962102046,
+        "all_preparation_proving_s": 19.897713647,
+        "leaf_proving_s": 9.281956395000002,
+        "process_s": 28.580599706998328,
+        "rss_gib": 38.20551681518555
+      }
+    },
+    "leanvm-mu30": {
+      "trials": 3,
+      "medians": {
+        "root_preparation_proving_s": 1.126241618,
+        "root_proving_s": 1.083994122,
+        "root_verification_ms": 12.080059,
+        "root_proof_bytes": 317968,
+        "setup_s": 0.431832783,
+        "all_preparation_proving_s": 48.870725929,
+        "leaf_proving_s": 23.900326882,
+        "process_s": 52.63940164000087,
+        "rss_gib": 63.87264633178711
+      }
+    }
+  },
+  "4": {
+    "native": {
+      "trials": 3,
+      "medians": {
+        "root_preparation_proving_s": 1.036089166,
+        "root_proving_s": 0.969081115,
+        "root_verification_ms": 6.086666,
+        "root_proof_bytes": 317192,
+        "setup_s": 8.564317124999999,
+        "all_preparation_proving_s": 38.925693605999996,
+        "leaf_proving_s": 8.291956235499999,
+        "process_s": 49.135428408000735,
+        "rss_gib": 38.44685363769531
+      }
+    },
+    "leanvm-mu30": {
+      "trials": 0,
+      "medians": null
+    }
+  },
+  "8": {
+    "native": {
+      "trials": 2,
+      "medians": {
+        "root_preparation_proving_s": 1.018430879,
+        "root_proving_s": 0.9507822564999999,
+        "root_verification_ms": 6.111882,
+        "root_proof_bytes": 317352.0,
+        "setup_s": 9.2797550665,
+        "all_preparation_proving_s": 75.9926085525,
+        "leaf_proving_s": 8.117663551749999,
+        "process_s": 87.244665608996,
+        "rss_gib": 38.45211219787598
+      }
+    },
+    "leanvm-mu30": {
+      "trials": 0,
+      "medians": null
+    }
+  }
+}

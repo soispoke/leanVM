@@ -1,0 +1,20 @@
+{
+  "pid": 446579,
+  "command": [
+    "/usr/bin/python3.12",
+    "/root/workspaces/mission-9abcee72/leanvm-opt/experiments/pcs-r1cs/recursion/run.py",
+    "--out",
+    "/root/workspaces/mission-9abcee72/leanvm-opt/experiments/pcs-r1cs/evidence/2026-10-22-full-recursion/depth2-chain16384/native-trial-0",
+    "--budget-gib",
+    "48",
+    "--binary-source-commit",
+    "cb88d52698be5ef640d4d15d1dd5e6caa553c70e",
+    "--",
+    "/root/yukon-autoresearch/workspaces/leanr1cs-hunt-20261022-phase3/private_tree-schedule",
+    "--depth",
+    "2",
+    "--chain",
+    "16384"
+  ],
+  "started_utc": "2026-10-22T18:24:43.327662+00:00"
+}

@@ -1,0 +1,10 @@
+{
+  "pid": 482827,
+  "command": [
+    "/root/.rustup/toolchains/1.99.1-x86_64-unknown-linux-gnu/bin/cargo",
+    "fmt",
+    "--all",
+    "--check"
+  ],
+  "started_utc": "2026-10-22T19:18:34.816791+00:00"
+}

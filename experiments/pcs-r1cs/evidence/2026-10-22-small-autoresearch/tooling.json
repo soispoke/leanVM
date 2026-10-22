@@ -1,0 +1,6 @@
+{
+  "revision": "578a2f8e21c59c8904525f966d6a9368d3c16d40",
+  "origin_master_at_phase_start": "578a2f8e21c59c8904525f966d6a9368d3c16d40",
+  "runner_sha256": "ccfa389f297eba6f0adcac80a41c15302ac6a749019f464f371e6be990970c9e",
+  "scope": "Rust measurements and checks; no Lean accelerator used"
+}

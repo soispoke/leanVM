@@ -1,0 +1,8 @@
+{
+  "checked_utc": "2026-10-22T18:27:38.329797+00:00",
+  "local_revision": "58b0915ae37a851bcd770734b1a397274fc83d22",
+  "upstream_revision": "58b0915ae37a851bcd770734b1a397274fc83d22",
+  "dirty": false,
+  "benchmark_runner_sha256": "ccfa389f297eba6f0adcac80a41c15302ac6a749019f464f371e6be990970c9e",
+  "scope": "Latest compatible upstream checked with git fetch origin; Rust measurement runner, no Lean accelerator used."
+}

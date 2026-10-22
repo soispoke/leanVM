@@ -1,0 +1,79 @@
+diff --git a/crates/format_recursion/src/native_arithmetic.rs b/crates/format_recursion/src/native_arithmetic.rs
+index 296eb2fb..77971c2d 100644
+--- a/crates/format_recursion/src/native_arithmetic.rs
++++ b/crates/format_recursion/src/native_arithmetic.rs
+@@ -150,25 +150,28 @@ fn stack_columns(cols: &[Vec<F192>; 4], column_stride: usize, capacity: usize) -
+     let n = cols[0].len();
+     let words = 4 * column_stride * n;
+     assert!(capacity >= words);
+-    let mut stack = if capacity == words {
+-        vec![F64::ZERO; words]
+-    } else {
+-        let mut stack = Vec::with_capacity(capacity);
+-        stack.resize(words, F64::ZERO);
+-        stack
+-    };
+-    parallel::chunks_mut(&mut stack, n, |slot, dst| {
++    let mut stack = Vec::<F64>::with_capacity(capacity);
++    let chunk_size = n.min(4096);
++    parallel::chunks_mut(&mut stack.spare_capacity_mut()[..words], chunk_size, |chunk, dst| {
++        let start = chunk * chunk_size;
++        let slot = start / n;
+         let limb = slot % column_stride;
+         if limb < 3 {
+-            for (dest, value) in dst.iter_mut().zip(&cols[slot / column_stride]) {
+-                *dest = F64(match limb {
++            for (dest, value) in dst.iter_mut().zip(&cols[slot / column_stride][start % n..]) {
++                dest.write(F64(match limb {
+                     0 => value.c0,
+                     1 => value.c1,
+                     _ => value.c2,
+-                });
++                }));
++            }
++        } else {
++            for dest in dst {
++                dest.write(F64::ZERO);
+             }
+         }
+     });
++    // Every slot, including the unused fourth limbs, was initialized above.
++    unsafe { stack.set_len(words) };
+     stack
+ }
+ /// Evaluate several base-field columns against one shared extension basis.
+@@ -671,6 +674,34 @@ mod tests {
+         }
+     }
+ 
++    #[test]
++    fn stack_transposition_initializes_parallel_chunks_and_padding() {
++        parallel::init();
++        for n in [32, 8192] {
++            let cols = std::array::from_fn(|column| {
++                (0..n)
++                    .map(|row| {
++                        let at = (column * n + row) as u64;
++                        F192::new(at, at.wrapping_mul(71), !at)
++                    })
++                    .collect::<Vec<_>>()
++            });
++            for stride in [3, 4] {
++                let expected: Vec<_> = cols
++                    .iter()
++                    .flat_map(|column| {
++                        (0..stride).flat_map(move |limb| column.iter().map(move |x| F64([x.c0, x.c1, x.c2, 0][limb])))
++                    })
++                    .collect();
++                for capacity in [expected.len(), expected.len() + n] {
++                    let stack = stack_columns(&cols, stride, capacity);
++                    assert_eq!(stack, expected);
++                    assert!(stack.capacity() >= capacity);
++                }
++            }
++        }
++    }
++
+     #[test]
+     fn compact_preparation_and_reduction_preserve_every_limb_claim_and_transcript() {
+         parallel::init();

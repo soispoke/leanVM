@@ -1,0 +1,61 @@
+{
+  "trace-depth3-chain16": {
+    "trials": 9,
+    "all_shapes_and_lengths_identical": true,
+    "baseline_root_median_s": 1.051759782,
+    "candidate_root_median_s": 1.062666927,
+    "median_paired_reduction": 0.016242013445058157,
+    "positive_pairs": 5,
+    "paired_median_bootstrap_95pct": [
+      -0.05154116747328619,
+      0.04460136609635923
+    ],
+    "pairs": [
+      {
+        "baseline": 1.01607574,
+        "candidate": 1.062666927,
+        "reduction": -0.04585404922668457
+      },
+      {
+        "baseline": 1.066400212,
+        "candidate": 0.999604741,
+        "reduction": 0.06263640071369381
+      },
+      {
+        "baseline": 1.0068603839999999,
+        "candidate": 1.0653567720000001,
+        "reduction": -0.058097814681722815
+      },
+      {
+        "baseline": 1.16722887,
+        "candidate": 1.148270723,
+        "reduction": 0.016242013445058157
+      },
+      {
+        "baseline": 1.051759782,
+        "candidate": 1.0739502969999999,
+        "reduction": -0.021098463146977275
+      },
+      {
+        "baseline": 1.086019676,
+        "candidate": 1.141994398,
+        "reduction": -0.05154116747328619
+      },
+      {
+        "baseline": 1.088762436,
+        "candidate": 1.040202144,
+        "reduction": 0.04460136609635923
+      },
+      {
+        "baseline": 1.0144857360000001,
+        "candidate": 0.988204583,
+        "reduction": 0.025905887157786633
+      },
+      {
+        "baseline": 1.026319635,
+        "candidate": 1.0057466210000001,
+        "reduction": 0.020045425711844422
+      }
+    ]
+  }
+}

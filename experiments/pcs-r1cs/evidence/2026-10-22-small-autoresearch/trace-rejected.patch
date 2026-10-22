@@ -1,0 +1,101 @@
+diff --git a/crates/format_recursion/src/trace.rs b/crates/format_recursion/src/trace.rs
+index be40482e..43791c0a 100644
+--- a/crates/format_recursion/src/trace.rs
++++ b/crates/format_recursion/src/trace.rs
+@@ -72,6 +72,17 @@ fn node(op: Op, value: F192) -> S {
+     })
+ }
+ 
++fn copy_bits(source: [u64; 3], mut from: usize, dest: &mut [u64; 3], mut to: usize, mut len: usize) {
++    while len != 0 {
++        let count = len.min(64 - from % 64).min(64 - to % 64);
++        let mask = u64::MAX >> (64 - count);
++        dest[to / 64] |= ((source[from / 64] >> (from % 64)) & mask) << (to % 64);
++        from += count;
++        to += count;
++        len -= count;
++    }
++}
++
+ impl S {
+     pub fn value(self) -> F192 {
+         TRACE.with(|t| t.borrow().nodes[self.0].value)
+@@ -100,9 +111,7 @@ impl S {
+         let x = self.value();
+         let limbs = [x.c0, x.c1, x.c2];
+         let mut out = [0u64; 3];
+-        for i in 0..len {
+-            out[i / 64] |= ((limbs[(offset + i) / 64] >> ((offset + i) % 64)) & 1) << (i % 64);
+-        }
++        copy_bits(limbs, offset, &mut out, 0, len);
+         let value = F192::new(out[0], out[1], out[2]);
+         if self.constant_value().is_some() {
+             Self::c(value)
+@@ -117,9 +126,7 @@ impl S {
+         for &(s, n) in parts {
+             let x = s.value();
+             let limbs = [x.c0, x.c1, x.c2];
+-            for i in 0..n {
+-                out[(offset + i) / 64] |= ((limbs[i / 64] >> (i % 64)) & 1) << ((offset + i) % 64);
+-            }
++            copy_bits(limbs, 0, &mut out, offset, n);
+             offset += n;
+         }
+         node(Op::Pack(parts.to_vec()), F192::new(out[0], out[1], out[2]))
+@@ -186,11 +193,14 @@ impl Scalar for S {
+ }
+ 
+ pub fn hash(parts: &[(S, usize)]) -> [S; 2] {
+-    let mut bytes = Vec::new();
++    let mut bytes = Vec::with_capacity(parts.iter().map(|(_, len)| len).sum());
+     for &(s, len) in parts {
+         assert!(len <= 24);
+         let x = s.value();
+-        let words: Vec<u8> = [x.c0, x.c1, x.c2].iter().flat_map(|x| x.to_le_bytes()).collect();
++        let mut words = [0u8; 24];
++        for (dest, word) in words.as_chunks_mut::<8>().0.iter_mut().zip([x.c0, x.c1, x.c2]) {
++            dest.copy_from_slice(&word.to_le_bytes());
++        }
+         bytes.extend_from_slice(&words[..len]);
+     }
+     let digest = primitives::hash::hash(&bytes);
+@@ -458,6 +468,39 @@ mod tests {
+     use super::*;
+     use circuit_suite::read_statement;
+ 
++    #[test]
++    fn wordwise_projections_match_bitwise_reference() {
++        let inputs = [
++            [0; 3],
++            [u64::MAX; 3],
++            [0x8123456789abcdef, 0xfedcba9876543210, 0x13579bdf2468ace0],
++        ];
++        for source in inputs {
++            for from in 0..=192 {
++                for len in 0..=192 - from {
++                    let mut expected = [0u64; 3];
++                    for bit in 0..len {
++                        expected[bit / 64] |= ((source[(from + bit) / 64] >> ((from + bit) % 64)) & 1) << (bit % 64);
++                    }
++                    let mut actual = [0u64; 3];
++                    copy_bits(source, from, &mut actual, 0, len);
++                    assert_eq!(actual, expected, "from={from}, len={len}");
++                }
++            }
++            for to in 0..=192 {
++                for len in 0..=192 - to {
++                    let mut expected = [0u64; 3];
++                    for bit in 0..len {
++                        expected[(to + bit) / 64] |= ((source[bit / 64] >> (bit % 64)) & 1) << ((to + bit) % 64);
++                    }
++                    let mut actual = [0u64; 3];
++                    copy_bits(source, 0, &mut actual, to, len);
++                    assert_eq!(actual, expected, "to={to}, len={len}");
++                }
++            }
++        }
++    }
++
+     #[test]
+     fn constants_share_only_public_values_and_reset_with_each_trace() {
+         start();

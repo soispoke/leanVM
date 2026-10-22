@@ -1,0 +1,49 @@
+{
+  "depth": 2,
+  "chain": 256,
+  "repeats": 3,
+  "workers": [
+    16,
+    8,
+    4
+  ],
+  "plan": [
+    [
+      "warmup",
+      [
+        16,
+        8,
+        4
+      ]
+    ],
+    [
+      "trial-0",
+      [
+        16,
+        8,
+        4
+      ]
+    ],
+    [
+      "trial-1",
+      [
+        8,
+        4,
+        16
+      ]
+    ],
+    [
+      "trial-2",
+      [
+        4,
+        16,
+        8
+      ]
+    ]
+  ],
+  "binary": {
+    "binary": "/root/yukon-autoresearch/workspaces/leanr1cs-hunt-20261022-phase3/private_tree-schedule",
+    "revision": "cb88d52698be5ef640d4d15d1dd5e6caa553c70e",
+    "sha256": "6f45d0259d44c1daae02148388b33624da775be5f1ebe329824a3777514f918b"
+  }
+}

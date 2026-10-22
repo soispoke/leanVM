@@ -1,0 +1,11 @@
+{
+  "pid": 487719,
+  "command": [
+    "/root/yukon-autoresearch/workspaces/leanr1cs-full-hunt-20261022/private_tree-stack",
+    "--depth",
+    "2",
+    "--chain",
+    "256"
+  ],
+  "started_utc": "2026-10-22T19:22:39.411205+00:00"
+}

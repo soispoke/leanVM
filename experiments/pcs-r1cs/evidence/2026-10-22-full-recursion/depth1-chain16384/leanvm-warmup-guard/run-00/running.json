@@ -1,0 +1,22 @@
+{
+  "pid": 432117,
+  "command": [
+    "/usr/bin/python3.12",
+    "/root/workspaces/mission-9abcee72/leanvm-opt/experiments/pcs-r1cs/recursion/run.py",
+    "--out",
+    "/root/workspaces/mission-9abcee72/leanvm-opt/experiments/pcs-r1cs/evidence/2026-10-22-full-recursion/depth1-chain16384/leanvm-warmup",
+    "--budget-gib",
+    "64",
+    "--binary-source-commit",
+    "bd2f8fc38c269f08ddcc8b2ea571fb45dfb10a47",
+    "--",
+    "/root/workspaces/mission-9abcee72/scratch/perf-20261022/frozen/chain_tree_vm-final",
+    "--depth",
+    "1",
+    "--chain",
+    "16384",
+    "--log-inv-rate",
+    "1"
+  ],
+  "started_utc": "2026-10-22T18:07:46.104938+00:00"
+}

@@ -1,0 +1,78 @@
+{
+  "depth": 3,
+  "chain": 16,
+  "trials": 9,
+  "plan": [
+    [
+      "warmup",
+      [
+        "baseline",
+        "candidate"
+      ]
+    ],
+    [
+      "trial-0",
+      [
+        "baseline",
+        "candidate"
+      ]
+    ],
+    [
+      "trial-1",
+      [
+        "candidate",
+        "baseline"
+      ]
+    ],
+    [
+      "trial-2",
+      [
+        "baseline",
+        "candidate"
+      ]
+    ],
+    [
+      "trial-3",
+      [
+        "candidate",
+        "baseline"
+      ]
+    ],
+    [
+      "trial-4",
+      [
+        "baseline",
+        "candidate"
+      ]
+    ],
+    [
+      "trial-5",
+      [
+        "candidate",
+        "baseline"
+      ]
+    ],
+    [
+      "trial-6",
+      [
+        "baseline",
+        "candidate"
+      ]
+    ],
+    [
+      "trial-7",
+      [
+        "candidate",
+        "baseline"
+      ]
+    ],
+    [
+      "trial-8",
+      [
+        "baseline",
+        "candidate"
+      ]
+    ]
+  ],
+  "policy": "One excluded warmup per backend; alternating fresh processes; same deterministic statement; 16 workers, CPUs 0-15."
+}

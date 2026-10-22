@@ -4,6 +4,12 @@ Reusing the witness computation schedule cuts native root preparation + proving 
 
 A separate [Succinct Flock baseline adapted to BLAKE2s](FLOCK_BASELINE.md) is now measured. It uses a different sequential chain workload and is not a matched speed comparison.
 
+## Small-tree worker profile
+
+A later [small-tree autoresearch batch](../evidence/2026-10-22-small-autoresearch/README.md) keeps the witness-schedule binary unchanged and tests worker counts. On this shared Xeon Gold 6230R host, using 32 rather than 16 workers reduces eight-leaf root preparation plus proving from 1.015 to 0.809 s and whole-process time from 10.958 to 9.611 s at 256 steps per leaf. Every one of nine alternating pairs improves, with median paired reductions of 20.1% and 11.7%, respectively. Every proof length and recorded circuit shape is identical.
+
+This uses twice as many workers with the same CPU affinity of 0-63. It is a host-specific operating point, not a source or protocol speedup. Four-leaf supporting checks improve in all three pairs; the two-leaf total regresses, so keep 16 workers there. Two source candidates were rejected because they failed the repeated root/whole-process threshold. The [partial full-length checkpoint](../evidence/2026-10-22-full-recursion/README.md) preserves the incomplete 16,384-step comparison and is not extrapolated from these small-tree results.
+
 ## Construction
 
 The outer proof combines native GF(2^192) arithmetic constraints, Flock's batched BLAKE2s argument and WHIR openings. A shared committed connector table binds the arithmetic verifier and hash argument to the same inputs and outputs. Hash messages and intermediate chaining values stay in the witness; the proof contains no separate request table. This is not a zero-knowledge claim.

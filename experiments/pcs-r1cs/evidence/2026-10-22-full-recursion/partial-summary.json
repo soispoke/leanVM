@@ -1,0 +1,498 @@
+{
+  "status": "incomplete",
+  "chain": 16384,
+  "workloads": {
+    "2": {
+      "native": {
+        "trials": 3,
+        "medians": {
+          "root_preparation_proving_s": 1.3161767949999998,
+          "root_proving_s": 1.2355589519999999,
+          "root_verification_ms": 5.688687000000001,
+          "root_proof_bytes": 337880,
+          "setup_s": 7.962102046,
+          "all_preparation_proving_s": 19.897713647,
+          "leaf_proving_s": 9.281956395000002,
+          "process_s": 28.580599706998328,
+          "rss_gib": 38.20551681518555
+        },
+        "max_rss_gib": 38.2079963684082,
+        "runs": [
+          {
+            "directory": "depth1-chain16384/native-trial-0",
+            "root_preparation_proving_s": 1.4305388030000001,
+            "root_proving_s": 1.343878807,
+            "root_verification_ms": 5.818913,
+            "root_proof_bytes": 337880,
+            "setup_s": 8.3968299,
+            "all_preparation_proving_s": 19.85166241,
+            "leaf_proving_s": 9.2028254205,
+            "process_s": 29.579039840988116,
+            "rss_gib": 38.190040588378906,
+            "shapes": [
+              {
+                "level": 0,
+                "rows": 16777216,
+                "native_shape": [
+                  12878700,
+                  12910464,
+                  95
+                ],
+                "compressions": 16385
+              },
+              {
+                "level": 1,
+                "rows": 2097152,
+                "native_shape": [
+                  1495589,
+                  1146368,
+                  447
+                ],
+                "compressions": 31050
+              }
+            ]
+          },
+          {
+            "directory": "depth1-chain16384/native-trial-1",
+            "root_preparation_proving_s": 1.309869341,
+            "root_proving_s": 1.230633782,
+            "root_verification_ms": 5.612288,
+            "root_proof_bytes": 337880,
+            "setup_s": 7.765177629,
+            "all_preparation_proving_s": 20.027287679,
+            "leaf_proving_s": 9.349871265,
+            "process_s": 28.580599706998328,
+            "rss_gib": 38.2079963684082,
+            "shapes": [
+              {
+                "level": 0,
+                "rows": 16777216,
+                "native_shape": [
+                  12878700,
+                  12910464,
+                  95
+                ],
+                "compressions": 16385
+              },
+              {
+                "level": 1,
+                "rows": 2097152,
+                "native_shape": [
+                  1495589,
+                  1146368,
+                  447
+                ],
+                "compressions": 31050
+              }
+            ]
+          },
+          {
+            "directory": "depth1-chain16384/native-trial-2",
+            "root_preparation_proving_s": 1.3161767949999998,
+            "root_proving_s": 1.2355589519999999,
+            "root_verification_ms": 5.688687000000001,
+            "root_proof_bytes": 337880,
+            "setup_s": 7.962102046,
+            "all_preparation_proving_s": 19.897713647,
+            "leaf_proving_s": 9.281956395000002,
+            "process_s": 28.576065514993388,
+            "rss_gib": 38.20551681518555,
+            "shapes": [
+              {
+                "level": 0,
+                "rows": 16777216,
+                "native_shape": [
+                  12878700,
+                  12910464,
+                  95
+                ],
+                "compressions": 16385
+              },
+              {
+                "level": 1,
+                "rows": 2097152,
+                "native_shape": [
+                  1495589,
+                  1146368,
+                  447
+                ],
+                "compressions": 31050
+              }
+            ]
+          }
+        ]
+      },
+      "leanvm-mu30": {
+        "trials": 3,
+        "medians": {
+          "root_preparation_proving_s": 1.126241618,
+          "root_proving_s": 1.083994122,
+          "root_verification_ms": 12.080059,
+          "root_proof_bytes": 317968,
+          "setup_s": 0.431832783,
+          "all_preparation_proving_s": 48.870725929,
+          "leaf_proving_s": 23.900326882,
+          "process_s": 52.63940164000087,
+          "rss_gib": 63.87264633178711
+        },
+        "max_rss_gib": 63.88936996459961,
+        "runs": [
+          {
+            "directory": "depth1-chain16384/leanvm-mu30-trial-0",
+            "root_preparation_proving_s": 1.133856225,
+            "root_proving_s": 1.093272035,
+            "root_verification_ms": 12.080059,
+            "root_proof_bytes": 317968,
+            "setup_s": 0.435096512,
+            "all_preparation_proving_s": 48.842794486,
+            "leaf_proving_s": 23.8544691305,
+            "process_s": 52.63940164000087,
+            "rss_gib": 63.87264633178711,
+            "shapes": [
+              {
+                "level": 0,
+                "code_len": 2625
+              },
+              {
+                "level": 1,
+                "code_len": 258474
+              }
+            ]
+          },
+          {
+            "directory": "depth1-chain16384/leanvm-mu30-trial-1",
+            "root_preparation_proving_s": 1.070072165,
+            "root_proving_s": 1.026112317,
+            "root_verification_ms": 11.285928,
+            "root_proof_bytes": 317968,
+            "setup_s": 0.431832783,
+            "all_preparation_proving_s": 48.870725929,
+            "leaf_proving_s": 23.900326882,
+            "process_s": 52.13899235399731,
+            "rss_gib": 63.88936996459961,
+            "shapes": [
+              {
+                "level": 0,
+                "code_len": 2625
+              },
+              {
+                "level": 1,
+                "code_len": 258474
+              }
+            ]
+          },
+          {
+            "directory": "depth1-chain16384/leanvm-mu30-trial-2-retry1",
+            "root_preparation_proving_s": 1.126241618,
+            "root_proving_s": 1.083994122,
+            "root_verification_ms": 12.220161000000001,
+            "root_proof_bytes": 317968,
+            "setup_s": 0.40928596,
+            "all_preparation_proving_s": 49.069591669,
+            "leaf_proving_s": 23.971675025499998,
+            "process_s": 52.655392180997296,
+            "rss_gib": 63.85116958618164,
+            "shapes": [
+              {
+                "level": 0,
+                "code_len": 2625
+              },
+              {
+                "level": 1,
+                "code_len": 258474
+              }
+            ]
+          }
+        ]
+      }
+    },
+    "4": {
+      "native": {
+        "trials": 3,
+        "medians": {
+          "root_preparation_proving_s": 1.036089166,
+          "root_proving_s": 0.969081115,
+          "root_verification_ms": 6.086666,
+          "root_proof_bytes": 317192,
+          "setup_s": 8.564317124999999,
+          "all_preparation_proving_s": 38.925693605999996,
+          "leaf_proving_s": 8.291956235499999,
+          "process_s": 49.135428408000735,
+          "rss_gib": 38.44685363769531
+        },
+        "max_rss_gib": 38.45759963989258,
+        "runs": [
+          {
+            "directory": "depth2-chain16384/native-trial-0",
+            "root_preparation_proving_s": 1.0162617360000001,
+            "root_proving_s": 0.949150903,
+            "root_verification_ms": 6.1390150000000006,
+            "root_proof_bytes": 317192,
+            "setup_s": 8.505289281,
+            "all_preparation_proving_s": 38.655486707,
+            "leaf_proving_s": 8.291956235499999,
+            "process_s": 48.62797420499555,
+            "rss_gib": 38.44662094116211,
+            "shapes": [
+              {
+                "level": 0,
+                "rows": 16777216,
+                "native_shape": [
+                  12878700,
+                  12910464,
+                  95
+                ],
+                "compressions": 16385
+              },
+              {
+                "level": 1,
+                "rows": 2097152,
+                "native_shape": [
+                  1495589,
+                  1146368,
+                  447
+                ],
+                "compressions": 31050
+              },
+              {
+                "level": 2,
+                "rows": 1048576,
+                "native_shape": [
+                  1354804,
+                  1046528,
+                  1133
+                ],
+                "compressions": 26125
+              }
+            ]
+          },
+          {
+            "directory": "depth2-chain16384/native-trial-1",
+            "root_preparation_proving_s": 1.0409579979999999,
+            "root_proving_s": 0.975339188,
+            "root_verification_ms": 6.086666,
+            "root_proof_bytes": 317192,
+            "setup_s": 9.722599227,
+            "all_preparation_proving_s": 39.058997319,
+            "leaf_proving_s": 8.3809312555,
+            "process_s": 50.13648866501171,
+            "rss_gib": 38.44685363769531,
+            "shapes": [
+              {
+                "level": 0,
+                "rows": 16777216,
+                "native_shape": [
+                  12878700,
+                  12910464,
+                  95
+                ],
+                "compressions": 16385
+              },
+              {
+                "level": 1,
+                "rows": 2097152,
+                "native_shape": [
+                  1495589,
+                  1146368,
+                  447
+                ],
+                "compressions": 31050
+              },
+              {
+                "level": 2,
+                "rows": 1048576,
+                "native_shape": [
+                  1354804,
+                  1046528,
+                  1133
+                ],
+                "compressions": 26125
+              }
+            ]
+          },
+          {
+            "directory": "depth2-chain16384/native-trial-2",
+            "root_preparation_proving_s": 1.036089166,
+            "root_proving_s": 0.969081115,
+            "root_verification_ms": 5.9115269999999995,
+            "root_proof_bytes": 317192,
+            "setup_s": 8.564317124999999,
+            "all_preparation_proving_s": 38.925693605999996,
+            "leaf_proving_s": 8.2425397865,
+            "process_s": 49.135428408000735,
+            "rss_gib": 38.45759963989258,
+            "shapes": [
+              {
+                "level": 0,
+                "rows": 16777216,
+                "native_shape": [
+                  12878700,
+                  12910464,
+                  95
+                ],
+                "compressions": 16385
+              },
+              {
+                "level": 1,
+                "rows": 2097152,
+                "native_shape": [
+                  1495589,
+                  1146368,
+                  447
+                ],
+                "compressions": 31050
+              },
+              {
+                "level": 2,
+                "rows": 1048576,
+                "native_shape": [
+                  1354804,
+                  1046528,
+                  1133
+                ],
+                "compressions": 26125
+              }
+            ]
+          }
+        ]
+      },
+      "leanvm-mu30": {
+        "trials": 0,
+        "medians": null,
+        "runs": []
+      }
+    },
+    "8": {
+      "native": {
+        "trials": 2,
+        "medians": {
+          "root_preparation_proving_s": 1.018430879,
+          "root_proving_s": 0.9507822564999999,
+          "root_verification_ms": 6.111882,
+          "root_proof_bytes": 317352.0,
+          "setup_s": 9.2797550665,
+          "all_preparation_proving_s": 75.9926085525,
+          "leaf_proving_s": 8.117663551749999,
+          "process_s": 87.244665608996,
+          "rss_gib": 38.45211219787598
+        },
+        "max_rss_gib": 38.4608268737793,
+        "runs": [
+          {
+            "directory": "depth3-chain16384/native-trial-0",
+            "root_preparation_proving_s": 1.049382824,
+            "root_proving_s": 0.978723057,
+            "root_verification_ms": 6.137744,
+            "root_proof_bytes": 317352,
+            "setup_s": 9.227319275,
+            "all_preparation_proving_s": 75.937922746,
+            "leaf_proving_s": 8.095286481999999,
+            "process_s": 87.24798420499428,
+            "rss_gib": 38.4608268737793,
+            "shapes": [
+              {
+                "level": 0,
+                "rows": 16777216,
+                "native_shape": [
+                  12878700,
+                  12910464,
+                  95
+                ],
+                "compressions": 16385
+              },
+              {
+                "level": 1,
+                "rows": 2097152,
+                "native_shape": [
+                  1495589,
+                  1146368,
+                  447
+                ],
+                "compressions": 31050
+              },
+              {
+                "level": 2,
+                "rows": 1048576,
+                "native_shape": [
+                  1354804,
+                  1046528,
+                  1133
+                ],
+                "compressions": 26125
+              },
+              {
+                "level": 3,
+                "rows": 1048576,
+                "native_shape": [
+                  1351360,
+                  1044480,
+                  2837
+                ],
+                "compressions": 25427
+              }
+            ]
+          },
+          {
+            "directory": "depth3-chain16384/native-trial-1",
+            "root_preparation_proving_s": 0.987478934,
+            "root_proving_s": 0.922841456,
+            "root_verification_ms": 6.08602,
+            "root_proof_bytes": 317352,
+            "setup_s": 9.332190858,
+            "all_preparation_proving_s": 76.047294359,
+            "leaf_proving_s": 8.140040621499999,
+            "process_s": 87.24134701299772,
+            "rss_gib": 38.443397521972656,
+            "shapes": [
+              {
+                "level": 0,
+                "rows": 16777216,
+                "native_shape": [
+                  12878700,
+                  12910464,
+                  95
+                ],
+                "compressions": 16385
+              },
+              {
+                "level": 1,
+                "rows": 2097152,
+                "native_shape": [
+                  1495589,
+                  1146368,
+                  447
+                ],
+                "compressions": 31050
+              },
+              {
+                "level": 2,
+                "rows": 1048576,
+                "native_shape": [
+                  1354804,
+                  1046528,
+                  1133
+                ],
+                "compressions": 26125
+              },
+              {
+                "level": 3,
+                "rows": 1048576,
+                "native_shape": [
+                  1351360,
+                  1044480,
+                  2837
+                ],
+                "compressions": 25427
+              }
+            ]
+          }
+        ]
+      },
+      "leanvm-mu30": {
+        "trials": 0,
+        "medians": null,
+        "runs": []
+      }
+    }
+  }
+}
