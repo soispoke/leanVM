@@ -7,6 +7,7 @@ use fiat_shamir::{
 use format_recursion::{
     private_recursion::{self as recursive, Setup},
     private_trace, recursion_fast,
+    trace::Op,
 };
 
 #[global_allocator]
@@ -55,10 +56,31 @@ fn main() {
             |a: &(Hash, Proof), b: &(Hash, Proof)| recursive::node((&setup, &a.0, &a.1), (&setup, &b.0, &b.1)).unwrap();
         let prototype = record(&children[0], &children[1]);
         let bound = private_trace::allocation_bound(&prototype);
+        let mut operations = std::collections::BTreeMap::<String, usize>::new();
+        for node in &prototype.nodes {
+            let name = match &node.op {
+                Op::Constant => "constant".to_owned(),
+                Op::Input => "input".to_owned(),
+                Op::Add(..) => "add".to_owned(),
+                Op::Mul(..) => "multiply".to_owned(),
+                Op::Frobenius(..) => "frobenius".to_owned(),
+                Op::Slice(_, start, len) => format!("slice_{start}_{len}"),
+                Op::Pack(parts) => format!("pack_{:?}", parts.iter().map(|p| p.1).collect::<Vec<_>>()),
+                Op::Hash(parts) => if parts.iter().all(|p| p.1 % 8 == 0) {
+                    "hash_aligned"
+                } else {
+                    "hash_unaligned"
+                }
+                .to_owned(),
+                Op::HashHigh(..) => "hash_high".to_owned(),
+                Op::Select(..) => "select".to_owned(),
+            };
+            *operations.entry(name).or_default() += 1;
+        }
         println!(
             "{}",
             serde_json::json!({"kind":"node_trace","level":level,"nodes":prototype.nodes.len(),
-            "compressions":prototype.hash_compressions(),"checks":prototype.checks.len(),
+            "compressions":prototype.hash_compressions(),"checks":prototype.checks.len(),"operations":operations,
             "lowering_bound":bound.map(|b|serde_json::json!({"rows":b.rows,"variables":b.variables,"compressions":b.compressions}))})
         );
         let Some(parent) = Setup::new(prototype) else {
