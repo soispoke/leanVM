@@ -144,7 +144,14 @@ impl<'a> Transcript<'a> {
             let leaf: Vec<S> = path
                 .leaf_data
                 .iter()
-                .map(|x| S::input(F192::from(*x)).slice(0, 64))
+                .map(|x| {
+                    // Serialized leaves are F64 words. State that range in the
+                    // circuit so a private compiler can use a 64-bit source.
+                    let word = S::input(F192::from(*x));
+                    let low = word.slice(0, 64);
+                    word.assert_eq(low);
+                    low
+                })
                 .collect();
             if base {
                 for &word in &leaf[..lanes - live_lanes] {
@@ -153,7 +160,12 @@ impl<'a> Transcript<'a> {
             }
             let mut node = hash(&leaf.iter().map(|&w| (w, 8)).collect::<Vec<_>>());
             for (level, sibling) in path.path.iter().enumerate() {
-                let sibling = hash_to_scalars(sibling).map(|x| S::input(x).slice(0, 128));
+                let sibling = hash_to_scalars(sibling).map(|x| {
+                    let word = S::input(x);
+                    let low = word.slice(0, 128);
+                    word.assert_eq(low);
+                    low
+                });
                 let bit = query.slice(level, 1);
                 let left = [S::select(bit, node[0], sibling[0]), S::select(bit, node[1], sibling[1])];
                 let right = [S::select(bit, sibling[0], node[0]), S::select(bit, sibling[1], node[1])];
@@ -495,6 +507,56 @@ fn record_with_identity(child: &Child, app_id: Option<&Hash>) -> Trace {
 mod tests {
     use super::*;
     use fiat_shamir::merkle::RawMerklePath;
+
+    #[test]
+    fn merkle_sources_enforce_serialized_word_and_digest_ranges() {
+        trace::start();
+        let path = RawMerklePath {
+            leaf_index: 0,
+            leaf_data: vec![primitives::field::F64(37)],
+            path: vec![[17; 32]],
+        };
+        let root = path.root(0);
+        let proof = RawProof {
+            stream: Vec::new(),
+            merkle: vec![path],
+        };
+        let mut t = Transcript::new(&proof, digest_constant(&[0; 32]), digest_constant(&[1; 32]));
+        let query = S::input(F192::ZERO).slice(0, 1);
+        t.merkle(digest_constant(&root), 1, &[query], 1, true, 1);
+        t.finish();
+        let mut program = trace::take();
+        assert!(program.satisfied());
+        let ranges: Vec<_> = program
+            .checks
+            .iter()
+            .filter_map(|&(source, narrow)| {
+                if let trace::Op::Slice(input, 0, width) = program.nodes[narrow.0].op
+                    && input == source
+                    && matches!(program.nodes[source.0].op, trace::Op::Input)
+                {
+                    Some((source.0, width))
+                } else {
+                    None
+                }
+            })
+            .collect();
+        assert_eq!(
+            ranges.iter().map(|(_, width)| *width).collect::<Vec<_>>(),
+            [64, 128, 128]
+        );
+        for (input, width) in ranges {
+            let old = program.nodes[input].value;
+            let high = if width == 64 {
+                F192::new(0, 1, 0)
+            } else {
+                F192::new(0, 0, 1)
+            };
+            program.nodes[input].value += high;
+            assert!(!program.satisfied(), "discarded high bits must be constrained");
+            program.nodes[input].value = old;
+        }
+    }
 
     #[test]
     fn merkle_paths_enforce_omitted_zero_lanes() {
