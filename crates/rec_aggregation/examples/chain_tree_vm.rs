@@ -14,15 +14,16 @@ fn main() {
     };
     let depth = arg("--depth", 1);
     let chain = arg("--chain", 16);
+    let rate = arg("--log-inv-rate", leanvm_core::pcs::TEST_LOG_INV_RATE);
     assert!((1..=3).contains(&depth));
     assert!(chain <= recursion_fast::CHAIN_CAP as usize);
     parallel::init();
     let mut keys = Vec::<Setup>::new();
     let t = Instant::now();
-    keys.push(Setup::leaf(chain));
+    keys.push(Setup::leaf_with_rate(chain, rate));
     println!(
         "{}",
-        serde_json::json!({"kind":"setup","level":0,"setup_s":t.elapsed().as_secs_f64(),"code_len":keys[0].program.code_len(),"backend":"vm"})
+        serde_json::json!({"kind":"setup","level":0,"setup_s":t.elapsed().as_secs_f64(),"code_len":keys[0].program.code_len(),"backend":"vm","log_inv_rate":rate})
     );
     if args.iter().any(|a| a == "--shape") {
         let start = primitives::hash::hash(&20261022u64.to_le_bytes());
@@ -41,7 +42,7 @@ fn main() {
             keys.push(Setup::parent(&keys));
             println!(
                 "{}",
-                serde_json::json!({"kind":"setup","level":level,"setup_s":t.elapsed().as_secs_f64(),"code_len":keys[level].program.code_len(),"backend":"vm","shape_only":true})
+                serde_json::json!({"kind":"setup","level":level,"setup_s":t.elapsed().as_secs_f64(),"code_len":keys[level].program.code_len(),"backend":"vm","log_inv_rate":rate,"shape_only":true})
             );
         }
         return;
@@ -58,7 +59,7 @@ fn main() {
         let verification = t.elapsed().as_secs_f64();
         println!(
             "{}",
-            serde_json::json!({"kind":"proof","level":0,"index":i,"statement":digest,"proving_s":proving,"verification_ms":verification*1000.,"proof_bytes":proof.encoded_size(),"base_cycles":stats.base_counts.iter().sum::<usize>(),"padded_cycles":stats.cycles,"deferred_records":proof.record_count(),"verified":true})
+            serde_json::json!({"kind":"proof","log_inv_rate":rate,"level":0,"index":i,"statement":digest,"proving_s":proving,"verification_ms":verification*1000.,"proof_bytes":proof.encoded_size(),"base_cycles":stats.base_counts.iter().sum::<usize>(),"padded_cycles":stats.cycles,"deferred_records":proof.record_count(),"verified":true})
         );
         children.push((digest, proof));
     }
@@ -67,7 +68,7 @@ fn main() {
         keys.push(Setup::parent(&keys));
         println!(
             "{}",
-            serde_json::json!({"kind":"setup","level":level,"setup_s":t.elapsed().as_secs_f64(),"code_len":keys[level].program.code_len(),"backend":"vm"})
+            serde_json::json!({"kind":"setup","level":level,"setup_s":t.elapsed().as_secs_f64(),"code_len":keys[level].program.code_len(),"backend":"vm","log_inv_rate":rate})
         );
         let mut next = Vec::new();
         for (i, pair) in children.as_chunks::<2>().0.iter().enumerate() {
@@ -88,7 +89,7 @@ fn main() {
             assert!(keys[level].verify(&keys, &wrong, &proof).is_err());
             println!(
                 "{}",
-                serde_json::json!({"kind":"proof","level":level,"index":i,"statement":digest,"preparation_s":preparation,"proving_s":proving,"verification_ms":verification*1000.,"proof_bytes":proof.encoded_size(),"base_cycles":stats.base_counts.iter().sum::<usize>(),"padded_cycles":stats.cycles,"deferred_records":proof.record_count(),"verified":true})
+                serde_json::json!({"kind":"proof","log_inv_rate":rate,"level":level,"index":i,"statement":digest,"preparation_s":preparation,"proving_s":proving,"verification_ms":verification*1000.,"proof_bytes":proof.encoded_size(),"base_cycles":stats.base_counts.iter().sum::<usize>(),"padded_cycles":stats.cycles,"deferred_records":proof.record_count(),"verified":true})
             );
             next.push((digest, proof));
         }
@@ -96,6 +97,6 @@ fn main() {
     }
     println!(
         "{}",
-        serde_json::json!({"kind":"complete","backend":"vm","levels":depth,"chain":chain,"root":children[0].0,"status":"locally_verified","single_fixed_circuit":false,"forwarded_deferred_claims":true,"contract_revision":recursion_fast::CONTRACT_REVISION,"measurement":"one trial per proof; no warmup; not a quiet matched benchmark","threads":std::env::var("LEANVM_NUM_THREADS").ok(),"oracle_mode":"existing untagged BLAKE2s; tagged statement hashes; challenge ROM adapter pending","lean_certificate":false,"official_score":false})
+        serde_json::json!({"kind":"complete","backend":"vm","log_inv_rate":rate,"levels":depth,"chain":chain,"root":children[0].0,"status":"locally_verified","single_fixed_circuit":false,"forwarded_deferred_claims":true,"contract_revision":recursion_fast::CONTRACT_REVISION,"measurement":"one trial per proof; no warmup; not a quiet matched benchmark","threads":std::env::var("LEANVM_NUM_THREADS").ok(),"oracle_mode":"existing untagged BLAKE2s; tagged statement hashes; challenge ROM adapter pending","lean_certificate":false,"official_score":false})
     );
 }

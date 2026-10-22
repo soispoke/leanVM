@@ -45,3 +45,28 @@ The tagged statement adapter is exact. The proof-system transcript still uses
 existing untagged BLAKE2s. No new Lean certificate, numerical security bound,
 zero-knowledge claim, closed fixed-shape recursion or official challenge result
 is established here.
+
+## Explicit WHIR rate
+
+`--log-inv-rate 1` is now the default, matching the upstream production/test
+profile (`LOG_INV_RATE_0 = TEST_LOG_INV_RATE = 1`). The first development runs
+hardcoded `2`; they can be reproduced with `--log-inv-rate 2`. The parameter
+propagates through every level and appears in the JSON output.
+
+Both values use the same production Johnson/OOD configuration analysis targeting
+128-bit round-by-round soundness, with 17-bit query grinding. They correspond to
+rate 1/2 and rate 1/4; neither is a reduced-security test profile. Upstream's
+`production_profile_is_128_bit_johnson_with_query_grinding` checks all allowed
+rates1–4 through committed log-size30. Higher redundancy trades more encoding work for fewer queries; its effect on
+total proving time must be measured. Compare configurations
+at the same security target and state which one was used. A numeric rate match
+alone does not prove that the whole protocols have equal security.
+
+The wrapper tests also construct one actual depth-two VM tree and reuse its root
+proof to reject changed points/values, missing/truncated/extra records, reordered
+individually valid records, a freshly recomputed valid replacement record, proof
+and public-input mutations, truncated serialization, and substitution of a
+foreign same-sized leaf key with correctly recomputed affected records. The valid
+record controls reach the root proof/public-hash binding rather than failing only
+a polynomial check. These are implementation controls, not a formal security
+certificate.

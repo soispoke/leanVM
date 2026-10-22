@@ -24,13 +24,15 @@ impl TreeProof {
 }
 
 pub struct Prepared {
+    log_inv_rate: usize,
     program: Program,
     public: [F192; 2],
     records: Vec<Vec<F192>>,
 }
 impl Prepared {
     pub fn prove(self) -> Result<(TreeProof, leanvm_core::cpu::Stats), AggregationError> {
-        let (proof, stats) = prove(&self.program, self.public, 2).map_err(AggregationError::ProofError)?;
+        let (proof, stats) =
+            prove(&self.program, self.public, self.log_inv_rate).map_err(AggregationError::ProofError)?;
         Ok((
             TreeProof {
                 proof,
@@ -44,6 +46,7 @@ impl Prepared {
 pub struct Setup {
     pub program: Program,
     pub level: usize,
+    pub log_inv_rate: usize,
     schema: Vec<usize>,
     bytecode: Bytecode,
 }
@@ -106,6 +109,11 @@ fn wrap(mut digest: [F192; 2], records: &[Vec<F192>], schema: &[usize], keys: &[
 
 impl Setup {
     pub fn leaf(chain: usize) -> Self {
+        Self::leaf_with_rate(chain, leanvm_core::pcs::TEST_LOG_INV_RATE)
+    }
+
+    pub fn leaf_with_rate(chain: usize, log_inv_rate: usize) -> Self {
+        pcs::whir::validate_log_inv_rate(log_inv_rate).expect("production WHIR rate");
         assert!(chain <= 1 << 20);
         let source = "from snark_lib import *\n".to_owned()
             + helpers().split("\ndef chain_wrap(").next().unwrap()
@@ -122,6 +130,7 @@ impl Setup {
             program,
             bytecode,
             level: 0,
+            log_inv_rate,
             schema: Vec::new(),
         }
     }
@@ -207,6 +216,7 @@ impl Setup {
             program,
             bytecode,
             level: keys.len(),
+            log_inv_rate: child.log_inv_rate,
             schema,
         }
     }
@@ -219,7 +229,8 @@ impl Setup {
         assert_eq!(self.level, 0);
         let mut p = self.program.clone();
         p.set_witness("start", vec![pack_hash_state(&start).to_vec()]);
-        let (proof, stats) = prove(&p, pack_hash_state(&digest), 2).map_err(AggregationError::ProofError)?;
+        let (proof, stats) =
+            prove(&p, pack_hash_state(&digest), self.log_inv_rate).map_err(AggregationError::ProofError)?;
         Ok((
             TreeProof {
                 proof,
@@ -270,6 +281,7 @@ impl Setup {
         let mut p = self.program.clone();
         hints.install(&mut p);
         Ok(Prepared {
+            log_inv_rate: self.log_inv_rate,
             program: p,
             public,
             records,
@@ -345,5 +357,116 @@ mod tests {
         assert_eq!(keys[1].schema, vec![0]);
         assert_eq!(keys[2].schema, vec![0, 0, 1]);
         assert_eq!(keys[3].schema, vec![0, 0, 1, 0, 0, 1, 2]);
+    }
+    #[test]
+    fn actual_root_rejects_deferred_record_attacks() {
+        parallel::init();
+        let mut keys = vec![Setup::leaf_with_rate(1, 1)];
+        let mut layer = Vec::new();
+        for i in 0..4u64 {
+            let start = primitives::hash::hash(&(20261022 + i).to_le_bytes());
+            let digest = expected(start, 1);
+            let (proof, _) = keys[0].prove_leaf(start, digest).expect("leaf");
+            keys[0].verify(&keys, &digest, &proof).expect("leaf verifies");
+            layer.push((digest, proof));
+        }
+        for level in 1..=2 {
+            keys.push(Setup::parent(&keys));
+            let mut next = Vec::new();
+            for pair in layer.as_chunks::<2>().0 {
+                let mut bytes = vec![0x4e];
+                bytes.extend(pair[0].0);
+                bytes.extend(pair[1].0);
+                let digest = primitives::hash::hash(&bytes);
+                let (proof, _) = keys[level]
+                    .prepare_parent(&keys, [(&pair[0].0, &pair[0].1), (&pair[1].0, &pair[1].1)], digest)
+                    .expect("prepare node")
+                    .prove()
+                    .expect("prove node");
+                keys[level].verify(&keys, &digest, &proof).expect("node verifies");
+                next.push((digest, proof));
+            }
+            layer = next;
+        }
+        let (digest, proof) = layer.pop().unwrap();
+        assert_eq!(proof.records.len(), 3);
+        let root = &keys[2];
+        let mut rejected = 0;
+        let mut reject = |bad: &TreeProof| {
+            assert!(root.verify(&keys, &digest, bad).is_err());
+            rejected += 1;
+        };
+        let mut bad = proof.clone();
+        bad.records[0][0] += F192::ONE;
+        reject(&bad);
+        let mut bad = proof.clone();
+        let n = keys[0].bytecode.vars();
+        bad.records[0][n] += F192::ONE;
+        reject(&bad);
+        let mut bad = proof.clone();
+        bad.records.pop();
+        reject(&bad);
+        let mut bad = proof.clone();
+        bad.records[0].pop();
+        reject(&bad);
+        let mut bad = proof.clone();
+        bad.records.push(proof.records[0].clone());
+        reject(&bad);
+        // Both reordered records remain valid against exactly the same key.
+        assert_ne!(proof.records[0], proof.records[1]);
+        let mut bad = proof.clone();
+        bad.records.swap(0, 1);
+        assert!(root.validate_records(&keys, &bad).is_ok());
+        reject(&bad);
+        // A newly and correctly evaluated record must not replace the one the
+        // actual root proof authenticated, even when it uses the right key.
+        let mut bad = proof.clone();
+        bad.records[0] = DeferredClaim::recompute(
+            &keys[0].bytecode,
+            vec![F192::ONE; n],
+            vec![F192::ONE; 2 * flock::hash::K_LOG],
+        )
+        .unwrap()
+        .cells();
+        assert_ne!(bad.records[0], proof.records[0]);
+        assert!(root.validate_records(&keys, &bad).is_ok());
+        reject(&bad);
+        let mut bad = proof.clone();
+        bad.proof.stream[0] += F192::ONE;
+        reject(&bad);
+        let mut wrong = digest;
+        wrong[0] ^= 1;
+        assert!(root.verify(&keys, &wrong, &proof).is_err());
+        rejected += 1;
+        let bytes = bincode::serialize(&proof).unwrap();
+        assert!(bincode::deserialize::<TreeProof>(&bytes[..bytes.len() - 1]).is_err());
+        rejected += 1;
+        // Substitute a same-sized foreign leaf key and recompute every affected
+        // record correctly for that key. Polynomial checks now pass, but the
+        // root's authenticated public hash must still reject the substitution.
+        let mut bad = proof.clone();
+        let original_key = std::mem::replace(&mut keys[0], Setup::leaf_with_rate(2, 1));
+        assert_eq!(keys[0].bytecode.vars(), n);
+        for (cells, &key) in bad.records.iter_mut().zip(&keys[2].schema) {
+            if key == 0 {
+                *cells = DeferredClaim::recompute(
+                    &keys[0].bytecode,
+                    cells[..n].to_vec(),
+                    cells[n + 1..n + 1 + 2 * flock::hash::K_LOG].to_vec(),
+                )
+                .unwrap()
+                .cells();
+            }
+        }
+        assert!(keys[2].validate_records(&keys, &bad).is_ok());
+        assert!(keys[2].verify(&keys, &digest, &bad).is_err());
+        rejected += 1;
+        keys[0] = original_key;
+        assert!(keys[2].verify(&keys, &digest, &proof).is_ok());
+        println!(
+            "{}",
+            serde_json::json!({"kind":"deferred_record_adversarial_controls","verified_proofs":7,"rejected":rejected,"log_inv_rate":1})
+        );
+        assert_eq!(rejected, 11);
     }
 }
