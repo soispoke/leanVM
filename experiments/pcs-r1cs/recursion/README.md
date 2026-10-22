@@ -77,6 +77,14 @@ cargo clippy --release -p format_recursion --all-targets -- -D warnings
 
 The eleven unit tests cover arithmetic replay, field and hash gadgets, zero-prefix Merkle lanes, public I/O layout, all packed I/O columns including padding, message lengths at block boundaries, adversarial public requests, malformed proofs, and the unbound-proof mutation fixture.
 
+### Small arithmetic optimizations
+
+A further [checked run](../evidence/2026-10-22-arithmetic-opt/stdout.jsonl) keeps the same format, protocol and high-level verifier. Binary linear maps now share short XOR expressions between output bits. For the representative dense constant in the gadget profile, this reduces a constant multiplication from 17,168 to 7,232 rows. Tests compare the optimized maps to native field arithmetic on every binary basis vector. Multiplication cutoff trials confirmed that the existing four-bit cutoff used the fewest rows of the five tested choices, so it was retained. Common-expression interning removed about 1% of dynamic products in a development trace and increased recording overhead; it was not retained.
+
+The outcome is unchanged: with hashes omitted, compilation reaches node 1,029 before exceeding the row limit at 8,413,912 rows. Variable products consume 8,122,960 of those rows, about 97%. This is a partial compilation, not a measurement of the full circuit's size. Three fresh hash-batch certificates still verify and reject all 45 complete-certificate corruptions. The original recorded-verifier regression also passes all 18 corruptions and retains the same high-level operation counts. All thirteen unit tests, all-target Clippy and formatting pass. No complete recursive proof is produced.
+
+The latest evidence preserves construction and native verification timings, but they remain component diagnostics. The optimized linear maps affect Boolean circuit compilation, not the transparent hash-batch certificate's proving algorithm. The earlier hash-batch timing table should not be interpreted as a before/after speed comparison for this optimization.
+
 ## Evidence and reproduction
 
 The [final diagnostic](../evidence/2026-10-22-recursion-checked/stdout.jsonl) and [execution record](../evidence/2026-10-22-recursion-checked/result.json) preserve the capacity failure explicitly. Earlier development diagnostics are retained in the adjacent `2026-10-22-recursion-trace`, `2026-10-22-recursion-capacity` and `2026-10-22-recursion` directories. Review added explicit checks for the omitted zero lanes restored in raw opening paths; the final recorded verifier includes those checks. The final diagnostic used less than 1 GiB process RSS and retained over 190 GiB available system memory. Source hashes, a patch against the published baseline and validation logs accompany the final record.

@@ -1,0 +1,21 @@
+    Finished `release` profile [optimized] target(s) in 0.20s
+     Running unittests src/lib.rs (/root/workspaces/mission-9abcee72/target-verified-pclmul/release/deps/format_recursion-9b76d66635e6d09e)
+
+running 2 tests
+{"kind":"field_multiply_rows","leaf":1,"rows":29432}
+{"kind":"constant_multiply_rows","method":"naive","rows":17168}
+{"kind":"field_multiply_rows","leaf":2,"rows":28460}
+{"kind":"field_multiply_rows","leaf":4,"rows":28298}
+{"kind":"field_multiply_rows","leaf":8,"rows":29648}
+{"kind":"constant_multiply_rows","rows":10186,"window":3}
+{"kind":"field_multiply_rows","leaf":16,"rows":33626}
+{"kind":"constant_multiply_rows","rows":8515,"window":4}
+test boolean_field::tests::profile_multiplication_cutoffs_and_check_native_values ... ok
+{"kind":"constant_multiply_rows","rows":7586,"window":5}
+{"kind":"constant_multiply_rows","rows":7232,"window":6}
+{"kind":"constant_multiply_rows","rows":7462,"window":7}
+{"kind":"constant_multiply_rows","rows":7834,"window":8}
+test boolean_field::tests::windowed_linear_maps_match_native_on_a_complete_binary_basis ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 11 filtered out; finished in 0.13s
+

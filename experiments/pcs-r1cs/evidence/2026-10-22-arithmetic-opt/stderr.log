@@ -1,0 +1,2 @@
+lower node 0/477889: 704 rows
+{"hash_advice":true,"kind":"partial_lowering_costs","nodes_lowered":1029,"rows_by_operation":{"constant_field_multiply":226466,"field_add":22528,"field_multiply":8122960,"field_square":33702,"frobenius":192,"hash_advice":4864,"input":2688,"layout":0}}

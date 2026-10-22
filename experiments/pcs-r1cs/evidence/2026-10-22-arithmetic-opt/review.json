@@ -1,0 +1,15 @@
+{
+  "status": "optimized_component_passes_recursion_still_over_capacity",
+  "samples": 3,
+  "complete_certificate_corruptions_rejected": 45,
+  "recorded_verifier_regression_corruptions_rejected": 18,
+  "unit_tests_passed": 13,
+  "clippy_all_targets_passed": true,
+  "outer_recursive_snark_produced": false,
+  "lean_proofs_added": false,
+  "protocol_changed": false,
+  "source_patch_base": "d18beffca30037cd7e25459ddfe85e5f7cd9e7c1",
+  "source_patch_sha256": "649c0e69f2111fd3b2b2920bf7549aafc7fa50eb336f187ad51dc8ad4bd0e3ba",
+  "arithmetic_circuit_bound_to_hash_coprocessor": false,
+  "timing_scope": "Transparent arithmetic replay with a public hash batch; not recursive proving time."
+}
