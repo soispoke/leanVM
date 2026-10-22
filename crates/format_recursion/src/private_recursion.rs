@@ -23,6 +23,7 @@ pub struct Setup {
 
 impl Setup {
     /// Preprocess a fixed program independently of subsequent witnesses.
+    #[tracing::instrument(skip_all, name = "Private setup")]
     pub fn new(program: Trace) -> Option<Self> {
         let lower = private_trace::lower(&program, &program)?;
         let bridge = PrivateBridge::new(lower.circuit, lower.connectors)?;
@@ -44,8 +45,9 @@ impl Setup {
         Some(values)
     }
 
+    #[tracing::instrument(skip_all, name = "Private prove")]
     pub fn prove(&self, witness: &Trace, outputs: &[F192]) -> Option<Proof> {
-        let lower = private_trace::lower(&self.program, witness)?;
+        let lower = tracing::info_span!("Compile witness").in_scope(|| private_trace::lower(&self.program, witness))?;
         let public = self.public_values(outputs)?;
         if lower
             .circuit

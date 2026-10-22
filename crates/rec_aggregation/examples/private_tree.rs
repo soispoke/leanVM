@@ -14,6 +14,7 @@ use format_recursion::{
 static ALLOCATOR: Jemalloc = Jemalloc;
 
 fn main() {
+    bench::init_tracing_from_env();
     let args: Vec<_> = std::env::args().collect();
     let arg = |key: &str, default: usize| {
         args.windows(2)

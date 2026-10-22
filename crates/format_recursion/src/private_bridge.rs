@@ -196,19 +196,24 @@ impl PrivateBridge {
         let mut values = values.to_vec();
         values.extend(self.padding.map(|x| F192::new(x, 0, 0)));
         let public = self.index.public_values(&values);
-        let witness = native_arithmetic::prepare(&self.index, &values);
-        let (z, a, b, lincheck) = generate_witness_with_ab_packed_and_lincheck(blocks, self.block_log);
+        let witness = tracing::info_span!("Arithmetic witness").in_scope(|| native_arithmetic::prepare(&self.index, &values));
+        let (z, a, b, lincheck) = tracing::info_span!("Hash witness")
+            .in_scope(|| generate_witness_with_ab_packed_and_lincheck(blocks, self.block_log));
         let mut stack = vec![F64::ZERO; 1 << self.stack_log];
         stack[..witness.stack.len()].copy_from_slice(&witness.stack);
         for (dest, &word) in stack[self.q_offset..].iter_mut().zip(&z) {
             *dest = F64(word);
         }
-        let (commitment, data) = whir::commit(&stack, self.stack_log, INITIAL_FOLDING_FACTOR, 1);
+        let (commitment, data) = tracing::info_span!("Joint commitment")
+            .in_scope(|| whir::commit(&stack, self.stack_log, INITIAL_FOLDING_FACTOR, 1));
         let mut ps = ProverState::from_label(&self.label(&public, context));
         ps.add_root(&commitment.root);
-        let (native_claims, index_claims) = native_arithmetic::prove_reduction(&self.index, &witness, &mut ps);
-        let reduced = Blake2sSetup::new(self.n_blocks.max(MIN_BLOCKS))
-            .prove_reduction_precomputed(&z, &a, &b, &lincheck, &mut ps);
+        let (native_claims, index_claims) = tracing::info_span!("Arithmetic reduction")
+            .in_scope(|| native_arithmetic::prove_reduction(&self.index, &witness, &mut ps));
+        let reduced = tracing::info_span!("Hash reduction").in_scope(|| {
+            Blake2sSetup::new(self.n_blocks.max(MIN_BLOCKS))
+                .prove_reduction_precomputed(&z, &a, &b, &lincheck, &mut ps)
+        });
         let point = ps.sample_vec(self.block_log);
         let weights = eq_table(&point);
         let mut bridge_values = [F192::ZERO; 18];
@@ -228,8 +233,11 @@ impl PrivateBridge {
         claims.extend(self.claims(&point, &bridge_values));
         let ring = ring_switch_open(1 << self.block_log, self.q_offset, &reduced);
         let config = whir::config_for_rate(self.stack_log, 1).ok()?;
-        open_batch_mixed_whir_stacked(&mut ps, self.stack_log, &stack, &data, &config, &claims, &ring);
-        native_arithmetic::prove_index_open(&self.index, &index_claims, &mut ps);
+        tracing::info_span!("Joint opening").in_scope(|| {
+            open_batch_mixed_whir_stacked(&mut ps, self.stack_log, &stack, &data, &config, &claims, &ring);
+        });
+        tracing::info_span!("Index opening")
+            .in_scope(|| native_arithmetic::prove_index_open(&self.index, &index_claims, &mut ps));
         Some(ps.into_proof())
     }
     pub fn verify(&self, public: &[F192], context: &Hash, proof: &Proof) -> bool {
