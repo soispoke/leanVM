@@ -1,0 +1,17 @@
+{
+  "checked_utc": "2026-10-22T16:39:11.293073+00:00",
+  "status": "passed",
+  "source_commit": "cb88d52698be5ef640d4d15d1dd5e6caa553c70e",
+  "ordinary_release_gates": "73 native tests, release example build and all-target release Clippy passed in retained receipts",
+  "evidence_controls": "29 Python tests passed in retained receipt",
+  "fresh_review": {
+    "source_freeze_files": 236,
+    "final_gate_source_hashes_checked": 708,
+    "local_markdown_links_checked": 61,
+    "raw_manifest": "verified",
+    "native_source_diff_check": "passed",
+    "rustfmt": "1.99.1, both changed files, passed",
+    "complete_tree_processes": 60
+  },
+  "note": "Initial review helper included tool paths as source paths and stopped; corrected review checked those tool hashes separately. cargo fmt was not on the command path; the pinned rustfmt executable passed directly."
+}

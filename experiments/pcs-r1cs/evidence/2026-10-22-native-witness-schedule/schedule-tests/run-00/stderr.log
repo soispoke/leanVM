@@ -1,0 +1,11 @@
+   Compiling parallel v0.1.0 (/root/yukon-autoresearch/workspaces/leanr1cs-hunt-20261022-phase3/candidate/crates/parallel)
+   Compiling primitives v0.1.0 (/root/yukon-autoresearch/workspaces/leanr1cs-hunt-20261022-phase3/candidate/crates/primitives)
+   Compiling fiat_shamir v0.1.0 (/root/yukon-autoresearch/workspaces/leanr1cs-hunt-20261022-phase3/candidate/crates/fiat_shamir)
+   Compiling pcs v0.1.0 (/root/yukon-autoresearch/workspaces/leanr1cs-hunt-20261022-phase3/candidate/crates/pcs)
+   Compiling flock v0.1.0 (/root/yukon-autoresearch/workspaces/leanr1cs-hunt-20261022-phase3/candidate/crates/flock)
+   Compiling evm v0.1.0 (/root/yukon-autoresearch/workspaces/leanr1cs-hunt-20261022-phase3/candidate/crates/evm)
+   Compiling leanvm_core v0.1.0 (/root/yukon-autoresearch/workspaces/leanr1cs-hunt-20261022-phase3/candidate/crates/leanvm_core)
+   Compiling circuit_suite v0.1.0 (/root/yukon-autoresearch/workspaces/leanr1cs-hunt-20261022-phase3/candidate/crates/circuit_suite)
+   Compiling format_recursion v0.1.0 (/root/yukon-autoresearch/workspaces/leanr1cs-hunt-20261022-phase3/candidate/crates/format_recursion)
+    Finished `release` profile [optimized] target(s) in 43.92s
+     Running unittests src/lib.rs (/root/yukon-autoresearch/workspaces/leanr1cs-hunt-20261022-phase3/target/release/deps/format_recursion-68e109cf669f374f)

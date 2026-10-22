@@ -1,0 +1,26 @@
+{
+  "status": "validated-promoted-publication-pending",
+  "created_utc": "2026-10-22T16:14:17.443828+00:00",
+  "baseline": "8a8e8adaeecccdf89ada2c9c7ac4ace39ab8f5a5",
+  "baseline_binary": "/root/yukon-autoresearch/workspaces/leanr1cs-hunt-20261022-phase2/private_tree-constants",
+  "yukon_revision": "58b0915ae37a851bcd770734b1a397274fc83d22",
+  "objective": "Reduce native recursion creation time without changing statement, security profiles or child checks; compare with current constant-sharing baseline and leanVM",
+  "parallel_policy": "sequential, preserving other missions and jobs",
+  "updated_utc": "2026-10-22T16:37:48.060844+00:00",
+  "experiment": "Setup-owned helper-value schedule; keep reference compiler and all circuit/verifier artifacts unchanged",
+  "baseline_profile": "profile-baseline",
+  "running_jobs": [],
+  "candidate_source": "cb88d52698be5ef640d4d15d1dd5e6caa553c70e",
+  "checks": {
+    "native_release_tests": 73,
+    "all_target_clippy": "passed",
+    "release_build": "passed",
+    "byte_identical_leaf_proofs": "passed",
+    "evidence_validator_tests": 29,
+    "complete_tree_processes": 60,
+    "source_binary_and_receipt_audit": "passed",
+    "circuit_shapes_and_proof_lengths": "unchanged"
+  },
+  "tooling_revision_at_phase_start": "e9857575725d6e20d18c07bc540edcfba298152e",
+  "tooling_note": "Shared checkout advanced before measured trials. All 60 benchmark process receipts identify 58b0915; benchmark runner is byte-identical to the phase-start archive. Initial audit rejected the stale expected revision; raw receipts preserved."
+}

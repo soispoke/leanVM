@@ -1,0 +1,17 @@
+{
+  "ok": true,
+  "returncode": 0,
+  "stop_reason": null,
+  "wall_seconds": 12.79739520700241,
+  "user_seconds": 105.22657,
+  "system_seconds": 6.766128,
+  "wait4_max_rss_kib": 4969384,
+  "sampled_group_peak_rss_bytes": 18452480,
+  "sampled_peak_processes": 1,
+  "minimum_available_bytes": 246000492544,
+  "rss_scope": "wait4 high water and sampled sum across own process group; not cgroup peak",
+  "cpu_scope": "wait4 child accounting, including descendants the child waited for",
+  "json_event_count": 1,
+  "stdout_sha256": "85b166fd4341a684ed2125933a2d1003495ad7a1f7ff60858be40e3801dd932b",
+  "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+}

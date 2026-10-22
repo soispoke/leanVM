@@ -1,0 +1,14 @@
+{
+  "pid": 395438,
+  "command": [
+    "/usr/bin/python3.12",
+    "-m",
+    "unittest",
+    "discover",
+    "-s",
+    "/root/workspaces/mission-9abcee72/leanvm-opt/experiments/pcs-r1cs/recursion",
+    "-p",
+    "test_*.py"
+  ],
+  "started_utc": "2026-10-22T16:30:37.848816+00:00"
+}

@@ -1,6 +1,6 @@
 # Native arithmetic and private hash batching
 
-Sharing public constants cuts measured root preparation + proving time by 18% at four leaves and 27% at eight. The eight-leaf native root takes 1.183 s versus leanVM’s 1.091 s, about 8.5% longer. These local implementation measurements use the same tagged hash-chain statement, with a separate trusted circuit and key at each level.
+Reusing the witness computation schedule cuts native root preparation + proving time by another 7-13%. The eight-leaf root takes 1.016 s versus leanVM's 1.075 s in seven matched trials. At four leaves it remains about 4% slower. These local implementation measurements use the same tagged hash-chain statement, with a separate trusted circuit and key at each level.
 
 A separate [Succinct Flock baseline adapted to BLAKE2s](FLOCK_BASELINE.md) is now measured. It uses a different sequential chain workload and is not a matched speed comparison.
 
@@ -11,6 +11,21 @@ The outer proof combines native GF(2^192) arithmetic constraints, Flock's batche
 Each parent checks both complete child verifiers and hashes their ordered statement digests. This backend extends the original Boolean full-adder format. Its native field rows are neither Boolean rows nor VM cycles.
 
 ## Latest repeated comparison
+
+Source `cb88d526`, rotating fresh-process trials after one excluded warmup per backend and workload. Rust 1.99.1, 16 workers on CPUs 0-15, shared Xeon Gold 6230R host. Root creation includes preparation and proving, excluding setup, child proving and final verification.
+
+| Leaves / aggregation levels | Steps per leaf | Trials | Previous native root (s) | New native root (s) | leanVM root (s) | Native time reduction |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| 2 / 1 | 16 | 3 | 1.060 | 0.987 | 1.195 | 7.0% |
+| 4 / 2 | 16 | 3 | 1.313 | 1.203 | 1.156 | 8.3% |
+| 8 / 3 | 16 | 7 | 1.163 | 1.016 | 1.075 | 12.6% |
+| 8 / 3 | 256 | 3 | 1.149 | 1.012 | 1.094 | 11.9% |
+
+Setup records a fixed computation schedule; each proof evaluates it on fresh witness values, with complete program and public-value checks. Circuit shapes, proof lengths and verifier code are unchanged. Every paired baseline/candidate run improves. Eight-leaf native/VM timing ranges overlap, so these results do not establish general parity.
+
+At eight 16-step leaves, whole-process medians are 9.03 s for native and 9.53 s for the VM comparison, including setup and all proofs. Native/VM setup totals are 2.09/1.13 s, maximum process RSS 4.90/3.52 GiB, full Rust verification 6.20/18.63 ms and complete proof sizes 317,512/324,064 bytes. The VM wrapper forwards deferred records across levels; its verification time is not an inherent upstream leanVM cost. All 73 native release tests, final build, all-target Clippy and 29 Python evidence-validator tests passed. The [complete witness-schedule evidence](../evidence/2026-10-22-native-witness-schedule/README.md) retains all 60 tree processes, source review and diagnostic profiles. The Lean and recursive-closure limitations below still apply.
+
+## Earlier constant-sharing comparison
 
 Source `f50dd22c`, three fresh-process trials per backend and workload, rotating execution order after one excluded warmup. Rust 1.99.1, 16 workers on CPUs 0-15, shared Xeon Gold 6230R host. Root creation includes preparation and proving, excluding setup and child proving. KB means 1,000 bytes.
 

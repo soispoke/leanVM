@@ -1,0 +1,383 @@
+{
+  "status": "passed",
+  "candidate": "cb88d52698be5ef640d4d15d1dd5e6caa553c70e",
+  "changed_files": [
+    "crates/format_recursion/src/private_recursion.rs",
+    "crates/format_recursion/src/private_trace.rs"
+  ],
+  "reports": {
+    "schedule-depth1-chain16": {
+      "root_metrics": {
+        "baseline": {
+          "level": 1,
+          "proving_s": {
+            "median": 0.986441171,
+            "min": 0.932960689,
+            "max": 1.004799901
+          },
+          "verification_ms": {
+            "median": 5.799869,
+            "min": 5.645614999999999,
+            "max": 5.872958000000001
+          },
+          "proof_bytes": {
+            "median": 324648,
+            "min": 324648,
+            "max": 324648
+          },
+          "preparation_plus_proving_s": {
+            "median": 1.06036654,
+            "min": 1.002493405,
+            "max": 1.077612063
+          }
+        },
+        "candidate": {
+          "level": 1,
+          "proving_s": {
+            "median": 0.916869985,
+            "min": 0.881594567,
+            "max": 0.929091813
+          },
+          "verification_ms": {
+            "median": 5.839204,
+            "min": 5.712213,
+            "max": 5.901511
+          },
+          "proof_bytes": {
+            "median": 324648,
+            "min": 324648,
+            "max": 324648
+          },
+          "preparation_plus_proving_s": {
+            "median": 0.986582634,
+            "min": 0.951649508,
+            "max": 0.999480602
+          }
+        },
+        "leanvm": {
+          "level": 1,
+          "proving_s": {
+            "median": 1.161010917,
+            "min": 1.087394629,
+            "max": 1.188733667
+          },
+          "verification_ms": {
+            "median": 12.890951,
+            "min": 12.059813,
+            "max": 13.4982
+          },
+          "proof_bytes": {
+            "median": 284440,
+            "min": 284440,
+            "max": 284440
+          },
+          "preparation_plus_proving_s": {
+            "median": 1.195491326,
+            "min": 1.121301509,
+            "max": 1.2273754099999998
+          }
+        }
+      },
+      "root_time_reduction_pct": 6.958339707701445,
+      "candidate_vs_vm_time_pct": -17.474714157817317,
+      "paired_reduction_pct": [
+        5.071743788678596,
+        8.447328322084669,
+        5.741970884897974
+      ],
+      "median_paired_reduction_pct": 5.741970884897974,
+      "whole_process_s": {
+        "baseline": 2.0058202639920637,
+        "candidate": 2.0051128799968865,
+        "leanvm": 2.504930126000545
+      },
+      "max_rss_gib": {
+        "baseline": 2.9164962768554688,
+        "candidate": 3.0221595764160156,
+        "leanvm": 2.5161399841308594
+      },
+      "circuit_shapes_and_proof_lengths_identical": true
+    },
+    "schedule-depth2-chain16": {
+      "root_metrics": {
+        "baseline": {
+          "level": 2,
+          "proving_s": {
+            "median": 1.238644865,
+            "min": 1.218379754,
+            "max": 1.306737781
+          },
+          "verification_ms": {
+            "median": 7.076726,
+            "min": 5.942704,
+            "max": 8.32239
+          },
+          "proof_bytes": {
+            "median": 316616,
+            "min": 316616,
+            "max": 316616
+          },
+          "preparation_plus_proving_s": {
+            "median": 1.3125272239999999,
+            "min": 1.2930043,
+            "max": 1.386918341
+          }
+        },
+        "candidate": {
+          "level": 2,
+          "proving_s": {
+            "median": 1.130267173,
+            "min": 1.045270762,
+            "max": 1.193790835
+          },
+          "verification_ms": {
+            "median": 5.9938839999999995,
+            "min": 5.981484,
+            "max": 6.296481
+          },
+          "proof_bytes": {
+            "median": 316616,
+            "min": 316616,
+            "max": 316616
+          },
+          "preparation_plus_proving_s": {
+            "median": 1.203199699,
+            "min": 1.119303266,
+            "max": 1.272592377
+          }
+        },
+        "leanvm": {
+          "level": 2,
+          "proving_s": {
+            "median": 1.07188259,
+            "min": 1.02432035,
+            "max": 1.090355092
+          },
+          "verification_ms": {
+            "median": 14.372707,
+            "min": 14.293301,
+            "max": 14.657025
+          },
+          "proof_bytes": {
+            "median": 318432,
+            "min": 318432,
+            "max": 318432
+          },
+          "preparation_plus_proving_s": {
+            "median": 1.156168285,
+            "min": 1.10972917,
+            "max": 1.174419742
+          }
+        }
+      },
+      "root_time_reduction_pct": 8.329543418293305,
+      "candidate_vs_vm_time_pct": 4.0678692375651915,
+      "paired_reduction_pct": [
+        13.246536336633541,
+        1.5786430872658297,
+        14.721520016258339
+      ],
+      "median_paired_reduction_pct": 13.246536336633541,
+      "whole_process_s": {
+        "baseline": 5.513543406006647,
+        "candidate": 5.014571398991393,
+        "leanvm": 5.014351548001287
+      },
+      "max_rss_gib": {
+        "baseline": 4.9898681640625,
+        "candidate": 4.588382720947266,
+        "leanvm": 3.4919776916503906
+      },
+      "circuit_shapes_and_proof_lengths_identical": true
+    },
+    "schedule-depth3-chain16": {
+      "root_metrics": {
+        "baseline": {
+          "level": 3,
+          "proving_s": {
+            "median": 1.0871528129999999,
+            "min": 1.034932431,
+            "max": 1.120249085
+          },
+          "verification_ms": {
+            "median": 6.054226,
+            "min": 5.913297,
+            "max": 6.8542309999999995
+          },
+          "proof_bytes": {
+            "median": 317512,
+            "min": 317512,
+            "max": 317512
+          },
+          "preparation_plus_proving_s": {
+            "median": 1.162858002,
+            "min": 1.108807984,
+            "max": 1.1963904269999999
+          }
+        },
+        "candidate": {
+          "level": 3,
+          "proving_s": {
+            "median": 0.945787862,
+            "min": 0.926844524,
+            "max": 1.004464706
+          },
+          "verification_ms": {
+            "median": 6.201458,
+            "min": 5.771615,
+            "max": 7.603973
+          },
+          "proof_bytes": {
+            "median": 317512,
+            "min": 317512,
+            "max": 317512
+          },
+          "preparation_plus_proving_s": {
+            "median": 1.016178863,
+            "min": 1.00173476,
+            "max": 1.083567277
+          }
+        },
+        "leanvm": {
+          "level": 3,
+          "proving_s": {
+            "median": 0.987902205,
+            "min": 0.940691639,
+            "max": 1.087562037
+          },
+          "verification_ms": {
+            "median": 18.630745,
+            "min": 18.253493,
+            "max": 19.766209
+          },
+          "proof_bytes": {
+            "median": 324064,
+            "min": 324064,
+            "max": 324064
+          },
+          "preparation_plus_proving_s": {
+            "median": 1.0749277,
+            "min": 1.03171025,
+            "max": 1.176687124
+          }
+        }
+      },
+      "root_time_reduction_pct": 12.61367585274612,
+      "candidate_vs_vm_time_pct": -5.465375671312589,
+      "paired_reduction_pct": [
+        9.891863180576122,
+        5.860190078411498,
+        9.65660651303536,
+        13.941560184363333,
+        9.26082425739294,
+        12.61367585274612,
+        11.799801453944593
+      ],
+      "median_paired_reduction_pct": 9.891863180576122,
+      "whole_process_s": {
+        "baseline": 10.024223422005889,
+        "candidate": 9.026200334992609,
+        "leanvm": 9.525038495004992
+      },
+      "max_rss_gib": {
+        "baseline": 5.038810729980469,
+        "candidate": 4.898384094238281,
+        "leanvm": 3.5216331481933594
+      },
+      "circuit_shapes_and_proof_lengths_identical": true
+    },
+    "schedule-depth3-chain256": {
+      "root_metrics": {
+        "baseline": {
+          "level": 3,
+          "proving_s": {
+            "median": 1.07384111,
+            "min": 1.055887992,
+            "max": 1.104065192
+          },
+          "verification_ms": {
+            "median": 6.1071729999999995,
+            "min": 6.07453,
+            "max": 6.250955
+          },
+          "proof_bytes": {
+            "median": 317608,
+            "min": 317608,
+            "max": 317608
+          },
+          "preparation_plus_proving_s": {
+            "median": 1.149406964,
+            "min": 1.132792953,
+            "max": 1.182867996
+          }
+        },
+        "candidate": {
+          "level": 3,
+          "proving_s": {
+            "median": 0.943422354,
+            "min": 0.919203232,
+            "max": 0.95592814
+          },
+          "verification_ms": {
+            "median": 6.558732,
+            "min": 6.312803,
+            "max": 7.1794459999999996
+          },
+          "proof_bytes": {
+            "median": 317608,
+            "min": 317608,
+            "max": 317608
+          },
+          "preparation_plus_proving_s": {
+            "median": 1.012307343,
+            "min": 0.9906822279999999,
+            "max": 1.02786508
+          }
+        },
+        "leanvm": {
+          "level": 3,
+          "proving_s": {
+            "median": 1.006728576,
+            "min": 0.996880991,
+            "max": 1.024356462
+          },
+          "verification_ms": {
+            "median": 18.834847,
+            "min": 18.544853,
+            "max": 19.106447
+          },
+          "proof_bytes": {
+            "median": 325056,
+            "min": 325056,
+            "max": 325056
+          },
+          "preparation_plus_proving_s": {
+            "median": 1.094323153,
+            "min": 1.0885414420000001,
+            "max": 1.111077904
+          }
+        }
+      },
+      "root_time_reduction_pct": 11.927857172788103,
+      "candidate_vs_vm_time_pct": -7.494660948656717,
+      "paired_reduction_pct": [
+        11.927857172788103,
+        13.10399102217319,
+        12.545163228959467
+      ],
+      "median_paired_reduction_pct": 12.545163228959467,
+      "whole_process_s": {
+        "baseline": 12.538183879994904,
+        "candidate": 11.032145516001037,
+        "leanvm": 12.53373113599082
+      },
+      "max_rss_gib": {
+        "baseline": 4.737804412841797,
+        "candidate": 4.689609527587891,
+        "leanvm": 4.452938079833984
+      },
+      "circuit_shapes_and_proof_lengths_identical": true
+    }
+  },
+  "scope": "Runtime and source checks; no new formal security certificate"
+}

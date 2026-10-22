@@ -1,0 +1,17 @@
+{
+  "pid": 389291,
+  "command": [
+    "/root/.rustup/toolchains/1.99.1-x86_64-unknown-linux-gnu/bin/cargo",
+    "clippy",
+    "--release",
+    "-p",
+    "format_recursion",
+    "-p",
+    "rec_aggregation",
+    "--all-targets",
+    "--",
+    "-D",
+    "warnings"
+  ],
+  "started_utc": "2026-10-22T16:23:09.748796+00:00"
+}

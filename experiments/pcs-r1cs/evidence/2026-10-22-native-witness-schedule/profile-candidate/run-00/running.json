@@ -1,0 +1,13 @@
+{
+  "pid": 394921,
+  "command": [
+    "/usr/bin/env",
+    "BENCH_TRACING=1",
+    "/root/yukon-autoresearch/workspaces/leanr1cs-hunt-20261022-phase3/private_tree-schedule",
+    "--depth",
+    "3",
+    "--chain",
+    "16"
+  ],
+  "started_utc": "2026-10-22T16:29:45.940179+00:00"
+}

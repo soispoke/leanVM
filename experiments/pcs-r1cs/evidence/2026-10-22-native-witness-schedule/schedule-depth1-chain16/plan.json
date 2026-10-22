@@ -1,0 +1,75 @@
+{
+  "specs": {
+    "baseline": [
+      "/root/yukon-autoresearch/workspaces/leanr1cs-hunt-20261022-phase2/private_tree-constants",
+      "f50dd22cc994596dd48695ac49c5e3f9b2aef1ae",
+      "19627f0b8a163844a54474a4da4722c90db20162f3032074445f778debade048"
+    ],
+    "candidate": [
+      "/root/yukon-autoresearch/workspaces/leanr1cs-hunt-20261022-phase3/private_tree-schedule",
+      "cb88d52698be5ef640d4d15d1dd5e6caa553c70e",
+      "6f45d0259d44c1daae02148388b33624da775be5f1ebe329824a3777514f918b"
+    ],
+    "leanvm": [
+      "/root/workspaces/mission-9abcee72/scratch/perf-20261022/frozen/chain_tree_vm-final",
+      "bd2f8fc38c269f08ddcc8b2ea571fb45dfb10a47",
+      "54c05b65a9594d44ca297238eae9c69d8dc05a164b88360bbb0a61e9644b58af"
+    ]
+  },
+  "plan": [
+    [
+      "warmup",
+      [
+        "baseline",
+        "candidate",
+        "leanvm"
+      ]
+    ],
+    [
+      "trial-0",
+      [
+        "baseline",
+        "candidate",
+        "leanvm"
+      ]
+    ],
+    [
+      "trial-1",
+      [
+        "candidate",
+        "leanvm",
+        "baseline"
+      ]
+    ],
+    [
+      "trial-2",
+      [
+        "leanvm",
+        "baseline",
+        "candidate"
+      ]
+    ]
+  ],
+  "depth": 1,
+  "chain": 16,
+  "workers": 16,
+  "cpus": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15
+  ],
+  "policy": "One excluded fresh-process warmup per backend, rotating fresh-process trials; shared host."
+}
