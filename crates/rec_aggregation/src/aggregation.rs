@@ -43,6 +43,7 @@
 //! `cpu::layout` of the inner program and the summary of a real `cpu::verify`
 //! run, so there is no hand-mirrored copy of the protocol to drift.
 
+pub mod chain_tree;
 pub mod tree;
 
 use bincode::Options as _;
