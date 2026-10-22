@@ -29,6 +29,7 @@ fn main() {
     parallel::init();
     let plan = Plan::new(1, 0);
     let mut children = Vec::<(Hash, Proof)>::new();
+    let setup_start = std::time::Instant::now();
     let leaf_program = recursive::leaf(&[0; 32], chain).unwrap();
     let bound = private_trace::allocation_bound(&leaf_program);
     println!(
@@ -48,25 +49,30 @@ fn main() {
     println!(
         "{}",
         serde_json::json!({"kind":"setup","level":0,"rows":1usize<<setup.bridge.index.log_rows,
-        "compressions":setup.bridge.n_blocks,"native_shape":setup.bridge.index.shape(),"official_score":false})
+        "compressions":setup.bridge.n_blocks,"native_shape":setup.bridge.index.shape(),"official_score":false,
+        "setup_s":setup_start.elapsed().as_secs_f64()})
     );
     for i in 0..1usize << depth {
         let start = primitives::hash::hash(&(i as u64 + 20261022).to_le_bytes());
         let digest = recursion_fast::expected_leaf(&start, chain as u64).unwrap();
+        let preparation_start = std::time::Instant::now();
         let t = recursive::leaf(&start, chain).unwrap();
         assert_eq!(recursive::outputs(&t), hash_to_scalars(&digest));
         let public = hash_to_scalars(&digest);
+        let preparation = preparation_start.elapsed().as_secs_f64();
         let (proof, proving) = plan.measure_quiet(|_| setup.prove(&t, &public).expect("leaf proof within cap"));
         let (ok, verification) = plan.measure_quiet(|_| setup.verify(&public, &proof));
         assert!(ok);
         println!(
             "{}",
             serde_json::json!({"kind":"proof","level":0,"index":i,"proving_s":proving.mean(),
+            "preparation_s":preparation,"statement":digest,
             "verification_ms":1000.0*verification.mean(),"proof_bytes":recursive::encode(&proof).unwrap().len(),"verified":true})
         );
         children.push((digest, proof));
     }
     for level in 1..=depth {
+        let setup_start = std::time::Instant::now();
         let record =
             |a: &(Hash, Proof), b: &(Hash, Proof)| recursive::node((&setup, &a.0, &a.1), (&setup, &b.0, &b.1)).unwrap();
         let prototype = record(&children[0], &children[1]);
@@ -109,15 +115,18 @@ fn main() {
         println!(
             "{}",
             serde_json::json!({"kind":"setup","level":level,"rows":1usize<<parent.bridge.index.log_rows,
-            "compressions":parent.bridge.n_blocks,"native_shape":parent.bridge.index.shape(),"official_score":false})
+            "compressions":parent.bridge.n_blocks,"native_shape":parent.bridge.index.shape(),"official_score":false,
+            "setup_s":setup_start.elapsed().as_secs_f64()})
         );
         let mut next = Vec::new();
         for (i, pair) in children.as_chunks::<2>().0.iter().enumerate() {
+            let preparation_start = std::time::Instant::now();
             let t = record(&pair[0], &pair[1]);
             assert!(t.satisfied());
             let digest = recursion_fast::node_statement(&pair[0].0, &pair[1].0);
             let public = hash_to_scalars(&digest);
             assert_eq!(recursive::outputs(&t), public);
+            let preparation = preparation_start.elapsed().as_secs_f64();
             let (proof, proving) = plan.measure_quiet(|_| parent.prove(&t, &public).expect("node proof within cap"));
             let (ok, verification) = plan.measure_quiet(|_| parent.verify(&public, &proof));
             assert!(ok);
@@ -127,6 +136,7 @@ fn main() {
             println!(
                 "{}",
                 serde_json::json!({"kind":"proof","level":level,"index":i,"proving_s":proving.mean(),
+                "preparation_s":preparation,"statement":digest,
                 "verification_ms":1000.0*verification.mean(),"proof_bytes":recursive::encode(&proof).unwrap().len(),"verified":true})
             );
             next.push((digest, proof));
