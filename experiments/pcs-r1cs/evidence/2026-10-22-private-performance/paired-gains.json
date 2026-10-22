@@ -1,0 +1,11 @@
+{
+  "paired_elapsed_speedups": [
+    1.5507049788638763,
+    1.5489009119465993,
+    1.5997798458916481
+  ],
+  "median_elapsed_reduction": 0.3548392692672464,
+  "peak_rss_reduction": 0.341311178806767,
+  "root_proving_reduction": 0.1367385501880788,
+  "root_size_reduction": 0.18604592480444104
+}

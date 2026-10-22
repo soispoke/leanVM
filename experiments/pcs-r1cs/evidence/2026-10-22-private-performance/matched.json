@@ -1,0 +1,742 @@
+{
+  "status": "complete_record_sets",
+  "groups": {
+    "native": {
+      "backend": "native",
+      "depth": 1,
+      "chain": 16,
+      "source_commit": "bd2f8fc38c269f08ddcc8b2ea571fb45dfb10a47",
+      "binary_sha256": "a7a7fe39a9e9031511bc8ff5f8f9604dc89a59123ef01d4458b2dc5987052b3b",
+      "environment": {
+        "hostname": "21af93d7fe47",
+        "kernel": "6.12.113+deb13-cloud-amd64",
+        "cpu_model": "Intel(R) Xeon(R) Gold 6230R CPU @ 2.10GHz",
+        "affinity": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15
+        ],
+        "worker_count": "16",
+        "rust_toolchain": "1.99.1",
+        "rustflags": "-C target-cpu=native -C target-feature=+pclmulqdq"
+      },
+      "trials": 3,
+      "elapsed_s": 3.508946792993811,
+      "peak_rss_gib": 4.720722198486328,
+      "levels": [
+        {
+          "level": 0,
+          "proving_s": {
+            "median": 0.031673807,
+            "min": 0.03070655,
+            "max": 0.034475782999999996
+          },
+          "verification_ms": {
+            "median": 5.0885075,
+            "min": 5.0843454999999995,
+            "max": 5.121297
+          },
+          "proof_bytes": {
+            "median": 303364.0,
+            "min": 303364.0,
+            "max": 303364.0
+          },
+          "preparation_plus_proving_s": {
+            "median": 0.031689895,
+            "min": 0.030726714,
+            "max": 0.034494093499999996
+          }
+        },
+        {
+          "level": 1,
+          "proving_s": {
+            "median": 2.102510996,
+            "min": 2.095859497,
+            "max": 2.124746482
+          },
+          "verification_ms": {
+            "median": 7.221703000000001,
+            "min": 6.927563,
+            "max": 7.828412
+          },
+          "proof_bytes": {
+            "median": 487144,
+            "min": 487144,
+            "max": 487144
+          },
+          "preparation_plus_proving_s": {
+            "median": 2.176369043,
+            "min": 2.169618947,
+            "max": 2.2007773189999997
+          }
+        }
+      ],
+      "runs": [
+        {
+          "directory": "experiments/pcs-r1cs/evidence/2026-10-22-private-performance/native-0",
+          "backend": "native",
+          "depth": 1,
+          "chain": 16,
+          "levels": [
+            {
+              "level": 0,
+              "proofs": 2,
+              "proving_s": 0.03070655,
+              "verification_ms": 5.0885075,
+              "proof_bytes": 303364.0,
+              "preparation_plus_proving_s": 0.030726714
+            },
+            {
+              "level": 1,
+              "proofs": 1,
+              "proving_s": 2.095859497,
+              "verification_ms": 7.221703000000001,
+              "proof_bytes": 487144,
+              "preparation_plus_proving_s": 2.169618947
+            }
+          ],
+          "elapsed_s": 3.508946792993811,
+          "peak_rss_gib": 4.720600128173828,
+          "source_commit": "bd2f8fc38c269f08ddcc8b2ea571fb45dfb10a47",
+          "binary_sha256": "a7a7fe39a9e9031511bc8ff5f8f9604dc89a59123ef01d4458b2dc5987052b3b",
+          "environment": {
+            "hostname": "21af93d7fe47",
+            "kernel": "6.12.113+deb13-cloud-amd64",
+            "cpu_model": "Intel(R) Xeon(R) Gold 6230R CPU @ 2.10GHz",
+            "affinity": [
+              0,
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15
+            ],
+            "worker_count": "16",
+            "rust_toolchain": "1.99.1",
+            "rustflags": "-C target-cpu=native -C target-feature=+pclmulqdq"
+          }
+        },
+        {
+          "directory": "experiments/pcs-r1cs/evidence/2026-10-22-private-performance/native-1",
+          "backend": "native",
+          "depth": 1,
+          "chain": 16,
+          "levels": [
+            {
+              "level": 0,
+              "proofs": 2,
+              "proving_s": 0.031673807,
+              "verification_ms": 5.0843454999999995,
+              "proof_bytes": 303364.0,
+              "preparation_plus_proving_s": 0.031689895
+            },
+            {
+              "level": 1,
+              "proofs": 1,
+              "proving_s": 2.102510996,
+              "verification_ms": 6.927563,
+              "proof_bytes": 487144,
+              "preparation_plus_proving_s": 2.176369043
+            }
+          ],
+          "elapsed_s": 3.5109822309896117,
+          "peak_rss_gib": 4.720722198486328,
+          "source_commit": "bd2f8fc38c269f08ddcc8b2ea571fb45dfb10a47",
+          "binary_sha256": "a7a7fe39a9e9031511bc8ff5f8f9604dc89a59123ef01d4458b2dc5987052b3b",
+          "environment": {
+            "hostname": "21af93d7fe47",
+            "kernel": "6.12.113+deb13-cloud-amd64",
+            "cpu_model": "Intel(R) Xeon(R) Gold 6230R CPU @ 2.10GHz",
+            "affinity": [
+              0,
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15
+            ],
+            "worker_count": "16",
+            "rust_toolchain": "1.99.1",
+            "rustflags": "-C target-cpu=native -C target-feature=+pclmulqdq"
+          }
+        },
+        {
+          "directory": "experiments/pcs-r1cs/evidence/2026-10-22-private-performance/native-2",
+          "backend": "native",
+          "depth": 1,
+          "chain": 16,
+          "levels": [
+            {
+              "level": 0,
+              "proofs": 2,
+              "proving_s": 0.034475782999999996,
+              "verification_ms": 5.121297,
+              "proof_bytes": 303364.0,
+              "preparation_plus_proving_s": 0.034494093499999996
+            },
+            {
+              "level": 1,
+              "proofs": 1,
+              "proving_s": 2.124746482,
+              "verification_ms": 7.828412,
+              "proof_bytes": 487144,
+              "preparation_plus_proving_s": 2.2007773189999997
+            }
+          ],
+          "elapsed_s": 3.5066892610047944,
+          "peak_rss_gib": 4.712131500244141,
+          "source_commit": "bd2f8fc38c269f08ddcc8b2ea571fb45dfb10a47",
+          "binary_sha256": "a7a7fe39a9e9031511bc8ff5f8f9604dc89a59123ef01d4458b2dc5987052b3b",
+          "environment": {
+            "hostname": "21af93d7fe47",
+            "kernel": "6.12.113+deb13-cloud-amd64",
+            "cpu_model": "Intel(R) Xeon(R) Gold 6230R CPU @ 2.10GHz",
+            "affinity": [
+              0,
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15
+            ],
+            "worker_count": "16",
+            "rust_toolchain": "1.99.1",
+            "rustflags": "-C target-cpu=native -C target-feature=+pclmulqdq"
+          }
+        }
+      ]
+    },
+    "vm1": {
+      "backend": "vm",
+      "depth": 1,
+      "chain": 16,
+      "source_commit": "bd2f8fc38c269f08ddcc8b2ea571fb45dfb10a47",
+      "binary_sha256": "54c05b65a9594d44ca297238eae9c69d8dc05a164b88360bbb0a61e9644b58af",
+      "environment": {
+        "hostname": "21af93d7fe47",
+        "kernel": "6.12.113+deb13-cloud-amd64",
+        "cpu_model": "Intel(R) Xeon(R) Gold 6230R CPU @ 2.10GHz",
+        "affinity": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15
+        ],
+        "worker_count": "16",
+        "rust_toolchain": "1.99.1",
+        "rustflags": "-C target-cpu=native -C target-feature=+pclmulqdq"
+      },
+      "trials": 3,
+      "elapsed_s": 2.004496845009271,
+      "peak_rss_gib": 2.5150146484375,
+      "levels": [
+        {
+          "level": 0,
+          "proving_s": {
+            "median": 0.156422524,
+            "min": 0.1516245,
+            "max": 0.165879733
+          },
+          "verification_ms": {
+            "median": 5.208401,
+            "min": 5.1760874999999995,
+            "max": 5.4996305
+          },
+          "proof_bytes": {
+            "median": 239904.0,
+            "min": 239904.0,
+            "max": 239904.0
+          },
+          "preparation_plus_proving_s": null
+        },
+        {
+          "level": 1,
+          "proving_s": {
+            "median": 1.038307916,
+            "min": 1.03299709,
+            "max": 1.083006534
+          },
+          "verification_ms": {
+            "median": 11.130365,
+            "min": 11.036405,
+            "max": 12.181579
+          },
+          "proof_bytes": {
+            "median": 284440,
+            "min": 284440,
+            "max": 284440
+          },
+          "preparation_plus_proving_s": {
+            "median": 1.071995216,
+            "min": 1.066312331,
+            "max": 1.118307626
+          }
+        }
+      ],
+      "runs": [
+        {
+          "directory": "experiments/pcs-r1cs/evidence/2026-10-22-private-performance/vm1-0",
+          "backend": "vm",
+          "depth": 1,
+          "chain": 16,
+          "levels": [
+            {
+              "level": 0,
+              "proofs": 2,
+              "proving_s": 0.156422524,
+              "verification_ms": 5.208401,
+              "proof_bytes": 239904.0,
+              "preparation_plus_proving_s": null
+            },
+            {
+              "level": 1,
+              "proofs": 1,
+              "proving_s": 1.038307916,
+              "verification_ms": 11.130365,
+              "proof_bytes": 284440,
+              "preparation_plus_proving_s": 1.071995216
+            }
+          ],
+          "elapsed_s": 2.004496845009271,
+          "peak_rss_gib": 2.511688232421875,
+          "source_commit": "bd2f8fc38c269f08ddcc8b2ea571fb45dfb10a47",
+          "binary_sha256": "54c05b65a9594d44ca297238eae9c69d8dc05a164b88360bbb0a61e9644b58af",
+          "environment": {
+            "hostname": "21af93d7fe47",
+            "kernel": "6.12.113+deb13-cloud-amd64",
+            "cpu_model": "Intel(R) Xeon(R) Gold 6230R CPU @ 2.10GHz",
+            "affinity": [
+              0,
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15
+            ],
+            "worker_count": "16",
+            "rust_toolchain": "1.99.1",
+            "rustflags": "-C target-cpu=native -C target-feature=+pclmulqdq"
+          }
+        },
+        {
+          "directory": "experiments/pcs-r1cs/evidence/2026-10-22-private-performance/vm1-1",
+          "backend": "vm",
+          "depth": 1,
+          "chain": 16,
+          "levels": [
+            {
+              "level": 0,
+              "proofs": 2,
+              "proving_s": 0.1516245,
+              "verification_ms": 5.1760874999999995,
+              "proof_bytes": 239904.0,
+              "preparation_plus_proving_s": null
+            },
+            {
+              "level": 1,
+              "proofs": 1,
+              "proving_s": 1.03299709,
+              "verification_ms": 11.036405,
+              "proof_bytes": 284440,
+              "preparation_plus_proving_s": 1.066312331
+            }
+          ],
+          "elapsed_s": 2.0037880029994994,
+          "peak_rss_gib": 2.5084686279296875,
+          "source_commit": "bd2f8fc38c269f08ddcc8b2ea571fb45dfb10a47",
+          "binary_sha256": "54c05b65a9594d44ca297238eae9c69d8dc05a164b88360bbb0a61e9644b58af",
+          "environment": {
+            "hostname": "21af93d7fe47",
+            "kernel": "6.12.113+deb13-cloud-amd64",
+            "cpu_model": "Intel(R) Xeon(R) Gold 6230R CPU @ 2.10GHz",
+            "affinity": [
+              0,
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15
+            ],
+            "worker_count": "16",
+            "rust_toolchain": "1.99.1",
+            "rustflags": "-C target-cpu=native -C target-feature=+pclmulqdq"
+          }
+        },
+        {
+          "directory": "experiments/pcs-r1cs/evidence/2026-10-22-private-performance/vm1-2",
+          "backend": "vm",
+          "depth": 1,
+          "chain": 16,
+          "levels": [
+            {
+              "level": 0,
+              "proofs": 2,
+              "proving_s": 0.165879733,
+              "verification_ms": 5.4996305,
+              "proof_bytes": 239904.0,
+              "preparation_plus_proving_s": null
+            },
+            {
+              "level": 1,
+              "proofs": 1,
+              "proving_s": 1.083006534,
+              "verification_ms": 12.181579,
+              "proof_bytes": 284440,
+              "preparation_plus_proving_s": 1.118307626
+            }
+          ],
+          "elapsed_s": 2.006342382999719,
+          "peak_rss_gib": 2.5150146484375,
+          "source_commit": "bd2f8fc38c269f08ddcc8b2ea571fb45dfb10a47",
+          "binary_sha256": "54c05b65a9594d44ca297238eae9c69d8dc05a164b88360bbb0a61e9644b58af",
+          "environment": {
+            "hostname": "21af93d7fe47",
+            "kernel": "6.12.113+deb13-cloud-amd64",
+            "cpu_model": "Intel(R) Xeon(R) Gold 6230R CPU @ 2.10GHz",
+            "affinity": [
+              0,
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15
+            ],
+            "worker_count": "16",
+            "rust_toolchain": "1.99.1",
+            "rustflags": "-C target-cpu=native -C target-feature=+pclmulqdq"
+          }
+        }
+      ]
+    },
+    "vm2": {
+      "backend": "vm",
+      "depth": 1,
+      "chain": 16,
+      "source_commit": "bd2f8fc38c269f08ddcc8b2ea571fb45dfb10a47",
+      "binary_sha256": "54c05b65a9594d44ca297238eae9c69d8dc05a164b88360bbb0a61e9644b58af",
+      "environment": {
+        "hostname": "21af93d7fe47",
+        "kernel": "6.12.113+deb13-cloud-amd64",
+        "cpu_model": "Intel(R) Xeon(R) Gold 6230R CPU @ 2.10GHz",
+        "affinity": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15
+        ],
+        "worker_count": "16",
+        "rust_toolchain": "1.99.1",
+        "rustflags": "-C target-cpu=native -C target-feature=+pclmulqdq"
+      },
+      "trials": 3,
+      "elapsed_s": 2.004902246990241,
+      "peak_rss_gib": 2.4877548217773438,
+      "levels": [
+        {
+          "level": 0,
+          "proving_s": {
+            "median": 0.1751711345,
+            "min": 0.1693128375,
+            "max": 0.17885522450000002
+          },
+          "verification_ms": {
+            "median": 4.6717975,
+            "min": 4.4213375,
+            "max": 4.7064425
+          },
+          "proof_bytes": {
+            "median": 168504.0,
+            "min": 168504.0,
+            "max": 168504.0
+          },
+          "preparation_plus_proving_s": null
+        },
+        {
+          "level": 1,
+          "proving_s": {
+            "median": 1.088187407,
+            "min": 1.0520631599999999,
+            "max": 1.117202344
+          },
+          "verification_ms": {
+            "median": 10.63258,
+            "min": 10.497739000000001,
+            "max": 10.784123
+          },
+          "proof_bytes": {
+            "median": 196360,
+            "min": 196360,
+            "max": 196360
+          },
+          "preparation_plus_proving_s": {
+            "median": 1.118836395,
+            "min": 1.082541904,
+            "max": 1.14801905
+          }
+        }
+      ],
+      "runs": [
+        {
+          "directory": "experiments/pcs-r1cs/evidence/2026-10-22-private-performance/vm2-0",
+          "backend": "vm",
+          "depth": 1,
+          "chain": 16,
+          "levels": [
+            {
+              "level": 0,
+              "proofs": 2,
+              "proving_s": 0.17885522450000002,
+              "verification_ms": 4.7064425,
+              "proof_bytes": 168504.0,
+              "preparation_plus_proving_s": null
+            },
+            {
+              "level": 1,
+              "proofs": 1,
+              "proving_s": 1.088187407,
+              "verification_ms": 10.63258,
+              "proof_bytes": 196360,
+              "preparation_plus_proving_s": 1.118836395
+            }
+          ],
+          "elapsed_s": 2.004902246990241,
+          "peak_rss_gib": 2.4877548217773438,
+          "source_commit": "bd2f8fc38c269f08ddcc8b2ea571fb45dfb10a47",
+          "binary_sha256": "54c05b65a9594d44ca297238eae9c69d8dc05a164b88360bbb0a61e9644b58af",
+          "environment": {
+            "hostname": "21af93d7fe47",
+            "kernel": "6.12.113+deb13-cloud-amd64",
+            "cpu_model": "Intel(R) Xeon(R) Gold 6230R CPU @ 2.10GHz",
+            "affinity": [
+              0,
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15
+            ],
+            "worker_count": "16",
+            "rust_toolchain": "1.99.1",
+            "rustflags": "-C target-cpu=native -C target-feature=+pclmulqdq"
+          }
+        },
+        {
+          "directory": "experiments/pcs-r1cs/evidence/2026-10-22-private-performance/vm2-1",
+          "backend": "vm",
+          "depth": 1,
+          "chain": 16,
+          "levels": [
+            {
+              "level": 0,
+              "proofs": 2,
+              "proving_s": 0.1693128375,
+              "verification_ms": 4.4213375,
+              "proof_bytes": 168504.0,
+              "preparation_plus_proving_s": null
+            },
+            {
+              "level": 1,
+              "proofs": 1,
+              "proving_s": 1.0520631599999999,
+              "verification_ms": 10.497739000000001,
+              "proof_bytes": 196360,
+              "preparation_plus_proving_s": 1.082541904
+            }
+          ],
+          "elapsed_s": 2.0057691749971127,
+          "peak_rss_gib": 2.4449234008789062,
+          "source_commit": "bd2f8fc38c269f08ddcc8b2ea571fb45dfb10a47",
+          "binary_sha256": "54c05b65a9594d44ca297238eae9c69d8dc05a164b88360bbb0a61e9644b58af",
+          "environment": {
+            "hostname": "21af93d7fe47",
+            "kernel": "6.12.113+deb13-cloud-amd64",
+            "cpu_model": "Intel(R) Xeon(R) Gold 6230R CPU @ 2.10GHz",
+            "affinity": [
+              0,
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15
+            ],
+            "worker_count": "16",
+            "rust_toolchain": "1.99.1",
+            "rustflags": "-C target-cpu=native -C target-feature=+pclmulqdq"
+          }
+        },
+        {
+          "directory": "experiments/pcs-r1cs/evidence/2026-10-22-private-performance/vm2-2",
+          "backend": "vm",
+          "depth": 1,
+          "chain": 16,
+          "levels": [
+            {
+              "level": 0,
+              "proofs": 2,
+              "proving_s": 0.1751711345,
+              "verification_ms": 4.6717975,
+              "proof_bytes": 168504.0,
+              "preparation_plus_proving_s": null
+            },
+            {
+              "level": 1,
+              "proofs": 1,
+              "proving_s": 1.117202344,
+              "verification_ms": 10.784123,
+              "proof_bytes": 196360,
+              "preparation_plus_proving_s": 1.14801905
+            }
+          ],
+          "elapsed_s": 2.004297043007682,
+          "peak_rss_gib": 2.4410934448242188,
+          "source_commit": "bd2f8fc38c269f08ddcc8b2ea571fb45dfb10a47",
+          "binary_sha256": "54c05b65a9594d44ca297238eae9c69d8dc05a164b88360bbb0a61e9644b58af",
+          "environment": {
+            "hostname": "21af93d7fe47",
+            "kernel": "6.12.113+deb13-cloud-amd64",
+            "cpu_model": "Intel(R) Xeon(R) Gold 6230R CPU @ 2.10GHz",
+            "affinity": [
+              0,
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15
+            ],
+            "worker_count": "16",
+            "rust_toolchain": "1.99.1",
+            "rustflags": "-C target-cpu=native -C target-feature=+pclmulqdq"
+          }
+        }
+      ]
+    }
+  },
+  "scope": "shared-host development trials; separate keys per level; native rows are not VM cycles; not an architectural ranking"
+}

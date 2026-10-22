@@ -1,0 +1,26 @@
+{
+  "command": [
+    "/root/yukon-autoresearch/workspaces/leanr1cs-perf-20261022/vm-target/release/deps/rec_aggregation-eeb7efd309422a48",
+    "chain_tree::tests",
+    "--nocapture",
+    "--test-threads",
+    "1"
+  ],
+  "cwd": "/root/yukon-autoresearch/workspaces/leanr1cs-perf-20261022/vm",
+  "started_utc": "2026-10-22T13:02:00Z",
+  "kernel": "6.12.113+deb13-cloud-amd64",
+  "hostname": "21af93d7fe47",
+  "admission": "ok: 35.7 GiB used + 24.0 GiB expected; ceiling 200.0 GiB",
+  "platform": "Linux-6.12.113+deb13-cloud-amd64-x86_64-with-glibc2.39",
+  "logical_cpus": 64,
+  "affinity": [
+    52,
+    53,
+    54,
+    55
+  ],
+  "total_memory_gib": 251.69292449951172,
+  "source_commit": "96caac5eee39ec5264c09984975fb68bcd4a35c4",
+  "binary_sha256": "c2d6b3ff810e891f17e8e94de7aec38e1763dbe3e290a73211d88217c2646c5e",
+  "budget_gib": 24
+}

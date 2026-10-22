@@ -1,0 +1,33 @@
+{
+  "command": [
+    "/root/yukon-autoresearch/workspaces/leanr1cs-perf-20261022/layout-evidence/private_tree-padded",
+    "--depth",
+    "1",
+    "--chain",
+    "16"
+  ],
+  "cwd": "/root/yukon-autoresearch/workspaces/leanr1cs-perf-20261022/layout",
+  "started_utc": "2026-10-22T12:55:27Z",
+  "kernel": "6.12.113+deb13-cloud-amd64",
+  "hostname": "21af93d7fe47",
+  "admission": "ok: 34.5 GiB used + 24.0 GiB expected; ceiling 200.0 GiB",
+  "platform": "Linux-6.12.113+deb13-cloud-amd64-x86_64-with-glibc2.39",
+  "logical_cpus": 64,
+  "affinity": [
+    56,
+    57,
+    58,
+    59
+  ],
+  "total_memory_gib": 251.69292449951172,
+  "cpu_model": "Intel(R) Xeon(R) Gold 6230R CPU @ 2.10GHz",
+  "worker_count": "4",
+  "rust_toolchain": "1.99.1",
+  "rustflags": "-C target-cpu=native -C target-feature=+pclmulqdq",
+  "source_commit": "de5cb28ce8749e06cd7d57d4864fa1fc68533681",
+  "harness_commit": "de5cb28ce8749e06cd7d57d4864fa1fc68533681",
+  "source_commit_method": "current checkout",
+  "harness_worktree_dirty": false,
+  "binary_sha256": "0fd9076317d82da9e907788400a41bd75fa9de7fdc10eebf44cbaf4a91eb9e4c",
+  "budget_gib": 24
+}

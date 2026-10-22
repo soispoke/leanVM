@@ -1,0 +1,81 @@
+{
+  "tooling_commit": "86b1153b747d3ae442901dbc97ae475801c3e28e",
+  "scope": "Local 2->1 recursion smoke, chain16,4threads CPUs56-59. One sample each; no statistical performance claim or Lean security certificate.",
+  "runs": [
+    {
+      "name": "natural",
+      "source_commit": "b6f093913a30329c33a8ec5be7f89524bc029f5b",
+      "proving_s": 7.86441486,
+      "verify_ms": 8.469334,
+      "proof_bytes": 619528,
+      "whole_s": 10.026162647001911,
+      "peak_rss_gib": 8.430309295654297,
+      "setup": {
+        "compressions": 33364,
+        "kind": "setup",
+        "level": 1,
+        "native_shape": [
+          1430070,
+          2489856,
+          320
+        ],
+        "official_score": false,
+        "rows": 4194304
+      },
+      "node_trace_compressions": 25712,
+      "node_trace_nodes": 991655,
+      "returned_success": true,
+      "caveat": "First natural run overlapped clippy on same CPUs; later two runs had no owned concurrent job."
+    },
+    {
+      "name": "natural-fixed",
+      "source_commit": "38557bfcc1f1fbd8dd3dca4f67695c16e03836c4",
+      "proving_s": 7.290851987,
+      "verify_ms": 8.59964,
+      "proof_bytes": 619880,
+      "whole_s": 9.024943311000243,
+      "peak_rss_gib": 8.443485260009766,
+      "setup": {
+        "compressions": 32856,
+        "kind": "setup",
+        "level": 1,
+        "native_shape": [
+          1428144,
+          2489856,
+          426
+        ],
+        "official_score": false,
+        "rows": 4194304
+      },
+      "node_trace_compressions": 25712,
+      "node_trace_nodes": 991655,
+      "returned_success": true,
+      "caveat": "First natural run overlapped clippy on same CPUs; later two runs had no owned concurrent job."
+    },
+    {
+      "name": "padded-fixed",
+      "source_commit": "de5cb28ce8749e06cd7d57d4864fa1fc68533681",
+      "proving_s": 9.947630176,
+      "verify_ms": 9.998463000000001,
+      "proof_bytes": 575984,
+      "whole_s": 12.04049376900366,
+      "peak_rss_gib": 8.619762420654297,
+      "setup": {
+        "compressions": 34058,
+        "kind": "setup",
+        "level": 1,
+        "native_shape": [
+          1485792,
+          2555392,
+          440
+        ],
+        "official_score": false,
+        "rows": 4194304
+      },
+      "node_trace_compressions": 26380,
+      "node_trace_nodes": 1031853,
+      "returned_success": true,
+      "caveat": "First natural run overlapped clippy on same CPUs; later two runs had no owned concurrent job."
+    }
+  ]
+}

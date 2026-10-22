@@ -1,0 +1,56 @@
+{
+  "source_commit": "81678ab23c6d99a331a910da8ef1187f36622194",
+  "yukon_commit": "3e10413e639215af6e1577681839ea057d2c1966",
+  "levels": [
+    {
+      "level": 0,
+      "count": 4,
+      "rows": 16384,
+      "native_shape": [
+        13275,
+        15488,
+        95
+      ],
+      "compressions": 17,
+      "median_proving_s": 0.0681846675,
+      "median_verify_ms": 5.3880815,
+      "min_proof_bytes": 290880,
+      "max_proof_bytes": 294320
+    },
+    {
+      "level": 1,
+      "count": 2,
+      "rows": 2097152,
+      "native_shape": [
+        1241886,
+        1703424,
+        435
+      ],
+      "compressions": 27295,
+      "median_proving_s": 5.4224768055,
+      "median_verify_ms": 7.3386825,
+      "min_proof_bytes": 470200,
+      "max_proof_bytes": 470744
+    },
+    {
+      "level": 2,
+      "count": 1,
+      "rows": 4194304,
+      "native_shape": [
+        1727637,
+        2750464,
+        1116
+      ],
+      "compressions": 42803,
+      "median_proving_s": 10.190809628,
+      "median_verify_ms": 7.853117,
+      "min_proof_bytes": 501248,
+      "max_proof_bytes": 501248
+    }
+  ],
+  "whole_wall_s": 24.387187922999146,
+  "sampled_group_peak_gib": 11.94533920288086,
+  "official_score": false,
+  "lean_certificate": false,
+  "matched_speedup_claim": false
+}

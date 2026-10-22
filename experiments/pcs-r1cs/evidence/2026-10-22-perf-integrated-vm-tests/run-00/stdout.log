@@ -1,0 +1,8 @@
+
+running 3 tests
+test aggregation::chain_tree::tests::actual_root_rejects_deferred_record_attacks ... ok
+test aggregation::chain_tree::tests::exact_tagged_leaf_execution ... ok
+test aggregation::chain_tree::tests::forwarded_claim_schema_is_exact ... ok
+
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 42 filtered out; finished in 13.36s
+

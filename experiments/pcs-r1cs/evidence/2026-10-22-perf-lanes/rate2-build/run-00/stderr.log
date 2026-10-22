@@ -1,0 +1,87 @@
+   Compiling libc v0.2.186
+   Compiling serde_core v1.0.228
+   Compiling serde v1.0.228
+   Compiling tracing-core v0.1.36
+   Compiling thiserror v2.0.18
+   Compiling tracing v0.1.44
+   Compiling hex v0.4.3
+   Compiling smallvec v1.15.2
+   Compiling aurora-engine-modexp v1.3.0
+   Compiling regex-syntax v0.8.11
+   Compiling getrandom v0.2.17
+   Compiling rand_core v0.6.4
+   Compiling getrandom v0.3.4
+   Compiling rand_core v0.9.5
+   Compiling ff v0.13.1
+   Compiling group v0.13.0
+   Compiling crypto-bigint v0.5.5
+   Compiling signature v2.2.0
+   Compiling rand_chacha v0.3.1
+   Compiling rand v0.8.8
+   Compiling elliptic-curve v0.13.8
+   Compiling ecdsa v0.16.9
+   Compiling bytes v1.12.1
+   Compiling hashbrown v0.17.1
+   Compiling k256 v0.13.4
+   Compiling alloy-rlp v0.3.16
+   Compiling const-hex v1.19.1
+   Compiling ruint v1.20.0
+   Compiling primitives v0.1.0 (/root/yukon-autoresearch/workspaces/leanr1cs-perf-20261022/private-rate2/crates/primitives)
+   Compiling ark-std v0.5.0
+   Compiling ark-serialize v0.5.0
+   Compiling alloy-primitives v1.7.2
+   Compiling ark-ff v0.5.0
+   Compiling primeorder v0.13.6
+   Compiling fiat_shamir v0.1.0 (/root/yukon-autoresearch/workspaces/leanr1cs-perf-20261022/private-rate2/crates/fiat_shamir)
+   Compiling pcs v0.1.0 (/root/yukon-autoresearch/workspaces/leanr1cs-perf-20261022/private-rate2/crates/pcs)
+   Compiling revm-primitives v20.2.1
+   Compiling revm-bytecode v6.2.2
+   Compiling alloy-eip7702 v0.6.3
+   Compiling revm-state v7.0.5
+   Compiling alloy-eip2930 v0.2.4
+   Compiling revm-database-interface v7.0.5
+   Compiling p256 v0.13.2
+   Compiling revm-context-interface v9.0.0
+   Compiling revm-interpreter v24.0.0
+   Compiling revm-context v8.0.4
+   Compiling flock v0.1.0 (/root/yukon-autoresearch/workspaces/leanr1cs-perf-20261022/private-rate2/crates/flock)
+   Compiling serde_json v1.0.151
+   Compiling rand_chacha v0.9.0
+   Compiling revm-database v7.0.5
+   Compiling rand v0.9.4
+   Compiling ark-poly v0.5.0
+   Compiling regex-automata v0.4.16
+   Compiling ark-ec v0.5.0
+   Compiling tikv-jemalloc-sys v0.7.1+5.3.1-0-g81034ce1f1373e37dc865038e1bc8eeecf559ce8
+   Compiling log v0.4.33
+   Compiling lazy_static v1.5.0
+   Compiling sharded-slab v0.1.7
+   Compiling ark-bls12-381 v0.5.0
+   Compiling ark-bn254 v0.5.0
+   Compiling revm-precompile v25.0.0
+   Compiling matchers v0.2.0
+   Compiling tracing-log v0.2.0
+   Compiling tikv-jemallocator v0.7.0
+   Compiling leanvm_core v0.1.0 (/root/yukon-autoresearch/workspaces/leanr1cs-perf-20261022/private-rate2/crates/leanvm_core)
+   Compiling revm-handler v8.1.0
+   Compiling revm-inspector v8.1.0
+   Compiling revm v27.1.0
+   Compiling ethereum_serde_utils v0.8.1
+   Compiling bincode v1.3.3
+   Compiling itertools v0.14.0
+   Compiling thread_local v1.1.10
+   Compiling nu-ansi-term v0.50.3
+   Compiling tracing-subscriber v0.3.23
+   Compiling ethereum_ssz v0.10.4
+   Compiling evm v0.1.0 (/root/yukon-autoresearch/workspaces/leanr1cs-perf-20261022/private-rate2/crates/evm)
+   Compiling ansi_term v0.12.1
+   Compiling xmss v0.1.0 (/root/yukon-autoresearch/workspaces/leanr1cs-perf-20261022/private-rate2/crates/xmss)
+   Compiling tracing-forest v0.3.1
+   Compiling circuit_suite v0.1.0 (/root/yukon-autoresearch/workspaces/leanr1cs-perf-20261022/private-rate2/crates/circuit_suite)
+   Compiling lean_compiler v0.1.0 (/root/yukon-autoresearch/workspaces/leanr1cs-perf-20261022/private-rate2/crates/lean_compiler)
+   Compiling sphincs v0.1.0 (/root/yukon-autoresearch/workspaces/leanr1cs-perf-20261022/private-rate2/crates/sphincs)
+   Compiling lean_da v0.1.0 (/root/yukon-autoresearch/workspaces/leanr1cs-perf-20261022/private-rate2/crates/lean_da)
+   Compiling bench v0.1.0 (/root/yukon-autoresearch/workspaces/leanr1cs-perf-20261022/private-rate2/crates/bench)
+   Compiling format_recursion v0.1.0 (/root/yukon-autoresearch/workspaces/leanr1cs-perf-20261022/private-rate2/crates/format_recursion)
+   Compiling rec_aggregation v0.1.0 (/root/yukon-autoresearch/workspaces/leanr1cs-perf-20261022/private-rate2/crates/rec_aggregation)
+    Finished `release` profile [optimized] target(s) in 47.02s
