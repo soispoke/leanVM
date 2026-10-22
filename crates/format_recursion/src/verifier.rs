@@ -17,28 +17,51 @@ pub struct Child {
     pub openings: [RawProof; 3],
 }
 
-struct Transcript<'a> {
-    proof: &'a RawProof,
+pub(crate) struct Transcript<'a> {
+    proof: std::borrow::Cow<'a, RawProof>,
+    compressed: Option<&'a Proof>,
     state: [S; 2],
     cursor: usize,
     phase: usize,
 }
 
 impl<'a> Transcript<'a> {
-    fn new(proof: &'a RawProof, iv: [S; 2], public: [S; 2]) -> Self {
+    pub(crate) fn new(proof: &'a RawProof, iv: [S; 2], public: [S; 2]) -> Self {
         let state = hash(&[(iv[0], 16), (iv[1], 16), (public[0], 16), (public[1], 16)]);
         Self {
-            proof,
+            proof: std::borrow::Cow::Borrowed(proof),
+            compressed: None,
             state,
             cursor: 0,
             phase: 0,
         }
     }
+    /// Expand compressed paths only as witness generation. Every expanded leaf,
+    /// query bit and sibling is authenticated again by symbolic hash constraints.
+    pub(crate) fn from_state(proof: &'a Proof, state: [S; 2]) -> Self {
+        Self {
+            proof: std::borrow::Cow::Owned(RawProof {
+                stream: proof.stream.clone(),
+                merkle: Vec::new(),
+            }),
+            compressed: Some(proof),
+            state,
+            cursor: 0,
+            phase: 0,
+        }
+    }
+    pub(crate) fn round(&mut self, n: usize, claim: S, equality: S) -> Vec<S> {
+        assert!(n >= 2);
+        let mut coefficients = vec![S::u(0)];
+        coefficients.extend(self.scalars(n - 1));
+        coefficients[0] = claim + equality * coefficients[1..].iter().copied().fold(S::u(0), |a, b| a + b);
+        coefficients
+    }
     fn step(&mut self, x: S, tag: u64) -> [S; 2] {
         self.state = hash(&[(self.state[0], 16), (self.state[1], 16), (x, 24), (S::u(tag), 8)]);
         self.state
     }
-    fn sample(&mut self) -> S {
+    pub(crate) fn sample(&mut self) -> S {
         let h = self.step(S::u(0), 2);
         S::pack(&[(h[0], 128), (h[1], 64)])
     }
@@ -47,27 +70,27 @@ impl<'a> Transcript<'a> {
         self.cursor += 1;
         x
     }
-    fn next(&mut self) -> S {
+    pub(crate) fn next(&mut self) -> S {
         let x = self.raw();
         self.step(x, 1);
         x
     }
-    fn scalars(&mut self, n: usize) -> Vec<S> {
+    pub(crate) fn scalars(&mut self, n: usize) -> Vec<S> {
         (0..n).map(|_| self.next()).collect()
     }
-    fn root(&mut self) -> [S; 2] {
+    pub(crate) fn root(&mut self) -> [S; 2] {
         let h = [self.next(), self.next()];
         for a in h {
             a.slice(128, 64).assert_eq(S::u(0));
         }
         h
     }
-    fn quad(&mut self, target: S) -> [S; 3] {
+    pub(crate) fn quad(&mut self, target: S) -> [S; 3] {
         let a = self.next();
         let b = self.next();
         [a, target + b, b]
     }
-    fn grind(&mut self, bits: usize) {
+    pub(crate) fn grind(&mut self, bits: usize) {
         let nonce = self.raw();
         if bits == 0 {
             nonce.assert_eq(S::u(0));
@@ -78,7 +101,7 @@ impl<'a> Transcript<'a> {
         }
         self.step(nonce, 4);
     }
-    fn queries(&mut self, depth: usize, count: usize) -> Vec<S> {
+    pub(crate) fn queries(&mut self, depth: usize, count: usize) -> Vec<S> {
         let mut out = Vec::new();
         while out.len() < count {
             let x = self.sample();
@@ -88,7 +111,7 @@ impl<'a> Transcript<'a> {
         }
         out
     }
-    fn merkle(
+    pub(crate) fn merkle(
         &mut self,
         root: [S; 2],
         depth: usize,
@@ -97,10 +120,24 @@ impl<'a> Transcript<'a> {
         base: bool,
         live_lanes: usize,
     ) -> Vec<Vec<S>> {
-        let mut rows = Vec::new();
-        for &query in queries {
-            let path = &self.proof.merkle[self.phase];
+        let expanded;
+        let paths = if let Some(proof) = self.compressed {
+            let root_bytes = fiat_shamir::merkle::scalars_to_hash(&root.map(S::value)).expect("canonical root");
+            let query_values: Vec<_> = queries.iter().map(|q| q.value().c0 as usize).collect();
+            let row_words = if base { live_lanes } else { 3 * lanes };
+            let leaf_words = if base { lanes } else { 3 * lanes };
+            expanded = proof.merkle[self.phase]
+                .open(&root_bytes, 1 << depth, &query_values, row_words, leaf_words)
+                .expect("well-formed compressed Merkle witness");
             self.phase += 1;
+            expanded.as_slice()
+        } else {
+            let paths = &self.proof.merkle[self.phase..self.phase + queries.len()];
+            self.phase += queries.len();
+            paths
+        };
+        let mut rows = Vec::new();
+        for (&query, path) in queries.iter().zip(paths) {
             assert_eq!(path.path.len(), depth);
             let words = if base { lanes } else { 3 * lanes };
             assert_eq!(path.leaf_data.len(), words);
@@ -135,9 +172,13 @@ impl<'a> Transcript<'a> {
         }
         rows
     }
-    fn finish(&self) {
+    pub(crate) fn finish(&self) {
         assert_eq!(self.cursor, self.proof.stream.len(), "all scalars consumed");
-        assert_eq!(self.phase, self.proof.merkle.len(), "all Merkle paths consumed");
+        assert_eq!(
+            self.phase,
+            self.compressed.map_or(self.proof.merkle.len(), |p| p.merkle.len()),
+            "all Merkle paths consumed"
+        );
     }
 }
 
@@ -164,7 +205,7 @@ impl Channel<S> for Piop<'_> {
     }
 }
 
-fn powers(x: S, n: usize) -> Vec<S> {
+pub(crate) fn powers(x: S, n: usize) -> Vec<S> {
     let mut out = vec![S::u(1)];
     for i in 1..n {
         out.push(out[i - 1] * x);
@@ -172,11 +213,11 @@ fn powers(x: S, n: usize) -> Vec<S> {
     out.truncate(n);
     out
 }
-fn eq(a: &[S], b: &[S]) -> S {
+pub(crate) fn eq(a: &[S], b: &[S]) -> S {
     assert_eq!(a.len(), b.len());
     a.iter().zip(b).fold(S::u(1), |acc, (&a, &b)| acc * (S::u(1) + a + b))
 }
-fn kernel(point: &[S]) -> Vec<S> {
+pub(crate) fn kernel(point: &[S]) -> Vec<S> {
     let mut out = vec![S::u(1)];
     for &x in point {
         for i in 0..out.len() {
@@ -187,7 +228,7 @@ fn kernel(point: &[S]) -> Vec<S> {
     }
     out
 }
-fn mle(table: &[S], point: &[S]) -> S {
+pub(crate) fn mle(table: &[S], point: &[S]) -> S {
     assert_eq!(table.len(), 1 << point.len());
     let mut values = table.to_vec();
     for &x in point {
@@ -199,10 +240,10 @@ fn mle(table: &[S], point: &[S]) -> S {
     }
     values[0]
 }
-fn poly(q: [S; 3], x: S) -> S {
+pub(crate) fn poly(q: [S; 3], x: S) -> S {
     q[0] + x * (q[1] + x * q[2])
 }
-fn induced(message_log: usize, queries: &[S], weights: &[S], point: &[S]) -> S {
+pub(crate) fn induced(message_log: usize, queries: &[S], weights: &[S], point: &[S]) -> S {
     assert_eq!(message_log, point.len());
     let roots = pcs::whir::eval_sk_at_vks(message_log);
     queries.iter().zip(weights).fold(S::u(0), |acc, (&query, &weight)| {
@@ -271,6 +312,38 @@ fn verify_opening(layout: &Layout, root: [S; 2], claims: &[(Vec<S>, S)], proof: 
                 acc + l * eq(&p[..log_lane], low) * on_lanes
             })
     };
+    verify_basis_opening_inner(
+        &mut t,
+        &config,
+        layout.log_n,
+        layout.lane_map().len(),
+        root,
+        target,
+        basis,
+    );
+    t.finish();
+}
+
+pub(crate) fn verify_basis_opening(
+    t: &mut Transcript<'_>,
+    log_n: usize,
+    root: [S; 2],
+    target: S,
+    basis: impl Fn(&[S]) -> S,
+) {
+    let config = pcs::whir::config_for_rate(log_n, 1).expect("supported WHIR shape");
+    verify_basis_opening_inner(t, &config, log_n, 1 << config.initial_k, root, target, basis);
+}
+
+fn verify_basis_opening_inner(
+    t: &mut Transcript<'_>,
+    config: &pcs::whir::VerifierConfig,
+    log_n: usize,
+    live_lanes: usize,
+    root: [S; 2],
+    target: S,
+    basis: impl Fn(&[S]) -> S,
+) {
     let folds_per_level: Vec<_> = std::iter::once(config.initial_k)
         .chain(config.level_ks.iter().copied())
         .collect();
@@ -285,7 +358,7 @@ fn verify_opening(layout: &Layout, root: [S; 2], claims: &[(Vec<S>, S)], proof: 
             folds.push(x);
             running = t.quad(poly(running, x));
         }
-        let message_log = layout.log_n - folds.len();
+        let message_log = log_n - folds.len();
         let last = level + 1 == folds_per_level.len();
         let mut pending = Vec::new();
         let mut next_root = None;
@@ -306,14 +379,7 @@ fn verify_opening(layout: &Layout, root: [S; 2], claims: &[(Vec<S>, S)], proof: 
         let queries = t.queries(depth, config.queries[level]);
         let lambda = t.sample();
         let weights = powers(lambda, queries.len());
-        let rows = t.merkle(
-            current_root,
-            depth,
-            &queries,
-            1 << count,
-            level == 0,
-            layout.lane_map().len(),
-        );
+        let rows = t.merkle(current_root, depth, &queries, 1 << count, level == 0, live_lanes);
         let lane_weights = kernel(&folds[start..]);
         let enforced = rows.iter().zip(&weights).fold(S::u(0), |acc, (row, &w)| {
             assert_eq!(row.len(), lane_weights.len());
@@ -345,7 +411,7 @@ fn verify_opening(layout: &Layout, root: [S; 2], claims: &[(Vec<S>, S)], proof: 
             }
             let mut point = folds.clone();
             point.extend_from_slice(&tail);
-            point.rotate_left(layout.fold);
+            point.rotate_left(config.initial_k);
             let mut weight = basis(&point);
             for claim in glued {
                 let mut p = folds[claim.start..].to_vec();
@@ -357,7 +423,6 @@ fn verify_opening(layout: &Layout, root: [S; 2], claims: &[(Vec<S>, S)], proof: 
                 weight = weight + claim.scalar * at;
             }
             (weight * mle(&residual, &tail)).assert_eq(running_target);
-            t.finish();
             return;
         }
         current_root = next_root.unwrap();
