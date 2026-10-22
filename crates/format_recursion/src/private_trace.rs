@@ -90,6 +90,7 @@ struct Estimate {
     pending: Vec<u8>,
     used: Vec<u8>,
     origins: Vec<[Option<(usize, usize)>; 3]>,
+    projected: Vec<u8>,
 }
 impl Estimate {
     fn charge(&mut self, rows: usize, variables: usize) -> Option<()> {
@@ -97,15 +98,26 @@ impl Estimate {
         self.bound.variables = self.bound.variables.checked_add(variables)?;
         Some(())
     }
-    fn project(&mut self, program: &Trace, source: S, at: usize) -> Option<()> {
-        if source.0 >= at {
+    fn project(&mut self, program: &Trace, source: S, at: usize, start: usize, len: usize) -> Option<()> {
+        if source.0 >= at || start.checked_add(len)? > 192 {
             return None;
         }
-        if !self.bits[source.0] && !matches!(program.nodes[source.0].op, Op::Constant) {
-            let width = self.widths[source.0];
-            self.charge(2 * width + 1, 2 * width)?;
+        if self.bits[source.0] || matches!(program.nodes[source.0].op, Op::Constant) || len == 0 {
+            return Some(());
         }
-        self.bits[source.0] = true;
+        let width = self.widths[source.0];
+        self.limb_view(program, source, at)?;
+        for limb in start / 64..(start + len).div_ceil(64).min(width.div_ceil(64)) {
+            if self.projected[source.0] & (1 << limb) == 0 {
+                let bits = (width - 64 * limb).min(64);
+                self.charge(2 * bits + 1, 2 * bits)?;
+                self.projected[source.0] |= 1 << limb;
+                // Boolean reconstruction supplies exact F64 typing itself.
+                if let Some((origin, position)) = self.origins[source.0][limb] {
+                    self.used[origin] |= 1 << position;
+                }
+            }
+        }
         Some(())
     }
     fn limb_view(&mut self, program: &Trace, source: S, at: usize) -> Option<()> {
@@ -119,16 +131,19 @@ impl Estimate {
         if matches!(program.nodes[source.0].op, Op::Constant) {
             self.charge(0, 3)?;
         } else {
-            if !width.is_multiple_of(64) {
-                self.project(program, source, at)?;
-            }
             if self.bits[source.0] {
                 self.charge(192, 195)?;
             } else {
                 self.charge(2, 4)?;
                 for limb in 0..width.div_ceil(64) {
-                    self.pending[source.0] |= 1 << limb;
-                    self.origins[source.0][limb] = Some((source.0, limb));
+                    let bits = (width - 64 * limb).min(64);
+                    if bits < 64 {
+                        self.charge(2 * bits + 1, 2 * bits)?;
+                        self.projected[source.0] |= 1 << limb;
+                    } else {
+                        self.pending[source.0] |= 1 << limb;
+                        self.origins[source.0][limb] = Some((source.0, limb));
+                    }
                 }
             }
         }
@@ -169,6 +184,7 @@ fn preflight(program: &Trace, limits: Limits) -> Option<Limits> {
         pending: vec![0; count],
         used: vec![0; count],
         origins: vec![[None; 3]; count],
+        projected: vec![0; count],
     };
     for (at, node) in program.nodes.iter().enumerate() {
         match &node.op {
@@ -179,15 +195,19 @@ fn preflight(program: &Trace, limits: Limits) -> Option<Limits> {
                 if start.checked_add(*len)? > 192 {
                     return None;
                 }
-                if start % 64 == 0 && len % 64 == 0 {
+                if (*start == 0 && *len >= e.widths.get(source.0).copied()?) || (start % 64 == 0 && len % 64 == 0) {
                     e.limb_view(program, *source, at)?;
-                    for limb in 0..len / 64 {
-                        e.origins[at][limb] = e.origins[source.0][start / 64 + limb];
+                    if *start == 0 && *len >= e.widths[source.0] {
+                        e.origins[at] = e.origins[source.0];
+                    } else {
+                        for limb in 0..len / 64 {
+                            e.origins[at][limb] = e.origins[source.0][start / 64 + limb];
+                        }
                     }
                     e.limbs[at] = true;
                     e.charge(2, 1)?;
                 } else {
-                    e.project(program, *source, at)?;
+                    e.project(program, *source, at, *start, *len)?;
                     e.charge(len.checked_add(1)?, len.checked_add(1)?)?;
                     e.bits[at] = true;
                 }
@@ -207,7 +227,7 @@ fn preflight(program: &Trace, limits: Limits) -> Option<Limits> {
                             e.origins[at][offset / 64 + limb] = e.origins[source.0][limb];
                         }
                     } else {
-                        e.project(program, source, at)?;
+                        e.project(program, source, at, 0, len)?;
                     }
                 }
                 if aligned {
@@ -232,7 +252,7 @@ fn preflight(program: &Trace, limits: Limits) -> Option<Limits> {
                     if aligned {
                         e.limb_source(program, source, at, len / 8)?;
                     } else {
-                        e.project(program, source, at)?;
+                        e.project(program, source, at, 0, 8 * len)?;
                     }
                 }
                 let count = bytes.div_ceil(64).max(1);
@@ -310,6 +330,7 @@ struct Compiler {
     constants: BTreeMap<(u64, u64, u64), usize>,
     public: Vec<usize>,
     bits: Vec<Option<Vec<usize>>>,
+    limb_bits: Vec<[Option<Vec<usize>>; 3]>,
     constant_nodes: Vec<bool>,
     widths: Vec<usize>,
     limbs: Vec<Option<[usize; 3]>>,
@@ -403,10 +424,6 @@ impl Compiler {
         }
         let value = self.values[source + 2];
         let native = [value.c0, value.c1, value.c2];
-        // A non-word range still needs Boolean constraints on its partial word.
-        if !self.constant_nodes[source] && !self.widths[source].is_multiple_of(64) && self.bits[source].is_none() {
-            self.decompose(source);
-        }
         let limbs = if self.constant_nodes[source] {
             std::array::from_fn(|i| self.constant(F192::new(native[i], 0, 0)))
         } else if let Some(bits) = self.bits[source].clone() {
@@ -422,7 +439,23 @@ impl Compiler {
                     0
                 } else {
                     let variable = self.variable(F192::new(native[i], 0, 0));
-                    self.pending_limbs.push(variable);
+                    let bits = (self.widths[source] - 64 * i).min(64);
+                    if bits < 64 {
+                        let mut projection: Vec<_> = (0..bits)
+                            .map(|bit| {
+                                let b = self.variable(F192::new((native[i] >> bit) & 1, 0, 0));
+                                self.boolean(b);
+                                b
+                            })
+                            .collect();
+                        let reconstructed = self.reconstruct(&projection);
+                        self.equal(reconstructed, variable);
+                        projection.resize(64, 0);
+                        self.limb_bits[source][i] = Some(projection);
+                        self.typed.insert(variable);
+                    } else {
+                        self.pending_limbs.push(variable);
+                    }
                     variable
                 }
             });
@@ -500,6 +533,54 @@ impl Compiler {
         self.bits[source] = Some(bits.clone());
         bits
     }
+    /// Decompose only the F64 limbs touched by this projection. Omitted
+    /// limbs retain the exact typing obligation from `source_limbs`; the
+    /// private bridge batches those obligations if no hash consumes them.
+    fn range_bits(&mut self, source: usize, start: usize, len: usize) -> Vec<usize> {
+        if len == 0 {
+            return Vec::new();
+        }
+        if self.bits[source].is_some() || self.constant_nodes[source] {
+            return self.decompose(source)[start..start + len].to_vec();
+        }
+        let limbs = self.source_limbs(source);
+        for (limb, &variable) in limbs
+            .iter()
+            .enumerate()
+            .take((start + len).div_ceil(64))
+            .skip(start / 64)
+        {
+            if self.limb_bits[source][limb].is_none() {
+                let bits = if variable <= 1 {
+                    let mut bits = vec![0; 64];
+                    bits[0] = variable;
+                    bits
+                } else if limb * 64 >= self.widths[source] {
+                    vec![0; 64]
+                } else {
+                    let value = self.values[variable].c0;
+                    let width = (self.widths[source] - 64 * limb).min(64);
+                    let mut bits: Vec<_> = (0..width)
+                        .map(|i| {
+                            let bit = self.variable(F192::new((value >> i) & 1, 0, 0));
+                            self.boolean(bit);
+                            bit
+                        })
+                        .collect();
+                    let reconstructed = self.reconstruct(&bits);
+                    self.equal(reconstructed, variable);
+                    self.typed.insert(variable);
+                    bits.resize(64, 0);
+                    bits
+                };
+                self.limb_bits[source][limb] = Some(bits);
+            }
+        }
+        (start..start + len)
+            .map(|bit| self.limb_bits[source][bit / 64].as_ref().unwrap()[bit % 64])
+            .collect()
+    }
+
     fn hash(&mut self, program: &Trace, at: usize, parts: &[(S, usize)]) -> Option<()> {
         if program.nodes.get(at + 1)?.op != Op::HashHigh(S(at)) {
             return None;
@@ -518,7 +599,7 @@ impl Compiler {
             if aligned {
                 message_words.extend_from_slice(&self.source_limbs(source.0)[..bytes / 8]);
             } else {
-                message_bits.extend_from_slice(&self.decompose(source.0)[..8 * bytes]);
+                message_bits.extend_from_slice(&self.range_bits(source.0, 0, 8 * bytes));
             }
         }
         for &(_, len) in parts {
@@ -595,6 +676,7 @@ pub fn lower_with_limits(program: &Trace, witness: &Trace, limits: Limits) -> Op
         constants: BTreeMap::from([(key(F192::ZERO), 0), (key(F192::ONE), 1)]),
         public: vec![0, 1],
         bits: vec![None; program.nodes.len()],
+        limb_bits: vec![std::array::from_fn(|_| None); program.nodes.len()],
         constant_nodes: program.nodes.iter().map(|n| matches!(n.op, Op::Constant)).collect(),
         widths,
         limbs: vec![None; program.nodes.len()],
@@ -636,15 +718,22 @@ pub fn lower_with_limits(program: &Trace, witness: &Trace, limits: Limits) -> Op
                 if start.checked_add(*len)? > 192 {
                     return None;
                 }
-                if start % 64 == 0 && len % 64 == 0 {
+                if (*start == 0 && *len >= c.widths[a.0]) || (start % 64 == 0 && len % 64 == 0) {
                     let source = c.source_limbs(a.0);
                     let mut limbs = [0; 3];
-                    limbs[..len / 64].copy_from_slice(&source[start / 64..(start + len) / 64]);
+                    if *start == 0 && *len >= c.widths[a.0] {
+                        limbs = source;
+                        c.limb_bits[i] = c.limb_bits[a.0].clone();
+                    } else {
+                        limbs[..len / 64].copy_from_slice(&source[start / 64..(start + len) / 64]);
+                        for limb in 0..len / 64 {
+                            c.limb_bits[i][limb] = c.limb_bits[a.0][start / 64 + limb].clone();
+                        }
+                    }
                     c.join_limbs(limbs, z);
                     c.limbs[i] = Some(limbs);
                 } else {
-                    let bits = c.decompose(a.0);
-                    let mut output = bits[*start..start + len].to_vec();
+                    let mut output = c.range_bits(a.0, *start, *len);
                     let out = c.reconstruct(&output);
                     c.equal(out, z);
                     output.resize(192, 0);
@@ -664,8 +753,11 @@ pub fn lower_with_limits(program: &Trace, witness: &Trace, limits: Limits) -> Op
                     }
                     if aligned {
                         limbs[width / 64..next / 64].copy_from_slice(&c.source_limbs(a.0)[..len / 64]);
+                        for limb in 0..len / 64 {
+                            c.limb_bits[i][width / 64 + limb] = c.limb_bits[a.0][limb].clone();
+                        }
                     } else {
-                        output.extend_from_slice(&c.decompose(a.0)[..len]);
+                        output.extend_from_slice(&c.range_bits(a.0, 0, len));
                     }
                     width = next;
                 }
@@ -826,7 +918,7 @@ mod tests {
             .filter(|r| r[0] == r[1] && r[1] == r[2] && r[3] == 0)
             .copied()
             .collect();
-        assert_eq!(bit_rows.len(), 192);
+        assert_eq!(bit_rows.len(), 64);
         lowered.values[bit_rows[0][0]] = F192::new(2, 0, 0);
         assert!(!rows_hold(&lowered));
     }
@@ -919,7 +1011,7 @@ mod tests {
             .iter()
             .filter(|r| r[0] == r[1] && r[1] == r[2] && r[3] == 0)
             .count();
-        assert_eq!(bits, 192);
+        assert_eq!(bits, 64);
         for limits in [
             Limits {
                 rows: 1,
@@ -935,6 +1027,89 @@ mod tests {
             },
         ] {
             assert!(lower_with_limits(&t, &t, limits).is_none());
+        }
+    }
+
+    #[test]
+    fn all_widths_have_exact_sparse_projections_and_checked_bounds() {
+        for width in 0usize..=192 {
+            trace::start();
+            let native = [0xa9876543210fedcbu64, 0xfedcba9876543210, 0x123456789abcdef0];
+            let words: [u64; 3] = std::array::from_fn(|i| {
+                let len = width.saturating_sub(64 * i).min(64);
+                native[i] & if len == 64 { u64::MAX } else { (1 << len) - 1 }
+            });
+            let source = S::input(F192::new(words[0], words[1], words[2]));
+            source.assert_eq(source.slice(0, width));
+            for (start, len) in [(0, 1), (31, 7), (61, 8), (126, 3), (190, 2)] {
+                let part = source.slice(start, len);
+                S::pack(&[(part, len), (source, len)]);
+            }
+            trace::hash(&[(source, 1)]);
+            let t = trace::take();
+            let lowered = lower(&t, &t).unwrap();
+            assert!(rows_hold(&lowered) && connectors_hold(&lowered), "width {width}");
+            check_bound(&t, &lowered);
+            assert!(
+                boolean_rows(&lowered) <= width,
+                "width {width}: {} Boolean rows",
+                boolean_rows(&lowered)
+            );
+        }
+    }
+
+    #[test]
+    fn sparse_projections_only_decompose_touched_typed_limbs() {
+        for (start, len, expected_bits) in [(1, 8, 64), (61, 8, 128), (129, 31, 64)] {
+            trace::start();
+            let source = S::input(F192::new(0x89abcdef12345678, 0xfedcba9876543210, 0x123456789abcdef0));
+            let first = source.slice(start, len);
+            let again = source.slice(start, len);
+            let packed = S::pack(&[(first, len), (again, len)]);
+            let mut t = trace::take();
+            t.public = vec![first, again, packed];
+            let mut lowered = lower(&t, &t).unwrap();
+            assert!(rows_hold(&lowered) && connectors_hold(&lowered));
+            assert_eq!(boolean_rows(&lowered), expected_bits);
+            assert!(lowered.circuit.rows.len() < 2 * expected_bits + 4 * len + 16);
+            check_bound(&t, &lowered);
+            // Every omitted limb remains F64-typed by a private compression.
+            assert!(!lowered.compressions.is_empty());
+            for target in [first, again, packed] {
+                let mut bad = copy_trace(&t);
+                bad.nodes[target.0].value += F192::ONE;
+                assert!(!rows_hold(&lower(&t, &bad).unwrap()));
+            }
+            // In particular high extension coefficients cannot hide in an
+            // omitted limb, even if the source reconstruction is adjusted.
+            let typing = lowered.connectors.last().unwrap();
+            let omitted = typing[8];
+            let delta = F192::new(0, 1, 0);
+            lowered.values[omitted] += delta;
+            assert!(!rows_hold(&lowered) || !connectors_hold(&lowered));
+        }
+    }
+
+    #[test]
+    fn sparse_projections_and_hashes_keep_exact_full_source_semantics() {
+        for bytes in [1usize, 7, 9, 17, 23] {
+            trace::start();
+            let source = S::input(F192::new(11, 17, 23));
+            trace::hash(&[(source, bytes)]);
+            source.slice(7, 9);
+            source.slice(64, 128);
+            source.slice(2, 190);
+            let t = trace::take();
+            let lowered = lower(&t, &t).unwrap();
+            assert!(rows_hold(&lowered) && connectors_hold(&lowered));
+            assert_eq!(boolean_rows(&lowered), 192);
+            check_bound(&t, &lowered);
+            let mut bad = copy_trace(&t);
+            bad.nodes[source.0].value += F192::new(0, 0, 1 << 63);
+            let changed = lower(&t, &bad).unwrap();
+            assert!(!rows_hold(&changed) || !connectors_hold(&changed));
+            assert_eq!(lowered.circuit.rows, changed.circuit.rows);
+            assert_eq!(lowered.connectors, changed.connectors);
         }
     }
 
@@ -1014,6 +1189,7 @@ mod tests {
             lowered.circuit.rows.len(),
             bound.rows
         );
+        assert!(lowered.compressions.len() <= bound.compressions);
         assert!(
             lowered.values.len() <= bound.variables,
             "variables {} > {}",
@@ -1067,7 +1243,7 @@ mod tests {
             let t = trace::take();
             let mut lowered = lower(&t, &t).unwrap();
             assert!(rows_hold(&lowered));
-            assert_eq!(boolean_rows(&lowered), if width % 64 == 0 { 0 } else { width });
+            assert_eq!(boolean_rows(&lowered), width % 64);
             assert!(connectors_hold(&lowered));
             check_bound(&t, &lowered);
             // Change both original nodes coherently: native equations plus
