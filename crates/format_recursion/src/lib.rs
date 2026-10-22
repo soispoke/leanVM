@@ -16,3 +16,5 @@ mod verifier;
 pub use verifier::{Child, record, record_bound};
 
 pub mod native_verifier;
+
+pub mod private_verifier;

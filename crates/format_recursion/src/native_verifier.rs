@@ -11,10 +11,10 @@ use flock::membership::Scalar;
 use primitives::field::F192;
 
 #[derive(Clone)]
-struct Claim {
-    offset: usize,
-    point: Vec<S>,
-    value: S,
+pub(crate) struct Claim {
+    pub(crate) offset: usize,
+    pub(crate) point: Vec<S>,
+    pub(crate) value: S,
 }
 fn eval_poly(coefficients: &[S], at: S) -> S {
     coefficients.iter().rev().fold(S::u(0), |v, &c| c + at * v)
@@ -37,7 +37,7 @@ fn read_field(t: &mut Transcript<'_>, l: usize, col: usize, point: &[S], claims:
     }
     value
 }
-fn opening(t: &mut Transcript<'_>, root: [S; 2], l: usize, claims: &[Claim]) {
+pub(crate) fn opening(t: &mut Transcript<'_>, root: [S; 2], l: usize, claims: &[Claim]) {
     let lambda = t.sample();
     let weights = powers(lambda, claims.len());
     let target = claims.iter().zip(&weights).fold(S::u(0), |v, (c, &w)| v + w * c.value);
@@ -55,6 +55,10 @@ fn opening(t: &mut Transcript<'_>, root: [S; 2], l: usize, claims: &[Claim]) {
 /// Native arithmetic transcript label, binding the trusted index and complete
 /// public vector before any prover message or random challenge.
 pub(crate) fn label(index: &Index, public: &[S], context: [S; 2]) -> Vec<(S, usize)> {
+    label_with_root(index, digest_constant(&index.root), public, context)
+}
+
+pub(crate) fn label_with_root(index: &Index, root: [S; 2], public: &[S], context: [S; 2]) -> Vec<(S, usize)> {
     let mut out = Vec::new();
     for chunk in b"format-native-arithmetic-v1".chunks(24) {
         let mut bytes = [0; 24];
@@ -62,7 +66,7 @@ pub(crate) fn label(index: &Index, public: &[S], context: [S; 2]) -> Vec<(S, usi
         let limb = |i| u64::from_le_bytes(bytes[i..i + 8].try_into().unwrap());
         out.push((S::c(F192::new(limb(0), limb(8), limb(16))), chunk.len()));
     }
-    out.extend(digest_constant(&index.root).map(|s| (s, 16)));
+    out.extend(root.map(|s| (s, 16)));
     out.extend(context.map(|s| (s, 16)));
     out.extend([index.log_rows, index.public_log, public.len()].map(|n| (S::u(n as u64), 8)));
     out.extend(public.iter().map(|&s| (s, 24)));
@@ -116,13 +120,23 @@ fn product(t: &mut Transcript<'_>, mu: usize) -> ([S; 3], Vec<S>, [S; 3]) {
 /// Append arithmetic proof verification to an active trace/transcript.
 /// Caller must seed `t` with `label` and call `t.finish()` after this function.
 pub(crate) fn verify(index: &Index, public: &[S], t: &mut Transcript<'_>) {
+    let root = t.root();
+    let (claims, index_claims) = reduce(index, public, t);
+    trace::mark("native-witness-opening");
+    opening(t, root, index.log_rows + 4, &claims);
+    trace::mark("native-index-opening");
+    opening(t, digest_constant(&index.root), index.log_rows + 2, &index_claims);
+}
+
+/// Native zerocheck/copy/public reduction. The caller owns commitment and
+/// opening composition, allowing arithmetic and hash arguments to share a stack.
+pub(crate) fn reduce(index: &Index, public: &[S], t: &mut Transcript<'_>) -> (Vec<Claim>, Vec<Claim>) {
     assert_eq!(public.len(), index.shape().2);
     assert!(public.len() >= 2);
     public[0].assert_eq(S::u(0));
     public[1].assert_eq(S::u(1));
     let l = index.log_rows;
     let n = 1 << l;
-    let root = t.root();
     let mut claims = Vec::new();
     let mut index_claims = Vec::new();
     trace::mark("native-zerocheck");
@@ -170,10 +184,7 @@ pub(crate) fn verify(index: &Index, public: &[S], t: &mut Transcript<'_>) {
     let value = read_field(t, l, 3, &point, &mut claims);
     let expected = kernel(&point).iter().zip(public).fold(S::u(0), |v, (&e, &x)| v + e * x);
     value.assert_eq(expected);
-    trace::mark("native-witness-opening");
-    opening(t, root, l + 4, &claims);
-    trace::mark("native-index-opening");
-    opening(t, digest_constant(&index.root), l + 2, &index_claims);
+    (claims, index_claims)
 }
 /// Record a proof with public values and caller context as circuit inputs.
 /// The trace output commits to the full label, including the fixed index root.
