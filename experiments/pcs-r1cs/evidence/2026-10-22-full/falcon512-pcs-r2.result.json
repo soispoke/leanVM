@@ -1,0 +1,25 @@
+{
+  "name": "falcon512-pcs-r2",
+  "kind": "paired",
+  "command": [
+    "/root/workspaces/mission-9abcee72/target-verified-pclmul/release/examples/suite_comparison",
+    "--workload",
+    "falcon512",
+    "--samples",
+    "1",
+    "--seed",
+    "2026102400",
+    "--pcs"
+  ],
+  "budget_gib": 40,
+  "admission": "ok: 41.4 GiB used + 40.0 GiB expected within 200 GiB",
+  "started_utc": "2026-10-22T07:30:49Z",
+  "loadavg_start": "16.86 16.03 14.26 8/1859 39366",
+  "exit_code": 0,
+  "wall_s": 23.50077318100375,
+  "minimum_available_gib": 194.82942581176758,
+  "sampled_peak_rss_gib": 12.503753662109375,
+  "peak_rss_gib": 12.499908447265625,
+  "loadavg_end": "18.66 16.49 14.44 4/1872 39512",
+  "status": "passed"
+}

@@ -1,0 +1,23 @@
+{
+  "name": "packed-keccak256-1KiB",
+  "kind": "packed",
+  "command": [
+    "/root/workspaces/mission-9abcee72/target-verified-pclmul/release/examples/packed",
+    "--repeat",
+    "3",
+    "--seed",
+    "2026102200",
+    "keccak256-1KiB"
+  ],
+  "budget_gib": 80,
+  "admission": "ok: 47.4 GiB used + 80.0 GiB expected within 200 GiB",
+  "started_utc": "2026-10-22T07:39:40Z",
+  "loadavg_start": "15.94 15.33 14.46 8/1858 42111",
+  "exit_code": 0,
+  "wall_s": 10.52110993298993,
+  "minimum_available_gib": 200.92668914794922,
+  "sampled_peak_rss_gib": 0.6052627563476562,
+  "peak_rss_gib": 0.6099128723144531,
+  "loadavg_end": "15.40 15.24 14.44 5/1976 42360",
+  "status": "passed"
+}

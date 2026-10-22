@@ -1,0 +1,23 @@
+{
+  "name": "packed-shielded-transfer",
+  "kind": "packed",
+  "command": [
+    "/root/workspaces/mission-9abcee72/target-verified-pclmul/release/examples/packed",
+    "--repeat",
+    "3",
+    "--seed",
+    "2026102200",
+    "shielded-transfer"
+  ],
+  "budget_gib": 80,
+  "admission": "ok: 50.2 GiB used + 80.0 GiB expected within 200 GiB",
+  "started_utc": "2026-10-22T07:39:50Z",
+  "loadavg_start": "15.40 15.24 14.44 8/1977 42362",
+  "exit_code": 0,
+  "wall_s": 5.466038856000523,
+  "minimum_available_gib": 198.8848991394043,
+  "sampled_peak_rss_gib": 2.0559005737304688,
+  "peak_rss_gib": 2.0556602478027344,
+  "loadavg_end": "15.77 15.32 14.47 5/1977 42391",
+  "status": "passed"
+}

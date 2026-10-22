@@ -1,0 +1,26 @@
+{
+  "name": "mpt-storage-proof-r1cs-r1",
+  "kind": "paired",
+  "command": [
+    "/root/workspaces/mission-9abcee72/target-verified-pclmul/release/examples/suite_comparison",
+    "--workload",
+    "mpt-storage-proof",
+    "--samples",
+    "1",
+    "--seed",
+    "2026102300",
+    "--oracle",
+    "blake2s"
+  ],
+  "budget_gib": 40,
+  "admission": "ok: 27.3 GiB used + 40.0 GiB expected within 200 GiB",
+  "started_utc": "2026-10-22T07:20:34Z",
+  "loadavg_start": "15.18 14.87 12.78 6/1843 34820",
+  "exit_code": 0,
+  "wall_s": 66.02653906001069,
+  "minimum_available_gib": 193.01515579223633,
+  "sampled_peak_rss_gib": 24.032459259033203,
+  "peak_rss_gib": 24.029006958007812,
+  "loadavg_end": "13.96 14.43 12.76 11/1875 35573",
+  "status": "passed"
+}

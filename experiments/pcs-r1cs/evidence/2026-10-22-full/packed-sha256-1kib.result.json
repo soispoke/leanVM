@@ -1,0 +1,23 @@
+{
+  "name": "packed-sha256-1kib",
+  "kind": "packed",
+  "command": [
+    "/root/workspaces/mission-9abcee72/target-verified-pclmul/release/examples/packed",
+    "--repeat",
+    "3",
+    "--seed",
+    "2026102200",
+    "sha256-1kib"
+  ],
+  "budget_gib": 80,
+  "admission": "ok: 47.2 GiB used + 80.0 GiB expected within 200 GiB",
+  "started_utc": "2026-10-22T07:39:38Z",
+  "loadavg_start": "15.94 15.33 14.46 7/1858 42093",
+  "exit_code": 0,
+  "wall_s": 1.627431532004266,
+  "minimum_available_gib": 203.73822402954102,
+  "sampled_peak_rss_gib": 0.5964088439941406,
+  "peak_rss_gib": 0.5959701538085938,
+  "loadavg_end": "15.94 15.33 14.46 6/1857 42109",
+  "status": "passed"
+}

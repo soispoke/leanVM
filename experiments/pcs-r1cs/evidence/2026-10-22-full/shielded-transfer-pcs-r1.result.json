@@ -1,0 +1,25 @@
+{
+  "name": "shielded-transfer-pcs-r1",
+  "kind": "paired",
+  "command": [
+    "/root/workspaces/mission-9abcee72/target-verified-pclmul/release/examples/suite_comparison",
+    "--workload",
+    "shielded-transfer",
+    "--samples",
+    "1",
+    "--seed",
+    "2026102300",
+    "--pcs"
+  ],
+  "budget_gib": 40,
+  "admission": "ok: 25.6 GiB used + 40.0 GiB expected within 200 GiB",
+  "started_utc": "2026-10-22T07:19:26Z",
+  "loadavg_start": "15.68 14.88 12.62 8/1887 34401",
+  "exit_code": 0,
+  "wall_s": 21.983917539997492,
+  "minimum_available_gib": 210.72133255004883,
+  "sampled_peak_rss_gib": 12.20693588256836,
+  "peak_rss_gib": 12.20465087890625,
+  "loadavg_end": "16.20 15.06 12.74 5/1895 34507",
+  "status": "passed"
+}

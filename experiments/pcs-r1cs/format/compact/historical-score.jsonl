@@ -1,0 +1,7 @@
+{"sha256-1kib": {"rows_bytes": 7381649, "desc_bytes": 4157, "encode_s": 0.02, "xz_bytes": 2480, "decode_py_s": 109.5, "exact_py": true, "fast_agrees": true}}
+{"shielded-transfer": {"rows_bytes": 44407049, "desc_bytes": 5509, "encode_s": 0.02, "xz_bytes": 3128, "decode_fast_s": 28.57, "exact_fast": true}}
+{"falcon512": {"rows_bytes": 48237893, "desc_bytes": 7976, "encode_s": 0.02, "xz_bytes": 4404, "decode_fast_s": 28.39, "exact_fast": true}}
+{"mpt-storage-proof": {"rows_bytes": 100551845, "desc_bytes": 17019, "encode_s": 0.02, "xz_bytes": 12292, "decode_fast_s": 75.35, "exact_fast": true}}
+{"ecdsa-secp256k1": {"rows_bytes": 513484877, "desc_bytes": 8391, "encode_s": 0.02, "xz_bytes": 4312, "decode_fast_s": 297.15, "exact_fast": true}}
+{"poseidon-bn254": {"rows_bytes": 4391982845, "desc_bytes": 8660, "encode_s": 0.02, "xz_bytes": 4360, "decode_fast_s": 2836.48, "exact_fast": true}}
+{"candidate": "gen-total", "decoder_logical_lines": 83, "all_exact": true, "total_desc_bytes": 51712}

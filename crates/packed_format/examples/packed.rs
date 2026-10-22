@@ -82,6 +82,13 @@ fn get(name: &str, seed: u64) -> Built {
         n if n == blake2s::Blake2sOneKiB::NAME => build::<blake2s::Blake2sOneKiB>(seed),
         n if n == Sha256OneKiB::NAME => build::<Sha256OneKiB>(seed),
         n if n == ShieldedTransfer::NAME => build::<ShieldedTransfer>(seed),
+        n if n == circuit_suite::keccak::Keccak256OneKiB::NAME => build::<circuit_suite::keccak::Keccak256OneKiB>(seed),
+        n if n == circuit_suite::falcon::Falcon512::NAME => build::<circuit_suite::falcon::Falcon512>(seed),
+        n if n == circuit_suite::mpt::MptStorageProof::NAME => build::<circuit_suite::mpt::MptStorageProof>(seed),
+        n if n == circuit_suite::secp256k1::Ecdsa::NAME => build::<circuit_suite::secp256k1::Ecdsa>(seed),
+        n if n == circuit_suite::poseidon::PoseidonSponge::<1024>::NAME => {
+            build::<circuit_suite::poseidon::PoseidonSponge<1024>>(seed)
+        }
         n if n == blake2s::Blake2s64::NAME => build::<blake2s::Blake2s64>(seed),
         n if n == blake2s::Blake2s256::NAME => build::<blake2s::Blake2s256>(seed),
         n if n == blake2s::Blake2s4KiB::NAME => build::<blake2s::Blake2s4KiB>(seed),
@@ -96,6 +103,7 @@ fn main() {
     let flag = |name: &str| args.iter().position(|a| a == name).map(|i| args[i + 1].clone());
     let seed: u64 = flag("--seed").map_or(1, |s| s.parse().unwrap());
     let repeat: usize = flag("--repeat").map_or(3, |s| s.parse().unwrap());
+    assert!(repeat > 0, "--repeat must be positive");
     let names: Vec<&String> = args
         .iter()
         .enumerate()
@@ -120,11 +128,13 @@ fn main() {
 
         // One warmup, then `repeat` measured proofs.
         let (mut proof, _) = prove(&index, &statement, &witness);
+        verify(b.circuit.log_rows, &index.root, &statement, &proof).expect("warmup proof verifies");
         let mut runs = Vec::new();
         for _ in 0..repeat {
             let t = Instant::now();
             let (p, timings) = prove(&index, &statement, &witness);
             runs.push((us(t), timings));
+            verify(b.circuit.log_rows, &index.root, &statement, &p).expect("every measured proof verifies");
             proof = p;
         }
         runs.sort_by_key(|r| r.0);

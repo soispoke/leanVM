@@ -1,0 +1,24 @@
+{
+  "name": "membership-r1cs-r1",
+  "kind": "paired",
+  "command": [
+    "/root/workspaces/mission-9abcee72/target-verified-pclmul/release/examples/comparison",
+    "--samples",
+    "1",
+    "--seed",
+    "2026102300",
+    "--oracle",
+    "blake2s"
+  ],
+  "budget_gib": 40,
+  "admission": "ok: 54.9 GiB used + 40.0 GiB expected within 200 GiB",
+  "started_utc": "2026-10-22T07:17:41Z",
+  "loadavg_start": "15.66 14.81 12.34 7/1952 33538",
+  "exit_code": 0,
+  "wall_s": 8.20877992300666,
+  "minimum_available_gib": 189.91894149780273,
+  "sampled_peak_rss_gib": 6.498760223388672,
+  "peak_rss_gib": 6.496864318847656,
+  "loadavg_end": "16.33 14.98 12.42 5/1951 33600",
+  "status": "passed"
+}

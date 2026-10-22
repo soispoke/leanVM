@@ -1,0 +1,26 @@
+{
+  "name": "keccak256-1KiB-r1cs-r2",
+  "kind": "paired",
+  "command": [
+    "/root/workspaces/mission-9abcee72/target-verified-pclmul/release/examples/suite_comparison",
+    "--workload",
+    "keccak256-1KiB",
+    "--samples",
+    "1",
+    "--seed",
+    "2026102400",
+    "--oracle",
+    "blake2s"
+  ],
+  "budget_gib": 40,
+  "admission": "ok: 35.8 GiB used + 40.0 GiB expected within 200 GiB",
+  "started_utc": "2026-10-22T07:29:47Z",
+  "loadavg_start": "15.72 15.82 14.08 7/1876 38991",
+  "exit_code": 0,
+  "wall_s": 16.9139171269926,
+  "minimum_available_gib": 207.8491973876953,
+  "sampled_peak_rss_gib": 6.501335144042969,
+  "peak_rss_gib": 6.499420166015625,
+  "loadavg_end": "15.79 15.82 14.11 5/1871 39167",
+  "status": "passed"
+}

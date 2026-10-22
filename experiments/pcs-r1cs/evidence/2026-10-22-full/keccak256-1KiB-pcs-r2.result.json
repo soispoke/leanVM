@@ -1,0 +1,25 @@
+{
+  "name": "keccak256-1KiB-pcs-r2",
+  "kind": "paired",
+  "command": [
+    "/root/workspaces/mission-9abcee72/target-verified-pclmul/release/examples/suite_comparison",
+    "--workload",
+    "keccak256-1KiB",
+    "--samples",
+    "1",
+    "--seed",
+    "2026102400",
+    "--pcs"
+  ],
+  "budget_gib": 40,
+  "admission": "ok: 34.4 GiB used + 40.0 GiB expected within 200 GiB",
+  "started_utc": "2026-10-22T07:29:30Z",
+  "loadavg_start": "15.96 15.86 14.06 6/1863 38808",
+  "exit_code": 0,
+  "wall_s": 17.413406175997807,
+  "minimum_available_gib": 208.5325813293457,
+  "sampled_peak_rss_gib": 6.4862823486328125,
+  "peak_rss_gib": 6.484256744384766,
+  "loadavg_end": "15.72 15.82 14.08 6/1875 38989",
+  "status": "passed"
+}

@@ -1,0 +1,180 @@
+#!/usr/bin/env python3
+"""Compile a trusted benchmark description to Python and stream its rows.
+
+This research helper omits the specification interpreter's fuel and size guards.
+Agreement is checked on benchmark files; this is not a verified replacement for decode.py.
+Usage: decode_fast IN.desc OUT.rows
+"""
+import array, struct, sys
+
+d = open(sys.argv[1], "rb").read()
+p = 0
+
+
+def u():
+    global p
+    v = s = 0
+    while d[p] > 127:
+        v |= (d[p] & 127) << s
+        p, s = p + 1, s + 7
+    p += 1
+    return v | d[p - 1] << s
+
+
+ARITY = [2] * 14 + [1, 1, 2, 3, 3, 1, 2, 2, 2, 0, 3, 3, 0]
+BIN = ["+", "-", "*", "//", "%", "&", "|", "^", "<<", ">>", "==", "!=", "<", "<="]
+log_rows, nslots = u(), u()
+funcs = []  # (slots, body)
+
+
+def parse():
+    op = u()
+    if op > 12:
+        return ("S", op - 13, [parse() for _ in range(ARITY[op - 13])])
+    if op in (0, 1):
+        return (op, u())
+    if op == 2:
+        s = u()
+        return (2, s, parse())
+    if op == 3:
+        return (3, [parse() for _ in range(u())])
+    if op == 6:
+        s = [u() for _ in range(u())]
+        funcs.append((s, parse()))
+        return (6, len(funcs) - 1)
+    if op == 7:
+        f = u()
+        return (7, f, [parse() for _ in funcs[f][0]])
+    if op == 8:
+        return (8, parse())
+    if op == 9:
+        return (9,)
+    s = u() if op in (4, 12) else None
+    a, b = parse(), parse()
+    c = parse() if op == 5 else None
+    return (op, s, a, b, c)
+
+
+prog = parse()
+assert p == len(d)
+
+
+def slots_of(n, acc):
+    if isinstance(n, tuple):
+        if n[0] in (1, 2) or (n[0] in (4, 12)):
+            acc.add(n[1])
+        if n[0] == 6:
+            return acc
+        for x in n[1:]:
+            if isinstance(x, (tuple, list)):
+                slots_of(x, acc) if isinstance(x, tuple) else [slots_of(y, acc) for y in x]
+    return acc
+
+
+def ex(n):
+    t = n[0]
+    if t == 0:
+        return str(n[1])
+    if t == 1:
+        return f"v{n[1]}"
+    if t == 2:
+        return f"(v{n[1]} := {ex(n[2])})"
+    if t == 3:
+        return "[" + ", ".join(ex(x) for x in n[1]) + "]"
+    if t == 5:
+        return f"({ex(n[3])} if {ex(n[2])} else {ex(n[4])})"
+    if t == 10:
+        return f"({ex(n[2])} and {ex(n[3])})"
+    if t == 11:
+        return f"({ex(n[2])} or {ex(n[3])})"
+    if t == 12:
+        return f"[{ex(n[3])} for v{n[1]} in range({ex(n[2])})]"
+    if t == 7:
+        return f"f{n[1]}(" + ", ".join(ex(x) for x in n[2]) + ")"
+    if t == "S":
+        k, a = n[1], [ex(x) for x in n[2]]
+        if k < 14:
+            return f"({a[0]} {BIN[k]} {a[1]})"
+        return {14: lambda: f"(-{a[0]})", 15: lambda: f"(not {a[0]})", 16: lambda: f"{a[0]}[{a[1]}]",
+                17: lambda: f"{a[0]}[{a[1]}:{a[2]}]", 18: lambda: f"_set({', '.join(a)})",
+                19: lambda: f"len({a[0]})", 20: lambda: f"{a[0]}.append({a[1]})", 21: lambda: f"{a[0]}.pop({a[1]})",
+                22: lambda: f"({a[1]} in {a[0]})", 23: lambda: "{}", 24: lambda: f"{a[0]}.get({a[1]}, {a[2]})",
+                25: lambda: f"row({', '.join(a)})", 26: lambda: "N()"}[k]()
+    raise SyntaxError(f"node {t} in expression")
+
+
+def st(n, ind, out):
+    t = n[0]
+    pad = " " * ind
+    if t == 3:
+        if not n[1]:
+            out.append(pad + "pass")
+        for x in n[1]:
+            st(x, ind, out)
+    elif t == 2:
+        out.append(f"{pad}v{n[1]} = {ex(n[2])}")
+    elif t == 4:
+        out.append(f"{pad}for v{n[1]} in range({ex(n[2])}):")
+        st(n[3], ind + 1, out)
+    elif t == 5:
+        out.append(f"{pad}if {ex(n[2])}:")
+        st(n[3], ind + 1, out)
+        out.append(f"{pad}else:")
+        st(n[4], ind + 1, out)
+    elif t == 8:
+        out.append(f"{pad}return {ex(n[1])}")
+    elif t == 9:
+        out.append(pad + "break")
+    elif t == 6:
+        slots, body = funcs[n[1]]
+        out.append(f"{pad}def f{n[1]}(" + ", ".join(f"a{i}" for i in range(len(slots))) + "):")
+        g = sorted(slots_of(body, set()) | set(slots))
+        if g:
+            out.append(f"{pad} global " + ", ".join(f"v{s}" for s in g))
+        for i, s in enumerate(slots):
+            out.append(f"{pad} v{s} = a{i}")
+        st(body, ind + 1, out)
+    elif t == "S" and n[1] == 18:
+        a = [ex(x) for x in n[2]]
+        out.append(f"{pad}{a[0]}[{a[1]}] = {a[2]}")
+    else:
+        out.append(pad + ex(n))
+
+
+lines = []
+st(prog, 0, lines)
+src = "\n".join(lines)
+f = open(sys.argv[2], "wb")
+f.write(bytes(9 + 2048))
+buf = array.array("I")
+count = [512]
+
+
+def row(x, y, c):
+    buf.append(x)
+    buf.append(y)
+    buf.append(c)
+    r = count[0]
+    count[0] = r + 1
+    if len(buf) >= 1 << 24:
+        buf.tofile(f)
+        del buf[:]
+    return r
+
+
+def N():
+    return count[0]
+
+
+def _set(a, i, v):
+    a[i] = v
+
+
+env = {"row": row, "N": N, "_set": _set}
+env.update({f"v{s}": 0 for s in range(nslots)})
+sys.setrecursionlimit(100000)
+exec(compile(src, "desc", "exec"), env)
+buf.tofile(f)
+f.seek(0)
+f.write(b"ROWS" + bytes([log_rows]) + struct.pack("<I512I", count[0], *env["v0"]))
+f.close()

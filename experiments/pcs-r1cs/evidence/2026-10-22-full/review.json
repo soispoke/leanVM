@@ -1,0 +1,20 @@
+{
+  "status": "passed",
+  "validated_jobs": 82,
+  "supported_statement_pairs": 21,
+  "measured_binaries_sha256": {
+    "comparison": "b309ddba08338bd18641b866a6f64f9881141badf053e528c5dd40549f2d9814",
+    "suite_comparison": "a2d965c357856ab00af7be86477c8a628e70bc0312c18ea22cda5d6929ebeef2",
+    "batch": "ec551a60d4e536f095e0f270062b2efde3f276a916a4ed0cfd677eddd516d2ba",
+    "tree": "37d736af04de690871ad5baebbd4c9d4404594da4b21525de8dcdff8bec807ad",
+    "packed": "10d2cf07af6250a6a953a3e44140576b4c32887005df437ed32031b04fbde2f4"
+  },
+  "checked_source_hashes": 1173,
+  "post_measurement_export_helper_changes": [
+    "crates/circuit_suite/examples/export_rows.rs"
+  ],
+  "independent_tables_check": "client/aggregate seconds, gas, matching circuit identities and paired statements",
+  "preserved_formal_sources": true,
+  "minimum_sampled_memory_available_gib": 159.2708625793457,
+  "note": "Rust/library and formal sources match the recorded run. Export helper gained membership output after timing; measured binaries unchanged. Benchmark/result prose was completed after timing."
+}

@@ -1,0 +1,23 @@
+{
+  "name": "membership-pcs-r2",
+  "kind": "paired",
+  "command": [
+    "/root/workspaces/mission-9abcee72/target-verified-pclmul/release/examples/comparison",
+    "--samples",
+    "1",
+    "--seed",
+    "2026102400",
+    "--pcs"
+  ],
+  "budget_gib": 40,
+  "admission": "ok: 30.8 GiB used + 40.0 GiB expected within 200 GiB",
+  "started_utc": "2026-10-22T07:28:42Z",
+  "loadavg_start": "18.67 16.24 14.07 7/1863 38567",
+  "exit_code": 0,
+  "wall_s": 8.608640289006871,
+  "minimum_available_gib": 212.73619842529297,
+  "sampled_peak_rss_gib": 6.497993469238281,
+  "peak_rss_gib": 6.496734619140625,
+  "loadavg_end": "18.25 16.21 14.08 6/1875 38622",
+  "status": "passed"
+}

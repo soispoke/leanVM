@@ -1,0 +1,26 @@
+{
+  "name": "tree4x4-r1cs-r0",
+  "kind": "tree",
+  "command": [
+    "/root/workspaces/mission-9abcee72/target-verified-pclmul/release/examples/tree",
+    "--interface",
+    "r1cs-vm",
+    "--leaves",
+    "4",
+    "--per-leaf",
+    "4",
+    "--seed",
+    "2026102200"
+  ],
+  "budget_gib": 100,
+  "admission": "ok: 56.2 GiB used + 100.0 GiB expected within 200 GiB",
+  "started_utc": "2026-10-22T07:16:50Z",
+  "loadavg_start": "13.13 14.31 12.05 8/1956 33248",
+  "exit_code": 0,
+  "wall_s": 50.490760101005435,
+  "minimum_available_gib": 182.31547164916992,
+  "sampled_peak_rss_gib": 14.512020111083984,
+  "peak_rss_gib": 14.510616302490234,
+  "loadavg_end": "15.66 14.81 12.34 5/1951 33536",
+  "status": "passed"
+}

@@ -1,0 +1,91 @@
+{
+  "decoder_logical_statements": 83,
+  "circuits": [
+    {
+      "workload": "blake2s-1kib",
+      "description_bytes": 1641,
+      "description_sha256": "757a823f75bf84be7a654bc11e0877e71287ebab69d84cc68ef620de9d41ed07",
+      "rows_bytes": 6032777,
+      "rows_sha256": "d815bd011ad8c46fce10005bdc0da97990bae2d67319e8a4b703cb50a79ea75a",
+      "exact": true,
+      "verification": "Historical completed scorer run, unchanged description and reference rows; decoder algorithms unchanged."
+    },
+    {
+      "workload": "ecdsa-secp256k1",
+      "description_bytes": 8391,
+      "description_sha256": "6b52f045b7d6c0da9eec2eab6a0b428e33c3729e249bbddbab355c492e0bb4d2",
+      "rows_bytes": 513484877,
+      "rows_sha256": "5c71db062aeaedf003b6f249cf9ad0cb2a78a98a3fd00089f0192364674155ba",
+      "exact": true,
+      "verification": "Historical completed scorer run, unchanged description and reference rows; decoder algorithms unchanged."
+    },
+    {
+      "workload": "falcon512",
+      "description_bytes": 7967,
+      "description_sha256": "62266b59a6baf1405dd5bb5f3625393b13c75949aff3e155f2ace4aa662a8ad6",
+      "rows_bytes": 48237893,
+      "rows_sha256": "4c9c71f0eaed2c53dc1e4de96291fb6857b21a8ed21f63e0b528b58413a4b78a",
+      "exact": true,
+      "verification": "Fresh fast-decoder byte comparison, 2026-10-22",
+      "decode_s": 27.739676626006258
+    },
+    {
+      "workload": "keccak256-1kib",
+      "description_bytes": 6268,
+      "description_sha256": "eba3172f9d8c874877a9535a59f292dd7aed631d7257733a6ef0125b8207e581",
+      "rows_bytes": 12042953,
+      "rows_sha256": "f5600852b1d92bf4307968f022c86629645e7693572ee671e3526661126f4e97",
+      "exact": true,
+      "verification": "Fresh fast-decoder byte comparison, 2026-10-22",
+      "decode_s": 9.48291258799145
+    },
+    {
+      "workload": "membership",
+      "description_bytes": 913,
+      "description_sha256": "c3bc4498f08dfbac1f8c0ecc19dc48a43a35e7ee78d2f5ba70bd0a72ecc3a8bc",
+      "rows_bytes": 11052437,
+      "rows_sha256": "9f23d1fd8094cca473a45c3bfb98e15bfce2e6e8b5912540bc544b20986b92c1",
+      "exact": true,
+      "verification": "Historical completed scorer run, unchanged description and reference rows; decoder algorithms unchanged.",
+      "fresh_spec_crosscheck": true
+    },
+    {
+      "workload": "mpt-storage-proof",
+      "description_bytes": 16022,
+      "description_sha256": "b51433e1fab762b28b21b3e31f81eaa22fc70b69f113168e58b9a4b456f993f2",
+      "rows_bytes": 100551845,
+      "rows_sha256": "b952559e9b162425b1fa23eca2e38cde4aac0bd59fa1c93bbafd105d1e44580f",
+      "exact": true,
+      "verification": "Fresh fast-decoder byte comparison, 2026-10-22",
+      "decode_s": 81.37473459000466
+    },
+    {
+      "workload": "poseidon-bn254",
+      "description_bytes": 8660,
+      "description_sha256": "1be905444ff3c8f8c7b6bb976796d55f7b4528d8ef7774164629c0d4b9b22479",
+      "rows_bytes": 4391982845,
+      "rows_sha256": "a17064b82e9af2e6a5d6965ba360375c2b1aad04e3d6b83f11c107c81548ea11",
+      "exact": true,
+      "verification": "Historical completed scorer run, unchanged description and reference rows; decoder algorithms unchanged."
+    },
+    {
+      "workload": "sha256-1kib",
+      "description_bytes": 4157,
+      "description_sha256": "ed93da6261571856a82031e8a7176ab7b040ca8dece26539c278ba8c627fd79e",
+      "rows_bytes": 7381649,
+      "rows_sha256": "1a618acf74da964796f731badbfaecf59e63c4c6373178262c8b8cada0d2abcc",
+      "exact": true,
+      "verification": "Historical completed scorer run, unchanged description and reference rows; decoder algorithms unchanged."
+    },
+    {
+      "workload": "shielded-transfer",
+      "description_bytes": 5509,
+      "description_sha256": "d47cb4c826f84d6214278700b61a2daf69b1adda606811799b70f70aff9f7b66",
+      "rows_bytes": 44407049,
+      "rows_sha256": "c67d83e13450b7bcb9571b41ecdc61d06c625d3d2e0d9b64e9bb7b7a88f7bc1a",
+      "exact": true,
+      "verification": "Historical completed scorer run, unchanged description and reference rows; decoder algorithms unchanged."
+    }
+  ],
+  "complete": true
+}

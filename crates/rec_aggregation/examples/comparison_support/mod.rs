@@ -89,6 +89,20 @@ pub(crate) fn build(
     oracle: quotient::Oracle,
     batch: usize,
 ) -> Program {
+    build_for_rows(opened, raws, index_root, app_id, full, oracle, batch, 20)
+}
+
+#[allow(clippy::too_many_arguments)]
+pub(crate) fn build_for_rows(
+    opened: &[Opened],
+    raws: &[fiat_shamir::transcript::RawProof],
+    index_root: &[u8; 32],
+    app_id: &[u8; 32],
+    full: bool,
+    oracle: quotient::Oracle,
+    batch: usize,
+    log_rows: usize,
+) -> Program {
     assert_eq!(opened.len(), 3, "three opening profiles are required");
     assert_eq!(raws.len(), opened.len());
     assert!(batch > 0, "a batch cannot be empty");
@@ -132,7 +146,7 @@ pub(crate) fn build(
     }
     let mut main = String::from("\ndef main():\n");
     if full {
-        let (h, f, m) = piop_guest::generate(oracle, index_root, app_id, 20);
+        let (h, f, m) = piop_guest::generate(oracle, index_root, app_id, log_rows);
         headers.push_str(&h);
         functions.push_str(&f);
         main.push_str(&m);
@@ -259,6 +273,18 @@ pub(crate) fn execution(
     index: &[u8; 32],
     public: [F192; 2],
 ) -> (f64, f64, u64) {
+    execution_for_rows(full, code, data, id, index, public, 20)
+}
+
+pub(crate) fn execution_for_rows(
+    full: bool,
+    code: &[u8],
+    data: &[u8],
+    id: &[u8; 32],
+    index: &[u8; 32],
+    public: [F192; 2],
+    log_rows: usize,
+) -> (f64, f64, u64) {
     let t = Instant::now();
     let outcome = evm::machine::call(code, data);
     let evm_us = elapsed(t);
@@ -273,7 +299,7 @@ pub(crate) fn execution(
         };
         r1cs::public_claim(id, &s)
     } else {
-        let (roots, claims) = evm::quotient::decode(&output, 20).expect("canonical PCS claims");
+        let (roots, claims) = evm::quotient::decode(&output, log_rows).expect("canonical PCS claims");
         pcs_claim_public(&roots, index, &claims)
     };
     assert_eq!(
@@ -298,7 +324,7 @@ pub(crate) fn install_witness(
     program.set_witness("app_statement", vec![statement.halves().to_vec()]);
     program.set_witness("app_proof", vec![piop.stream.clone()]);
 }
-fn adversarial(
+pub(crate) fn adversarial(
     program: &Program,
     opened: &[Opened],
     raws: &[fiat_shamir::transcript::RawProof],

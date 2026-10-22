@@ -1,0 +1,23 @@
+{
+  "name": "capacity-poseidon-bn254",
+  "kind": "capacity",
+  "command": [
+    "/root/workspaces/mission-9abcee72/target-verified-pclmul/release/examples/suite_comparison",
+    "--workload",
+    "poseidon-bn254",
+    "--pcs",
+    "--samples",
+    "1"
+  ],
+  "budget_gib": 120,
+  "admission": "ok: 21.8 GiB used + 120.0 GiB expected within 200 GiB",
+  "started_utc": "2026-10-22T07:42:28Z",
+  "loadavg_start": "13.38 14.19 14.14 10/1862 43354",
+  "exit_code": 0,
+  "wall_s": 172.9513605250104,
+  "minimum_available_gib": 174.79024505615234,
+  "sampled_peak_rss_gib": 39.92587661743164,
+  "peak_rss_gib": 39.92587661743164,
+  "loadavg_end": "6.00 10.35 12.66 4/1845 44129",
+  "status": "passed"
+}

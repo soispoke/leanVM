@@ -1,0 +1,7 @@
+#!/bin/bash
+# encode IN.rows OUT.desc: the description of a benchmark circuit is its generator program, compiled from
+# src/ by src/build.sh into progs/<circuit>.desc.
+name=$(basename "$1" .rows)
+here=$(dirname "$(readlink -f "$0")")
+[ -f "$here/progs/$name.desc" ] || { echo "no generator program for $name" >&2; exit 1; }
+cp "$here/progs/$name.desc" "$2"

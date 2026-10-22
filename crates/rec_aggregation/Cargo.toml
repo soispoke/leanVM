@@ -28,3 +28,4 @@ bench.workspace = true
 evm = { path = "../evm" }
 serde_json = "1"
 sha3 = "0.11"
+circuit_suite = { path = "../circuit_suite" }

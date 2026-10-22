@@ -1,0 +1,23 @@
+{
+  "name": "packed-mpt-storage-proof",
+  "kind": "packed",
+  "command": [
+    "/root/workspaces/mission-9abcee72/target-verified-pclmul/release/examples/packed",
+    "--repeat",
+    "3",
+    "--seed",
+    "2026102200",
+    "mpt-storage-proof"
+  ],
+  "budget_gib": 80,
+  "admission": "ok: 51.4 GiB used + 80.0 GiB expected within 200 GiB",
+  "started_utc": "2026-10-22T07:40:02Z",
+  "loadavg_start": "15.07 15.18 14.43 8/2003 42440",
+  "exit_code": 0,
+  "wall_s": 35.32238643200253,
+  "minimum_available_gib": 198.34085845947266,
+  "sampled_peak_rss_gib": 4.448863983154297,
+  "peak_rss_gib": 4.44830322265625,
+  "loadavg_end": "13.27 14.69 14.29 6/1883 42889",
+  "status": "passed"
+}

@@ -1,0 +1,26 @@
+{
+  "name": "sha256-1kib-r1cs-r2",
+  "kind": "paired",
+  "command": [
+    "/root/workspaces/mission-9abcee72/target-verified-pclmul/release/examples/suite_comparison",
+    "--workload",
+    "sha256-1kib",
+    "--samples",
+    "1",
+    "--seed",
+    "2026102400",
+    "--oracle",
+    "blake2s"
+  ],
+  "budget_gib": 40,
+  "admission": "ok: 35.1 GiB used + 40.0 GiB expected within 200 GiB",
+  "started_utc": "2026-10-22T07:29:21Z",
+  "loadavg_start": "16.34 15.94 14.06 7/1886 38779",
+  "exit_code": 0,
+  "wall_s": 8.710747023986187,
+  "minimum_available_gib": 210.83296966552734,
+  "sampled_peak_rss_gib": 6.50628662109375,
+  "peak_rss_gib": 6.505119323730469,
+  "loadavg_end": "15.96 15.86 14.06 6/1862 38806",
+  "status": "passed"
+}

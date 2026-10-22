@@ -1,0 +1,23 @@
+{
+  "name": "packed-ecdsa-secp256k1",
+  "kind": "packed",
+  "command": [
+    "/root/workspaces/mission-9abcee72/target-verified-pclmul/release/examples/packed",
+    "--repeat",
+    "3",
+    "--seed",
+    "2026102200",
+    "ecdsa-secp256k1"
+  ],
+  "budget_gib": 80,
+  "admission": "ok: 49.2 GiB used + 80.0 GiB expected within 200 GiB",
+  "started_utc": "2026-10-22T07:40:38Z",
+  "loadavg_start": "13.27 14.69 14.29 7/1884 42891",
+  "exit_code": 0,
+  "wall_s": 89.08000791700033,
+  "minimum_available_gib": 181.1722183227539,
+  "sampled_peak_rss_gib": 34.70431900024414,
+  "peak_rss_gib": 34.704063415527344,
+  "loadavg_end": "16.17 14.74 14.31 6/1912 43250",
+  "status": "passed"
+}

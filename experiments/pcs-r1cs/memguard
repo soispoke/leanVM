@@ -1,0 +1,14 @@
+#!/usr/bin/env python3
+"""Portable equivalent of the recorded host's 200 GiB admission helper."""
+import pathlib
+import sys
+
+fields = dict(line.split(':', 1) for line in pathlib.Path('/proc/meminfo').read_text().splitlines())
+gib = 1024**3
+total, available = (int(fields[k].split()[0]) * 1024 / gib for k in ['MemTotal', 'MemAvailable'])
+used = total - available
+expected = float(sys.argv[2]) if len(sys.argv) == 3 and sys.argv[1] == 'admit' else 0
+limit = min(200, total - 40)
+ok = expected >= 0 and used + expected <= limit
+print(f"{'ok' if ok else 'queue'}: {used:.1f} GiB used + {expected:.1f} GiB expected; ceiling {limit:.1f} GiB")
+sys.exit(0 if ok else 1)

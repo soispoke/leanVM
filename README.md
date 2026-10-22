@@ -1,3 +1,5 @@
+> **Research branch:** [leanPCS versus structured leanR1CS: results, reproduction and proof scope](experiments/pcs-r1cs/README.md). The upstream overview below describes leanVM; its benchmark numbers are separate from this experiment.
+
 <h1 align="center">leanVM</h1>
 
 <p align="center">

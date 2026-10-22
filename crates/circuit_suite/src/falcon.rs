@@ -212,14 +212,9 @@ fn needs_flip(c: &Ckt, w: Wire, neg: bool) -> bool {
 /// A bit-kind literal as a carry-kind one (one row, cached).
 fn as_carry(c: &mut Ckt, w: Wire) -> Wire {
     let Kind::Sum(r) = w.kind else { return w };
-    let k = match c.to_carry.get(&r) {
-        Some(&k) => k,
-        None => {
-            let k = c.row(crate::Src::Row(r), crate::Src::Row(r), crate::Src::Zero);
-            c.to_carry.insert(r, k);
-            k
-        }
-    };
+    // Share Ckt's x + 1 conversion: its sum is !x and its carry is x.
+    // Ckt::positive also reads this cache, so x + x (sum zero) is incompatible.
+    let k = c.flip_row(r);
     Wire {
         kind: Kind::Carry(k),
         neg: w.neg,
@@ -1891,6 +1886,29 @@ pub mod native {
 mod tests {
     use super::*;
     use crate::{PUBLIC_BITS, Row, Src, build, read_statement};
+
+    #[test]
+    fn carry_conversion_and_negation_share_the_same_row() {
+        for carry_first in [false, true] {
+            let mut c = Ckt::new();
+            let x = c.input();
+            let (carry, negated) = if carry_first {
+                let carry = as_carry(&mut c, x);
+                (carry, c.positive(x.not()))
+            } else {
+                let negated = c.positive(x.not());
+                (as_carry(&mut c, x), negated)
+            };
+            let mut public = vec![carry, negated];
+            public.resize(PUBLIC_BITS, Wire::ZERO);
+            let (circuit, srcs) = c.finish(&public);
+            circuit.check_wired().unwrap();
+            for bit in [false, true] {
+                let statement = read_statement(&circuit.values(&[bit]), &srcs);
+                assert_eq!(statement[0] & 3, if bit { 1 } else { 2 });
+            }
+        }
+    }
 
     /// A circuit evaluated 64 assignments at a time (bit-sliced), reading any wire.
     struct Sliced {

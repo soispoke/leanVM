@@ -1,0 +1,23 @@
+{
+  "name": "packed-blake2s-1kib",
+  "kind": "packed",
+  "command": [
+    "/root/workspaces/mission-9abcee72/target-verified-pclmul/release/examples/packed",
+    "--repeat",
+    "3",
+    "--seed",
+    "2026102200",
+    "blake2s-1kib"
+  ],
+  "budget_gib": 80,
+  "admission": "ok: 46.9 GiB used + 80.0 GiB expected within 200 GiB",
+  "started_utc": "2026-10-22T07:39:37Z",
+  "loadavg_start": "15.32 15.20 14.42 8/1851 42069",
+  "exit_code": 0,
+  "wall_s": 0.9154794519999996,
+  "minimum_available_gib": 204.34725952148438,
+  "sampled_peak_rss_gib": 0.2832908630371094,
+  "peak_rss_gib": 0.3403282165527344,
+  "loadavg_end": "15.94 15.33 14.46 6/1850 42084",
+  "status": "passed"
+}

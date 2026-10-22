@@ -1,0 +1,12 @@
+{
+  "status": "complete",
+  "validated_jobs": 82,
+  "expected_jobs": 82,
+  "unsupported_quotient": [
+    "ecdsa-secp256k1",
+    "poseidon-bn254"
+  ],
+  "packed_not_admitted": [
+    "poseidon-bn254"
+  ]
+}

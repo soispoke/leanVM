@@ -2506,6 +2506,7 @@ version = "0.1.0"
 dependencies = [
  "bench",
  "bincode",
+ "circuit_suite",
  "evm",
  "fiat_shamir",
  "flock",

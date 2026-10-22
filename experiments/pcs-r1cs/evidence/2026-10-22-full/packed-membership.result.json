@@ -1,0 +1,23 @@
+{
+  "name": "packed-membership",
+  "kind": "packed",
+  "command": [
+    "/root/workspaces/mission-9abcee72/target-verified-pclmul/release/examples/packed",
+    "--repeat",
+    "3",
+    "--seed",
+    "2026102200",
+    "membership"
+  ],
+  "budget_gib": 80,
+  "admission": "ok: 46.4 GiB used + 80.0 GiB expected within 200 GiB",
+  "started_utc": "2026-10-22T07:39:35Z",
+  "loadavg_start": "15.32 15.20 14.42 7/1851 42051",
+  "exit_code": 0,
+  "wall_s": 1.4304319759976352,
+  "minimum_available_gib": 204.28067779541016,
+  "sampled_peak_rss_gib": 0.5948867797851562,
+  "peak_rss_gib": 0.5941581726074219,
+  "loadavg_end": "15.32 15.20 14.42 6/1850 42067",
+  "status": "passed"
+}

@@ -1,0 +1,8 @@
+{
+  "status": "not_admitted",
+  "log_rows": 29,
+  "minimum_retained_bytes": 234075717616,
+  "minimum_retained_gib": 217.99999998509884,
+  "admission_ceiling_gib": 200,
+  "reason": "Retained GKR/index allocations alone exceed memguard admission; excludes circuit, Merkle tree and temporary workspaces. No proving time measured."
+}

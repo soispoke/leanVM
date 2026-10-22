@@ -1,0 +1,10 @@
+{
+  "workload": "falcon512",
+  "description_bytes": 7967,
+  "description_sha256": "62266b59a6baf1405dd5bb5f3625393b13c75949aff3e155f2ace4aa662a8ad6",
+  "rows_bytes": 48237893,
+  "rows_sha256": "4c9c71f0eaed2c53dc1e4de96291fb6857b21a8ed21f63e0b528b58413a4b78a",
+  "decoded_sha256": "4c9c71f0eaed2c53dc1e4de96291fb6857b21a8ed21f63e0b528b58413a4b78a",
+  "exact_fast": true,
+  "note": "Corrected shared carry conversion; independently re-exported from current Rust and compared byte for byte on 2026-10-22."
+}

@@ -1,0 +1,26 @@
+{
+  "name": "blake2s-1kib-r1cs-r2",
+  "kind": "paired",
+  "command": [
+    "/root/workspaces/mission-9abcee72/target-verified-pclmul/release/examples/suite_comparison",
+    "--workload",
+    "blake2s-1kib",
+    "--samples",
+    "1",
+    "--seed",
+    "2026102400",
+    "--oracle",
+    "blake2s"
+  ],
+  "budget_gib": 40,
+  "admission": "ok: 32.8 GiB used + 40.0 GiB expected within 200 GiB",
+  "started_utc": "2026-10-22T07:29:06Z",
+  "loadavg_start": "16.63 15.97 14.04 8/1868 38702",
+  "exit_code": 0,
+  "wall_s": 6.48726863200136,
+  "minimum_available_gib": 212.41570281982422,
+  "sampled_peak_rss_gib": 5.4139862060546875,
+  "peak_rss_gib": 5.413272857666016,
+  "loadavg_end": "16.02 15.87 14.03 5/1865 38732",
+  "status": "passed"
+}

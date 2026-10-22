@@ -1,0 +1,26 @@
+{
+  "name": "batch2-r1cs-r0",
+  "kind": "paired",
+  "command": [
+    "/root/workspaces/mission-9abcee72/target-verified-pclmul/release/examples/batch",
+    "--fan-in",
+    "2",
+    "--samples",
+    "1",
+    "--seed",
+    "2026102200",
+    "--oracle",
+    "blake2s"
+  ],
+  "budget_gib": 70,
+  "admission": "ok: 32.7 GiB used + 70.0 GiB expected within 200 GiB",
+  "started_utc": "2026-10-22T07:12:14Z",
+  "loadavg_start": "14.26 14.20 11.19 9/2007 31917",
+  "exit_code": 0,
+  "wall_s": 15.10540287400363,
+  "minimum_available_gib": 204.46916580200195,
+  "sampled_peak_rss_gib": 11.577678680419922,
+  "peak_rss_gib": 11.577102661132812,
+  "loadavg_end": "13.66 14.09 11.21 6/2011 31999",
+  "status": "passed"
+}

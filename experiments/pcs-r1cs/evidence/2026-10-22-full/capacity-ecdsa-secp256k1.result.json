@@ -1,0 +1,23 @@
+{
+  "name": "capacity-ecdsa-secp256k1",
+  "kind": "capacity",
+  "command": [
+    "/root/workspaces/mission-9abcee72/target-verified-pclmul/release/examples/suite_comparison",
+    "--workload",
+    "ecdsa-secp256k1",
+    "--pcs",
+    "--samples",
+    "1"
+  ],
+  "budget_gib": 120,
+  "admission": "ok: 21.1 GiB used + 120.0 GiB expected within 200 GiB",
+  "started_utc": "2026-10-22T07:42:07Z",
+  "loadavg_start": "16.17 14.74 14.31 7/1913 43252",
+  "exit_code": 0,
+  "wall_s": 21.04512274300214,
+  "minimum_available_gib": 225.0077018737793,
+  "sampled_peak_rss_gib": 5.033988952636719,
+  "peak_rss_gib": 5.033988952636719,
+  "loadavg_end": "13.38 14.19 14.14 8/1861 43352",
+  "status": "passed"
+}

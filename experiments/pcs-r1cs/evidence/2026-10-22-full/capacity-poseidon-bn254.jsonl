@@ -1,0 +1,1 @@
+{"kind":"capacity","log_rows":29,"maximum_log_rows":23,"reason":"quotient prover evaluation domain exceeds its implemented Cantor basis","status":"unsupported","workload":"poseidon-bn254"}

@@ -1,0 +1,23 @@
+{
+  "name": "packed-falcon512",
+  "kind": "packed",
+  "command": [
+    "/root/workspaces/mission-9abcee72/target-verified-pclmul/release/examples/packed",
+    "--repeat",
+    "3",
+    "--seed",
+    "2026102200",
+    "falcon512"
+  ],
+  "budget_gib": 80,
+  "admission": "ok: 50.9 GiB used + 80.0 GiB expected within 200 GiB",
+  "started_utc": "2026-10-22T07:39:56Z",
+  "loadavg_start": "15.77 15.32 14.47 7/1978 42393",
+  "exit_code": 0,
+  "wall_s": 6.484212439987459,
+  "minimum_available_gib": 198.21170806884766,
+  "sampled_peak_rss_gib": 2.2104339599609375,
+  "peak_rss_gib": 2.210235595703125,
+  "loadavg_end": "15.07 15.18 14.43 8/2002 42438",
+  "status": "passed"
+}
