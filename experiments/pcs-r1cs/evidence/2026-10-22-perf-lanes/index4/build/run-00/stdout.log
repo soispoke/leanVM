@@ -1,0 +1,7 @@
+error: unexpected argument '-p' found
+
+  tip: to pass '-p' as a value, use '-- -p'
+
+Usage: rustup[EXE] [OPTIONS] [+toolchain] [COMMAND]
+
+For more information, try '--help'.

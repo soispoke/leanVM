@@ -1,0 +1,10 @@
+   Compiling primitives v0.1.0 (/root/yukon-autoresearch/workspaces/leanr1cs-perf-20261022/index4/crates/primitives)
+   Compiling fiat_shamir v0.1.0 (/root/yukon-autoresearch/workspaces/leanr1cs-perf-20261022/index4/crates/fiat_shamir)
+   Compiling pcs v0.1.0 (/root/yukon-autoresearch/workspaces/leanr1cs-perf-20261022/index4/crates/pcs)
+   Compiling flock v0.1.0 (/root/yukon-autoresearch/workspaces/leanr1cs-perf-20261022/index4/crates/flock)
+   Compiling evm v0.1.0 (/root/yukon-autoresearch/workspaces/leanr1cs-perf-20261022/index4/crates/evm)
+   Compiling leanvm_core v0.1.0 (/root/yukon-autoresearch/workspaces/leanr1cs-perf-20261022/index4/crates/leanvm_core)
+   Compiling circuit_suite v0.1.0 (/root/yukon-autoresearch/workspaces/leanr1cs-perf-20261022/index4/crates/circuit_suite)
+   Compiling format_recursion v0.1.0 (/root/yukon-autoresearch/workspaces/leanr1cs-perf-20261022/index4/crates/format_recursion)
+    Finished `release` profile [optimized] target(s) in 45.04s
+     Running unittests src/lib.rs (/root/yukon-autoresearch/workspaces/leanr1cs-perf-20261022/index4-target/release/deps/format_recursion-68e109cf669f374f)

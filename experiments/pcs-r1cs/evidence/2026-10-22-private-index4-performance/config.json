@@ -1,0 +1,40 @@
+{
+  "source_commit": "d87e4322fcca5975f7853f206a83cc3ab55b435e",
+  "yukon_revision": "8e19ffca7f1ed46a111f81cef61b06e51604a27e",
+  "samples": 3,
+  "warmups": 0,
+  "chain": 16,
+  "cpus": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15
+  ],
+  "threads": 16,
+  "native_joint_log_inv_rate": 2,
+  "native_index_log_inv_rate": 4,
+  "vm_log_inv_rates": [
+    1,
+    2
+  ],
+  "baseline_source": "eb8985ceb918b48aff2494603e6ee81c940b8c10",
+  "vm_source": "bd2f8fc38c269f08ddcc8b2ea571fb45dfb10a47",
+  "binaries": {
+    "/root/workspaces/mission-9abcee72/scratch/perf-20261022/frozen/private_tree-index4": "1f34bb2aaff4eee1a20d398f2f2c94ca47f961450713d65b3b553ec0da8aa625",
+    "/root/workspaces/mission-9abcee72/scratch/perf-20261022/frozen/chain_tree_vm-final": "54c05b65a9594d44ca297238eae9c69d8dc05a164b88360bbb0a61e9644b58af",
+    "/root/workspaces/mission-9abcee72/scratch/perf-20261022/private_tree-baseline": "d4406b582e338d8d3cb4aa6a22bebaaaa9a0a36d2d3b01853680c4e30be02c68"
+  },
+  "started_utc": "2026-10-22T13:31:14Z"
+}

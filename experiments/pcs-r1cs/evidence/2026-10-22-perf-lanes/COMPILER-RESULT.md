@@ -20,7 +20,7 @@ Compression folding tests a set of canonical public-pinned variable IDs. It neve
 - Combined release library tests: **56 passed**. Includes all 193 widths, checked rows/variables/compression bounds, partial-word ranges, sparse projection boundaries, malformed outputs and extension coefficients, and four constant-prefix message lengths with private zero witnesses.
 - All-target release Clippy for `format_recursion`: **passed with `-D warnings`**.
 - Cargo format and diff whitespace checks passed.
-- Rust 1.99.1, native CPU + pclmul flags, four workers, CPUs48–51, separate target cache. Existing 24GiB memguard used.
+- Rust 1.99.1, native CPU + pclmul flags, four workers, CPUs48-51, separate target cache. Existing 24GiB memguard used.
 - Tests receipt: `compiler-tests-fold/result.json` (31.07s including compile, 0.461GiB peak). Clippy: `compiler-clippy/result.json` (19.04s, 0.441GiB peak). Receipts correctly mark dirty precommit source; their binary digest is taskset, not a pinned cryptographic benchmark artifact. Root integration must retain actual binary/source provenance for performance runs.
 
 ## Performance scope

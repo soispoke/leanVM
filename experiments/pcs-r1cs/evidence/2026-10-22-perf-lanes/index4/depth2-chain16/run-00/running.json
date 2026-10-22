@@ -1,0 +1,11 @@
+{
+  "pid": 246384,
+  "command": [
+    "/root/yukon-autoresearch/workspaces/leanr1cs-perf-20261022/index4-target/release/examples/private_tree",
+    "--depth",
+    "2",
+    "--chain",
+    "16"
+  ],
+  "started_utc": "2026-10-22T13:28:43.076002+00:00"
+}

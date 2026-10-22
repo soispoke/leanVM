@@ -1,0 +1,9 @@
+{
+  "status": "validated",
+  "summary": "summary.json",
+  "source": "4531448b0c6b6088d172ee8b8097ddf89ef128a6",
+  "tooling": "8e19ffca7f1ed46a111f81cef61b06e51604a27e",
+  "tests_passed": 60,
+  "clippy": "passed warnings denied",
+  "proofs_verified": 7
+}

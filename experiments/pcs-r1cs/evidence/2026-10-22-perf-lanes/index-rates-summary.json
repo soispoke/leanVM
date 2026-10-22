@@ -1,0 +1,166 @@
+{
+  "base": "bd2f8fc38c269f08ddcc8b2ea571fb45dfb10a47",
+  "index2_commit": "785c28a2aa2b5d7c7b3def99dc2de8b03d238f4a",
+  "index3_commit": "c3f7c8f12c4f3703d9c1fc40764c94dc741d2f74",
+  "yukon": "db146971d12a76ac9a056d175b9e717e522c1c01",
+  "runs": {
+    "index-rate2-depth1": {
+      "ok": true,
+      "whole_wall_s": 6.960785908988328,
+      "peak_sampled_group_gib": 5.076835632324219,
+      "levels": [
+        {
+          "level": 0,
+          "proof_count": 2,
+          "rows": 16384,
+          "native_shape": [
+            13275,
+            15488,
+            95
+          ],
+          "compressions": 17,
+          "median_proving_s": 0.071357158,
+          "median_verify_ms": 5.496434,
+          "proof_bytes": [
+            246896,
+            244440
+          ]
+        },
+        {
+          "level": 1,
+          "proof_count": 1,
+          "rows": 2097152,
+          "native_shape": [
+            1026862,
+            1539584,
+            426
+          ],
+          "compressions": 21104,
+          "median_proving_s": 5.590837471,
+          "median_verify_ms": 6.1695150000000005,
+          "proof_bytes": [
+            391872
+          ]
+        }
+      ]
+    },
+    "index-rate2-depth2": {
+      "ok": true,
+      "whole_wall_s": 22.022269284003414,
+      "peak_sampled_group_gib": 9.781623840332031,
+      "levels": [
+        {
+          "level": 0,
+          "proof_count": 4,
+          "rows": 16384,
+          "native_shape": [
+            13275,
+            15488,
+            95
+          ],
+          "compressions": 17,
+          "median_proving_s": 0.0548595055,
+          "median_verify_ms": 4.6223525,
+          "proof_bytes": [
+            246896,
+            244440,
+            246408,
+            246400
+          ]
+        },
+        {
+          "level": 1,
+          "proof_count": 2,
+          "rows": 2097152,
+          "native_shape": [
+            1026862,
+            1539584,
+            426
+          ],
+          "compressions": 21104,
+          "median_proving_s": 4.7670863015,
+          "median_verify_ms": 6.1126075,
+          "proof_bytes": [
+            391872,
+            392576
+          ]
+        },
+        {
+          "level": 2,
+          "proof_count": 1,
+          "rows": 4194304,
+          "native_shape": [
+            1415418,
+            2422784,
+            1095
+          ],
+          "compressions": 33808,
+          "median_proving_s": 9.381758272999999,
+          "median_verify_ms": 6.625697,
+          "proof_bytes": [
+            420352
+          ]
+        }
+      ]
+    },
+    "index-rate3-depth2": {
+      "ok": true,
+      "whole_wall_s": 17.667720533005195,
+      "peak_sampled_group_gib": 6.126136779785156,
+      "levels": [
+        {
+          "level": 0,
+          "proof_count": 4,
+          "rows": 16384,
+          "native_shape": [
+            13275,
+            15488,
+            95
+          ],
+          "compressions": 17,
+          "median_proving_s": 0.052717132,
+          "median_verify_ms": 4.1623339999999995,
+          "proof_bytes": [
+            223256,
+            222808,
+            222712,
+            222800
+          ]
+        },
+        {
+          "level": 1,
+          "proof_count": 2,
+          "rows": 2097152,
+          "native_shape": [
+            959726,
+            1474048,
+            426
+          ],
+          "compressions": 19100,
+          "median_proving_s": 5.191961291,
+          "median_verify_ms": 5.901733500000001,
+          "proof_bytes": [
+            356376,
+            357176
+          ]
+        },
+        {
+          "level": 2,
+          "proof_count": 1,
+          "rows": 2097152,
+          "native_shape": [
+            1315298,
+            1767424,
+            1095
+          ],
+          "compressions": 30799,
+          "median_proving_s": 4.200040739,
+          "median_verify_ms": 6.195367,
+          "proof_bytes": [
+            356920
+          ]
+        }
+      ]
+    }
+  }
+}

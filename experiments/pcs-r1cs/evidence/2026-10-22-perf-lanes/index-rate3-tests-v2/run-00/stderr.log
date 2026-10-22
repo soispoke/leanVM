@@ -1,0 +1,3 @@
+   Compiling format_recursion v0.1.0 (/root/yukon-autoresearch/workspaces/leanr1cs-perf-20261022/private-index-rate2/crates/format_recursion)
+    Finished `release` profile [optimized] target(s) in 21.59s
+     Running unittests src/lib.rs (/root/yukon-autoresearch/workspaces/leanr1cs-perf-20261022/compiler-target/release/deps/format_recursion-68e109cf669f374f)

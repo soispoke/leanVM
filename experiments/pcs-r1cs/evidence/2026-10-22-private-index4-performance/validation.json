@@ -1,0 +1,16 @@
+{
+  "checked_utc": "2026-10-22T13:39:52.837347+00:00",
+  "current_rust_toml_lock_manifest_unchanged": true,
+  "completed_processes": 26,
+  "verified_proof_records": 226,
+  "independent_tagged_statements_and_receipts_pass": true,
+  "native_library_tests": 60,
+  "python_validator_tests": 20,
+  "all_targets_clippy": "passed",
+  "rust_format": "passed",
+  "vm_targeted_tests": 3,
+  "upstream_two_to_one_test": "passed; source unaffected by final native index knob",
+  "scope": "implementation validation, not a formal security certificate",
+  "final_audit_yukon_revision": "e155c2983efa1dd49eea6bc2a440bba9f5333fe1",
+  "benchmark_runner_unchanged_since_measurement_phase": true
+}

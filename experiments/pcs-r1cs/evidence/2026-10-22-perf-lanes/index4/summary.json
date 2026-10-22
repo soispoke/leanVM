@@ -1,0 +1,63 @@
+{
+  "source_commit": "4531448b0c6b6088d172ee8b8097ddf89ef128a6",
+  "tooling_commit": "8e19ffca7f1ed46a111f81cef61b06e51604a27e",
+  "scope": "one local depth2chain16 trial; medians across distinct proofs within trial, not repeated trials",
+  "levels": [
+    {
+      "level": 0,
+      "proofs": 4,
+      "padded_rows": 16384,
+      "native_shape": [
+        13275,
+        15488,
+        95
+      ],
+      "compressions": 17,
+      "setup_s": 0.019335171,
+      "proving_median_s": 0.0546665005,
+      "verification_median_ms": 6.5969225,
+      "preparation_median_s": 2.7652e-05,
+      "proof_bytes_min": 207960,
+      "proof_bytes_max": 209864
+    },
+    {
+      "level": 1,
+      "proofs": 2,
+      "padded_rows": 2097152,
+      "native_shape": [
+        924196,
+        1441280,
+        426
+      ],
+      "compressions": 18053,
+      "setup_s": 1.609604415,
+      "proving_median_s": 4.680557214,
+      "verification_median_ms": 5.9925565,
+      "preparation_median_s": 0.0584337565,
+      "proof_bytes_min": 337112,
+      "proof_bytes_max": 337784
+    },
+    {
+      "level": 2,
+      "proofs": 1,
+      "padded_rows": 2097152,
+      "native_shape": [
+        1259238,
+        1701888,
+        1095
+      ],
+      "compressions": 29129,
+      "setup_s": 1.5173266600000002,
+      "proving_median_s": 4.613137228,
+      "verification_median_ms": 5.9802539999999995,
+      "preparation_median_s": 0.075885983,
+      "proof_bytes_min": 338872,
+      "proof_bytes_max": 338872
+    }
+  ],
+  "whole_wall_s": 17.717136020000908,
+  "wait4_max_rss_gib": 7.3086090087890625,
+  "sampled_group_peak_rss_gib": 7.309043884277344,
+  "source_hashes_unchanged": true,
+  "ok": true
+}

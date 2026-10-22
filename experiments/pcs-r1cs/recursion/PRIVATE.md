@@ -1,53 +1,84 @@
-# Private hash binding and repeated recursion
+# Native arithmetic and private hash batching
 
-Three successive 2→1 recursion levels now pass on eight fresh 16,384-step hash chains. The root takes 3.82 seconds to prove and 8.70 milliseconds to verify, with a 635,072-byte total proof. These are single-run development measurements on a shared host, with a separate preprocessed key at each level.
-
-This is a local recursion prototype. It proves native field arithmetic and batches BLAKE2s with Flock. The hash messages and intermediate chaining values stay in the proof witness; the serialized proof contains no separate request table. This is not a zero-knowledge claim.
+The native recursion prototype has improved, but leanVM still proves the measured two-child parent faster. The native prototype verifies faster in Rust and has larger proofs. These are measurements of two implementations on the same tagged hash-chain statement, with a separate trusted circuit and key at each level.
 
 ## Construction
 
-The outer proof combines a native GF(2^192) arithmetic argument with Flock's batched BLAKE2s argument. Child-verifier arithmetic becomes multiply-add rows; child-verifier hashes become compression requests in the batch. A shared committed connector table and WHIR openings bind both arguments to the same hash inputs and outputs. The recursive circuit checks both child verifiers, then hashes their ordered statements to obtain its own statement.
+The outer proof combines native GF(2^192) arithmetic constraints, Flock's batched BLAKE2s argument and WHIR openings. A shared committed connector table binds the arithmetic verifier and hash argument to the same inputs and outputs. Hash messages and intermediate chaining values stay in the witness; the proof contains no separate request table. This is not a zero-knowledge claim.
 
-This changes the arithmetic backend and adds hash-binding machinery beyond the original Boolean full-adder format. The reported native row count therefore cannot be compared directly with that format's rows or leanVM cycles.
+Each parent checks both complete child verifiers and hashes their ordered statement digests. This backend extends the original Boolean full-adder format. Its native field rows are neither Boolean rows nor VM cycles.
 
-## What is checked
+## Improvement over the original native prototype
 
-Leaves prove the tagged hash-chain statement in the pinned recursion.fast relation. A parent records both complete child verifiers, including native arithmetic, Flock, connector equality and WHIR openings, then hashes the two child statements in order. The verification keys are fixed by trusted preprocessing. Every level currently has its own circuit and key. These runs cover hash chains, not Falcon or shielded-transfer recursion.
+Three alternating baseline/candidate pairs use four 16-step leaves and two binary aggregation levels, with 16 workers pinned to CPUs 0-15. The original binary is built from `eb8985ce`; the candidate is built from `d87e4322`. Both prove the same statements. [Validated records](../evidence/2026-10-22-private-index4-performance/optimization.json), [paired gains](../evidence/2026-10-22-private-index4-performance/paired-gains.json) and the [frozen schedule](../evidence/2026-10-22-private-index4-performance/measure.py) retain every trial.
 
-Proofs are serialized with fixed-integer bincode, capped at 1 MiB, and parsed with trailing bytes rejected. All serialized auxiliary data is included in the reported proof size.
+| Metric | Original | Current |
+| --- | ---: | ---: |
+| Whole process, median (s) | 16.05 | 8.03 |
+| Peak process RSS, maximum (GiB) | 15.58 | 7.45 |
+| Root proving, median (s) | 3.923 | 1.902 |
+| Total root proof (decimal KB) | 634.1 | 338.9 |
 
-## Measurements
+The median paired process speedup is 2.00x. Process time includes setup, leaf proofs, verification and negative checks, plus up to about 0.5 s of completion polling delay. It is an approximate whole-run measure, not a precise proving-only timer.
 
-The [full-size leaf run](../evidence/2026-10-22-private-tree-full-depth3/summary.json) proves eight independent 16,384-step hash chains, four parents, two grandparents and one root. All 15 proofs verify. Each parent also rejects a changed statement. This uses the challenge's benchmark leaf length, with eight leaves rather than its required 256.
+The changes prune authenticated zero lanes, reuse evaluation weights, prepare witnesses in parallel, avoid redundant limb decomposition and compact the joint witness stack. Public constant folding only uses values explicitly pinned by circuit constraints. The joint commitment uses code rate 1/4; the fixed index uses 1/16. These select existing production WHIR parameters targeting 128-bit round-by-round soundness, with the rates bound into the transcript. This parameter target is not a formal security theorem for the full native composition.
 
-| Stage | Proofs | Padded native rows | Proving per proof | Rust verification | Total proof bytes |
+## Matched comparison with leanVM
+
+Two child proofs to one parent, 16 chain steps per leaf. Medians of three rotated trials on the same deterministic fixture, 16 workers and CPU affinity 0-15. Each backend verifies its own child proofs, so proof formats and verifier work differ. Setup is excluded from parent creation and reported in the raw records. All auxiliary records count in proof size and full verification.
+
+| Implementation and WHIR profile | Parent preparation + proving (s) | Full Rust verification (ms) | Total root proof (decimal KB) |
+| --- | ---: | ---: | ---: |
+| Native, joint 1/4 and index 1/16 | 2.127 | 5.76 | 337.1 |
+| leanVM, rate 1/2 (default) | 1.058 | 11.43 | 284.4 |
+| leanVM, rate 1/4 | 1.137 | 11.04 | 196.4 |
+
+The [validated comparison](../evidence/2026-10-22-private-index4-performance/matched-depth1.json) includes prover-only timing, ranges, peak memory and source/binary provenance. The earlier [request-table bridge](NATIVE.md) is a different implementation and workload.
+
+### Three aggregation levels
+
+Eight 16-step leaves, 15 proofs per process, three rotated trials per implementation:
+
+| Implementation and WHIR profile | Root preparation + proving (s) | Full Rust root verification (ms) | Total root proof (decimal KB) |
+| --- | ---: | ---: | ---: |
+| Native, joint 1/4 and index 1/16 | 1.843 | 6.22 | 338.7 |
+| leanVM, rate 1/2 (default) | 1.041 | 18.65 | 324.1 |
+| leanVM, rate 1/4 | 0.944 | 19.03 | 203.1 |
+
+The [VM wrapper](VM_TREE.md) forwards authenticated deferred claims because its program changes at each level. The root discharges all seven records at depth three. This is a diagnostic wrapper, not upstream leanVM's same-program fixed-point construction; its growing verification cost is not an inherent VM cost. [Validated deeper records](../evidence/2026-10-22-private-index4-performance/matched-depth3.json).
+
+## Full-length leaves
+
+One process proves eight distinct 16,384-step hash chains, four parents, two grandparents and a root. All 15 proofs verify. This uses the challenge benchmark's leaf length, with eight leaves rather than 256. It is not a matched full-length comparison with leanVM.
+
+| Stage | Proofs | Padded native rows | Proving per proof (s) | Rust verification (ms) | Total proof (decimal KB) |
 | --- | ---: | ---: | ---: | ---: | ---: |
-| Leaf | 8 | 16,777,216 | 13.32 s | 9.46 ms | 694,200–696,536 |
-| First parent level | 4 | 4,194,304 | 3.95 s | 8.63 ms | 632,032–634,464 |
-| Second parent level | 2 | 4,194,304 | 3.82 s | 9.59 ms | 633,208–635,168 |
-| Root | 1 | 4,194,304 | 3.82 s | 8.70 ms | 635,072 |
+| Leaf | 8 | 16,777,216 | 10.285 | 6.59 | 386.0 |
+| First parent | 4 | 4,194,304 | 3.095 | 6.20 | 361.7 |
+| Second parent | 2 | 2,097,152 | 1.782 | 5.99 | 337.6 |
+| Root | 1 | 2,097,152 | 1.669 | 6.15 | 337.0 |
 
-Times are medians across the distinct proofs at that level in one process, not repeated trials. The root has one sample. The complete process took **152.37 seconds** and peaked at **52.59 GiB RSS**, including preprocessing and symbolic verifier recording. The shared host exposes an Intel Xeon Gold 6230R and carry-less multiplication; 16 workers were used without CPU pinning. Rows are native GF(2^192) multiply-add constraints, not Boolean full-adder rows or VM cycles. [Raw records](../evidence/2026-10-22-private-tree-full-depth3/stdout.jsonl), [process receipt](../evidence/2026-10-22-private-tree-full-depth3/result.json) and [supplementary environment](../evidence/2026-10-22-private-tree-full-depth3/environment.json) retain the scope and provenance.
+Times are medians across distinct proofs at a level in one process; the root has one sample. Whole process time is 114.84 s and peak RSS is 38.86 GiB. [Independent statement and record validation](../evidence/2026-10-22-private-index4-performance/full-summary.json), [raw records](../evidence/2026-10-22-private-index4-performance/full-0/stdout.jsonl) and [process receipt](../evidence/2026-10-22-private-index4-performance/full-0/result.json) preserve the measurement. The original full-length run was 152.37 s at 52.59 GiB; those separate single runs do not establish a paired speedup.
 
-An earlier [four-leaf run](../evidence/2026-10-22-private-tree-full-leaves/summary.json) independently completed two recursion levels at the same leaf length: 101.22 s total, 52.49 GiB peak, and a 5.11 s root. The [small-leaf development run](../evidence/2026-10-22-private-tree-depth3-batched/summary.json) completed three levels with 16 steps per leaf: 37.08 s total and 15.62 GiB peak. Differences in shared-host timings between these runs are not measured optimization gains.
+### Opening-profile tradeoff
 
-Per-proof proving includes private-trace compilation, backend witness preparation and proving. It excludes circuit preprocessing and symbolic child-verifier recording. Verification includes proof-cap serialization. `Plan::measure_quiet` takes one measured sample without a warmup. Process wall time includes the complete run. These are Rust timings, not the challenge's compiled Lean verifier or official score.
+The preceding index-rate-1/8 profile is retained in [its own complete series](../evidence/2026-10-22-private-index3-performance/). Its full-length run used 113.82 s and 34.94 GiB, with a 3.069 s root and 382,800-byte proof. Rate 1/16 uses 114.84 s and 38.86 GiB, with a 1.669 s root and 336,984-byte proof. These are separate single runs. The root's padded native rows fall from 2^22 to 2^21, but the larger index encoding increases memory and does not improve the measured whole-tree time. This checkpoint selects rate 1/16 for full-length recursive root cost; rate 1/8 remains a useful lighter profile for shallow trees.
 
-The index resource cap was raised from 2^22 to 2^24 padded native rows, with private compiler allocation limits at 2^25. Four columns of cell addresses still fit in u32; the resulting native/index/bridge WHIR dimensions stay inside the existing tested production parameter range. Actual sizes remain checked before building an index, and long runs use a 64 GiB process guard plus a 40 GiB global memory reserve. This capacity change is not a new security proof.
+## Measurement and validation
 
-### Development history
+Measurements ran on a shared Intel Xeon Gold 6230R host, with carry-less multiplication enabled, Rust 1.99.1, 16 workers and CPU affinity 0-15. Each proof has one timed sample without a warmup. Repeated trials use fresh processes and the same deterministic statements. Native proving includes trace lowering, backend witness preparation and proof generation. Parent preparation includes symbolic child-verifier recording. Preprocessing is separate. These are Rust timings, not the challenge's compiled Lean verifier or official score.
 
-The [first capacity run](../evidence/2026-10-22-private-tree-depth1-dev/stdout.jsonl) failed before producing a recursive proof: the compiler estimated about 50 million rows. [Aligned word routing](../evidence/2026-10-22-private-tree-depth1-limbs/stdout.jsonl) reduced the estimate to about 10 million. Batching unused 64-bit range checks as valid private hash compressions brought the parent within capacity. These extra compressions use the existing Flock circuit; partial-word range checks still use Boolean constraints.
+The final source passed 60 release native library tests, including actual malformed connector proofs covering all 18 slots and three limbs, and all-target Clippy. The matched VM wrapper passed its three targeted tests, including a real depth-two tree and adversarial deferred-record controls; upstream two-to-one recursion passed. The independent Python record validators passed 20 controls. Formatting passed. Earlier tests and failed experiments remain under [the lane records](../evidence/2026-10-22-perf-lanes/). Full-length jobs use an 80 GiB sampled process guard and preserve 40 GiB global memory headroom; this is admission and monitoring, not hard isolation.
 
-The [initial full-leaf attempt](../evidence/2026-10-22-private-tree-chain16384-capacity/stdout.jsonl) was rejected under the former limits. It is retained as a capacity failure, not a completed tree. All failed runs remain available with their source and binary hashes.
+Yukon tooling was checked against upstream at `8e19ffca`. It supplies source-bound development checks, not a measured acceleration of the cryptographic prover. No Lean source changed in this optimization phase. At the final audit, upstream and local Yukon had advanced to `e155c298`; its Lean audit hardening does not change the benchmark runner used here. The measurement-phase tooling pin remains unchanged.
 
 ## Formal and challenge scope
 
-The new arithmetic argument, private bridge and compiler have Rust tests and engineering reviews. The original quotient and structured-R1CS Lean theorems do not certify this new composition. No numerical security bound is asserted for it here.
+The original quotient and structured-R1CS Lean theorems do not certify this native arithmetic/Flock composition, compiler, private bridge, concrete PCS or Rust implementation. No new numerical security bound or zero-knowledge property is asserted here.
 
-This is not a recursion.fast entry: one closed fixed-shape verifier, the tagged proof-system oracle adapter, concrete PCS/composition security, perfect completeness and the executable extractor certificate remain unfinished. Exact statement encodings alone do not discharge these obligations. The [pinned challenge contract](https://github.com/scaraven/recursion.fast/tree/15e4ae5eaba6a65211668c6e0f55f9fea1d9050d) uses Lean 4.34.1; this run does not exercise its compiled Lean verifier or official harness.
+The [pinned recursion.fast relation](https://github.com/scaraven/recursion.fast/blob/15e4ae5eaba6a65211668c6e0f55f9fea1d9050d/RecursionFast/Contract/Relation.lean) requires nodes to verify children with the same submitted verifier. It does not require literally one circuit shape or key. A verifier could authenticate several shapes and keys. Our per-level externally supplied setups have not yet established recursive closure under one submitted verifier. Fixed-shape recursion is one possible construction, not a challenge requirement.
 
-Closing recursion requires more than equal padded row counts. Leaf and node metadata, public-input positions, hash-block profiles and opening shapes must agree. Both authorized keys must be pinned externally and propagated unchanged; embedding a node's own key as a circuit constant would create a circular setup requirement. This design remains unimplemented. There is no matched repeated-recursion leanVM benchmark yet.
+The tagged proof-system oracle adapter, concrete PCS/composition knowledge soundness, perfect completeness and executable extractor certificate also remain open. This is not an official recursion.fast entry. The pinned challenge uses Lean 4.34.1; these runs do not exercise its Lean verifier or official harness.
 
 ## Reproduce
 
@@ -56,11 +87,11 @@ export RUSTUP_TOOLCHAIN=1.99.1
 export CARGO_TARGET_DIR=/absolute/path/to/target
 export RUSTFLAGS='-C target-cpu=native -C target-feature=+pclmulqdq'
 export LEANVM_NUM_THREADS=16
-cargo build --locked --release -p rec_aggregation --example private_tree
-python3 experiments/pcs-r1cs/recursion/run.py \
-  --out /absolute/path/to/new-evidence --budget-gib 64 -- \
+cargo build --locked --release -p rec_aggregation --example private_tree --example chain_tree_vm
+taskset -c 0-15 python3 experiments/pcs-r1cs/recursion/run.py \
+  --out /absolute/path/to/new-evidence --budget-gib 80 -- \
   "$CARGO_TARGET_DIR/release/examples/private_tree" --depth 3 --chain 16384
 python3 experiments/pcs-r1cs/recursion/summarize_private.py /absolute/path/to/new-evidence
 ```
 
-Use [the matched single-level leanVM comparison](NATIVE.md) for the earlier measurements. They use a different bridge that discloses its request table, and must not be presented as timings for this private bridge. Yukon tooling was checked against upstream at revision `dec7b98`; it supplies development checks, not a cryptographic speed or security result.
+Use the frozen schedule and config beside the measurements to repeat the alternating baseline and VM series. Never label an older executable with the current source revision.

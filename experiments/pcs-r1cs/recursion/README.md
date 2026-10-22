@@ -1,6 +1,6 @@
 # A verifier in the generic circuit format
 
-**Latest:** the [private hash bridge](PRIVATE.md) completes three aggregation levels over eight 16,384-step hash chains, with a 3.82 s root proof, 8.70 ms Rust verification and a 635,072-byte total proof. Each level has its own preprocessed key. Fixed-shape recursion and a formal composition proof remain open. The earlier [matched native-field comparison with leanVM](NATIVE.md) uses a different bridge and workload. The results below preserve the original full-adder experiments.
+**Latest:** the [private native-field prototype](PRIVATE.md) now has repeated comparisons with leanVM and a full-length eight-leaf run. Its two-child parent takes 2.127 s to prepare and prove versus leanVM's 1.058 s, with faster Rust verification and a larger proof. The full-length native root takes 1.67 s to prove, 6.15 ms to verify and 336,984 total bytes. Each level still has its own trusted circuit and key; recursive closure under one submitted verifier and a formal composition proof remain open. The results below preserve the original full-adder experiments.
 
 ## Earlier full-adder backend
 

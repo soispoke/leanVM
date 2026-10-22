@@ -12,12 +12,12 @@ At jointlog26 the production query schedule changes `[224,56,32,23,18]` to `[112
 
 57 release library tests passed (including actual malformedproof rejection and concrete/symbolic verifier agreement). Configgate covers jointlog18,22,26,29. All-targetreleaseClippy passed with `-D warnings` (6.48s wholecommand). All seven proofs in the depth2/chain16 tree verified; wrong root statements were rejected by the existing example. Fullsize workloads were not run in this lane.
 
-## One process, four threads on CPUs48–51
+## One process, four threads on CPUs48-51
 
 | Level | Proofs | Padded native rows | Compressions | Median proving | Median verify | Total proof bytes |
 |---|---:|---:|---:|---:|---:|---:|
-| Small leaf |4|16,384|17|68.2ms|5.39ms|290,880–294,320|
-| Parent1 |2|2,097,152|27,295|5.422s|7.34ms|470,200–470,744|
+| Small leaf |4|16,384|17|68.2ms|5.39ms|290,880-294,320|
+| Parent1 |2|2,097,152|27,295|5.422s|7.34ms|470,200-470,744|
 | Root |1|4,194,304|42,803|10.191s|7.85ms|501,248|
 
 Whole process24.387s; sampled aggregate RSS11.95GiB. The firstparent shape reduction does not persist at the second level: the Flock batch crosses another power-of-two boundary. This is a size/time tradeoff candidate, not a demonstrated speedup. No matched rate1 benchmark was launched here. The root owner is separately evaluating the combination with compact stack layout.

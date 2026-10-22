@@ -1,0 +1,17 @@
+{
+  "paired_elapsed_speedups": [
+    1.9978327070126194,
+    2.0015133064904362,
+    1.8827900799105275
+  ],
+  "median_paired_elapsed_speedup": 1.9978327070126194,
+  "elapsed_polling_delay_max_s": 0.5,
+  "conservative_paired_speedup_lower_bounds": [
+    1.9355593444004457,
+    1.9391886803535967,
+    1.8241499348998944
+  ],
+  "peak_rss_reduction": 0.5220252730777468,
+  "root_proving_reduction": 0.5152722666631664,
+  "root_size_reduction": 0.4655690133737068
+}

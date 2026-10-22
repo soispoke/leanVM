@@ -1,3 +1,5 @@
+> Earlier optimization checkpoint: joint rate 1/4, index rate 1/2. Later index-profile results and tradeoffs are in [the current report](../../recursion/PRIVATE.md). This record retains its original source and measurements.
+
 # Private recursion performance, 22 October
 
 This checkpoint improves the private native-field/Flock prototype. Three alternating paired processes show a 1.55× speedup for a four-leaf, two-level tree, with about one-third less peak memory. A matched 2→1 comparison still finds leanVM faster to prove. These are shared-host development measurements, not an architectural ranking or a formal security result.

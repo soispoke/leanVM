@@ -1,0 +1,10 @@
+    Checking parallel v0.1.0 (/root/yukon-autoresearch/workspaces/leanr1cs-perf-20261022/private-index-rate2/crates/parallel)
+    Checking primitives v0.1.0 (/root/yukon-autoresearch/workspaces/leanr1cs-perf-20261022/private-index-rate2/crates/primitives)
+    Checking fiat_shamir v0.1.0 (/root/yukon-autoresearch/workspaces/leanr1cs-perf-20261022/private-index-rate2/crates/fiat_shamir)
+    Checking pcs v0.1.0 (/root/yukon-autoresearch/workspaces/leanr1cs-perf-20261022/private-index-rate2/crates/pcs)
+    Checking flock v0.1.0 (/root/yukon-autoresearch/workspaces/leanr1cs-perf-20261022/private-index-rate2/crates/flock)
+    Checking evm v0.1.0 (/root/yukon-autoresearch/workspaces/leanr1cs-perf-20261022/private-index-rate2/crates/evm)
+    Checking leanvm_core v0.1.0 (/root/yukon-autoresearch/workspaces/leanr1cs-perf-20261022/private-index-rate2/crates/leanvm_core)
+    Checking circuit_suite v0.1.0 (/root/yukon-autoresearch/workspaces/leanr1cs-perf-20261022/private-index-rate2/crates/circuit_suite)
+    Checking format_recursion v0.1.0 (/root/yukon-autoresearch/workspaces/leanr1cs-perf-20261022/private-index-rate2/crates/format_recursion)
+    Finished `release` profile [optimized] target(s) in 6.11s

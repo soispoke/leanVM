@@ -1,0 +1,14 @@
+{
+  "pid": 236265,
+  "command": [
+    "/root/.rustup/toolchains/1.99.1-x86_64-unknown-linux-gnu/bin/cargo",
+    "test",
+    "--release",
+    "-p",
+    "format_recursion",
+    "--lib",
+    "-j",
+    "4"
+  ],
+  "started_utc": "2026-10-22T13:10:59.257786+00:00"
+}
