@@ -10,6 +10,10 @@ A later [small-tree autoresearch batch](../evidence/2026-10-22-small-autoresearc
 
 This uses twice as many workers with the same CPU affinity of 0-63. It is a host-specific operating point, not a source or protocol speedup. Four-leaf supporting checks improve in all three pairs; the two-leaf total regresses, so keep 16 workers there. Two source candidates were rejected because they failed the repeated root/whole-process threshold. The [partial full-length checkpoint](../evidence/2026-10-22-full-recursion/README.md) preserves the incomplete 16,384-step comparison and is not extrapolated from these small-tree results.
 
+## Pool and compiler search
+
+A subsequent [seven-candidate autoresearch batch](../evidence/2026-10-22-pool-and-pgo-autoresearch/README.md) retained no changes. All screens used four 256-step leaves, 32 workers and seven alternating pairs. PGO regressed root preparation plus proving by 5.0%; compact permutation setup metadata improved setup by 5.9% but total time by only 2.7%, below the predeclared 3% root-or-total threshold. The other spin, allocator, field, lifetime and NTT-cache candidates also failed retention. The final audit covers 112 processes and 784 locally verified proofs with unchanged shapes and proof sizes. The accepted source and worker profile above remain unchanged.
+
 ## Construction
 
 The outer proof combines native GF(2^192) arithmetic constraints, Flock's batched BLAKE2s argument and WHIR openings. A shared committed connector table binds the arithmetic verifier and hash argument to the same inputs and outputs. Hash messages and intermediate chaining values stay in the witness; the proof contains no separate request table. This is not a zero-knowledge claim.

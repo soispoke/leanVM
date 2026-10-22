@@ -1,0 +1,8 @@
+{
+  "pid": 31362,
+  "command": [
+    "/usr/bin/python3.12",
+    "/root/yukon-autoresearch/workspaces/leanr1cs-pool-hunt-20261022/publication-check.py"
+  ],
+  "started_utc": "2026-10-22T21:08:17.335517+00:00"
+}
