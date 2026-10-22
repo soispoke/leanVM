@@ -384,22 +384,33 @@ mod tests {
     #[test]
     fn verifier_rejects_invalid_private_bindings_without_prover_prechecks() {
         parallel::init();
-        let (circuit, io, values, blocks) = fixture(2, 29);
+        let (mut circuit, io, values, blocks) = fixture(2, 29);
+        // Keep all compression I/O private so rejection cannot come merely
+        // from comparing a mutated connector against a public input.
+        circuit.public.truncate(2);
         let public: Vec<_> = circuit.public.iter().map(|&i| values[i]).collect();
         let bridge = PrivateBridge::new(circuit, io).unwrap();
         let context = [63; 32];
-        // Both witnesses have valid arithmetic connector rows. Their values
-        // disagree with a genuine Flock compression in the shared commitment.
-        for high_limb in [false, true] {
-            let mut bad = values.clone();
-            let at = bridge.io_variables[0][8];
-            if high_limb {
-                bad[at].c1 = 1;
-            } else {
-                bad[at] += F192::ONE;
+        // Each witness has valid arithmetic connector rows but disagrees with
+        // a genuine Flock compression. Exercise every named slot and each
+        // native limb without relying on the prover's connector precheck.
+        for slot in 0..18 {
+            for limb in 0..3 {
+                let mut bad = values.clone();
+                let at = bridge.io_variables[0][slot];
+                let delta = match limb {
+                    0 => F192::ONE,
+                    1 => F192::new(0, 1, 0),
+                    2 => F192::new(0, 0, 1),
+                    _ => unreachable!(),
+                };
+                bad[at] += delta;
+                let proof = bridge.prove_unchecked(&bad, &blocks, &context).unwrap();
+                assert!(
+                    !bridge.verify(&public, &context, &proof),
+                    "accepted invalid private connector slot={slot} limb={limb}"
+                );
             }
-            let proof = bridge.prove_unchecked(&bad, &blocks, &context).unwrap();
-            assert!(!bridge.verify(&public, &context, &proof));
         }
         // A correct compression witness cannot rescue a false arithmetic gate.
         let (mut circuit, io, values, blocks) = fixture(1, 31);
