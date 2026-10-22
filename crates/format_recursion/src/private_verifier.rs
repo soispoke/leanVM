@@ -40,7 +40,7 @@ fn claim_eval(claim: &Claim, at: &[S]) -> S {
 /// Complete private bridge label, with the child verification key supplied as
 /// symbolic digest words. Circuit dimensions remain fixed by trusted metadata.
 pub(crate) fn label(bridge: &PrivateBridge, index_root: [S; 2], context: [S; 2], public: &[S]) -> Vec<(S, usize)> {
-    let mut label = literal(b"format-private-bridge-v2");
+    let mut label = literal(b"format-private-bridge-v3");
     label.extend(index_root.map(|x| (x, 16)));
     label.extend(context.map(|x| (x, 16)));
     label.extend(digest_constant(&R1CS_DIGEST).map(|x| (x, 16)));

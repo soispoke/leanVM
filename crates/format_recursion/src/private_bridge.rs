@@ -181,7 +181,7 @@ impl PrivateBridge {
         Some(full)
     }
     pub(crate) fn label(&self, public: &[F192], context: &Hash) -> Vec<u8> {
-        let mut out = b"format-private-bridge-v2".to_vec();
+        let mut out = b"format-private-bridge-v3".to_vec();
         out.extend_from_slice(&self.index.root);
         out.extend_from_slice(context);
         out.extend_from_slice(&R1CS_DIGEST);
