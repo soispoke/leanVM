@@ -53,6 +53,32 @@ fn inferred_widths(program: &Trace) -> Vec<usize> {
             }
         }
     }
+    // These bounds follow from the enforced operations; no witness values are
+    // used except immutable, public-pinned constants.
+    for (at, node) in program.nodes.iter().enumerate() {
+        let width = match &node.op {
+            Op::Constant => {
+                let v = node.value;
+                if v.c2 != 0 {
+                    192 - v.c2.leading_zeros() as usize
+                } else if v.c1 != 0 {
+                    128 - v.c1.leading_zeros() as usize
+                } else {
+                    64 - v.c0.leading_zeros() as usize
+                }
+            }
+            Op::Hash(_) | Op::HashHigh(_) => 128,
+            Op::Slice(_, _, len) => *len,
+            Op::Pack(parts) => parts
+                .iter()
+                .try_fold(0usize, |w, (_, len)| w.checked_add(*len))
+                .unwrap_or(192),
+            Op::Add(a, b) if a.0 < at && b.0 < at => widths[a.0].max(widths[b.0]),
+            Op::Select(_, a, b) if a.0 < at && b.0 < at => widths[a.0].max(widths[b.0]),
+            _ => 192,
+        };
+        widths[at] = widths[at].min(width);
+    }
     widths
 }
 
@@ -63,6 +89,7 @@ struct Estimate {
     limbs: Vec<bool>,
     pending: Vec<u8>,
     used: Vec<u8>,
+    origins: Vec<[Option<(usize, usize)>; 3]>,
 }
 impl Estimate {
     fn charge(&mut self, rows: usize, variables: usize) -> Option<()> {
@@ -81,27 +108,43 @@ impl Estimate {
         self.bits[source.0] = true;
         Some(())
     }
-    fn limb_source(&mut self, program: &Trace, source: S, at: usize, words: usize) -> Option<()> {
+    fn limb_view(&mut self, program: &Trace, source: S, at: usize) -> Option<()> {
         if source.0 >= at {
             return None;
         }
-        if words == 0 {
+        if self.limbs[source.0] {
             return Some(());
         }
-        if !self.limbs[source.0] {
-            if matches!(program.nodes[source.0].op, Op::Constant) {
-                self.charge(0, 3)?;
-            } else if self.widths[source.0] > 64 {
-                if self.bits[source.0] {
-                    self.charge(192, 195)?;
-                } else {
-                    self.charge(2, 4)?;
-                    self.pending[source.0] = (1 << self.widths[source.0].div_ceil(64)) - 1;
+        let width = self.widths[source.0];
+        if matches!(program.nodes[source.0].op, Op::Constant) {
+            self.charge(0, 3)?;
+        } else {
+            if !width.is_multiple_of(64) {
+                self.project(program, source, at)?;
+            }
+            if self.bits[source.0] {
+                self.charge(192, 195)?;
+            } else {
+                self.charge(2, 4)?;
+                for limb in 0..width.div_ceil(64) {
+                    self.pending[source.0] |= 1 << limb;
+                    self.origins[source.0][limb] = Some((source.0, limb));
                 }
             }
-            self.limbs[source.0] = true;
         }
-        self.used[source.0] |= (1 << words) - 1;
+        self.limbs[source.0] = true;
+        Some(())
+    }
+    fn limb_source(&mut self, program: &Trace, source: S, at: usize, words: usize) -> Option<()> {
+        if words == 0 {
+            return (source.0 < at).then_some(());
+        }
+        self.limb_view(program, source, at)?;
+        for limb in 0..words {
+            if let Some((origin, position)) = self.origins[source.0][limb] {
+                self.used[origin] |= 1 << position;
+            }
+        }
         Some(())
     }
 }
@@ -125,6 +168,7 @@ fn preflight(program: &Trace, limits: Limits) -> Option<Limits> {
         limbs: vec![false; count],
         pending: vec![0; count],
         used: vec![0; count],
+        origins: vec![[None; 3]; count],
     };
     for (at, node) in program.nodes.iter().enumerate() {
         match &node.op {
@@ -135,21 +179,44 @@ fn preflight(program: &Trace, limits: Limits) -> Option<Limits> {
                 if start.checked_add(*len)? > 192 {
                     return None;
                 }
-                e.project(program, *source, at)?;
-                e.charge(len.checked_add(1)?, len.checked_add(1)?)?;
-                e.bits[at] = true;
+                if start % 64 == 0 && len % 64 == 0 {
+                    e.limb_view(program, *source, at)?;
+                    for limb in 0..len / 64 {
+                        e.origins[at][limb] = e.origins[source.0][start / 64 + limb];
+                    }
+                    e.limbs[at] = true;
+                    e.charge(2, 1)?;
+                } else {
+                    e.project(program, *source, at)?;
+                    e.charge(len.checked_add(1)?, len.checked_add(1)?)?;
+                    e.bits[at] = true;
+                }
             }
             Op::Pack(parts) => {
+                let aligned = parts.iter().all(|(_, len)| len % 64 == 0);
                 let mut width = 0usize;
                 for &(source, len) in parts {
+                    let offset = width;
                     width = width.checked_add(len)?;
                     if width > 192 {
                         return None;
                     }
-                    e.project(program, source, at)?;
+                    if aligned {
+                        e.limb_view(program, source, at)?;
+                        for limb in 0..len / 64 {
+                            e.origins[at][offset / 64 + limb] = e.origins[source.0][limb];
+                        }
+                    } else {
+                        e.project(program, source, at)?;
+                    }
                 }
-                e.charge(width.checked_add(1)?, width.checked_add(1)?)?;
-                e.bits[at] = true;
+                if aligned {
+                    e.charge(2, 1)?;
+                    e.limbs[at] = true;
+                } else {
+                    e.charge(width.checked_add(1)?, width.checked_add(1)?)?;
+                    e.bits[at] = true;
+                }
             }
             Op::Hash(parts) => {
                 if program.nodes.get(at + 1)?.op != Op::HashHigh(S(at)) {
@@ -306,20 +373,43 @@ impl Compiler {
         acc
     }
 
+    /// Recombine typed (or pending-typed) F64 words into the entire target.
+    fn join_limbs(&mut self, limbs: [usize; 3], target: usize) {
+        let [lo, mid, hi] = limbs;
+        if mid == 0 && hi == 0 {
+            self.equal(lo, target);
+        } else {
+            let y = self.constant(F192::new(0, 1, 0));
+            if hi == 0 {
+                self.rows.push([mid, y, lo, target]);
+            } else {
+                let y2 = self.constant(F192::new(0, 0, 1));
+                let partial = self.variable(self.values[lo] + self.values[mid] * self.values[y]);
+                self.rows.push([mid, y, lo, partial]);
+                self.rows.push([hi, y2, partial, target]);
+            }
+        }
+    }
+
     fn source_limbs(&mut self, source: usize) -> [usize; 3] {
         if let Some(limbs) = self.limbs[source] {
             return limbs;
         }
         let value = self.values[source + 2];
         let native = [value.c0, value.c1, value.c2];
+        // A non-word range still needs Boolean constraints on its partial word.
+        if !self.constant_nodes[source] && !self.widths[source].is_multiple_of(64) && self.bits[source].is_none() {
+            self.decompose(source);
+        }
         let limbs = if self.constant_nodes[source] {
             std::array::from_fn(|i| self.constant(F192::new(native[i], 0, 0)))
-        } else if self.widths[source] <= 64 {
-            // A fixed explicit source == Slice(source,0,width) check supplies
-            // this range; the slice lowering also reconstructs the whole source.
-            [source + 2, 0, 0]
         } else if let Some(bits) = self.bits[source].clone() {
             std::array::from_fn(|i| self.reconstruct(&bits[64 * i..64 * (i + 1)]))
+        } else if self.widths[source] == 64 {
+            // The bridge supplies F64 typing if connected; otherwise the final
+            // fallback enforces it. Explicit range checks cannot become vacuous.
+            self.pending_limbs.push(source + 2);
+            [source + 2, 0, 0]
         } else {
             let limbs = std::array::from_fn(|i| {
                 if i * 64 >= self.widths[source] {
@@ -330,11 +420,7 @@ impl Compiler {
                     variable
                 }
             });
-            let y = self.constant(F192::new(0, 1, 0));
-            let y2 = self.constant(F192::new(0, 0, 1));
-            let partial = self.variable(self.values[limbs[0]] + self.values[limbs[1]] * self.values[y]);
-            self.rows.push([limbs[1], y, limbs[0], partial]);
-            self.rows.push([limbs[2], y2, partial, source + 2]);
+            self.join_limbs(limbs, source + 2);
             limbs
         };
         self.limbs[source] = Some(limbs);
@@ -520,26 +606,48 @@ pub fn lower_with_limits(program: &Trace, witness: &Trace, limits: Limits) -> Op
                 if start.checked_add(*len)? > 192 {
                     return None;
                 }
-                let bits = c.decompose(a.0);
-                let mut output = bits[*start..start + len].to_vec();
-                let out = c.reconstruct(&output);
-                c.equal(out, z);
-                output.resize(192, 0);
-                c.bits[i] = Some(output);
+                if start % 64 == 0 && len % 64 == 0 {
+                    let source = c.source_limbs(a.0);
+                    let mut limbs = [0; 3];
+                    limbs[..len / 64].copy_from_slice(&source[start / 64..(start + len) / 64]);
+                    c.join_limbs(limbs, z);
+                    c.limbs[i] = Some(limbs);
+                } else {
+                    let bits = c.decompose(a.0);
+                    let mut output = bits[*start..start + len].to_vec();
+                    let out = c.reconstruct(&output);
+                    c.equal(out, z);
+                    output.resize(192, 0);
+                    c.bits[i] = Some(output);
+                }
             }
             Op::Pack(parts) => {
+                let aligned = parts.iter().all(|(_, len)| len % 64 == 0);
+                let mut width = 0usize;
+                let mut limbs = [0; 3];
                 let mut output = Vec::new();
                 for &(a, len) in parts {
                     source(a)?;
-                    if output.len().checked_add(len)? > 192 {
+                    let next = width.checked_add(len)?;
+                    if next > 192 {
                         return None;
                     }
-                    output.extend_from_slice(&c.decompose(a.0)[..len]);
+                    if aligned {
+                        limbs[width / 64..next / 64].copy_from_slice(&c.source_limbs(a.0)[..len / 64]);
+                    } else {
+                        output.extend_from_slice(&c.decompose(a.0)[..len]);
+                    }
+                    width = next;
                 }
-                let out = c.reconstruct(&output);
-                c.equal(out, z);
-                output.resize(192, 0);
-                c.bits[i] = Some(output);
+                if aligned {
+                    c.join_limbs(limbs, z);
+                    c.limbs[i] = Some(limbs);
+                } else {
+                    let out = c.reconstruct(&output);
+                    c.equal(out, z);
+                    output.resize(192, 0);
+                    c.bits[i] = Some(output);
+                }
             }
             Op::Select(bit, a, b) => {
                 let bit = source(*bit)?;
@@ -847,10 +955,142 @@ mod tests {
             .iter()
             .filter(|r| r[0] == r[1] && r[1] == r[2] && r[3] == 0)
             .count();
-        assert_eq!(bit_rows, 64);
+        assert_eq!(bit_rows, 0);
+        let mut malicious = lower(&t, &t).unwrap();
+        malicious.values[source.0 + 2] += F192::new(0, 0, 1);
+        malicious.values[t.checks[0].1.0 + 2] += F192::new(0, 0, 1);
+        assert!(rows_hold(&malicious)); // equalities alone permit this
+        assert!(!connectors_hold(&malicious)); // private bridge rejects non-F64
         let mut bad = copy_trace(&t);
         bad.nodes[source.0].value += F192::new(0, 0, 1);
         let lowered = lower(&t, &bad).unwrap();
         assert!(!rows_hold(&lowered));
+    }
+    fn boolean_rows(lowered: &Lowered) -> usize {
+        lowered
+            .circuit
+            .rows
+            .iter()
+            .filter(|r| r[0] == r[1] && r[1] == r[2] && r[3] == 0)
+            .count()
+    }
+
+    fn check_bound(t: &Trace, lowered: &Lowered) {
+        let bound = allocation_bound(t).unwrap();
+        assert!(
+            lowered.circuit.rows.len() <= bound.rows,
+            "rows {} > {}",
+            lowered.circuit.rows.len(),
+            bound.rows
+        );
+        assert!(
+            lowered.values.len() <= bound.variables,
+            "variables {} > {}",
+            lowered.values.len(),
+            bound.variables
+        );
+    }
+
+    #[test]
+    fn aligned_slices_and_packs_reuse_bridge_typing_and_preserve_shape() {
+        for width in [64, 128, 192] {
+            trace::start();
+            let source = S::input(F192::new(
+                11,
+                if width >= 128 { 17 } else { 0 },
+                if width == 192 { 23 } else { 0 },
+            ));
+            source.assert_eq(source.slice(0, width));
+            let tail = source.slice(64, 128);
+            let low = source.slice(0, 64);
+            let packed = S::pack(&[(low, 64), (tail, 128)]);
+            trace::hash(&[(packed, 24)]);
+            let t = trace::take();
+            let lowered = lower(&t, &t).unwrap();
+            assert!(rows_hold(&lowered) && connectors_hold(&lowered));
+            assert_eq!(boolean_rows(&lowered), 0);
+            assert!(lowered.circuit.rows.len() < 16);
+            check_bound(&t, &lowered);
+            let mut bad = copy_trace(&t);
+            bad.nodes[packed.0].value += F192::new(0, 0, 1 << 63);
+            assert!(!rows_hold(&lower(&t, &bad).unwrap()));
+            let mut changed = copy_trace(&t);
+            changed.nodes[source.0].value += F192::ONE;
+            let alternate = lower(&t, &changed).unwrap();
+            assert_eq!(lowered.circuit.rows, alternate.circuit.rows);
+            assert_eq!(lowered.circuit.public, alternate.circuit.public);
+            assert_eq!(lowered.connectors, alternate.connectors);
+        }
+    }
+
+    #[test]
+    fn range_checks_without_bridge_still_type_every_word() {
+        for width in [32, 64, 96, 128, 192] {
+            trace::start();
+            let source = S::input(F192::new(
+                11,
+                if width > 64 { 17 } else { 0 },
+                if width > 128 { 23 } else { 0 },
+            ));
+            source.assert_eq(source.slice(0, width));
+            let t = trace::take();
+            let mut lowered = lower(&t, &t).unwrap();
+            assert!(rows_hold(&lowered));
+            assert_eq!(boolean_rows(&lowered), width);
+            check_bound(&t, &lowered);
+            // Change both original nodes coherently: row equations alone must
+            // still forbid values outside the advertised range.
+            let projection = t.checks[0].1;
+            let delta = basis(width.min(191));
+            if width < 192 {
+                lowered.values[source.0 + 2] += delta;
+                lowered.values[projection.0 + 2] += delta;
+                assert!(!rows_hold(&lowered));
+            }
+        }
+    }
+
+    #[test]
+    fn aligned_slice_types_omitted_source_limbs_and_rejects_compensating_high_bits() {
+        trace::start();
+        let source = S::input(F192::new(11, 17, 23));
+        let middle = source.slice(64, 64);
+        trace::hash(&[(middle, 8)]);
+        let t = trace::take();
+        let mut lowered = lower(&t, &t).unwrap();
+        assert!(rows_hold(&lowered) && connectors_hold(&lowered));
+        assert_eq!(boolean_rows(&lowered), 128);
+        check_bound(&t, &lowered);
+        // Move a high extension-field value into an omitted limb and adjust
+        // the complete source equation. Fallback F64 typing rejects it.
+        let hi_row = lowered
+            .circuit
+            .rows
+            .iter()
+            .find(|r| r[3] == source.0 + 2 && lowered.values[r[1]] == F192::new(0, 0, 1))
+            .unwrap();
+        let high = hi_row[0];
+        let delta = F192::new(0, 1, 0);
+        lowered.values[high] += delta;
+        lowered.values[source.0 + 2] += delta * F192::new(0, 0, 1);
+        assert!(!rows_hold(&lowered));
+    }
+
+    #[test]
+    fn packed_hash_halves_and_selects_keep_native_widths() {
+        trace::start();
+        let input = S::input(F192::new(11, 17, 23));
+        let h = trace::hash(&[(input, 24)]);
+        let selector = S::input(F192::ONE);
+        let selected = S::select(selector, h[0], h[1]);
+        let xor = selected + h[1];
+        let packed = S::pack(&[(xor, 128), (h[1], 64)]);
+        trace::hash(&[(packed, 24)]);
+        let t = trace::take();
+        let lowered = lower(&t, &t).unwrap();
+        assert!(rows_hold(&lowered) && connectors_hold(&lowered));
+        assert_eq!(boolean_rows(&lowered), 1); // selector only
+        assert!(lowered.circuit.rows.len() < 24);
+        check_bound(&t, &lowered);
     }
 }
