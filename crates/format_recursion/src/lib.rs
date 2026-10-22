@@ -2,6 +2,7 @@
 //! The child circuit and proof shapes are fixed; proof contents remain circuit inputs.
 
 mod boolean_field;
+pub mod flock_trace;
 pub mod hash_batch;
 pub mod native_arithmetic;
 pub mod native_recursion;
