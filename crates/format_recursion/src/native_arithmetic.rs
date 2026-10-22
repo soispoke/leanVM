@@ -496,12 +496,46 @@ fn prove_reduction_with_stack(
     (claims, index_claims)
 }
 pub(crate) fn prove_index_open(index: &Index, claims: &[Claim], ps: &mut ProverState) {
-    open(
+    let log_n = index.log_rows + 2;
+    let config = whir::config_for_rate(log_n, index.index_log_inv_rate).unwrap();
+    let n = 1usize << index.log_rows;
+    let canonical = (2..=log_n).contains(&config.initial_k)
+        && claims.len() == 4
+        && claims.iter().enumerate().all(|(column, claim)| {
+            claim.offset == column * n && claim.point.len() == index.log_rows && claim.point == claims[0].point
+        });
+    if !canonical {
+        open(&index.stack, &index.data, log_n, index.index_log_inv_rate, claims, ps);
+        return;
+    }
+    let weights_span = tracing::info_span!("Native opening weights").entered();
+    let lambda = ps.sample();
+    let log_block = log_n - config.initial_k;
+    let (low, high) = claims[0].point.split_at(log_block);
+    let selectors = eq_table(high);
+    let mut lanes = vec![F192::ZERO; 1usize << config.initial_k];
+    let mut power = F192::ONE;
+    let mut target = F192::ZERO;
+    for (column, claim) in claims.iter().enumerate() {
+        target += power * claim.value;
+        for (lane, &selector) in selectors.iter().enumerate() {
+            lanes[column * selectors.len() + lane] = power * selector;
+        }
+        power *= lambda;
+    }
+    let weights = [whir::LaneWeight {
+        lanes,
+        block: eq_table(low),
+    }];
+    drop(weights_span);
+    whir::recursive_prover_with_lane_weights(
+        &config,
+        log_n,
         &index.stack,
-        &index.data,
-        index.log_rows + 2,
-        index.index_log_inv_rate,
-        claims,
+        &weights,
+        target,
+        &index.data.codeword,
+        &index.data.merkle_tree,
         ps,
     );
 }
@@ -684,6 +718,52 @@ mod tests {
                 *out += power * eq;
             }
             assert_eq!(got, expected, "offset={offset} length={length}");
+        }
+    }
+
+    #[test]
+    fn factored_index_opening_matches_the_complete_dense_proof() {
+        parallel::init();
+        let mut rng = StdRng::seed_from_u64(0xFA_C701);
+        for rate in [1, 4] {
+            let index = Index::new_with_rate(
+                Circuit {
+                    variables: 6,
+                    rows: vec![[2, 3, 0, 4], [4, 1, 2, 5]],
+                    public: vec![0, 1, 5],
+                },
+                rate,
+            );
+            let point: Vec<_> = (0..index.log_rows)
+                .map(|_| F192::new(rng.next_u64(), rng.next_u64(), rng.next_u64()))
+                .collect();
+            let n = 1usize << index.log_rows;
+            let equality = eq_table(&point);
+            let claims: Vec<_> = (0..4)
+                .map(|column| Claim {
+                    offset: column * n,
+                    point: point.clone(),
+                    value: whir::inner_product_base_ext(&index.stack[column * n..(column + 1) * n], &equality),
+                })
+                .collect();
+            for canonical in [true, false] {
+                // Reordering preserves a valid batched claim while exercising the dense fallback.
+                let mut claims = claims.clone();
+                if !canonical {
+                    claims.swap(0, 1);
+                }
+                let label = b"factored-index-opening-reference";
+                let mut dense = ProverState::from_label(label);
+                open(&index.stack, &index.data, index.log_rows + 2, rate, &claims, &mut dense);
+                let expected = dense.into_proof();
+                let mut actual = ProverState::from_label(label);
+                prove_index_open(&index, &claims, &mut actual);
+                let actual = actual.into_proof();
+                assert_eq!(actual, expected, "rate={rate} canonical={canonical}");
+                let mut verifier = VerifierState::from_label(label, &actual);
+                assert!(verify_index_open(&index, &claims, &mut verifier));
+                assert!(verifier.finish().is_ok());
+            }
         }
     }
 
