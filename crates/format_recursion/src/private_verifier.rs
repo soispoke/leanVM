@@ -40,7 +40,7 @@ fn claim_eval(claim: &Claim, at: &[S]) -> S {
 /// Complete private bridge label, with the child verification key supplied as
 /// symbolic digest words. Circuit dimensions remain fixed by trusted metadata.
 pub(crate) fn label(bridge: &PrivateBridge, index_root: [S; 2], context: [S; 2], public: &[S]) -> Vec<(S, usize)> {
-    let mut label = literal(b"format-private-bridge-v1");
+    let mut label = literal(b"format-private-bridge-v2");
     label.extend(index_root.map(|x| (x, 16)));
     label.extend(context.map(|x| (x, 16)));
     label.extend(digest_constant(&R1CS_DIGEST).map(|x| (x, 16)));
@@ -65,6 +65,9 @@ pub(crate) fn label(bridge: &PrivateBridge, index_root: [S; 2], context: [S; 2],
 pub(crate) fn verify(bridge: &PrivateBridge, index_root: [S; 2], public: &[S], t: &mut Transcript<'_>) {
     let root = t.root();
     let (mut claims, index_claims) = native_verifier::reduce(&bridge.index, public, t);
+    for claim in &mut claims {
+        claim.offset = bridge.compact_native_offset(claim.offset, claim.point.len());
+    }
     trace::mark("private-flock-reduction");
     let flock = flock_trace::reduce(K_LOG + bridge.block_log, t);
     let point: Vec<_> = (0..bridge.block_log).map(|_| t.sample()).collect();

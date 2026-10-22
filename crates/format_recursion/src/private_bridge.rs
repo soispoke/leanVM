@@ -26,6 +26,29 @@ const SLOTS: [usize; 18] = [0, 1, 2, 3, 4, 5, 6, 7, 10, 11, 12, 13, 14, 15, 16, 
 const MIN_BLOCKS: usize = 128;
 const MAX_BLOCKS: usize = 1 << 16;
 
+/// Four native columns have three F64 limbs each. Unlike the standalone
+/// arithmetic stack, this joint commitment does not retain each fourth slot.
+fn joint_layout(log_rows: usize, q_log: usize) -> (usize, usize) {
+    let native_words = 12usize << log_rows;
+    let q_words = 1usize << q_log;
+    let q_offset = native_words.next_multiple_of(q_words);
+    let stack_log = (q_offset + q_words).next_power_of_two().trailing_zeros() as usize;
+    (q_offset, stack_log)
+}
+
+fn copy_compact_native(destination: &mut [F64], source: &[F64], log_rows: usize) {
+    let n = 1usize << log_rows;
+    assert_eq!(source.len(), 16 * n);
+    assert!(destination.len() >= 12 * n);
+    for col in 0..4 {
+        for limb in 0..3 {
+            let from = (4 * col + limb) * n;
+            let to = (3 * col + limb) * n;
+            destination[to..to + n].copy_from_slice(&source[from..from + n]);
+        }
+    }
+}
+
 /// The order is CV[4], output[4], message[8], counter, flags.
 pub fn io_words(block: &Compression, output: &[u32; 8]) -> [u64; 18] {
     let (h, m, t, f0, f1) = block;
@@ -115,10 +138,8 @@ impl PrivateBridge {
             return None;
         }
         let index = Index::new(circuit);
-        let native_log = index.log_rows + 4;
         let q_log = K_LOG - LOG_PACKING + block_log;
-        let q_offset = 1usize << native_log.max(q_log);
-        let stack_log = (q_offset + (1 << q_log)).next_power_of_two().trailing_zeros() as usize;
+        let (q_offset, stack_log) = joint_layout(index.log_rows, q_log);
         Some(Self {
             index,
             n_blocks,
@@ -132,6 +153,22 @@ impl PrivateBridge {
             padding,
         })
     }
+    /// Translate only native witness claims; permutation-index claims use a
+    /// different four-column layout and must never pass through this mapping.
+    pub(crate) fn compact_native_offset(&self, offset: usize, low_log: usize) -> usize {
+        let n = 1usize << self.index.log_rows;
+        assert!(low_log <= self.index.log_rows, "native claim exceeds its column");
+        let slot = offset / n;
+        let within = offset % n;
+        assert!(slot < 16 && slot % 4 < 3, "claim addresses an unused native limb slot");
+        let width = 1usize << low_log;
+        assert!(
+            offset.is_multiple_of(width) && within + width <= n,
+            "unaligned native claim"
+        );
+        (3 * (slot / 4) + slot % 4) * n + within
+    }
+
     pub(crate) fn public(&self, public: &[F192]) -> Option<Vec<F192>> {
         if public.len() != self.public_len || public[..2] != [F192::ZERO, F192::ONE] {
             return None;
@@ -141,7 +178,7 @@ impl PrivateBridge {
         Some(full)
     }
     pub(crate) fn label(&self, public: &[F192], context: &Hash) -> Vec<u8> {
-        let mut out = b"format-private-bridge-v1".to_vec();
+        let mut out = b"format-private-bridge-v2".to_vec();
         out.extend_from_slice(&self.index.root);
         out.extend_from_slice(context);
         out.extend_from_slice(&R1CS_DIGEST);
@@ -211,7 +248,7 @@ impl PrivateBridge {
             .in_scope(|| generate_witness_with_ab_packed_and_lincheck(blocks, self.block_log));
         let lane_words = 1usize << (self.stack_log - INITIAL_FOLDING_FACTOR);
         let mut stack = vec![F64::ZERO; self.committed_lanes() * lane_words];
-        stack[..witness.stack.len()].copy_from_slice(&witness.stack);
+        copy_compact_native(&mut stack, &witness.stack, self.index.log_rows);
         for (dest, &word) in stack[self.q_offset..].iter_mut().zip(&z) {
             *dest = F64(word);
         }
@@ -235,7 +272,7 @@ impl PrivateBridge {
         let mut claims: Vec<_> = native_claims
             .into_iter()
             .map(|c| StackClaim::Point {
-                offset: c.offset,
+                offset: self.compact_native_offset(c.offset, c.point.len()),
                 low_point: c.point,
                 value: c.value,
             })
@@ -276,7 +313,7 @@ impl PrivateBridge {
         let mut claims: Vec<_> = native_claims
             .into_iter()
             .map(|c| StackClaim::Point {
-                offset: c.offset,
+                offset: self.compact_native_offset(c.offset, c.point.len()),
                 low_point: c.point,
                 value: c.value,
             })
@@ -437,6 +474,70 @@ mod tests {
         let bridge = PrivateBridge::new(circuit, io).unwrap();
         let proof = bridge.prove(&values, &blocks, &context).unwrap();
         assert!(!bridge.verify(&public, &context, &proof));
+    }
+
+    #[test]
+    fn compact_native_views_and_claims_preserve_every_used_limb() {
+        let (circuit, io, _, _) = fixture(1, 7);
+        let bridge = PrivateBridge::new(circuit, io).unwrap();
+        let l = bridge.index.log_rows;
+        let n = 1usize << l;
+        let source: Vec<_> = (0..16 * n).map(|i| F64(i as u64 + 1)).collect();
+        let mut compact = vec![F64::ZERO; 12 * n + 16];
+        copy_compact_native(&mut compact, &source, l);
+        for col in 0..4 {
+            for limb in 0..3 {
+                let from = (4 * col + limb) * n;
+                let to = (3 * col + limb) * n;
+                assert_eq!(bridge.compact_native_offset(from, l), to);
+                assert_eq!(bridge.compact_native_offset(from + n - 1, 0), to + n - 1);
+                assert_eq!(bridge.compact_native_offset(from + n / 2, l - 1), to + n / 2);
+                assert_eq!(&compact[to..to + n], &source[from..from + n]);
+            }
+        }
+        assert!(compact[12 * n..].iter().all(|&x| x == F64::ZERO));
+        // Column-zero connector slices keep their original offsets.
+        for slot in 0..18 {
+            for limb in 0..3 {
+                let offset = limb * n + bridge.connector_start + (slot << bridge.block_log);
+                assert_eq!(bridge.compact_native_offset(offset, bridge.block_log), offset);
+            }
+        }
+        for (offset, low_log) in [
+            (3 * n, 0),
+            (7 * n, 0),
+            (11 * n, 0),
+            (15 * n, 0),
+            (16 * n, 0),
+            (0, l + 1),
+            (1, l),
+        ] {
+            assert!(
+                std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
+                    bridge.compact_native_offset(offset, low_log)
+                }))
+                .is_err(),
+                "accepted invalid native view offset={offset} low_log={low_log}"
+            );
+        }
+    }
+
+    #[test]
+    fn compact_joint_layout_keeps_flock_aligned_and_disjoint() {
+        for l in 13..=24 {
+            let n = 1usize << l;
+            for q_log in 0..=24 {
+                let q_words = 1usize << q_log;
+                let (offset, log) = joint_layout(l, q_log);
+                assert!(offset >= 12 * n);
+                assert!(offset.is_multiple_of(q_words));
+                assert!(offset - 12 * n < q_words);
+                assert!(offset + q_words <= 1usize << log);
+                assert!(offset + q_words > 1usize << (log - 1));
+            }
+            assert_eq!(joint_layout(l, l + 2), (12 * n, l + 4));
+            assert_eq!(joint_layout(l, l + 3), (16 * n, l + 5));
+        }
     }
 
     #[test]
