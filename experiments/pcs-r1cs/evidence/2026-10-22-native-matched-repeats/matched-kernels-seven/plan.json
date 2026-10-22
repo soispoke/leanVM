@@ -1,0 +1,73 @@
+{
+  "specs": {
+    "candidate": [
+      "/root/yukon-autoresearch/workspaces/leanr1cs-parity-20261022/private_tree-kernels",
+      "926264e3e9da1e8b92cd41ef2239a60049aa917a",
+      "646b5559ad188604f38ab5f0f196da81879cfe286cbb4aee9cfa5ba34fd5036a"
+    ],
+    "leanvm": [
+      "/root/workspaces/mission-9abcee72/scratch/perf-20261022/frozen/chain_tree_vm-final",
+      "bd2f8fc38c269f08ddcc8b2ea571fb45dfb10a47",
+      "54c05b65a9594d44ca297238eae9c69d8dc05a164b88360bbb0a61e9644b58af"
+    ]
+  },
+  "plan": [
+    [
+      "warmup",
+      [
+        "candidate",
+        "leanvm"
+      ]
+    ],
+    [
+      "trial-0",
+      [
+        "candidate",
+        "leanvm"
+      ]
+    ],
+    [
+      "trial-1",
+      [
+        "leanvm",
+        "candidate"
+      ]
+    ],
+    [
+      "trial-2",
+      [
+        "candidate",
+        "leanvm"
+      ]
+    ],
+    [
+      "trial-3",
+      [
+        "leanvm",
+        "candidate"
+      ]
+    ],
+    [
+      "trial-4",
+      [
+        "candidate",
+        "leanvm"
+      ]
+    ],
+    [
+      "trial-5",
+      [
+        "leanvm",
+        "candidate"
+      ]
+    ],
+    [
+      "trial-6",
+      [
+        "candidate",
+        "leanvm"
+      ]
+    ]
+  ],
+  "scope": "Two leaves, 16 hash steps each, one parent; 16 workers CPUs0-15. Warmup excluded."
+}

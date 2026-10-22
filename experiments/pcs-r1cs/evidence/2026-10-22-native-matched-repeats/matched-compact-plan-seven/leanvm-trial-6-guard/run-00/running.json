@@ -1,0 +1,22 @@
+{
+  "pid": 304047,
+  "command": [
+    "/usr/bin/python3.12",
+    "/root/workspaces/mission-9abcee72/leanvm-opt/experiments/pcs-r1cs/recursion/run.py",
+    "--out",
+    "/root/yukon-autoresearch/workspaces/leanr1cs-parity-20261022/matched-compact-plan-seven/leanvm-trial-6",
+    "--budget-gib",
+    "32",
+    "--binary-source-commit",
+    "bd2f8fc38c269f08ddcc8b2ea571fb45dfb10a47",
+    "--",
+    "/root/workspaces/mission-9abcee72/scratch/perf-20261022/frozen/chain_tree_vm-final",
+    "--depth",
+    "1",
+    "--chain",
+    "16",
+    "--log-inv-rate",
+    "1"
+  ],
+  "started_utc": "2026-10-22T14:24:57.253784+00:00"
+}

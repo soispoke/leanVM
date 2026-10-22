@@ -1,0 +1,20 @@
+{
+  "pid": 296169,
+  "command": [
+    "/usr/bin/python3.12",
+    "/root/workspaces/mission-9abcee72/leanvm-opt/experiments/pcs-r1cs/recursion/run.py",
+    "--out",
+    "/root/yukon-autoresearch/workspaces/leanr1cs-parity-20261022/matched-kernels-seven/candidate-trial-2",
+    "--budget-gib",
+    "32",
+    "--binary-source-commit",
+    "926264e3e9da1e8b92cd41ef2239a60049aa917a",
+    "--",
+    "/root/yukon-autoresearch/workspaces/leanr1cs-parity-20261022/private_tree-kernels",
+    "--depth",
+    "1",
+    "--chain",
+    "16"
+  ],
+  "started_utc": "2026-10-22T14:21:11.293646+00:00"
+}

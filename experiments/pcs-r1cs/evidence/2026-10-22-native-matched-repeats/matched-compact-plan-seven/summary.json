@@ -1,0 +1,930 @@
+{
+  "status": "complete_record_sets",
+  "groups": {
+    "candidate": {
+      "backend": "native",
+      "depth": 1,
+      "chain": 16,
+      "source_commit": "f1b6626fc546956085f4512d8210f715e6dd256b",
+      "binary_sha256": "61aa7593645c0a7838f3a40e61bb0826b0dd78b77826413335178a29ae474713",
+      "environment": {
+        "hostname": "21af93d7fe47",
+        "kernel": "6.12.113+deb13-cloud-amd64",
+        "cpu_model": "Intel(R) Xeon(R) Gold 6230R CPU @ 2.10GHz",
+        "affinity": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15
+        ],
+        "worker_count": "16",
+        "rust_toolchain": "1.99.1",
+        "rustflags": "-C target-cpu=native -C target-feature=+pclmulqdq"
+      },
+      "trials": 7,
+      "elapsed_s": 2.005814618009026,
+      "peak_rss_gib": 3.0819549560546875,
+      "levels": [
+        {
+          "level": 0,
+          "proving_s": {
+            "median": 0.0299151155,
+            "min": 0.027763577499999997,
+            "max": 0.038705346
+          },
+          "verification_ms": {
+            "median": 4.2864725,
+            "min": 4.183618,
+            "max": 5.449612500000001
+          },
+          "proof_bytes": {
+            "median": 208752.0,
+            "min": 208752.0,
+            "max": 208752.0
+          },
+          "preparation_plus_proving_s": {
+            "median": 0.0299407175,
+            "min": 0.0277790725,
+            "max": 0.0387290495
+          }
+        },
+        {
+          "level": 1,
+          "proving_s": {
+            "median": 0.98736347,
+            "min": 0.96073843,
+            "max": 1.015043465
+          },
+          "verification_ms": {
+            "median": 5.606133,
+            "min": 5.5049030000000005,
+            "max": 6.9601560000000005
+          },
+          "proof_bytes": {
+            "median": 325352,
+            "min": 325352,
+            "max": 325352
+          },
+          "preparation_plus_proving_s": {
+            "median": 1.041650868,
+            "min": 1.006213194,
+            "max": 1.080144209
+          }
+        }
+      ],
+      "runs": [
+        {
+          "directory": "/root/yukon-autoresearch/workspaces/leanr1cs-parity-20261022/matched-compact-plan-seven/candidate-trial-0",
+          "backend": "native",
+          "depth": 1,
+          "chain": 16,
+          "levels": [
+            {
+              "level": 0,
+              "proofs": 2,
+              "proving_s": 0.038705346,
+              "verification_ms": 5.449612500000001,
+              "proof_bytes": 208752.0,
+              "preparation_plus_proving_s": 0.0387290495
+            },
+            {
+              "level": 1,
+              "proofs": 1,
+              "proving_s": 1.015043465,
+              "verification_ms": 6.9601560000000005,
+              "proof_bytes": 325352,
+              "preparation_plus_proving_s": 1.080144209
+            }
+          ],
+          "elapsed_s": 2.508508597005857,
+          "peak_rss_gib": 3.0819549560546875,
+          "source_commit": "f1b6626fc546956085f4512d8210f715e6dd256b",
+          "binary_sha256": "61aa7593645c0a7838f3a40e61bb0826b0dd78b77826413335178a29ae474713",
+          "environment": {
+            "hostname": "21af93d7fe47",
+            "kernel": "6.12.113+deb13-cloud-amd64",
+            "cpu_model": "Intel(R) Xeon(R) Gold 6230R CPU @ 2.10GHz",
+            "affinity": [
+              0,
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15
+            ],
+            "worker_count": "16",
+            "rust_toolchain": "1.99.1",
+            "rustflags": "-C target-cpu=native -C target-feature=+pclmulqdq"
+          }
+        },
+        {
+          "directory": "/root/yukon-autoresearch/workspaces/leanr1cs-parity-20261022/matched-compact-plan-seven/candidate-trial-1",
+          "backend": "native",
+          "depth": 1,
+          "chain": 16,
+          "levels": [
+            {
+              "level": 0,
+              "proofs": 2,
+              "proving_s": 0.031807279,
+              "verification_ms": 5.4441615,
+              "proof_bytes": 208752.0,
+              "preparation_plus_proving_s": 0.031832912500000005
+            },
+            {
+              "level": 1,
+              "proofs": 1,
+              "proving_s": 0.991831612,
+              "verification_ms": 5.5049030000000005,
+              "proof_bytes": 325352,
+              "preparation_plus_proving_s": 1.041650868
+            }
+          ],
+          "elapsed_s": 2.006237751003937,
+          "peak_rss_gib": 3.0712509155273438,
+          "source_commit": "f1b6626fc546956085f4512d8210f715e6dd256b",
+          "binary_sha256": "61aa7593645c0a7838f3a40e61bb0826b0dd78b77826413335178a29ae474713",
+          "environment": {
+            "hostname": "21af93d7fe47",
+            "kernel": "6.12.113+deb13-cloud-amd64",
+            "cpu_model": "Intel(R) Xeon(R) Gold 6230R CPU @ 2.10GHz",
+            "affinity": [
+              0,
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15
+            ],
+            "worker_count": "16",
+            "rust_toolchain": "1.99.1",
+            "rustflags": "-C target-cpu=native -C target-feature=+pclmulqdq"
+          }
+        },
+        {
+          "directory": "/root/yukon-autoresearch/workspaces/leanr1cs-parity-20261022/matched-compact-plan-seven/candidate-trial-2",
+          "backend": "native",
+          "depth": 1,
+          "chain": 16,
+          "levels": [
+            {
+              "level": 0,
+              "proofs": 2,
+              "proving_s": 0.027763577499999997,
+              "verification_ms": 4.183723,
+              "proof_bytes": 208752.0,
+              "preparation_plus_proving_s": 0.0277790725
+            },
+            {
+              "level": 1,
+              "proofs": 1,
+              "proving_s": 0.995949891,
+              "verification_ms": 5.593284,
+              "proof_bytes": 325352,
+              "preparation_plus_proving_s": 1.04679314
+            }
+          ],
+          "elapsed_s": 2.004794780004886,
+          "peak_rss_gib": 3.0634002685546875,
+          "source_commit": "f1b6626fc546956085f4512d8210f715e6dd256b",
+          "binary_sha256": "61aa7593645c0a7838f3a40e61bb0826b0dd78b77826413335178a29ae474713",
+          "environment": {
+            "hostname": "21af93d7fe47",
+            "kernel": "6.12.113+deb13-cloud-amd64",
+            "cpu_model": "Intel(R) Xeon(R) Gold 6230R CPU @ 2.10GHz",
+            "affinity": [
+              0,
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15
+            ],
+            "worker_count": "16",
+            "rust_toolchain": "1.99.1",
+            "rustflags": "-C target-cpu=native -C target-feature=+pclmulqdq"
+          }
+        },
+        {
+          "directory": "/root/yukon-autoresearch/workspaces/leanr1cs-parity-20261022/matched-compact-plan-seven/candidate-trial-3",
+          "backend": "native",
+          "depth": 1,
+          "chain": 16,
+          "levels": [
+            {
+              "level": 0,
+              "proofs": 2,
+              "proving_s": 0.030548452,
+              "verification_ms": 4.183618,
+              "proof_bytes": 208752.0,
+              "preparation_plus_proving_s": 0.0305662905
+            },
+            {
+              "level": 1,
+              "proofs": 1,
+              "proving_s": 0.984374298,
+              "verification_ms": 5.606133,
+              "proof_bytes": 325352,
+              "preparation_plus_proving_s": 1.054840179
+            }
+          ],
+          "elapsed_s": 2.005494936995092,
+          "peak_rss_gib": 3.0715179443359375,
+          "source_commit": "f1b6626fc546956085f4512d8210f715e6dd256b",
+          "binary_sha256": "61aa7593645c0a7838f3a40e61bb0826b0dd78b77826413335178a29ae474713",
+          "environment": {
+            "hostname": "21af93d7fe47",
+            "kernel": "6.12.113+deb13-cloud-amd64",
+            "cpu_model": "Intel(R) Xeon(R) Gold 6230R CPU @ 2.10GHz",
+            "affinity": [
+              0,
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15
+            ],
+            "worker_count": "16",
+            "rust_toolchain": "1.99.1",
+            "rustflags": "-C target-cpu=native -C target-feature=+pclmulqdq"
+          }
+        },
+        {
+          "directory": "/root/yukon-autoresearch/workspaces/leanr1cs-parity-20261022/matched-compact-plan-seven/candidate-trial-4",
+          "backend": "native",
+          "depth": 1,
+          "chain": 16,
+          "levels": [
+            {
+              "level": 0,
+              "proofs": 2,
+              "proving_s": 0.028383823,
+              "verification_ms": 4.2864725,
+              "proof_bytes": 208752.0,
+              "preparation_plus_proving_s": 0.0283992805
+            },
+            {
+              "level": 1,
+              "proofs": 1,
+              "proving_s": 0.98736347,
+              "verification_ms": 6.171145999999999,
+              "proof_bytes": 325352,
+              "preparation_plus_proving_s": 1.037738024
+            }
+          ],
+          "elapsed_s": 2.0047028130065883,
+          "peak_rss_gib": 3.0717506408691406,
+          "source_commit": "f1b6626fc546956085f4512d8210f715e6dd256b",
+          "binary_sha256": "61aa7593645c0a7838f3a40e61bb0826b0dd78b77826413335178a29ae474713",
+          "environment": {
+            "hostname": "21af93d7fe47",
+            "kernel": "6.12.113+deb13-cloud-amd64",
+            "cpu_model": "Intel(R) Xeon(R) Gold 6230R CPU @ 2.10GHz",
+            "affinity": [
+              0,
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15
+            ],
+            "worker_count": "16",
+            "rust_toolchain": "1.99.1",
+            "rustflags": "-C target-cpu=native -C target-feature=+pclmulqdq"
+          }
+        },
+        {
+          "directory": "/root/yukon-autoresearch/workspaces/leanr1cs-parity-20261022/matched-compact-plan-seven/candidate-trial-5",
+          "backend": "native",
+          "depth": 1,
+          "chain": 16,
+          "levels": [
+            {
+              "level": 0,
+              "proofs": 2,
+              "proving_s": 0.0299151155,
+              "verification_ms": 4.255497,
+              "proof_bytes": 208752.0,
+              "preparation_plus_proving_s": 0.0299407175
+            },
+            {
+              "level": 1,
+              "proofs": 1,
+              "proving_s": 0.977059457,
+              "verification_ms": 5.662401,
+              "proof_bytes": 325352,
+              "preparation_plus_proving_s": 1.02562935
+            }
+          ],
+          "elapsed_s": 2.005814618009026,
+          "peak_rss_gib": 3.0697669982910156,
+          "source_commit": "f1b6626fc546956085f4512d8210f715e6dd256b",
+          "binary_sha256": "61aa7593645c0a7838f3a40e61bb0826b0dd78b77826413335178a29ae474713",
+          "environment": {
+            "hostname": "21af93d7fe47",
+            "kernel": "6.12.113+deb13-cloud-amd64",
+            "cpu_model": "Intel(R) Xeon(R) Gold 6230R CPU @ 2.10GHz",
+            "affinity": [
+              0,
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15
+            ],
+            "worker_count": "16",
+            "rust_toolchain": "1.99.1",
+            "rustflags": "-C target-cpu=native -C target-feature=+pclmulqdq"
+          }
+        },
+        {
+          "directory": "/root/yukon-autoresearch/workspaces/leanr1cs-parity-20261022/matched-compact-plan-seven/candidate-trial-6",
+          "backend": "native",
+          "depth": 1,
+          "chain": 16,
+          "levels": [
+            {
+              "level": 0,
+              "proofs": 2,
+              "proving_s": 0.028693186500000002,
+              "verification_ms": 4.290103,
+              "proof_bytes": 208752.0,
+              "preparation_plus_proving_s": 0.028710415000000003
+            },
+            {
+              "level": 1,
+              "proofs": 1,
+              "proving_s": 0.96073843,
+              "verification_ms": 5.577261,
+              "proof_bytes": 325352,
+              "preparation_plus_proving_s": 1.006213194
+            }
+          ],
+          "elapsed_s": 2.009742299997015,
+          "peak_rss_gib": 3.060016632080078,
+          "source_commit": "f1b6626fc546956085f4512d8210f715e6dd256b",
+          "binary_sha256": "61aa7593645c0a7838f3a40e61bb0826b0dd78b77826413335178a29ae474713",
+          "environment": {
+            "hostname": "21af93d7fe47",
+            "kernel": "6.12.113+deb13-cloud-amd64",
+            "cpu_model": "Intel(R) Xeon(R) Gold 6230R CPU @ 2.10GHz",
+            "affinity": [
+              0,
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15
+            ],
+            "worker_count": "16",
+            "rust_toolchain": "1.99.1",
+            "rustflags": "-C target-cpu=native -C target-feature=+pclmulqdq"
+          }
+        }
+      ]
+    },
+    "leanvm": {
+      "backend": "vm",
+      "depth": 1,
+      "chain": 16,
+      "source_commit": "bd2f8fc38c269f08ddcc8b2ea571fb45dfb10a47",
+      "binary_sha256": "54c05b65a9594d44ca297238eae9c69d8dc05a164b88360bbb0a61e9644b58af",
+      "environment": {
+        "hostname": "21af93d7fe47",
+        "kernel": "6.12.113+deb13-cloud-amd64",
+        "cpu_model": "Intel(R) Xeon(R) Gold 6230R CPU @ 2.10GHz",
+        "affinity": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15
+        ],
+        "worker_count": "16",
+        "rust_toolchain": "1.99.1",
+        "rustflags": "-C target-cpu=native -C target-feature=+pclmulqdq"
+      },
+      "trials": 7,
+      "elapsed_s": 2.007281457001227,
+      "peak_rss_gib": 2.526153564453125,
+      "levels": [
+        {
+          "level": 0,
+          "proving_s": {
+            "median": 0.15835688850000001,
+            "min": 0.1445808,
+            "max": 0.19309097749999998
+          },
+          "verification_ms": {
+            "median": 5.7337264999999995,
+            "min": 5.222758000000001,
+            "max": 8.5488515
+          },
+          "proof_bytes": {
+            "median": 239904.0,
+            "min": 239904.0,
+            "max": 239904.0
+          },
+          "preparation_plus_proving_s": null
+        },
+        {
+          "level": 1,
+          "proving_s": {
+            "median": 1.062014845,
+            "min": 1.017880048,
+            "max": 1.197738512
+          },
+          "verification_ms": {
+            "median": 11.513545,
+            "min": 11.159474000000001,
+            "max": 11.846243
+          },
+          "proof_bytes": {
+            "median": 284440,
+            "min": 284440,
+            "max": 284440
+          },
+          "preparation_plus_proving_s": {
+            "median": 1.097025224,
+            "min": 1.050839614,
+            "max": 1.2337908359999998
+          }
+        }
+      ],
+      "runs": [
+        {
+          "directory": "/root/yukon-autoresearch/workspaces/leanr1cs-parity-20261022/matched-compact-plan-seven/leanvm-trial-0",
+          "backend": "vm",
+          "depth": 1,
+          "chain": 16,
+          "levels": [
+            {
+              "level": 0,
+              "proofs": 2,
+              "proving_s": 0.19309097749999998,
+              "verification_ms": 5.7337264999999995,
+              "proof_bytes": 239904.0,
+              "preparation_plus_proving_s": null
+            },
+            {
+              "level": 1,
+              "proofs": 1,
+              "proving_s": 1.197738512,
+              "verification_ms": 11.758398,
+              "proof_bytes": 284440,
+              "preparation_plus_proving_s": 1.2337908359999998
+            }
+          ],
+          "elapsed_s": 2.5090084799885517,
+          "peak_rss_gib": 2.519744873046875,
+          "source_commit": "bd2f8fc38c269f08ddcc8b2ea571fb45dfb10a47",
+          "binary_sha256": "54c05b65a9594d44ca297238eae9c69d8dc05a164b88360bbb0a61e9644b58af",
+          "environment": {
+            "hostname": "21af93d7fe47",
+            "kernel": "6.12.113+deb13-cloud-amd64",
+            "cpu_model": "Intel(R) Xeon(R) Gold 6230R CPU @ 2.10GHz",
+            "affinity": [
+              0,
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15
+            ],
+            "worker_count": "16",
+            "rust_toolchain": "1.99.1",
+            "rustflags": "-C target-cpu=native -C target-feature=+pclmulqdq"
+          }
+        },
+        {
+          "directory": "/root/yukon-autoresearch/workspaces/leanr1cs-parity-20261022/matched-compact-plan-seven/leanvm-trial-1",
+          "backend": "vm",
+          "depth": 1,
+          "chain": 16,
+          "levels": [
+            {
+              "level": 0,
+              "proofs": 2,
+              "proving_s": 0.156196698,
+              "verification_ms": 5.3455200000000005,
+              "proof_bytes": 239904.0,
+              "preparation_plus_proving_s": null
+            },
+            {
+              "level": 1,
+              "proofs": 1,
+              "proving_s": 1.056495542,
+              "verification_ms": 11.513545,
+              "proof_bytes": 284440,
+              "preparation_plus_proving_s": 1.091846148
+            }
+          ],
+          "elapsed_s": 2.004774161003297,
+          "peak_rss_gib": 2.5094566345214844,
+          "source_commit": "bd2f8fc38c269f08ddcc8b2ea571fb45dfb10a47",
+          "binary_sha256": "54c05b65a9594d44ca297238eae9c69d8dc05a164b88360bbb0a61e9644b58af",
+          "environment": {
+            "hostname": "21af93d7fe47",
+            "kernel": "6.12.113+deb13-cloud-amd64",
+            "cpu_model": "Intel(R) Xeon(R) Gold 6230R CPU @ 2.10GHz",
+            "affinity": [
+              0,
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15
+            ],
+            "worker_count": "16",
+            "rust_toolchain": "1.99.1",
+            "rustflags": "-C target-cpu=native -C target-feature=+pclmulqdq"
+          }
+        },
+        {
+          "directory": "/root/yukon-autoresearch/workspaces/leanr1cs-parity-20261022/matched-compact-plan-seven/leanvm-trial-2",
+          "backend": "vm",
+          "depth": 1,
+          "chain": 16,
+          "levels": [
+            {
+              "level": 0,
+              "proofs": 2,
+              "proving_s": 0.15835688850000001,
+              "verification_ms": 5.222758000000001,
+              "proof_bytes": 239904.0,
+              "preparation_plus_proving_s": null
+            },
+            {
+              "level": 1,
+              "proofs": 1,
+              "proving_s": 1.140002562,
+              "verification_ms": 11.64999,
+              "proof_bytes": 284440,
+              "preparation_plus_proving_s": 1.17473669
+            }
+          ],
+          "elapsed_s": 2.010097135003889,
+          "peak_rss_gib": 2.5167083740234375,
+          "source_commit": "bd2f8fc38c269f08ddcc8b2ea571fb45dfb10a47",
+          "binary_sha256": "54c05b65a9594d44ca297238eae9c69d8dc05a164b88360bbb0a61e9644b58af",
+          "environment": {
+            "hostname": "21af93d7fe47",
+            "kernel": "6.12.113+deb13-cloud-amd64",
+            "cpu_model": "Intel(R) Xeon(R) Gold 6230R CPU @ 2.10GHz",
+            "affinity": [
+              0,
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15
+            ],
+            "worker_count": "16",
+            "rust_toolchain": "1.99.1",
+            "rustflags": "-C target-cpu=native -C target-feature=+pclmulqdq"
+          }
+        },
+        {
+          "directory": "/root/yukon-autoresearch/workspaces/leanr1cs-parity-20261022/matched-compact-plan-seven/leanvm-trial-3",
+          "backend": "vm",
+          "depth": 1,
+          "chain": 16,
+          "levels": [
+            {
+              "level": 0,
+              "proofs": 2,
+              "proving_s": 0.174975393,
+              "verification_ms": 8.5488515,
+              "proof_bytes": 239904.0,
+              "preparation_plus_proving_s": null
+            },
+            {
+              "level": 1,
+              "proofs": 1,
+              "proving_s": 1.10997684,
+              "verification_ms": 11.159474000000001,
+              "proof_bytes": 284440,
+              "preparation_plus_proving_s": 1.1451807040000002
+            }
+          ],
+          "elapsed_s": 2.505602456003544,
+          "peak_rss_gib": 2.5104751586914062,
+          "source_commit": "bd2f8fc38c269f08ddcc8b2ea571fb45dfb10a47",
+          "binary_sha256": "54c05b65a9594d44ca297238eae9c69d8dc05a164b88360bbb0a61e9644b58af",
+          "environment": {
+            "hostname": "21af93d7fe47",
+            "kernel": "6.12.113+deb13-cloud-amd64",
+            "cpu_model": "Intel(R) Xeon(R) Gold 6230R CPU @ 2.10GHz",
+            "affinity": [
+              0,
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15
+            ],
+            "worker_count": "16",
+            "rust_toolchain": "1.99.1",
+            "rustflags": "-C target-cpu=native -C target-feature=+pclmulqdq"
+          }
+        },
+        {
+          "directory": "/root/yukon-autoresearch/workspaces/leanr1cs-parity-20261022/matched-compact-plan-seven/leanvm-trial-4",
+          "backend": "vm",
+          "depth": 1,
+          "chain": 16,
+          "levels": [
+            {
+              "level": 0,
+              "proofs": 2,
+              "proving_s": 0.161218391,
+              "verification_ms": 5.9127849999999995,
+              "proof_bytes": 239904.0,
+              "preparation_plus_proving_s": null
+            },
+            {
+              "level": 1,
+              "proofs": 1,
+              "proving_s": 1.055880814,
+              "verification_ms": 11.846243,
+              "proof_bytes": 284440,
+              "preparation_plus_proving_s": 1.09198315
+            }
+          ],
+          "elapsed_s": 2.007281457001227,
+          "peak_rss_gib": 2.516254425048828,
+          "source_commit": "bd2f8fc38c269f08ddcc8b2ea571fb45dfb10a47",
+          "binary_sha256": "54c05b65a9594d44ca297238eae9c69d8dc05a164b88360bbb0a61e9644b58af",
+          "environment": {
+            "hostname": "21af93d7fe47",
+            "kernel": "6.12.113+deb13-cloud-amd64",
+            "cpu_model": "Intel(R) Xeon(R) Gold 6230R CPU @ 2.10GHz",
+            "affinity": [
+              0,
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15
+            ],
+            "worker_count": "16",
+            "rust_toolchain": "1.99.1",
+            "rustflags": "-C target-cpu=native -C target-feature=+pclmulqdq"
+          }
+        },
+        {
+          "directory": "/root/yukon-autoresearch/workspaces/leanr1cs-parity-20261022/matched-compact-plan-seven/leanvm-trial-5",
+          "backend": "vm",
+          "depth": 1,
+          "chain": 16,
+          "levels": [
+            {
+              "level": 0,
+              "proofs": 2,
+              "proving_s": 0.15626276649999998,
+              "verification_ms": 6.954332000000001,
+              "proof_bytes": 239904.0,
+              "preparation_plus_proving_s": null
+            },
+            {
+              "level": 1,
+              "proofs": 1,
+              "proving_s": 1.062014845,
+              "verification_ms": 11.499324999999999,
+              "proof_bytes": 284440,
+              "preparation_plus_proving_s": 1.097025224
+            }
+          ],
+          "elapsed_s": 2.004476531990804,
+          "peak_rss_gib": 2.526153564453125,
+          "source_commit": "bd2f8fc38c269f08ddcc8b2ea571fb45dfb10a47",
+          "binary_sha256": "54c05b65a9594d44ca297238eae9c69d8dc05a164b88360bbb0a61e9644b58af",
+          "environment": {
+            "hostname": "21af93d7fe47",
+            "kernel": "6.12.113+deb13-cloud-amd64",
+            "cpu_model": "Intel(R) Xeon(R) Gold 6230R CPU @ 2.10GHz",
+            "affinity": [
+              0,
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15
+            ],
+            "worker_count": "16",
+            "rust_toolchain": "1.99.1",
+            "rustflags": "-C target-cpu=native -C target-feature=+pclmulqdq"
+          }
+        },
+        {
+          "directory": "/root/yukon-autoresearch/workspaces/leanr1cs-parity-20261022/matched-compact-plan-seven/leanvm-trial-6",
+          "backend": "vm",
+          "depth": 1,
+          "chain": 16,
+          "levels": [
+            {
+              "level": 0,
+              "proofs": 2,
+              "proving_s": 0.1445808,
+              "verification_ms": 5.2929794999999995,
+              "proof_bytes": 239904.0,
+              "preparation_plus_proving_s": null
+            },
+            {
+              "level": 1,
+              "proofs": 1,
+              "proving_s": 1.017880048,
+              "verification_ms": 11.396471,
+              "proof_bytes": 284440,
+              "preparation_plus_proving_s": 1.050839614
+            }
+          ],
+          "elapsed_s": 2.0060988290060777,
+          "peak_rss_gib": 2.5237808227539062,
+          "source_commit": "bd2f8fc38c269f08ddcc8b2ea571fb45dfb10a47",
+          "binary_sha256": "54c05b65a9594d44ca297238eae9c69d8dc05a164b88360bbb0a61e9644b58af",
+          "environment": {
+            "hostname": "21af93d7fe47",
+            "kernel": "6.12.113+deb13-cloud-amd64",
+            "cpu_model": "Intel(R) Xeon(R) Gold 6230R CPU @ 2.10GHz",
+            "affinity": [
+              0,
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15
+            ],
+            "worker_count": "16",
+            "rust_toolchain": "1.99.1",
+            "rustflags": "-C target-cpu=native -C target-feature=+pclmulqdq"
+          }
+        }
+      ]
+    }
+  },
+  "scope": "shared-host development trials; separate keys per level; native rows are not VM cycles; not an architectural ranking"
+}

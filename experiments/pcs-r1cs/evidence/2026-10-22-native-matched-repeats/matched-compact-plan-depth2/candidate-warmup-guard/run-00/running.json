@@ -1,0 +1,20 @@
+{
+  "pid": 305008,
+  "command": [
+    "/usr/bin/python3.12",
+    "/root/workspaces/mission-9abcee72/leanvm-opt/experiments/pcs-r1cs/recursion/run.py",
+    "--out",
+    "/root/yukon-autoresearch/workspaces/leanr1cs-parity-20261022/matched-compact-plan-depth2/candidate-warmup",
+    "--budget-gib",
+    "32",
+    "--binary-source-commit",
+    "f1b6626fc546956085f4512d8210f715e6dd256b",
+    "--",
+    "/root/yukon-autoresearch/workspaces/leanr1cs-parity-20261022/private_tree-compact-plan",
+    "--depth",
+    "2",
+    "--chain",
+    "16"
+  ],
+  "started_utc": "2026-10-22T14:26:22.028184+00:00"
+}
