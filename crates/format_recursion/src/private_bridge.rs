@@ -26,7 +26,7 @@ const SLOTS: [usize; 18] = [0, 1, 2, 3, 4, 5, 6, 7, 10, 11, 12, 13, 14, 15, 16, 
 /// Candidate production WHIR profile for the joint private witness only.
 /// The fixed circuit index uses a separate validated production profile.
 pub(crate) const JOINT_LOG_INV_RATE: usize = 2;
-const INDEX_LOG_INV_RATE: usize = 3;
+const INDEX_LOG_INV_RATE: usize = 4;
 const MIN_BLOCKS: usize = 128;
 const MAX_BLOCKS: usize = 1 << 16;
 
@@ -355,6 +355,7 @@ mod tests {
             let baseline = whir::config_for_rate(log_n, 1).unwrap();
             let candidate = whir::config_for_rate(log_n, JOINT_LOG_INV_RATE).unwrap();
             let index = whir::config_for_rate(log_n, INDEX_LOG_INV_RATE).unwrap();
+            assert_eq!(INDEX_LOG_INV_RATE, 4);
             assert_eq!(index.log_inv_rates[0], INDEX_LOG_INV_RATE);
             assert!(index.queries[0] < candidate.queries[0]);
             assert_eq!(candidate.initial_k, INITIAL_FOLDING_FACTOR);
