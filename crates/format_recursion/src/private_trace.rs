@@ -265,7 +265,13 @@ fn preflight(program: &Trace, limits: Limits) -> Option<Limits> {
         .zip(&e.used)
         .map(|(&p, &u)| (p & !u).count_ones() as usize)
         .sum();
-    e.charge(pending.checked_mul(129)?, pending.checked_mul(128)?)?;
+    // Unused F64 limbs are message words of additional private compressions.
+    // The bridge's existing compression relation supplies their exact typing.
+    let typing = pending.div_ceil(8);
+    e.bound.compressions = e.bound.compressions.checked_add(typing)?;
+    if typing != 0 {
+        e.charge(0, typing.checked_mul(4)?.checked_add(6)?)?;
+    }
     (e.bound.rows <= limits.rows
         && e.bound.variables <= limits.variables
         && e.bound.compressions <= limits.compressions)
@@ -427,21 +433,45 @@ impl Compiler {
         limbs
     }
 
+    /// Batch remaining range checks into the existing private hash relation.
+    /// Each connector proves a valid fixed-IV BLAKE2s compression, hence every
+    /// connected message word is an embedded F64. Outputs remain private and
+    /// otherwise unused. This compiler always requires the private bridge.
     fn constrain_unused_limbs(&mut self) {
-        for variable in self.pending_limbs.clone() {
-            if self.typed.contains(&variable) {
-                continue;
-            }
-            let value = self.values[variable].c0;
-            let bits: Vec<_> = (0..64)
-                .map(|bit| {
-                    let variable = self.variable(F192::new((value >> bit) & 1, 0, 0));
-                    self.boolean(variable);
-                    variable
-                })
-                .collect();
-            let reconstructed = self.reconstruct(&bits);
-            self.equal(reconstructed, variable);
+        let pending: Vec<_> = self
+            .pending_limbs
+            .iter()
+            .copied()
+            .filter(|v| !self.typed.contains(v))
+            .collect::<BTreeSet<_>>()
+            .into_iter()
+            .collect();
+        if pending.is_empty() {
+            return;
+        }
+        let initial = param_iv();
+        let cv: [usize; 4] =
+            std::array::from_fn(|i| self.constant(F192::new(pack32(initial[2 * i], initial[2 * i + 1]), 0, 0)));
+        let counter = self.constant(F192::new(64, 0, 0));
+        let flags = self.constant(F192::new(u64::from(u32::MAX), 0, 0));
+        for chunk in pending.chunks(8) {
+            let words: [usize; 8] = std::array::from_fn(|i| *chunk.get(i).unwrap_or(&0));
+            let message: [u32; 16] = std::array::from_fn(|i| (self.values[words[i / 2]].c0 >> (32 * (i % 2))) as u32);
+            let compression = (initial, message, 64, u32::MAX, 0);
+            let output = blake2s_compress(&initial, &message, 64, u32::MAX, 0);
+            let outputs: [usize; 4] =
+                std::array::from_fn(|i| self.variable(F192::new(pack32(output[2 * i], output[2 * i + 1]), 0, 0)));
+            self.connectors.push(std::array::from_fn(|i| match i {
+                0..4 => cv[i],
+                4..8 => outputs[i - 4],
+                8..16 => words[i - 8],
+                16 => counter,
+                17 => flags,
+                _ => unreachable!(),
+            }));
+            self.compressions.push(compression);
+            self.typed.extend(words);
+            self.typed.extend(outputs);
         }
     }
     /// Every source has at most one full decomposition. High bits are never
@@ -757,7 +787,7 @@ mod tests {
         t.public = vec![add, mul, frob, lo, high, packed, selected];
         let mut lowered = lower(&t, &t).unwrap();
         assert!(rows_hold(&lowered));
-        assert!(lowered.connectors.is_empty());
+        assert!(connectors_hold(&lowered));
         assert_eq!(
             lowered.expected_public(&public(&t)).unwrap(),
             lowered
@@ -785,7 +815,7 @@ mod tests {
     fn decompositions_are_cached_and_boolean() {
         trace::start();
         let input = S::input(F192::new(17, 19, 23));
-        input.slice(0, 64);
+        input.slice(0, 63);
         input.slice(64, 128);
         let t = trace::take();
         let mut lowered = lower(&t, &t).unwrap();
@@ -820,20 +850,21 @@ mod tests {
             let mut lowered = lower(&t, &t).unwrap();
             assert!(rows_hold(&lowered));
             assert!(connectors_hold(&lowered));
-            assert_eq!(lowered.compressions.len(), bytes.div_ceil(64).max(1));
+            let hash_count = bytes.div_ceil(64).max(1);
+            assert!(lowered.compressions.len() >= hash_count);
             assert_eq!(
                 fiat_shamir::merkle::scalars_to_hash(&[t.nodes[outputs[0].0].value, t.nodes[outputs[1].0].value])
                     .unwrap(),
                 primitives::hash::hash(&message)
             );
-            for pair in lowered.connectors.windows(2) {
+            for pair in lowered.connectors[..hash_count].windows(2) {
                 assert_eq!(pair[0][4..8], pair[1][..4]);
             }
-            let end = lowered.connectors.len() - 1;
+            let end = hash_count - 1;
             let cv = lowered.connectors[end][0];
             lowered.values[cv] += F192::ONE;
             assert!(!connectors_hold(&lowered));
-            if lowered.connectors.len() > 1 {
+            if hash_count > 1 {
                 assert!(rows_hold(&lowered));
             }
             let mut witness = copy_trace(&t);
@@ -936,7 +967,7 @@ mod tests {
         let delta = F192::new(0, 1, 0);
         lowered.values[upper] += delta;
         lowered.values[source.0 + 2] += delta * F192::new(0, 0, 1);
-        assert!(!rows_hold(&lowered));
+        assert!(!rows_hold(&lowered) || !connectors_hold(&lowered));
     }
 
     #[test]
@@ -1024,7 +1055,7 @@ mod tests {
     }
 
     #[test]
-    fn range_checks_without_bridge_still_type_every_word() {
+    fn range_checks_use_private_typing_and_exact_partial_words() {
         for width in [32, 64, 96, 128, 192] {
             trace::start();
             let source = S::input(F192::new(
@@ -1036,16 +1067,17 @@ mod tests {
             let t = trace::take();
             let mut lowered = lower(&t, &t).unwrap();
             assert!(rows_hold(&lowered));
-            assert_eq!(boolean_rows(&lowered), width);
+            assert_eq!(boolean_rows(&lowered), if width % 64 == 0 { 0 } else { width });
+            assert!(connectors_hold(&lowered));
             check_bound(&t, &lowered);
-            // Change both original nodes coherently: row equations alone must
-            // still forbid values outside the advertised range.
+            // Change both original nodes coherently: native equations plus
+            // private bridge typing must forbid values outside the range.
             let projection = t.checks[0].1;
             let delta = basis(width.min(191));
             if width < 192 {
                 lowered.values[source.0 + 2] += delta;
                 lowered.values[projection.0 + 2] += delta;
-                assert!(!rows_hold(&lowered));
+                assert!(!rows_hold(&lowered) || !connectors_hold(&lowered));
             }
         }
     }
@@ -1059,10 +1091,10 @@ mod tests {
         let t = trace::take();
         let mut lowered = lower(&t, &t).unwrap();
         assert!(rows_hold(&lowered) && connectors_hold(&lowered));
-        assert_eq!(boolean_rows(&lowered), 128);
+        assert_eq!(boolean_rows(&lowered), 0);
         check_bound(&t, &lowered);
         // Move a high extension-field value into an omitted limb and adjust
-        // the complete source equation. Fallback F64 typing rejects it.
+        // the complete source equation. Private bridge F64 typing rejects it.
         let hi_row = lowered
             .circuit
             .rows
@@ -1073,7 +1105,7 @@ mod tests {
         let delta = F192::new(0, 1, 0);
         lowered.values[high] += delta;
         lowered.values[source.0 + 2] += delta * F192::new(0, 0, 1);
-        assert!(!rows_hold(&lowered));
+        assert!(!rows_hold(&lowered) || !connectors_hold(&lowered));
     }
 
     #[test]
@@ -1092,5 +1124,46 @@ mod tests {
         assert_eq!(boolean_rows(&lowered), 1); // selector only
         assert!(lowered.circuit.rows.len() < 24);
         check_bound(&t, &lowered);
+    }
+    #[test]
+    fn private_range_typing_batches_eight_unique_words_and_checks_budget() {
+        trace::start();
+        for value in 11..20 {
+            let word = S::input(F192::new(value, 0, 0));
+            let projection = word.slice(0, 64);
+            word.assert_eq(projection);
+            // Reuse aliases: no duplicate pending range check is needed.
+            projection.slice(0, 64);
+        }
+        let t = trace::take();
+        let mut lowered = lower(&t, &t).unwrap();
+        assert!(rows_hold(&lowered) && connectors_hold(&lowered));
+        assert_eq!(lowered.compressions.len(), 2);
+        assert_eq!(boolean_rows(&lowered), 0);
+        assert!(
+            lowered
+                .compressions
+                .iter()
+                .all(|c| c.0 == param_iv() && c.2 == 64 && c.3 == u32::MAX && c.4 == 0)
+        );
+        assert!(lowered.connectors[1][9..16].iter().all(|&v| v == 0));
+        check_bound(&t, &lowered);
+        let bound = allocation_bound(&t).unwrap();
+        assert_eq!(bound.compressions, 2);
+        assert!(
+            lower_with_limits(
+                &t,
+                &t,
+                Limits {
+                    compressions: 1,
+                    ..Limits::default()
+                }
+            )
+            .is_none()
+        );
+        let output = lowered.connectors[0][4];
+        lowered.values[output] += F192::ONE;
+        assert!(rows_hold(&lowered));
+        assert!(!connectors_hold(&lowered));
     }
 }
