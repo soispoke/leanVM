@@ -92,16 +92,12 @@ impl PrivateBridge {
         circuit.variables += 18;
         circuit.public.extend(padding_variables);
         let public_rows = circuit.public.len().next_power_of_two();
-        let alignment = 32 * count;
+        let alignment = count;
         let connector_start = (public_rows + circuit.rows.len()).next_multiple_of(alignment);
         circuit.rows.resize(connector_start - public_rows, [0, 0, 0, 0]);
-        for slot in 0..32 {
+        for slot in 0..18 {
             for block in 0..count {
-                let v = if slot >= 18 {
-                    0
-                } else {
-                    io_variables.get(block).map_or(padding_variables[slot], |row| row[slot])
-                };
+                let v = io_variables.get(block).map_or(padding_variables[slot], |row| row[slot]);
                 circuit.rows.push([v, 1, 0, v]);
             }
         }
