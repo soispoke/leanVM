@@ -23,20 +23,32 @@ def main():
     parser = argparse.ArgumentParser(__doc__)
     parser.add_argument('--out', type=Path, required=True)
     parser.add_argument('--budget-gib', type=int, default=64)
+    parser.add_argument('--binary-source-commit', help='Recorded build revision when measuring a preserved baseline binary')
     parser.add_argument('command', nargs=argparse.REMAINDER)
     args = parser.parse_args()
     command = args.command[1:] if args.command[:1] == ['--'] else args.command
     assert command and 0 < args.budget_gib <= 120
     admission = subprocess.run([str(ROOT / 'experiments/pcs-r1cs/memguard'), 'admit', str(args.budget_gib)], capture_output=True, text=True)
     assert admission.returncode == 0, admission.stdout
-    args.out.mkdir(parents=True, exist_ok=False)
     binary = Path(command[0])
+    binary_digest = hashlib.sha256(binary.read_bytes()).hexdigest()
+    harness_commit = subprocess.check_output(['git', 'rev-parse', 'HEAD'], cwd=ROOT, text=True).strip()
+    source_commit = subprocess.check_output(
+        ['git', 'rev-parse', '--verify', (args.binary_source_commit or harness_commit) + '^{commit}'], cwd=ROOT, text=True).strip()
+    cpu_model = next((line.split(':', 1)[1].strip() for line in Path('/proc/cpuinfo').read_text().splitlines()
+                      if line.startswith('model name')), None)
+    args.out.mkdir(parents=True, exist_ok=False)
     record = dict(command=command, cwd=str(ROOT), started_utc=time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime()),
                   kernel=platform.release(), hostname=platform.node(), admission=admission.stdout.strip(),
                   platform=platform.platform(), logical_cpus=os.cpu_count(), affinity=sorted(os.sched_getaffinity(0)),
                   total_memory_gib=memory()['MemTotal']/GIB,
-                  source_commit=subprocess.check_output(['git', 'rev-parse', 'HEAD'], cwd=ROOT, text=True).strip(),
-                  binary_sha256=hashlib.sha256(binary.read_bytes()).hexdigest(), budget_gib=args.budget_gib)
+                  cpu_model=cpu_model, worker_count=os.environ.get('LEANVM_NUM_THREADS'),
+                  rust_toolchain=os.environ.get('RUSTUP_TOOLCHAIN'), rustflags=os.environ.get('RUSTFLAGS'),
+                  source_commit=source_commit, harness_commit=harness_commit,
+                  source_commit_method='operator-specified build revision' if args.binary_source_commit else 'current checkout',
+                  harness_worktree_dirty=bool(subprocess.check_output(
+                      ['git', 'status', '--porcelain', '--untracked-files=no'], cwd=ROOT, text=True).strip()),
+                  binary_sha256=binary_digest, budget_gib=args.budget_gib)
     (args.out / 'started.json').write_text(json.dumps(record, indent=2) + '\n')
     with (args.out / 'stdout.jsonl').open('w') as stdout, (args.out / 'stderr.log').open('w') as stderr:
         process = subprocess.Popen(command, cwd=ROOT, stdout=stdout, stderr=stderr, start_new_session=True)
