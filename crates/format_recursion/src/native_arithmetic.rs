@@ -542,10 +542,11 @@ pub fn verify(index: &Index, public: &[F192], context: &Hash, proof: &Proof) -> 
 #[cfg(test)]
 mod tests {
     use super::*;
+    use rand::{RngCore, SeedableRng, rngs::StdRng};
     #[test]
     fn deferred_native_evaluations_match_reference_for_dense_sparse_and_boundary_lengths() {
         parallel::init();
-        let mut rng = primitives::test_rng::Rng::new(0xB4515);
+        let mut rng = StdRng::seed_from_u64(0xB4515);
         for n in [0usize, 1, 255, 256, 257, 4095, 4096, 4097, 8192] {
             let weights: Vec<_> = (0..n)
                 .map(|_| F192::new(rng.next_u64(), rng.next_u64(), rng.next_u64()))
@@ -575,7 +576,7 @@ mod tests {
     #[test]
     fn shared_copy_fingerprints_match_reference_including_zero_one_and_extension_cells() {
         parallel::init();
-        let mut rng = primitives::test_rng::Rng::new(0xC0B1);
+        let mut rng = StdRng::seed_from_u64(0xC0B1);
         for n in [1usize, 255, 256, 257, 8192] {
             let cols: [Vec<_>; 4] = std::array::from_fn(|_| {
                 (0..n)
@@ -601,7 +602,7 @@ mod tests {
     #[test]
     fn parallel_opening_weights_preserve_overlapping_claim_accumulation() {
         parallel::init();
-        let mut rng = primitives::test_rng::Rng::new(0xB45152);
+        let mut rng = StdRng::seed_from_u64(0xB45152);
         let mut got = vec![F192::ONE; 32768];
         let mut expected = got.clone();
         for (offset, length) in [
