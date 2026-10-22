@@ -4,7 +4,7 @@
 use crate::{
     native_arithmetic::Index,
     trace::{self, S, Trace, digest_constant, hash},
-    verifier::{Transcript, eq, kernel, powers, verify_basis_opening},
+    verifier::{Transcript, eq, kernel, powers, verify_basis_opening, verify_basis_opening_lanes_rate},
 };
 use fiat_shamir::{merkle::Hash, transcript::Proof};
 use flock::membership::Scalar;
@@ -38,10 +38,13 @@ fn read_field(t: &mut Transcript<'_>, l: usize, col: usize, point: &[S], claims:
     value
 }
 pub(crate) fn opening(t: &mut Transcript<'_>, root: [S; 2], l: usize, claims: &[Claim]) {
+    opening_rate(t, root, l, 1, claims)
+}
+pub(crate) fn opening_rate(t: &mut Transcript<'_>, root: [S; 2], l: usize, log_inv_rate: usize, claims: &[Claim]) {
     let lambda = t.sample();
     let weights = powers(lambda, claims.len());
     let target = claims.iter().zip(&weights).fold(S::u(0), |v, (c, &w)| v + w * c.value);
-    verify_basis_opening(t, l, root, target, |at| {
+    let basis = |at: &[S]| {
         claims.iter().zip(&weights).fold(S::u(0), |sum, (c, &w)| {
             let mut value = eq(&c.point, &at[..c.point.len()]);
             let selector = c.offset >> c.point.len();
@@ -50,7 +53,20 @@ pub(crate) fn opening(t: &mut Transcript<'_>, root: [S; 2], l: usize, claims: &[
             }
             sum + w * value
         })
-    });
+    };
+    if log_inv_rate == 1 {
+        verify_basis_opening(t, l, root, target, basis);
+    } else {
+        verify_basis_opening_lanes_rate(
+            t,
+            l,
+            log_inv_rate,
+            1 << pcs::whir::INITIAL_FOLDING_FACTOR,
+            root,
+            target,
+            basis,
+        );
+    }
 }
 /// Native arithmetic transcript label, binding the trusted index and complete
 /// public vector before any prover message or random challenge.
@@ -60,11 +76,19 @@ pub(crate) fn label(index: &Index, public: &[S], context: [S; 2]) -> Vec<(S, usi
 
 pub(crate) fn label_with_root(index: &Index, root: [S; 2], public: &[S], context: [S; 2]) -> Vec<(S, usize)> {
     let mut out = Vec::new();
-    for chunk in b"format-native-arithmetic-v1".chunks(24) {
+    let prefix = if index.index_log_inv_rate == 1 {
+        b"format-native-arithmetic-v1"
+    } else {
+        b"format-native-arithmetic-v2"
+    };
+    for chunk in prefix.chunks(24) {
         let mut bytes = [0; 24];
         bytes[..chunk.len()].copy_from_slice(chunk);
         let limb = |i| u64::from_le_bytes(bytes[i..i + 8].try_into().unwrap());
         out.push((S::c(F192::new(limb(0), limb(8), limb(16))), chunk.len()));
+    }
+    if index.index_log_inv_rate != 1 {
+        out.push((S::u(index.index_log_inv_rate as u64), 8));
     }
     out.extend(root.map(|s| (s, 16)));
     out.extend(context.map(|s| (s, 16)));
@@ -125,7 +149,13 @@ pub(crate) fn verify(index: &Index, public: &[S], t: &mut Transcript<'_>) {
     trace::mark("native-witness-opening");
     opening(t, root, index.log_rows + 4, &claims);
     trace::mark("native-index-opening");
-    opening(t, digest_constant(&index.root), index.log_rows + 2, &index_claims);
+    opening_rate(
+        t,
+        digest_constant(&index.root),
+        index.log_rows + 2,
+        index.index_log_inv_rate,
+        &index_claims,
+    );
 }
 
 /// Native zerocheck/copy/public reduction. The caller owns commitment and
@@ -240,6 +270,32 @@ mod tests {
             assert!(trace::take().satisfied());
         }
     }
+    #[test]
+    fn alternate_index_rate_records_and_binds_production_profile() {
+        parallel::init();
+        let circuit = Circuit {
+            variables: 5,
+            rows: vec![[2, 3, 0, 4]],
+            public: vec![0, 1, 4],
+        };
+        let mut index = Index::new_with_rate(circuit.clone(), 2);
+        let default = Index::new(circuit);
+        assert_eq!(default.index_log_inv_rate, 1);
+        assert_eq!(index.shape(), default.shape());
+        assert_ne!(index.root, default.root);
+        let x = F192::new(17, 3, 91);
+        let y = F192::new(41, 52, 2);
+        let values = vec![F192::ZERO, F192::ONE, x, y, x * y];
+        let public = index.public_values(&values);
+        let context = [37; 32];
+        let proof = native_arithmetic::prove(&index, &values, &context);
+        assert!(native_arithmetic::verify(&index, &public, &context, &proof));
+        assert!(record(&index, &public, &context, &proof).satisfied());
+        index.index_log_inv_rate = 1;
+        assert!(!native_arithmetic::verify(&index, &public, &context, &proof));
+        assert!(!std::panic::catch_unwind(|| record(&index, &public, &context, &proof)).is_ok_and(|t| t.satisfied()));
+    }
+
     #[test]
     fn complete_recorder_enforces_same_public_context_index_and_proof() {
         parallel::init();

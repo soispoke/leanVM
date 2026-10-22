@@ -40,7 +40,7 @@ fn claim_eval(claim: &Claim, at: &[S]) -> S {
 /// Complete private bridge label, with the child verification key supplied as
 /// symbolic digest words. Circuit dimensions remain fixed by trusted metadata.
 pub(crate) fn label(bridge: &PrivateBridge, index_root: [S; 2], context: [S; 2], public: &[S]) -> Vec<(S, usize)> {
-    let mut label = literal(b"format-private-bridge-v3");
+    let mut label = literal(b"format-private-bridge-v4");
     label.extend(index_root.map(|x| (x, 16)));
     label.extend(context.map(|x| (x, 16)));
     label.extend(digest_constant(&R1CS_DIGEST).map(|x| (x, 16)));
@@ -54,6 +54,7 @@ pub(crate) fn label(bridge: &PrivateBridge, index_root: [S; 2], context: [S; 2],
             bridge.q_offset,
             bridge.stack_log,
             JOINT_LOG_INV_RATE,
+            bridge.index.index_log_inv_rate,
             public.len(),
         ]
         .map(|n| (S::u(n as u64), 8)),
@@ -120,7 +121,13 @@ pub(crate) fn verify(bridge: &PrivateBridge, index_root: [S; 2], public: &[S], t
         },
     );
     trace::mark("private-index-opening");
-    native_verifier::opening(t, index_root, bridge.index.log_rows + 2, &index_claims);
+    native_verifier::opening_rate(
+        t,
+        index_root,
+        bridge.index.log_rows + 2,
+        bridge.index.index_log_inv_rate,
+        &index_claims,
+    );
 }
 fn record_impl(
     bridge: &PrivateBridge,

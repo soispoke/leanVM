@@ -29,6 +29,7 @@ pub struct Index {
     pub root: Hash,
     pub log_rows: usize,
     pub public_log: usize,
+    pub index_log_inv_rate: usize,
     circuit: Circuit,
     rows: Vec<[usize; 4]>,
     sigma: Vec<u32>,
@@ -38,6 +39,12 @@ pub struct Index {
 
 impl Index {
     pub fn new(circuit: Circuit) -> Self {
+        Self::new_with_rate(circuit, 1)
+    }
+    /// Select a validated production WHIR profile for the fixed circuit index.
+    /// Standalone witness openings retain their rate-1/2 profile.
+    pub fn new_with_rate(circuit: Circuit, index_log_inv_rate: usize) -> Self {
+        whir::validate_log_inv_rate(index_log_inv_rate).expect("supported index WHIR rate");
         assert_eq!(&circuit.public[..2], &[0, 1]);
         assert!(circuit.variables >= 2);
         assert!(
@@ -75,11 +82,12 @@ impl Index {
             }
         }
         let stack: Vec<_> = sigma.iter().map(|&v| F64(v as u64)).collect();
-        let (commitment, data) = whir::commit(&stack, log_rows + 2, whir::INITIAL_FOLDING_FACTOR, 1);
+        let (commitment, data) = whir::commit(&stack, log_rows + 2, whir::INITIAL_FOLDING_FACTOR, index_log_inv_rate);
         Self {
             root: commitment.root,
             log_rows,
             public_log,
+            index_log_inv_rate,
             circuit,
             rows,
             sigma,
@@ -118,7 +126,13 @@ fn claim_eval(claim: &Claim, at: &[F192]) -> F192 {
     v
 }
 fn label(index: &Index, public: &[F192], context: &Hash) -> Vec<u8> {
-    let mut out = b"format-native-arithmetic-v1".to_vec();
+    let mut out = if index.index_log_inv_rate == 1 {
+        b"format-native-arithmetic-v1".to_vec()
+    } else {
+        let mut out = b"format-native-arithmetic-v2".to_vec();
+        out.extend_from_slice(&(index.index_log_inv_rate as u64).to_le_bytes());
+        out
+    };
     out.extend_from_slice(&index.root);
     out.extend_from_slice(context);
     for n in [index.log_rows, index.public_log, public.len()] {
@@ -195,7 +209,7 @@ fn read_field(
     }
     Some(value)
 }
-fn open(stack: &[F64], data: &ProverData, l: usize, claims: &[Claim], ps: &mut ProverState) {
+fn open(stack: &[F64], data: &ProverData, l: usize, log_inv_rate: usize, claims: &[Claim], ps: &mut ProverState) {
     let lambda = ps.sample();
     let mut power = F192::ONE;
     let mut target = F192::ZERO;
@@ -213,7 +227,7 @@ fn open(stack: &[F64], data: &ProverData, l: usize, claims: &[Claim], ps: &mut P
         }
         power *= lambda;
     }
-    let config = whir::config_for_rate(l, 1).unwrap();
+    let config = whir::config_for_rate(l, log_inv_rate).unwrap();
     whir::recursive_prover_with_basis(
         &config,
         l,
@@ -225,7 +239,7 @@ fn open(stack: &[F64], data: &ProverData, l: usize, claims: &[Claim], ps: &mut P
         ps,
     );
 }
-fn verify_open(root: &Hash, l: usize, claims: &[Claim], vs: &mut VerifierState<'_>) -> bool {
+fn verify_open(root: &Hash, l: usize, log_inv_rate: usize, claims: &[Claim], vs: &mut VerifierState<'_>) -> bool {
     let lambda = vs.sample();
     let mut power = F192::ONE;
     let mut target = F192::ZERO;
@@ -235,7 +249,7 @@ fn verify_open(root: &Hash, l: usize, claims: &[Claim], vs: &mut VerifierState<'
         powers.push(power);
         power *= lambda;
     }
-    let Ok(config) = whir::config_for_rate(l, 1) else {
+    let Ok(config) = whir::config_for_rate(l, log_inv_rate) else {
         return false;
     };
     whir::recursive_verifier_with_basis_succinct(
@@ -318,10 +332,17 @@ pub(crate) fn prove_reduction(index: &Index, witness: &Prepared, ps: &mut Prover
     (claims, index_claims)
 }
 pub(crate) fn prove_index_open(index: &Index, claims: &[Claim], ps: &mut ProverState) {
-    open(&index.stack, &index.data, index.log_rows + 2, claims, ps);
+    open(
+        &index.stack,
+        &index.data,
+        index.log_rows + 2,
+        index.index_log_inv_rate,
+        claims,
+        ps,
+    );
 }
 pub(crate) fn verify_index_open(index: &Index, claims: &[Claim], vs: &mut VerifierState<'_>) -> bool {
-    verify_open(&index.root, index.log_rows + 2, claims, vs)
+    verify_open(&index.root, index.log_rows + 2, index.index_log_inv_rate, claims, vs)
 }
 pub fn prove(index: &Index, values: &[F192], context: &Hash) -> Proof {
     let l = index.log_rows;
@@ -331,7 +352,7 @@ pub fn prove(index: &Index, values: &[F192], context: &Hash) -> Proof {
     let (commitment, data) = whir::commit(&witness.stack, l + 4, whir::INITIAL_FOLDING_FACTOR, 1);
     ps.add_root(&commitment.root);
     let (claims, index_claims) = prove_reduction(index, &witness, &mut ps);
-    open(&witness.stack, &data, l + 4, &claims, &mut ps);
+    open(&witness.stack, &data, l + 4, 1, &claims, &mut ps);
     prove_index_open(index, &index_claims, &mut ps);
     ps.into_proof()
 }
@@ -411,7 +432,7 @@ pub fn verify(index: &Index, public: &[F192], context: &Hash, proof: &Proof) -> 
     let Some((claims, index_claims)) = verify_reduction(index, public, &mut vs) else {
         return false;
     };
-    verify_open(&root, index.log_rows + 4, &claims, &mut vs)
+    verify_open(&root, index.log_rows + 4, 1, &claims, &mut vs)
         && verify_index_open(index, &index_claims, &mut vs)
         && vs.finish().is_ok()
 }

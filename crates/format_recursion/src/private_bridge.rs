@@ -24,8 +24,9 @@ use primitives::{
 
 const SLOTS: [usize; 18] = [0, 1, 2, 3, 4, 5, 6, 7, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19];
 /// Candidate production WHIR profile for the joint private witness only.
-/// Native circuit-index openings retain their existing rate-1/2 profile.
+/// The fixed circuit index uses a separate validated production profile.
 pub(crate) const JOINT_LOG_INV_RATE: usize = 2;
+const INDEX_LOG_INV_RATE: usize = 2;
 const MIN_BLOCKS: usize = 128;
 const MAX_BLOCKS: usize = 1 << 16;
 
@@ -140,7 +141,7 @@ impl PrivateBridge {
         if required_rows.next_power_of_two().trailing_zeros() as usize > native_arithmetic::MAX_LOG_ROWS {
             return None;
         }
-        let index = Index::new(circuit);
+        let index = Index::new_with_rate(circuit, INDEX_LOG_INV_RATE);
         let q_log = K_LOG - LOG_PACKING + block_log;
         let (q_offset, stack_log) = joint_layout(index.log_rows, q_log);
         Some(Self {
@@ -181,7 +182,7 @@ impl PrivateBridge {
         Some(full)
     }
     pub(crate) fn label(&self, public: &[F192], context: &Hash) -> Vec<u8> {
-        let mut out = b"format-private-bridge-v3".to_vec();
+        let mut out = b"format-private-bridge-v4".to_vec();
         out.extend_from_slice(&self.index.root);
         out.extend_from_slice(context);
         out.extend_from_slice(&R1CS_DIGEST);
@@ -194,6 +195,7 @@ impl PrivateBridge {
             self.q_offset,
             self.stack_log,
             JOINT_LOG_INV_RATE,
+            self.index.index_log_inv_rate,
             public.len(),
         ] {
             out.extend_from_slice(&(x as u64).to_le_bytes());
