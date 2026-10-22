@@ -1,5 +1,7 @@
 # Native-field recursion prototype versus leanVM
 
+The follow-up [private hash bridge and repeated-recursion work](PRIVATE.md) has separate evidence and limits. The measurements below describe the original bridge that discloses its request table.
+
 The new prototype produces a verified outer certificate for a complete quotient child verifier, including all three WHIR openings. It proves field arithmetic and batches BLAKE2s through Flock, without executing a VM guest. **It has not demonstrated repeated self-recursion.**
 
 At eight children, median proving takes **6.63 s versus 7.26 s for leanVM**, but complete verification takes **1.19 s versus 7 ms** and total proof size is **15.79 MB versus 0.236 MB**. Peak process memory is **8.09 GiB versus 19.35 GiB**. On this workload, avoiding the VM reduces memory and produces comparable proving times, while exposing a much larger verification payload. It does not establish a better recursion system.

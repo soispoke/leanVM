@@ -1,0 +1,15 @@
+{
+  "recorded_utc": "2026-10-22T12:30:28.036834+00:00",
+  "recording_scope": "Supplementary metadata recorded after completion; original started/result receipts preserved",
+  "cpu_model": "Intel(R) Xeon(R) Gold 6230R CPU @ 2.10GHz",
+  "threads": 16,
+  "thread_source": "launch configuration LEANVM_NUM_THREADS=16",
+  "affinity_policy": "not pinned; original receipt records allowed CPUs",
+  "rustflags": "-C target-cpu=native -C target-feature=+pclmulqdq",
+  "rust_toolchain": "1.99.1",
+  "yukon_revision": "dec7b98797c4a56cad6c071e22b8736a16476dec",
+  "yukon_upstream_checked_utc": "2026-10-22T12:30:28.036871+00:00",
+  "lean_source_edits": false,
+  "formal_certificate": false,
+  "official_score": false
+}

@@ -1,0 +1,2 @@
+{"compressions":16385,"kind":"leaf_trace","lowering_bound":{"compressions":16386,"rows":16860176,"variables":17138929},"nodes":49160}
+{"kind":"capacity_limit","level":0,"message":"leaf compiler or experimental index limit reached; no proof produced","status":"incomplete"}

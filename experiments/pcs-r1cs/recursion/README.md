@@ -1,6 +1,6 @@
 # A verifier in the generic circuit format
 
-**Latest:** a [native-field follow-up](NATIVE.md) now produces verified outer certificates and compares them with leanVM. It changes the arithmetic backend and has not demonstrated repeated self-recursion or established a formal composition proof. The results below preserve the earlier full-adder experiments.
+**Latest:** the [private hash bridge](PRIVATE.md) completes three aggregation levels over eight 16,384-step hash chains, with a 3.82 s root proof, 8.70 ms Rust verification and a 635,072-byte total proof. Each level has its own preprocessed key. Fixed-shape recursion and a formal composition proof remain open. The earlier [matched native-field comparison with leanVM](NATIVE.md) uses a different bridge and workload. The results below preserve the original full-adder experiments.
 
 ## Earlier full-adder backend
 

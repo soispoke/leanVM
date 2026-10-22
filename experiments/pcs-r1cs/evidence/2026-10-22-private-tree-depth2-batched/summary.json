@@ -1,0 +1,60 @@
+{
+  "status": "complete_record_set",
+  "source_commit": "e6efa0d91e859521f97dec8b0192d576f6df8850",
+  "binary_sha256": "7018dd2d95fc6d3af93d94a0353cbd188330f490f409327bf14a0ea8af2d4e94",
+  "depth": 2,
+  "chain": 16,
+  "timing_scope": "one sample per distinct proof; level median; no warmup",
+  "elapsed_s": 20.047842946005403,
+  "peak_rss_gib": 15.585281372070312,
+  "levels": [
+    {
+      "level": 0,
+      "proofs": 4,
+      "padded_native_rows": 16384,
+      "native_shape": [
+        13342,
+        15488,
+        158
+      ],
+      "compressions": 18,
+      "median_proving_s": 0.034709987,
+      "median_verification_ms": 8.0820765,
+      "min_total_proof_bytes": 389056,
+      "max_total_proof_bytes": 396528
+    },
+    {
+      "level": 1,
+      "proofs": 2,
+      "padded_native_rows": 4194304,
+      "native_shape": [
+        1456977,
+        2489856,
+        471
+      ],
+      "compressions": 33947,
+      "median_proving_s": 5.488853289,
+      "median_verification_ms": 9.1388855,
+      "min_total_proof_bytes": 634848,
+      "max_total_proof_bytes": 634912
+    },
+    {
+      "level": 2,
+      "proofs": 1,
+      "padded_native_rows": 4194304,
+      "native_shape": [
+        2141824,
+        3079168,
+        628
+      ],
+      "compressions": 55984,
+      "median_proving_s": 5.106844374,
+      "median_verification_ms": 10.361365000000001,
+      "min_total_proof_bytes": 634080,
+      "max_total_proof_bytes": 634080
+    }
+  ],
+  "single_fixed_circuit": false,
+  "lean_certificate": false,
+  "official_score": false
+}

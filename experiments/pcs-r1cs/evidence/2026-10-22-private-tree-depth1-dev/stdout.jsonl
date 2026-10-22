@@ -1,0 +1,5 @@
+{"compressions":17,"kind":"setup","level":0,"native_shape":[13784,15872,222],"official_score":false,"rows":16384}
+{"index":0,"kind":"proof","level":0,"proof_bytes":397280,"proving_s":0.056061339,"verification_ms":6.097045,"verified":true}
+{"index":1,"kind":"proof","level":0,"proof_bytes":388360,"proving_s":0.035040442,"verification_ms":5.6981150000000005,"verified":true}
+{"checks":106444,"compressions":26478,"kind":"node_trace","level":1,"lowering_bound":{"compressions":26478,"rows":50450739,"variables":51015298},"nodes":1001055}
+{"kind":"capacity_limit","level":1,"message":"private compiler or experimental index limit reached; no proof produced","status":"incomplete"}
