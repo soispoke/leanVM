@@ -1,6 +1,6 @@
 # Native arithmetic and private hash batching
 
-The latest native candidate matches leanVM on the measured two-child parent, but remains slower on deeper trees. It verifies faster in Rust and has larger proofs. These local implementation measurements use the same tagged hash-chain statement, with a separate trusted circuit and key at each level.
+Sharing public constants cuts measured root preparation + proving time by 18% at four leaves and 27% at eight. The eight-leaf native root takes 1.183 s versus leanVM’s 1.091 s, about 8.5% longer. These local implementation measurements use the same tagged hash-chain statement, with a separate trusted circuit and key at each level.
 
 A separate [Succinct Flock baseline adapted to BLAKE2s](FLOCK_BASELINE.md) is now measured. It uses a different sequential chain workload and is not a matched speed comparison.
 
@@ -11,6 +11,21 @@ The outer proof combines native GF(2^192) arithmetic constraints, Flock's batche
 Each parent checks both complete child verifiers and hashes their ordered statement digests. This backend extends the original Boolean full-adder format. Its native field rows are neither Boolean rows nor VM cycles.
 
 ## Latest repeated comparison
+
+Source `f50dd22c`, three fresh-process trials per backend and workload, rotating execution order after one excluded warmup. Rust 1.99.1, 16 workers on CPUs 0-15, shared Xeon Gold 6230R host. Root creation includes preparation and proving, excluding setup and child proving. KB means 1,000 bytes.
+
+| Leaves / aggregation levels | Steps per leaf | Previous native root (s) | New native root (s) | leanVM root (s) | Native / leanVM verification (ms) | Native / leanVM proof (KB) |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| 2 / 1 | 16 | 1.112 | 1.101 | 1.300 | 5.80 / 12.82 | 324.6 / 284.4 |
+| 4 / 2 | 16 | 1.709 | 1.395 | 1.228 | 5.96 / 15.05 | 316.6 / 318.4 |
+| 8 / 3 | 16 | 1.629 | 1.183 | 1.091 | 6.82 / 18.90 | 317.5 / 324.1 |
+| 8 / 3 | 256 | 1.602 | 1.163 | 1.100 | 6.18 / 18.47 | 317.6 / 325.1 |
+
+The two-leaf change is within timing noise. Every paired trial improves at four and eight leaves. Sharing only public constant nodes removes redundant equality rows and halves the padded arithmetic table at levels two and three. The benefit is shape dependent: the new level-three circuit is only 4,096 rows below the next padding threshold.
+
+At eight 16-step leaves, whole-process medians fall from 12.03 to 10.03 s, and maximum RSS from 7.64 to 5.04 GiB. Root proving alone falls from 1.565 to 1.101 s, while full native verification is slightly slower, 6.08 to 6.82 ms. All 72 native release tests, all-target Clippy and 29 Python evidence-validator tests passed. The [complete evidence and source review](../evidence/2026-10-22-native-constant-sharing/README.md) retain every trial and a separate unsuccessful preprocessing experiment. The Lean and recursive-closure limitations below still apply.
+
+## Earlier repeated comparison
 
 Source `f1b6626f`, 16 workers, CPUs 0-15 and 16 hash steps per leaf. Trials alternate execution order and exclude one warmup process per backend and workload. Times include root preparation and proving; setup and child proving are separate. Each backend verifies its own child proofs. Full verification and proof size include auxiliary records.
 

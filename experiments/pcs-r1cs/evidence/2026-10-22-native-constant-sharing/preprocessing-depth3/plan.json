@@ -1,0 +1,66 @@
+{
+  "specs": {
+    "baseline": [
+      "/root/yukon-autoresearch/workspaces/leanr1cs-parity-20261022/private_tree-compact-plan",
+      "f1b6626fc546956085f4512d8210f715e6dd256b",
+      "61aa7593645c0a7838f3a40e61bb0826b0dd78b77826413335178a29ae474713"
+    ],
+    "candidate": [
+      "/root/yukon-autoresearch/workspaces/leanr1cs-hunt-20261022-phase2/private_tree-preprocessing",
+      "63e390ad73c1be225ddad7fb5718acddd9ec8229",
+      "c1da242df239ff6f7c0f5901b56885509177b3283b4658fd2fa8e51cf8ee32be"
+    ]
+  },
+  "plan": [
+    [
+      "warmup",
+      [
+        "baseline",
+        "candidate"
+      ]
+    ],
+    [
+      "trial-0",
+      [
+        "baseline",
+        "candidate"
+      ]
+    ],
+    [
+      "trial-1",
+      [
+        "candidate",
+        "baseline"
+      ]
+    ],
+    [
+      "trial-2",
+      [
+        "baseline",
+        "candidate"
+      ]
+    ]
+  ],
+  "depth": 3,
+  "chain": 16,
+  "workers": 16,
+  "cpus": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15
+  ],
+  "policy": "One excluded fresh-process warmup per backend, three alternating fresh-process pairs; shared host."
+}

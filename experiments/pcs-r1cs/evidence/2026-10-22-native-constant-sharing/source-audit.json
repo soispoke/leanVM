@@ -1,0 +1,12 @@
+{
+  "status": "passed",
+  "baseline": "7591db251b00207c009d76e3f6208837ccbd3117",
+  "candidate": "f50dd22cc994596dd48695ac49c5e3f9b2aef1ae",
+  "changed": [
+    "crates/format_recursion/src/trace.rs"
+  ],
+  "baseline_measured_rust_and_formal_sources_identical": true,
+  "formal_sources_unchanged": true,
+  "verifier_sources_unchanged": true,
+  "scope": "Source identity only; generated circuit changes require trusted new keys and are not formally verified."
+}

@@ -1,0 +1,20 @@
+{
+  "pid": 364264,
+  "command": [
+    "/usr/bin/python3.12",
+    "/root/workspaces/mission-9abcee72/leanvm-opt/experiments/pcs-r1cs/recursion/run.py",
+    "--out",
+    "/root/yukon-autoresearch/workspaces/leanr1cs-hunt-20261022-phase2/preprocessing-depth3/candidate-trial-1",
+    "--budget-gib",
+    "32",
+    "--binary-source-commit",
+    "63e390ad73c1be225ddad7fb5718acddd9ec8229",
+    "--",
+    "/root/yukon-autoresearch/workspaces/leanr1cs-hunt-20261022-phase2/private_tree-preprocessing",
+    "--depth",
+    "3",
+    "--chain",
+    "16"
+  ],
+  "started_utc": "2026-10-22T15:51:49.460973+00:00"
+}

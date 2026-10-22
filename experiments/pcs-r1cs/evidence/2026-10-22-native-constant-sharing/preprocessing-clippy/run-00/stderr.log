@@ -1,0 +1,10 @@
+    Checking parallel v0.1.0 (/root/yukon-autoresearch/workspaces/leanr1cs-hunt-20261022-phase2/prover/crates/parallel)
+    Checking primitives v0.1.0 (/root/yukon-autoresearch/workspaces/leanr1cs-hunt-20261022-phase2/prover/crates/primitives)
+    Checking fiat_shamir v0.1.0 (/root/yukon-autoresearch/workspaces/leanr1cs-hunt-20261022-phase2/prover/crates/fiat_shamir)
+    Checking pcs v0.1.0 (/root/yukon-autoresearch/workspaces/leanr1cs-hunt-20261022-phase2/prover/crates/pcs)
+    Checking flock v0.1.0 (/root/yukon-autoresearch/workspaces/leanr1cs-hunt-20261022-phase2/prover/crates/flock)
+    Checking evm v0.1.0 (/root/yukon-autoresearch/workspaces/leanr1cs-hunt-20261022-phase2/prover/crates/evm)
+    Checking leanvm_core v0.1.0 (/root/yukon-autoresearch/workspaces/leanr1cs-hunt-20261022-phase2/prover/crates/leanvm_core)
+    Checking circuit_suite v0.1.0 (/root/yukon-autoresearch/workspaces/leanr1cs-hunt-20261022-phase2/prover/crates/circuit_suite)
+    Checking format_recursion v0.1.0 (/root/yukon-autoresearch/workspaces/leanr1cs-hunt-20261022-phase2/prover/crates/format_recursion)
+    Finished `release` profile [optimized] target(s) in 7.52s

@@ -1,0 +1,20 @@
+{
+  "pid": 376495,
+  "command": [
+    "/usr/bin/python3.12",
+    "/root/workspaces/mission-9abcee72/leanvm-opt/experiments/pcs-r1cs/recursion/run.py",
+    "--out",
+    "/root/yukon-autoresearch/workspaces/leanr1cs-hunt-20261022-phase2/constants-depth3-chain256/candidate-warmup",
+    "--budget-gib",
+    "32",
+    "--binary-source-commit",
+    "f50dd22cc994596dd48695ac49c5e3f9b2aef1ae",
+    "--",
+    "/root/yukon-autoresearch/workspaces/leanr1cs-hunt-20261022-phase2/private_tree-constants",
+    "--depth",
+    "3",
+    "--chain",
+    "256"
+  ],
+  "started_utc": "2026-10-22T16:03:03.238071+00:00"
+}

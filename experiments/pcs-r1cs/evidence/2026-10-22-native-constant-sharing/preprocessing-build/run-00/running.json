@@ -1,0 +1,14 @@
+{
+  "pid": 359292,
+  "command": [
+    "/root/.cargo/bin/rustup",
+    "build",
+    "--locked",
+    "--release",
+    "-p",
+    "rec_aggregation",
+    "--example",
+    "private_tree"
+  ],
+  "started_utc": "2026-10-22T15:47:52.146473+00:00"
+}

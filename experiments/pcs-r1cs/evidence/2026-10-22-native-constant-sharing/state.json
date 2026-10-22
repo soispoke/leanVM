@@ -1,0 +1,52 @@
+{
+  "created_utc": "2026-10-22T15:43:18.392935+00:00",
+  "status": "validated-promoted-source-archiving",
+  "parent_mission": "5e4c9f8f-e74c-44db-9c74-a65a37f60ffb",
+  "baseline": "7591db251b00207c009d76e3f6208837ccbd3117",
+  "baseline_measured_source": "f1b6626fc546956085f4512d8210f715e6dd256b",
+  "yukon_revision": "e9857575725d6e20d18c07bc540edcfba298152e",
+  "lanes": {},
+  "objective": "Improve native leanR1CS recursion with unchanged relation, cryptographic profiles and full child verification; prioritize deeper roots and whole-tree cost; compare final candidate in repeated matched runs.",
+  "published_results_unchanged": true,
+  "parallel_dispatch": {
+    "status": "rejected",
+    "code": "workspace_occupied",
+    "action_id": "77e82c1d-020d-4773-91aa-2c6ee955f550",
+    "confirmed_no_children": true
+  },
+  "active_tree": "/root/yukon-autoresearch/workspaces/leanr1cs-hunt-20261022-phase2/compiler",
+  "preprocessing_candidate": {
+    "source": "63e390ad73c1be225ddad7fb5718acddd9ec8229",
+    "status": "not-promoted",
+    "reason": "0.38% median root gain, mixed adjacent pairs",
+    "evidence": "/root/yukon-autoresearch/workspaces/leanr1cs-hunt-20261022-phase2/preprocessing-depth3"
+  },
+  "latest_candidate": "f50dd22cc994596dd48695ac49c5e3f9b2aef1ae",
+  "updated_utc": "2026-10-22T16:06:05.042637+00:00",
+  "measured_depth3": {
+    "root_reduction_pct": 27.3360168611536,
+    "baseline_s": 1.628544324,
+    "candidate_s": 1.183365173,
+    "leanvm_s": 1.090861081,
+    "trials": 3
+  },
+  "measured_depth1": {
+    "status": "no-clear-gain",
+    "trials": 3
+  },
+  "running_jobs": [],
+  "candidate_source": "f50dd22cc994596dd48695ac49c5e3f9b2aef1ae",
+  "validation": {
+    "native_release_tests": 72,
+    "all_target_clippy": "passed",
+    "tree_records": "all revalidated",
+    "source_and_binary_freezes": "passed",
+    "python_controls": "passed"
+  },
+  "measurements": [
+    "constants-depth1-chain16",
+    "constants-depth2-chain16",
+    "constants-depth3",
+    "constants-depth3-chain256"
+  ]
+}

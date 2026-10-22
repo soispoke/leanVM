@@ -1,0 +1,106 @@
+diff --git a/crates/format_recursion/src/private_bridge.rs b/crates/format_recursion/src/private_bridge.rs
+index b2faf76f..fe90c1e1 100644
+--- a/crates/format_recursion/src/private_bridge.rs
++++ b/crates/format_recursion/src/private_bridge.rs
+@@ -245,13 +245,22 @@ impl PrivateBridge {
+         if values.len() != self.variables || blocks.len() != self.n_blocks {
+             return None;
+         }
+-        for (block, variables) in blocks.iter().zip(&self.io_variables) {
++        let valid_block = |at: usize| {
++            let block = &blocks[at];
++            let variables = &self.io_variables[at];
+             let output = blake2s_compress(&block.0, &block.1, block.2, block.3, block.4);
+-            for (variable, word) in variables.iter().zip(io_words(block, &output)) {
+-                if values[*variable] != F192::new(word, 0, 0) {
+-                    return None;
+-                }
+-            }
++            variables
++                .iter()
++                .zip(io_words(block, &output))
++                .all(|(variable, word)| values[*variable] == F192::new(word, 0, 0))
++        };
++        let valid = if blocks.len() < 128 {
++            (0..blocks.len()).all(valid_block)
++        } else {
++            parallel::map_reduce(blocks.len(), || true, valid_block, |left, right| left && right)
++        };
++        if !valid {
++            return None;
+         }
+         self.prove_unchecked(values, blocks, context)
+     }
+@@ -260,19 +269,28 @@ impl PrivateBridge {
+     fn extend_values(&self, values: &[F192]) -> Vec<F192> {
+         let mut values = values.to_vec();
+         values.extend(self.padding.map(|x| F192::new(x, 0, 0)));
+-        for group in 0..6 {
+-            for block in 0..1usize << self.block_log {
++        let count = 1usize << self.block_log;
++        let start = values.len();
++        values.resize(start + 6 * count, F192::ZERO);
++        // Helper rows read only original variables or the fixed padding words.
++        // They do not depend on one another, so all writes are disjoint.
++        let (inputs, helpers) = values.split_at_mut(start);
++        parallel::chunks_mut(helpers, 256, |chunk, helpers| {
++            for (i, helper) in helpers.iter_mut().enumerate() {
++                let at = chunk * 256 + i;
++                let group = at / count;
++                let block = at % count;
+                 let inputs: [F192; 3] = std::array::from_fn(|col| {
+                     let slot = 6 * col + group;
+                     let variable = self
+                         .io_variables
+                         .get(block)
+                         .map_or(self.variables + slot, |row| row[slot]);
+-                    values[variable]
++                    inputs[variable]
+                 });
+-                values.push(inputs[0] * inputs[1] + inputs[2]);
++                *helper = inputs[0] * inputs[1] + inputs[2];
+             }
+-        }
++        });
+         values
+     }
+     fn prove_unchecked(&self, values: &[F192], blocks: &[Compression], context: &Hash) -> Option<Proof> {
+@@ -441,6 +459,38 @@ mod tests {
+         (circuit, io, values, blocks)
+     }
+ 
++    #[test]
++    fn parallel_helpers_match_serial_rows_including_padding_and_extension_values() {
++        parallel::init();
++        for count in [1, 127, 128, 129, 257] {
++            let (circuit, io, mut values, _) = fixture(count, 0x504152);
++            let bridge = PrivateBridge::new(circuit, io).unwrap();
++            // Exercise the unchecked test path as well as honest F64 inputs.
++            for (i, value) in values.iter_mut().enumerate().skip(2) {
++                if i % 19 == 0 {
++                    value.c1 = i as u64;
++                    value.c2 = !(i as u64);
++                }
++            }
++            let mut expected = values.clone();
++            expected.extend(bridge.padding.map(|x| F192::new(x, 0, 0)));
++            for group in 0..6 {
++                for block in 0..1usize << bridge.block_log {
++                    let inputs: [F192; 3] = std::array::from_fn(|col| {
++                        let slot = 6 * col + group;
++                        let variable = bridge
++                            .io_variables
++                            .get(block)
++                            .map_or(bridge.variables + slot, |row| row[slot]);
++                        expected[variable]
++                    });
++                    expected.push(inputs[0] * inputs[1] + inputs[2]);
++                }
++            }
++            assert_eq!(bridge.extend_values(&values), expected, "count={count}");
++        }
++    }
++
+     #[test]
+     fn private_chain_proves_without_disclosed_requests_and_rejects_mutations() {
+         parallel::init();
