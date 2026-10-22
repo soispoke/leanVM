@@ -14,6 +14,9 @@ use primitives::{
     multilinear::{eq_eval, eq_table},
 };
 
+/// Resource cap, with four cell-address columns still fitting in u32.
+pub const MAX_LOG_ROWS: usize = 24;
+
 /// A row enforces z = x*y + u. Variables zero and one are pinned public anchors.
 #[derive(Clone)]
 pub struct Circuit {
@@ -48,7 +51,7 @@ impl Index {
         let public_rows = 1 << public_log;
         let count = public_rows + circuit.rows.len();
         let log_rows = (count.next_power_of_two().trailing_zeros() as usize).max(13);
-        assert!(log_rows <= 22, "bounded experimental index");
+        assert!(log_rows <= MAX_LOG_ROWS, "bounded experimental index");
         let n = 1 << log_rows;
         let mut rows: Vec<_> = circuit.public.iter().map(|&v| [v, 1, 0, v]).collect();
         rows.resize(public_rows, [0, 1, 0, 0]);

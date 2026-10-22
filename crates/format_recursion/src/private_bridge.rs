@@ -102,7 +102,7 @@ impl PrivateBridge {
             }
         }
         let required_rows = public_rows.checked_add(circuit.rows.len())?;
-        if required_rows.next_power_of_two().trailing_zeros() > 22 {
+        if required_rows.next_power_of_two().trailing_zeros() as usize > native_arithmetic::MAX_LOG_ROWS {
             return None;
         }
         let index = Index::new(circuit);

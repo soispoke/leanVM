@@ -32,8 +32,8 @@ pub struct Limits {
 impl Default for Limits {
     fn default() -> Self {
         Self {
-            rows: 1 << 24,
-            variables: 1 << 24,
+            rows: 1 << 25,
+            variables: 1 << 25,
             compressions: 1 << 16,
         }
     }
