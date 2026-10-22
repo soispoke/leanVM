@@ -40,6 +40,7 @@ fn joint_layout(log_rows: usize, q_log: usize) -> (usize, usize) {
     (q_offset, stack_log)
 }
 
+#[cfg(test)]
 fn copy_compact_native(destination: &mut [F64], source: &[F64], log_rows: usize) {
     let n = 1usize << log_rows;
     assert_eq!(source.len(), 16 * n);
@@ -277,13 +278,14 @@ impl PrivateBridge {
     fn prove_unchecked(&self, values: &[F192], blocks: &[Compression], context: &Hash) -> Option<Proof> {
         let values = self.extend_values(values);
         let public = self.index.public_values(&values);
-        let witness =
-            tracing::info_span!("Arithmetic witness").in_scope(|| native_arithmetic::prepare(&self.index, &values));
+        let lane_words = 1usize << (self.stack_log - INITIAL_FOLDING_FACTOR);
+        let joint_words = self.committed_lanes() * lane_words;
+        let mut witness = tracing::info_span!("Arithmetic witness")
+            .in_scope(|| native_arithmetic::prepare_compact_with_capacity(&self.index, &values, joint_words));
         let (z, a, b, lincheck) = tracing::info_span!("Hash witness")
             .in_scope(|| generate_witness_with_ab_packed_and_lincheck(blocks, self.block_log));
-        let lane_words = 1usize << (self.stack_log - INITIAL_FOLDING_FACTOR);
-        let mut stack = vec![F64::ZERO; self.committed_lanes() * lane_words];
-        copy_compact_native(&mut stack, &witness.stack, self.index.log_rows);
+        let mut stack = std::mem::take(&mut witness.stack);
+        stack.resize(joint_words, F64::ZERO);
         for (dest, &word) in stack[self.q_offset..].iter_mut().zip(&z) {
             *dest = F64(word);
         }
@@ -292,7 +294,7 @@ impl PrivateBridge {
         let mut ps = ProverState::from_label(&self.label(&public, context));
         ps.add_root(&commitment.root);
         let (native_claims, index_claims) = tracing::info_span!("Arithmetic reduction")
-            .in_scope(|| native_arithmetic::prove_reduction(&self.index, &witness, &mut ps));
+            .in_scope(|| native_arithmetic::prove_reduction_compact(&self.index, &witness, &stack, &mut ps));
         let reduced = tracing::info_span!("Hash reduction").in_scope(|| {
             Blake2sSetup::new(self.n_blocks.max(MIN_BLOCKS)).prove_reduction_precomputed(&z, &a, &b, &lincheck, &mut ps)
         });
