@@ -716,10 +716,45 @@ pub fn lower(program: &Trace, witness: &Trace) -> Option<Lowered> {
     lower_with_limits(program, witness, Limits::default())
 }
 
+/// An immutable trusted program and its witness-independent admission/fusion
+/// analysis. Ownership prevents a cached plan from being paired with a different
+/// program. Every witness still passes the complete structural identity check.
+pub struct PreparedProgram {
+    program: Trace,
+    analysis: Analysis,
+}
+
+struct Analysis {
+    widths: Vec<usize>,
+    fused: Vec<Option<(S, S, S)>>,
+    skipped: Vec<bool>,
+}
+
+impl PreparedProgram {
+    pub fn new(program: Trace) -> Option<Self> {
+        let analysis = analyze(&program, Limits::default())?;
+        Some(Self { program, analysis })
+    }
+    pub(crate) fn lower_setup(&self) -> Option<Lowered> {
+        lower_analyzed(&self.program, &self.program, &self.analysis)
+    }
+    pub fn lower(&self, witness: &Trace) -> Option<Lowered> {
+        if !self.program.same_program(witness) {
+            return None;
+        }
+        lower_analyzed(&self.program, witness, &self.analysis)
+    }
+}
+
 pub fn lower_with_limits(program: &Trace, witness: &Trace, limits: Limits) -> Option<Lowered> {
     if !program.same_program(witness) {
         return None;
     }
+    let analysis = analyze(program, limits)?;
+    lower_analyzed(program, witness, &analysis)
+}
+
+fn analyze(program: &Trace, limits: Limits) -> Option<Analysis> {
     preflight(program, limits)?;
     let widths = inferred_widths(program);
     // A product used only by one addition can be enforced directly by one
@@ -774,6 +809,11 @@ pub fn lower_with_limits(program: &Trace, witness: &Trace, limits: Limits) -> Op
             }
         }
     }
+    Some(Analysis { widths, fused, skipped })
+}
+
+fn lower_analyzed(program: &Trace, witness: &Trace, analysis: &Analysis) -> Option<Lowered> {
+    let Analysis { widths, fused, skipped } = analysis;
     let mut c = Compiler {
         rows: Vec::new(),
         values: vec![F192::ZERO, F192::ONE],
@@ -783,7 +823,7 @@ pub fn lower_with_limits(program: &Trace, witness: &Trace, limits: Limits) -> Op
         bits: vec![None; program.nodes.len()],
         limb_bits: vec![std::array::from_fn(|_| None); program.nodes.len()],
         constant_nodes: program.nodes.iter().map(|n| matches!(n.op, Op::Constant)).collect(),
-        widths,
+        widths: widths.clone(),
         limbs: vec![None; program.nodes.len()],
         pending_limbs: Vec::new(),
         typed: VariableSet::anchors(),
@@ -979,6 +1019,53 @@ mod tests {
     }
     fn public(t: &Trace) -> Vec<F192> {
         t.public.iter().map(|s| t.nodes[s.0].value).collect()
+    }
+
+    #[test]
+    fn prepared_program_matches_reference_and_binds_structure_and_outputs() {
+        fn witness(seed: u64) -> Trace {
+            trace::start();
+            let x = S::input(F192::new(seed + 3, 17, 19));
+            let y = S::input(F192::new(seed + 23, 29, 31));
+            let bit = S::input(F192::new(seed & 1, 0, 0));
+            let result = S::select(bit, x * y + x, y);
+            let packed = S::pack(&[(x.slice(0, 64), 64), (result.slice(0, 128), 128)]);
+            let digest = trace::hash(&[(packed, 24), (S::u(71), 8)]);
+            let mut t = trace::take();
+            t.public = digest.to_vec();
+            t
+        }
+        let template = witness(0);
+        let prepared = PreparedProgram::new(copy_trace(&template)).unwrap();
+        for seed in 1..9 {
+            let fresh = witness(seed);
+            let reference = lower(&template, &fresh).unwrap();
+            let cached = prepared.lower(&fresh).unwrap();
+            assert!(rows_hold(&cached) && connectors_hold(&cached));
+            assert_eq!(reference.circuit.rows, cached.circuit.rows);
+            assert_eq!(reference.circuit.public, cached.circuit.public);
+            assert_eq!(reference.values, cached.values);
+            assert_eq!(reference.connectors, cached.connectors);
+            assert_eq!(reference.compressions, cached.compressions);
+            assert_eq!(reference.fixed_public, cached.fixed_public);
+            let mut altered = copy_trace(&fresh);
+            altered.public.reverse();
+            assert!(prepared.lower(&altered).is_none());
+            altered = copy_trace(&fresh);
+            let constant = altered.nodes.iter_mut().find(|node| node.op == Op::Constant).unwrap();
+            constant.value += F192::ONE;
+            assert!(prepared.lower(&altered).is_none());
+            altered = copy_trace(&fresh);
+            altered.checks.push((S(0), S(1)));
+            assert!(prepared.lower(&altered).is_none());
+            altered = copy_trace(&fresh);
+            altered.nodes[0].op = Op::Constant;
+            assert!(prepared.lower(&altered).is_none());
+            altered = copy_trace(&fresh);
+            altered.nodes[altered.public[0].0].value += F192::new(0, 0, 1);
+            let bad = prepared.lower(&altered).unwrap();
+            assert!(!rows_hold(&bad) || !connectors_hold(&bad));
+        }
     }
 
     #[test]
