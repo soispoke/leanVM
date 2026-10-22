@@ -99,7 +99,7 @@ impl Index {
     }
     fn columns(&self, values: &[F192]) -> [Vec<F192>; 4] {
         assert_eq!(values.len(), self.circuit.variables);
-        std::array::from_fn(|role| self.rows.iter().map(|row| values[row[role]]).collect())
+        std::array::from_fn(|role| parallel::map_collect(self.rows.len(), |row| values[self.rows[row][role]]))
     }
 }
 
@@ -134,24 +134,26 @@ fn label(index: &Index, public: &[F192], context: &Hash) -> Vec<u8> {
 fn stack_columns(cols: &[Vec<F192>; 4]) -> Vec<F64> {
     let n = cols[0].len();
     let mut stack = vec![F64::ZERO; 16 * n];
-    for (col, values) in cols.iter().enumerate() {
-        for (r, x) in values.iter().enumerate() {
-            for (limb, v) in [x.c0, x.c1, x.c2].into_iter().enumerate() {
-                stack[(col * 4 + limb) * n + r] = F64(v);
+    parallel::chunks_mut(&mut stack, n, |slot, dst| {
+        let limb = slot % 4;
+        if limb < 3 {
+            for (dest, value) in dst.iter_mut().zip(&cols[slot / 4]) {
+                *dest = F64(match limb {
+                    0 => value.c0,
+                    1 => value.c1,
+                    _ => value.c2,
+                });
             }
         }
-    }
+    });
     stack
-}
-fn base_eval(table: &[F64], point: &[F192]) -> F192 {
-    let eq = eq_table(point);
-    whir::inner_product_base_ext(&table[..eq.len()], &eq)
 }
 fn send_field(
     stack: &[F64],
     l: usize,
     col: usize,
     point: &[F192],
+    weights: &[F192],
     ps: &mut ProverState,
     claims: &mut Vec<Claim>,
 ) -> F192 {
@@ -160,7 +162,7 @@ fn send_field(
     let mut basis = F192::ONE;
     for limb in 0..3 {
         let offset = (col * 4 + limb) * n;
-        let v = base_eval(&stack[offset..], point);
+        let v = whir::inner_product_base_ext(&stack[offset..offset + weights.len()], weights);
         ps.add_scalar(v);
         claims.push(Claim {
             offset,
@@ -198,10 +200,16 @@ fn open(stack: &[F64], data: &ProverData, l: usize, claims: &[Claim], ps: &mut P
     let mut power = F192::ONE;
     let mut target = F192::ZERO;
     let mut weights = vec![F192::ZERO; stack.len()];
+    let mut previous_point: Option<&[F192]> = None;
+    let mut eq = Vec::new();
     for claim in claims {
         target += power * claim.value;
-        for (dest, eq) in weights[claim.offset..].iter_mut().zip(eq_table(&claim.point)) {
-            *dest += power * eq;
+        if previous_point != Some(claim.point.as_slice()) {
+            eq = eq_table(&claim.point);
+            previous_point = Some(&claim.point);
+        }
+        for (dest, &value) in weights[claim.offset..].iter_mut().zip(&eq) {
+            *dest += power * value;
         }
         power *= lambda;
     }
@@ -266,7 +274,7 @@ pub(crate) fn prove_reduction(index: &Index, witness: &Prepared, ps: &mut Prover
     let mut claims = Vec::new();
     let mut index_claims = Vec::new();
     let r = ps.sample_vec(l);
-    let c: Vec<_> = cols[2].iter().zip(&cols[3]).map(|(&u, &z)| u + z).collect();
+    let c = parallel::map_collect(n, |i| cols[2][i] + cols[3][i]);
     let (point, _, _, _) = zerocheck::prove_tables(
         cols[0].clone(),
         cols[1].clone(),
@@ -276,9 +284,11 @@ pub(crate) fn prove_reduction(index: &Index, witness: &Prepared, ps: &mut Prover
         &mut |_| (F192::ZERO, F192::ZERO),
         ps,
     );
+    let weights = eq_table(&point);
     for col in 0..4 {
-        send_field(stack, l, col, &point, ps, &mut claims);
+        send_field(stack, l, col, &point, &weights, ps, &mut claims);
     }
+    drop(weights);
     let alpha = ps.sample();
     let beta = ps.sample();
     let leaf = |k: usize, permuted: bool| {
@@ -288,11 +298,12 @@ pub(crate) fn prove_reduction(index: &Index, witness: &Prepared, ps: &mut Prover
     let sigma = parallel::map_collect(4 * n, |k| leaf(k, true));
     let product = gkr::prove_product_triple([ids, sigma, vec![F192::ONE]], ps, RootShape::Distinct);
     let rho = &product.point[..l];
+    let weights = eq_table(rho);
     for col in 0..4 {
-        send_field(stack, l, col, rho, ps, &mut claims);
+        send_field(stack, l, col, rho, &weights, ps, &mut claims);
     }
     for col in 0..4 {
-        let value = base_eval(&index.stack[col * n..], rho);
+        let value = whir::inner_product_base_ext(&index.stack[col * n..(col + 1) * n], &weights);
         ps.add_scalar(value);
         index_claims.push(Claim {
             offset: col * n,
@@ -300,8 +311,10 @@ pub(crate) fn prove_reduction(index: &Index, witness: &Prepared, ps: &mut Prover
             value,
         });
     }
+    drop(weights);
     let point = ps.sample_vec(index.public_log);
-    send_field(stack, l, 3, &point, ps, &mut claims);
+    let weights = eq_table(&point);
+    send_field(stack, l, 3, &point, &weights, ps, &mut claims);
     (claims, index_claims)
 }
 pub(crate) fn prove_index_open(index: &Index, claims: &[Claim], ps: &mut ProverState) {
