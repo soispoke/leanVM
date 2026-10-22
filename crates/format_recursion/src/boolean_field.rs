@@ -68,6 +68,7 @@ fn linear_naive(c: &mut Ckt, a: &[Wire], f: impl Fn(F192) -> F192) -> Word {
     out
 }
 
+#[cfg(test)]
 fn mul_with_leaf(c: &mut Ckt, a: &[Wire], b: &[Wire], leaf: usize) -> Word {
     let aa: Vec<_> = a.chunks(64).collect();
     let bb: Vec<_> = b.chunks(64).collect();
@@ -96,8 +97,111 @@ fn mul_with_leaf(c: &mut Ckt, a: &[Wire], b: &[Wire], leaf: usize) -> Word {
     out
 }
 
+/// Multiply a base-field word by x, modulo x^64 + x^4 + x^3 + x + 1.
+fn base_x(c: &mut Ckt, a: &[Wire]) -> Word {
+    let mut out = vec![a[63]];
+    out.extend_from_slice(&a[..63]);
+    for i in [1, 3, 4] {
+        out[i] = c.xor(out[i], a[63]);
+    }
+    out
+}
+
+fn base_div_x(c: &mut Ckt, a: &[Wire]) -> Word {
+    let mut out = a[1..].to_vec();
+    for i in [0, 2, 3] {
+        out[i] = c.xor(out[i], a[0]);
+    }
+    out.push(a[0]);
+    out
+}
+
+/// Divide by x + 1. The modulus has value one at x = 1, so the
+/// top quotient coefficient is the parity of the reduced product.
+fn base_div_x_plus_one(c: &mut Ckt, a: &[Wire]) -> Word {
+    let top = a.iter().copied().fold(Wire::ZERO, |s, bit| c.xor(s, bit));
+    let mut previous = top;
+    let mut out = Vec::with_capacity(64);
+    for (i, &bit) in a.iter().take(63).enumerate() {
+        let mut next = bit;
+        if [0, 1, 3, 4].contains(&i) {
+            next = c.xor(next, top);
+        }
+        if i != 0 {
+            next = c.xor(next, previous);
+        }
+        out.push(next);
+        previous = next;
+    }
+    out.push(top);
+    out
+}
+
+fn base_div_x_times_x_plus_one(c: &mut Ckt, a: &[Wire]) -> Word {
+    let shifted = base_div_x(c, a);
+    base_div_x_plus_one(c, &shifted)
+}
+
+/// Evaluate a quadratic over the base field at x.
+fn evaluate_x(c: &mut Ckt, a: &[Wire]) -> Word {
+    let high = base_x(c, &a[128..]);
+    let middle = xor(c, &high, &a[64..128]);
+    let shifted = base_x(c, &middle);
+    xor(c, &shifted, &a[..64])
+}
+
+/// Interpolate the product at 0, 1, x, x + 1 and infinity, then reduce
+/// modulo y^3 + y + 1. All divisions are fixed invertible binary linear maps.
+fn mul_five(c: &mut Ckt, a: &[Wire], b: &[Wire], leaf: usize) -> Word {
+    assert_eq!(a.len(), 192);
+    assert_eq!(b.len(), 192);
+    let v0 = base_mul(c, &a[..64], &b[..64], leaf);
+    let v4 = base_mul(c, &a[128..], &b[128..], leaf);
+    let a1: Word = (0..64).map(|i| c.xor3(a[i], a[64 + i], a[128 + i])).collect();
+    let b1: Word = (0..64).map(|i| c.xor3(b[i], b[64 + i], b[128 + i])).collect();
+    let v1 = base_mul(c, &a1, &b1, leaf);
+    let ax = evaluate_x(c, a);
+    let bx = evaluate_x(c, b);
+    let vx = base_mul(c, &ax, &bx, leaf);
+    // In characteristic two, A(x + 1) = A(x) + a1 + a2.
+    let ax1: Word = (0..64).map(|i| c.xor3(ax[i], a[64 + i], a[128 + i])).collect();
+    let bx1: Word = (0..64).map(|i| c.xor3(bx[i], b[64 + i], b[128 + i])).collect();
+    let vx1 = base_mul(c, &ax1, &bx1, leaf);
+
+    // For product coefficients c_i, r1 = c1 + c2 + c3.
+    let r1: Word = (0..64).map(|i| c.xor3(v1[i], v0[i], v4[i])).collect();
+    let mut fourth = v4.clone();
+    for _ in 0..4 {
+        fourth = base_x(c, &fourth);
+    }
+    let xr1 = base_x(c, &r1);
+    let numerator: Word = (0..64)
+        .map(|i| {
+            let lo = c.xor3(vx1[i], v0[i], fourth[i]);
+            let hi = c.xor3(v4[i], xr1[i], r1[i]);
+            c.xor(lo, hi)
+        })
+        .collect();
+    // j = c2 + x*c3; c3 = (vx + vx1 + v4 + r1) / (x*(x+1)).
+    let j = base_div_x_times_x_plus_one(c, &numerator);
+    let numerator: Word = (0..64)
+        .map(|i| {
+            let lo = c.xor(vx[i], vx1[i]);
+            let hi = c.xor(v4[i], r1[i]);
+            c.xor(lo, hi)
+        })
+        .collect();
+    let c3 = base_div_x_times_x_plus_one(c, &numerator);
+    let xc3 = base_x(c, &c3);
+    let out2: Word = (0..64).map(|i| c.xor3(j[i], xc3[i], v4[i])).collect();
+    let mut out = xor(c, &v0, &c3);
+    out.extend(xor(c, &r1, &out2));
+    out.extend(out2);
+    out
+}
+
 pub(crate) fn mul(c: &mut Ckt, a: &[Wire], b: &[Wire]) -> Word {
-    mul_with_leaf(c, a, b, 4)
+    mul_five(c, a, b, 4)
 }
 
 /// Share short input XORs between the output bits of a binary linear map.
@@ -189,10 +293,74 @@ mod tests {
             let b = c.inputs(192);
             let before = c.rows();
             let output = mul_with_leaf(&mut c, &a, &b, leaf);
+            let six_product_rows = c.rows() - before;
             println!(
                 "{}",
-                serde_json::json!({"kind":"field_multiply_rows","leaf":leaf,"rows":c.rows()-before})
+                serde_json::json!({"kind":"field_multiply_rows","method":"six_product","leaf":leaf,"rows":six_product_rows})
             );
+            check(c, output, &pairs);
+            let mut c = Ckt::new();
+            let a = c.inputs(192);
+            let b = c.inputs(192);
+            let before = c.rows();
+            let output = mul_five(&mut c, &a, &b, leaf);
+            assert!(c.rows() - before < six_product_rows);
+            println!(
+                "{}",
+                serde_json::json!({"kind":"field_multiply_rows","method":"five_product","leaf":leaf,"rows":c.rows()-before})
+            );
+            check(c, output, &pairs);
+        }
+    }
+
+    #[test]
+    fn five_product_matches_native_on_every_binary_basis_pair() {
+        let basis: Vec<_> = (0..192)
+            .map(|i| {
+                let mut x = [0u64; 3];
+                x[i / 64] = 1 << (i % 64);
+                F192::new(x[0], x[1], x[2])
+            })
+            .collect();
+        let mut pairs: Vec<_> = basis
+            .iter()
+            .flat_map(|&a| basis.iter().map(move |&b| (a, Some(b), a * b)))
+            .collect();
+        for a in [F192::ZERO, F192::ONE, F192::new(u64::MAX, u64::MAX, u64::MAX)] {
+            for b in basis.iter().copied().chain([a]) {
+                pairs.push((a, Some(b), a * b));
+                pairs.push((b, Some(a), a * b));
+            }
+        }
+        let mut c = Ckt::new();
+        let a = c.inputs(192);
+        let b = c.inputs(192);
+        let output = mul(&mut c, &a, &b);
+        check(c, output, &pairs);
+    }
+
+    #[test]
+    fn sparse_base_maps_match_native_on_every_binary_basis_vector() {
+        for mode in 0..3 {
+            let constant = match mode {
+                0 => F192::new(2, 0, 0),
+                1 => F192::new(2, 0, 0).inv(),
+                _ => F192::new(3, 0, 0).inv(),
+            };
+            let pairs: Vec<_> = (0..64)
+                .map(|i| {
+                    let x = F192::new(1 << i, 0, 0);
+                    (x, None, x * constant)
+                })
+                .collect();
+            let mut c = Ckt::new();
+            let a = c.inputs(192);
+            let mut output = match mode {
+                0 => base_x(&mut c, &a[..64]),
+                1 => base_div_x(&mut c, &a[..64]),
+                _ => base_div_x_plus_one(&mut c, &a[..64]),
+            };
+            output.resize(192, Wire::ZERO);
             check(c, output, &pairs);
         }
     }

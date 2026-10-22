@@ -1,0 +1,20 @@
+{
+  "status": "field_multiplication_smaller_recursion_still_over_capacity",
+  "source_patch_base": "b4d5d66aba9794e88bbe2ed5cc59a3737960352c",
+  "source_patch_sha256": "2f4a28a4028c53d5217a17ba9ec1bc5d4b5d907e629632dfdba56cb53cedda7f",
+  "full_width_field_multiply_rows_before": 28298,
+  "full_width_field_multiply_rows_after": 24544,
+  "row_reduction_percent": 13.26595519117959,
+  "binary_basis_pairs_checked": 36864,
+  "unit_tests_passed": 15,
+  "complete_certificate_corruptions_rejected": 45,
+  "recorded_verifier_corruptions_rejected": 18,
+  "clippy_all_targets_passed": true,
+  "formatting_passed": true,
+  "protocol_changed": false,
+  "lean_proofs_added": false,
+  "outer_recursive_snark_produced": false,
+  "arithmetic_circuit_bound_to_hash_coprocessor": false,
+  "timing_scope": "Row counts measure Boolean multiplication; hash-batch timings use transparent native replay and are not recursive proving times.",
+  "source_receipt_note": "Execution source_commit identifies the patch base; source.patch.gz and source-sha256.json identify the implementation tested."
+}

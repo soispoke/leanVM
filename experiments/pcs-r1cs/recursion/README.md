@@ -20,7 +20,7 @@ The child is a small circuit with 4,096 padded rows, two private 64-bit inputs, 
 
 Hash counts include statement hashing, transcript operations, grinding, opening seeds, Merkle leaves and paths. Fixed domain and circuit seed digests are precomputed. The recorded implementation uses independent Merkle paths and does not optimize shared paths across queries. These counts describe this implementation, not a lower bound on recursion.
 
-The lowering uses Karatsuba polynomial multiplication for variable field products and linear maps for squares, constant products and Frobenius. Primitive tests compare the Boolean gadgets against native field arithmetic and BLAKE2s across block boundaries, including changed-input rejection. The complete verifier was executed at the recorded-operation level; it was not fully lowered, evaluated as a complete Boolean circuit, or proved. No new Lean theorem or implementation correspondence proof is claimed.
+The original lowering used six base-field products for variable field multiplication. The latest implementation uses five-point interpolation with Karatsuba inside each base-field product, and linear maps for squares, constant products and Frobenius. Primitive tests compare the Boolean gadgets against native field arithmetic and BLAKE2s across block boundaries, including changed-input rejection. The complete verifier was executed at the recorded-operation level; it was not fully lowered, evaluated as a complete Boolean circuit, or proved. No new Lean theorem or implementation correspondence proof is claimed.
 
 ## What this changes in the comparison
 
@@ -84,6 +84,18 @@ A further [checked run](../evidence/2026-10-22-arithmetic-opt/stdout.jsonl) keep
 The outcome is unchanged: with hashes omitted, compilation reaches node 1,029 before exceeding the row limit at 8,413,912 rows. Variable products consume 8,122,960 of those rows, about 97%. This is a partial compilation, not a measurement of the full circuit's size. Three fresh hash-batch certificates still verify and reject all 45 complete-certificate corruptions. The original recorded-verifier regression also passes all 18 corruptions and retains the same high-level operation counts. All thirteen unit tests, all-target Clippy and formatting pass. No complete recursive proof is produced.
 
 The latest evidence preserves construction and native verification timings, but they remain component diagnostics. The optimized linear maps affect Boolean circuit compilation, not the transparent hash-batch certificate's proving algorithm. The earlier hash-batch timing table should not be interpreted as a before/after speed comparison for this optimization.
+
+### Five-product field multiplication
+
+The [next checked run](../evidence/2026-10-22-five-product/batched/stdout.jsonl) reduces a fully variable field multiplication from **28,298 to 24,544 full-adder rows, 13.3% fewer**. This is a circuit-size result, not an end-to-end proving-time speedup. The field, circuit format, transcript, verifier equations and backend limit are unchanged.
+
+The implementation evaluates the two quadratic field elements at 0, 1, x, x + 1 and infinity, multiplies these five pairs in the base field, and interpolates before reducing modulo y³ + y + 1. Multiplication and division by x and x + 1 are fixed binary linear maps. They introduce no advice or new proof protocol. The previous six-product implementation remains as a test reference. The four-bit Karatsuba cutoff remains best among the five tested cutoffs.
+
+All 36,864 binary basis pairs agree with native field multiplication. Tests also cover zero, one, all-one operands, randomized dense inputs, and every basis vector for the fixed linear maps. All fifteen unit tests, all-target Clippy and formatting pass. These are implementation checks; no new Lean implementation-equivalence proof is claimed.
+
+Three fresh hash-batch certificates pass with all 45 corruptions rejected, and the complete recorded-verifier regression still rejects its 18 corruptions. With all hashes and circuit-to-coprocessor binding omitted, compilation now reaches node 1,585 instead of 1,029 before exceeding the same 8,388,608-row limit. It stops at 8,395,870 rows, still inside the first opening verifier. These are partial compilations at different stopping points, not complete circuit sizes or a recursion speed comparison. The direct compilation with hashes also remains over capacity. **No complete recursive outer proof is produced.**
+
+The [execution record](../evidence/2026-10-22-five-product/batched/result.json), [test log](../evidence/2026-10-22-five-product/tests.log), [direct regression](../evidence/2026-10-22-five-product/direct-regression/stdout.jsonl), source hashes and patch preserve the result. The hash-batch run peaked below 1.5 GiB RSS and retained over 200 GiB available system memory. Its component timings do not measure this arithmetic optimization: the transparent replay uses native field arithmetic, not the Boolean circuit.
 
 ## Evidence and reproduction
 

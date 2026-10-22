@@ -1,0 +1,59 @@
+   Compiling format_recursion v0.1.0 (/root/workspaces/mission-9abcee72/leanvm-opt/crates/format_recursion)
+    Finished `release` profile [optimized] target(s) in 9.58s
+     Running unittests src/lib.rs (/root/workspaces/mission-9abcee72/target-verified-pclmul/release/deps/format_recursion-9b76d66635e6d09e)
+
+running 15 tests
+lower node 0/11: 704 rows
+lower node 0/6: 704 rows
+test replay::tests::replay_cannot_stand_in_for_hash_verification ... ok
+test replay::tests::replay_checks_every_arithmetic_kind_and_public_output ... ok
+lower node 0/4: 704 rows
+lower node 0/28: 512 rows
+lower node 0/6: 704 rows
+lower node 0/4: 512 rows
+test trace::tests::merkle_selection_uses_the_constrained_bit ... ok
+lower node 0/5: 704 rows
+test boolean_field::tests::sparse_base_maps_match_native_on_every_binary_basis_vector ... ok
+test trace::tests::nonzero_advice_is_constrained ... ok
+test hash_batch::tests::public_io_matches_packed_flock_layout ... ok
+test hash_batch::tests::binding_point_detects_every_io_column_including_padding ... ok
+{"kind":"field_multiply_rows","leaf":1,"method":"six_product","rows":29432}
+{"kind":"constant_multiply_rows","method":"naive","rows":17168}
+lower node 0/7: 704 rows
+lower node 0/7: 704 rows
+lower node 0/11: 704 rows
+lower node 0/28: 512 rows
+{"kind":"field_multiply_rows","leaf":1,"method":"five_product","rows":25489}
+lower node 0/7: 704 rows
+lower node 0/11: 704 rows
+{"kind":"field_multiply_rows","leaf":2,"method":"six_product","rows":28460}
+test verifier::tests::merkle_paths_enforce_omitted_zero_lanes ... ok
+{"kind":"constant_multiply_rows","rows":10186,"window":3}
+{"kind":"field_multiply_rows","leaf":2,"method":"five_product","rows":24679}
+lower node 0/10: 704 rows
+lower node 0/11: 704 rows
+{"kind":"field_multiply_rows","leaf":4,"method":"six_product","rows":28298}
+{"kind":"constant_multiply_rows","rows":8515,"window":4}
+test trace::tests::hashes_match_native_across_block_boundaries ... ok
+test hash_batch::tests::an_unbound_proof_of_unrelated_hashes_is_rejected ... ok
+lower node 0/11: 704 rows
+{"kind":"field_multiply_rows","leaf":4,"method":"five_product","rows":24544}
+lower node 0/11: 704 rows
+{"kind":"constant_multiply_rows","rows":7586,"window":5}
+{"kind":"field_multiply_rows","leaf":8,"method":"six_product","rows":29648}
+{"kind":"field_multiply_rows","leaf":8,"method":"five_product","rows":25669}
+lower node 0/11: 704 rows
+test hash_batch::tests::honest_and_adversarial_public_batch ... ok
+{"kind":"constant_multiply_rows","rows":7232,"window":6}
+{"kind":"field_multiply_rows","leaf":16,"method":"six_product","rows":33626}
+lower node 0/11: 704 rows
+{"kind":"constant_multiply_rows","rows":7462,"window":7}
+test trace::tests::field_operations_match_native_and_bind_their_inputs ... ok
+{"kind":"field_multiply_rows","leaf":16,"method":"five_product","rows":28984}
+test boolean_field::tests::profile_multiplication_cutoffs_and_check_native_values ... ok
+{"kind":"constant_multiply_rows","rows":7834,"window":8}
+test boolean_field::tests::windowed_linear_maps_match_native_on_a_complete_binary_basis ... ok
+test boolean_field::tests::five_product_matches_native_on_every_binary_basis_pair ... ok
+
+test result: ok. 15 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 5.38s
+
