@@ -357,15 +357,16 @@ pub(crate) fn verify_basis_opening(
     verify_basis_opening_inner(t, &config, log_n, 1 << config.initial_k, root, target, basis);
 }
 
-pub(crate) fn verify_basis_opening_lanes(
+pub(crate) fn verify_basis_opening_lanes_rate(
     t: &mut Transcript<'_>,
     log_n: usize,
+    log_inv_rate: usize,
     live_lanes: usize,
     root: [S; 2],
     target: S,
     basis: impl Fn(&[S]) -> S,
 ) {
-    let config = pcs::whir::config_for_rate(log_n, 1).expect("supported WHIR shape");
+    let config = pcs::whir::config_for_rate(log_n, log_inv_rate).expect("supported WHIR shape");
     assert!((1..=1 << config.initial_k).contains(&live_lanes));
     verify_basis_opening_inner(t, &config, log_n, live_lanes, root, target, basis);
 }

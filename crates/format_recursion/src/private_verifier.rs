@@ -4,9 +4,9 @@
 use crate::{
     flock_trace,
     native_verifier::{self, Claim},
-    private_bridge::PrivateBridge,
+    private_bridge::{JOINT_LOG_INV_RATE, PrivateBridge},
     trace::{self, S, Trace, digest_constant, hash},
-    verifier::{Transcript, eq, powers, verify_basis_opening_lanes},
+    verifier::{Transcript, eq, powers, verify_basis_opening_lanes_rate},
 };
 use fiat_shamir::{
     merkle::{Hash, hash_to_scalars},
@@ -53,6 +53,7 @@ pub(crate) fn label(bridge: &PrivateBridge, index_root: [S; 2], context: [S; 2],
             bridge.connector_start,
             bridge.q_offset,
             bridge.stack_log,
+            JOINT_LOG_INV_RATE,
             public.len(),
         ]
         .map(|n| (S::u(n as u64), 8)),
@@ -102,14 +103,22 @@ pub(crate) fn verify(bridge: &PrivateBridge, index_root: [S; 2], public: &[S], t
         });
     let qlog = stride + bridge.block_log;
     assert_eq!(flock.suffix_point.len(), qlog);
-    verify_basis_opening_lanes(t, bridge.stack_log, bridge.committed_lanes(), root, target, |at| {
-        let ring =
-            selector(bridge.q_offset, qlog, at) * flock_trace::ring_weight(&flock.suffix_point, &at[..qlog], &map);
-        claims
-            .iter()
-            .zip(&weights[1..])
-            .fold(ring, |sum, (claim, &weight)| sum + weight * claim_eval(claim, at))
-    });
+    verify_basis_opening_lanes_rate(
+        t,
+        bridge.stack_log,
+        JOINT_LOG_INV_RATE,
+        bridge.committed_lanes(),
+        root,
+        target,
+        |at| {
+            let ring =
+                selector(bridge.q_offset, qlog, at) * flock_trace::ring_weight(&flock.suffix_point, &at[..qlog], &map);
+            claims
+                .iter()
+                .zip(&weights[1..])
+                .fold(ring, |sum, (claim, &weight)| sum + weight * claim_eval(claim, at))
+        },
+    );
     trace::mark("private-index-opening");
     native_verifier::opening(t, index_root, bridge.index.log_rows + 2, &index_claims);
 }

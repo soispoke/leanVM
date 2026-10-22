@@ -23,6 +23,9 @@ use primitives::{
 };
 
 const SLOTS: [usize; 18] = [0, 1, 2, 3, 4, 5, 6, 7, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19];
+/// Candidate production WHIR profile for the joint private witness only.
+/// Native circuit-index openings retain their existing rate-1/2 profile.
+pub(crate) const JOINT_LOG_INV_RATE: usize = 2;
 const MIN_BLOCKS: usize = 128;
 const MAX_BLOCKS: usize = 1 << 16;
 
@@ -190,6 +193,7 @@ impl PrivateBridge {
             self.connector_start,
             self.q_offset,
             self.stack_log,
+            JOINT_LOG_INV_RATE,
             public.len(),
         ] {
             out.extend_from_slice(&(x as u64).to_le_bytes());
@@ -253,7 +257,7 @@ impl PrivateBridge {
             *dest = F64(word);
         }
         let (commitment, data) = tracing::info_span!("Joint commitment")
-            .in_scope(|| whir::commit(&stack, self.stack_log, INITIAL_FOLDING_FACTOR, 1));
+            .in_scope(|| whir::commit(&stack, self.stack_log, INITIAL_FOLDING_FACTOR, JOINT_LOG_INV_RATE));
         let mut ps = ProverState::from_label(&self.label(&public, context));
         ps.add_root(&commitment.root);
         let (native_claims, index_claims) = tracing::info_span!("Arithmetic reduction")
@@ -279,7 +283,7 @@ impl PrivateBridge {
             .collect();
         claims.extend(self.claims(&point, &bridge_values));
         let ring = ring_switch_open(1 << self.block_log, self.q_offset, &reduced);
-        let config = whir::config_for_rate(self.stack_log, 1).ok()?;
+        let config = whir::config_for_rate(self.stack_log, JOINT_LOG_INV_RATE).ok()?;
         tracing::info_span!("Joint opening").in_scope(|| {
             open_batch_mixed_whir_stacked(&mut ps, self.stack_log, &stack, &data, &config, &claims, &ring);
         });
@@ -320,7 +324,7 @@ impl PrivateBridge {
             .collect();
         claims.extend(self.claims(&point, &bridge_values));
         let ring = ring_switch_verify(1 << self.block_log, self.q_offset, &reduced.claim);
-        let Ok(config) = whir::config_for_rate(self.stack_log, 1) else {
+        let Ok(config) = whir::config_for_rate(self.stack_log, JOINT_LOG_INV_RATE) else {
             return false;
         };
         verify_opening_batch_mixed_whir_stacked(
@@ -342,6 +346,22 @@ impl PrivateBridge {
 mod tests {
     use super::*;
     use flock::hash::param_iv;
+
+    #[test]
+    fn joint_rate_profile_uses_validated_production_parameters() {
+        for log_n in [18usize, 22, 26, 29] {
+            let baseline = whir::config_for_rate(log_n, 1).unwrap();
+            let candidate = whir::config_for_rate(log_n, JOINT_LOG_INV_RATE).unwrap();
+            assert_eq!(candidate.initial_k, INITIAL_FOLDING_FACTOR);
+            assert_eq!(candidate.log_inv_rates[0], JOINT_LOG_INV_RATE);
+            assert_eq!(candidate.grinding_bits, baseline.grinding_bits);
+            assert!(candidate.queries[0] < baseline.queries[0]);
+            eprintln!(
+                "joint log_n={log_n} rate1_queries={:?} rate2_queries={:?}",
+                baseline.queries, candidate.queries
+            );
+        }
+    }
 
     fn fixture(count: usize, seed: u32) -> (Circuit, Vec<[usize; 18]>, Vec<F192>, Vec<Compression>) {
         let mut values = vec![F192::ZERO, F192::ONE];
