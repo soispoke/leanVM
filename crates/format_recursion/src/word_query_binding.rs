@@ -124,7 +124,7 @@ pub fn prove(schedule: &Schedule, stack: &[F64], claims: &[Evaluation], ps: &mut
     while values.len() > 1 {
         let mut q0 = F192::ZERO;
         let mut q2 = F192::ZERO;
-        for (v, w) in values.chunks_exact(2).zip(weights.chunks_exact(2)) {
+        for (v, w) in values.as_chunks::<2>().0.iter().zip(weights.as_chunks::<2>().0.iter()) {
             q0 += v[0] * w[0];
             q2 += (v[0] + v[1]) * (w[0] + w[1]);
         }

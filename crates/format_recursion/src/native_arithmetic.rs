@@ -15,6 +15,10 @@ use primitives::{
 };
 
 /// Resource cap, with four cell-address columns still fitting in u32.
+#[cfg(not(feature = "experimental-log26"))]
+pub const MAX_LOG_ROWS: usize = 24;
+/// Opt-in research cap for the ML-DSA native-row experiments.
+#[cfg(feature = "experimental-log26")]
 pub const MAX_LOG_ROWS: usize = 26;
 
 /// A row enforces z = x*y + u. Variables zero and one are pinned public anchors.
@@ -674,6 +678,10 @@ pub fn verify(index: &Index, public: &[F192], context: &Hash, proof: &Proof) -> 
 mod tests {
     use super::*;
     use rand::{RngCore, SeedableRng, rngs::StdRng};
+    #[test]
+    fn row_cap_requires_explicit_experimental_feature() {
+        assert_eq!(MAX_LOG_ROWS, if cfg!(feature = "experimental-log26") { 26 } else { 24 });
+    }
     #[test]
     fn deferred_native_evaluations_match_reference_for_dense_sparse_and_boundary_lengths() {
         parallel::init();

@@ -12,12 +12,14 @@ fn main() {
     let instance = circuit_suite::sha256::Sha256OneKiB::instance(0);
     let message: Vec<u8> = instance
         .inputs
-        .chunks_exact(8)
+        .as_chunks::<8>()
+        .0
+        .iter()
         .map(|bits| bits.iter().enumerate().fold(0, |v, (i, &bit)| v | (u8::from(bit) << i)))
         .collect();
     let canonical = sha256_word::application(&message, identity);
     let mut expected = identity.to_vec();
-    for half in instance.statement.chunks_exact(16) {
+    for half in instance.statement.as_chunks::<16>().0.iter() {
         expected.extend(half.iter().rev());
     }
     let expected = primitives::hash::hash(&expected);

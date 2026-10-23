@@ -17,7 +17,7 @@ fn main() {
     statement.resize(64, 0);
     statement[32] = 1;
     let mut expected = identity.to_vec();
-    for half in statement.chunks_exact(16) {
+    for half in statement.as_chunks::<16>().0.iter() {
         expected.extend(half.iter().rev());
     }
     let expected = primitives::hash::hash(&expected);

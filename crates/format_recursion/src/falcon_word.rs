@@ -99,8 +99,8 @@ fn shake(c: &mut Lowering, input: &[Word], output_len: usize) -> Vec<Word> {
     let flag = c.b.constant(128);
     padded[last] = c.b.gate(padded[last], c.b.one(), flag);
     let mut state = [Word::ZERO; 25];
-    for block in padded.chunks_exact(136) {
-        for (i, word) in block.chunks_exact(8).enumerate() {
+    for block in padded.as_chunks::<136>().0.iter() {
+        for (i, word) in block.as_chunks::<8>().0.iter().enumerate() {
             let packed = c.pack(word);
             state[i] = c.b.gate(state[i], c.b.one(), packed);
         }
@@ -229,7 +229,7 @@ pub fn application(fixture: &circuit_suite::falcon::Vector, identity: [u8; 32]) 
         pkbits.extend(bits.into_iter().rev());
     }
     let mut pk = vec![c.b.constant(9)];
-    for bits in pkbits.chunks_exact(8) {
+    for bits in pkbits.as_chunks::<8>().0.iter() {
         let reversed: Vec<_> = bits.iter().copied().rev().collect();
         pk.push(c.b.pack(&reversed));
     }
@@ -245,7 +245,12 @@ pub fn application(fixture: &circuit_suite::falcon::Vector, identity: [u8; 32]) 
         &mut stages,
         "SHAKE and input serialization",
     );
-    let samples = sample_bytes.chunks_exact(2).map(|b| vec![b[1], b[0]]).collect();
+    let samples = sample_bytes
+        .as_chunks::<2>()
+        .0
+        .iter()
+        .map(|b| vec![b[1], b[0]])
+        .collect();
     let challenge = compact(&mut c, samples);
     mark(&c, &mut rows, &mut queries, &mut stages, "sampling and compaction");
     let integer = relation(&mut c, &h, &s1, &s2, &challenge);
@@ -267,12 +272,14 @@ pub fn application(fixture: &circuit_suite::falcon::Vector, identity: [u8; 32]) 
     statement.push(c.b.one());
     statement.resize(64, Word::ZERO);
     let mut message: Vec<_> = identity
-        .chunks_exact(8)
-        .map(|b| c.b.constant(u64::from_le_bytes(b.try_into().unwrap())))
+        .as_chunks::<8>()
+        .0
+        .iter()
+        .map(|b| c.b.constant(u64::from_le_bytes(*b)))
         .collect();
-    for half in statement.chunks_exact(16) {
+    for half in statement.as_chunks::<16>().0.iter() {
         let reversed: Vec<_> = half.iter().copied().rev().collect();
-        for word in reversed.chunks_exact(8) {
+        for word in reversed.as_chunks::<8>().0.iter() {
             message.push(c.pack(word));
         }
     }

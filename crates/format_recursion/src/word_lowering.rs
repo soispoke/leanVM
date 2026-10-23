@@ -182,7 +182,7 @@ impl Lowering {
             .iter()
             .enumerate()
             .fold(0u64, |n, (i, &w)| n | (self.value(w) << (8 * i)));
-        let width = ((64 - modulus.leading_zeros() as usize) + 7) / 8;
+        let width = (64 - modulus.leading_zeros() as usize).div_ceil(8);
         let quotient = integer / modulus;
         let rem = integer % modulus;
         let q: Vec<_> = (0..value.len())

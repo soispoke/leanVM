@@ -7,6 +7,10 @@ publish = false
 [lints]
 workspace = true
 
+[features]
+default = []
+experimental-log26 = []
+
 [dependencies]
 circuit_suite = { path = "../circuit_suite" }
 flock.workspace = true

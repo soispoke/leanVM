@@ -25,7 +25,7 @@ fn shift(c: &mut Lowering, a: &W, n: usize, rotate: bool) -> W {
             }
         })
         .collect();
-    shifted.chunks_exact(8).map(|bits| c.b.pack(bits)).collect()
+    shifted.as_chunks::<8>().0.iter().map(|bits| c.b.pack(bits)).collect()
 }
 fn sigma(c: &mut Lowering, a: &W, rot: [usize; 3], last_shift: bool) -> W {
     let x = shift(c, a, rot[0], true);
@@ -54,9 +54,11 @@ pub fn application(message: &[u8], identity: [u8; 32]) -> Lowering {
             .map(|&v| c.b.constant(v as u64)),
     );
     let mut state: Vec<_> = circuit_suite::sha256::IV.iter().map(|&v| constant(&mut c, v)).collect();
-    for block in padded.chunks_exact(64) {
+    for block in padded.as_chunks::<64>().0.iter() {
         let mut schedule: Vec<W> = block
-            .chunks_exact(4)
+            .as_chunks::<4>()
+            .0
+            .iter()
             .map(|b| b.iter().copied().rev().collect())
             .collect();
         for i in 16..64 {
@@ -104,12 +106,14 @@ pub fn application(message: &[u8], identity: [u8; 32]) -> Lowering {
     let mut statement: Vec<_> = state.iter().flat_map(|w| w.iter().copied().rev()).collect();
     statement.resize(64, Word::ZERO);
     let mut claim_input: Vec<_> = identity
-        .chunks_exact(8)
-        .map(|v| c.b.constant(u64::from_le_bytes(v.try_into().unwrap())))
+        .as_chunks::<8>()
+        .0
+        .iter()
+        .map(|v| c.b.constant(u64::from_le_bytes(*v)))
         .collect();
-    for half in statement.chunks_exact(16) {
+    for half in statement.as_chunks::<16>().0.iter() {
         let rev: Vec<_> = half.iter().copied().rev().collect();
-        for word in rev.chunks_exact(8) {
+        for word in rev.as_chunks::<8>().0.iter() {
             claim_input.push(c.pack(word));
         }
     }

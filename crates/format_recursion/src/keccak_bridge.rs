@@ -23,6 +23,8 @@ use primitives::{
     multilinear::eq_table,
 };
 
+type WordAdvice<'a> = (&'a [Vec<F192>; 6], &'a [(usize, u64)]);
+
 const SLOTS: [usize; 50] = slots();
 const fn slots() -> [usize; 50] {
     let mut out = [0; 50];
@@ -561,7 +563,7 @@ impl KeccakBridge {
         blocks: &[Permutation],
         blake_blocks: &[Compression],
         context: &Hash,
-        word_advice: Option<(&[Vec<F192>; 6], &[(usize, u64)])>,
+        word_advice: Option<WordAdvice<'_>>,
     ) -> Option<Proof> {
         let values = self.extend_values(values);
         let public = self.index.public_values(&values);
@@ -869,7 +871,9 @@ mod tests {
                 let instance = circuit_suite::sha256::Sha256OneKiB::instance(0);
                 let message: Vec<u8> = instance
                     .inputs
-                    .chunks_exact(8)
+                    .as_chunks::<8>()
+                    .0
+                    .iter()
                     .map(|bits| bits.iter().enumerate().fold(0, |n, (i, &b)| n | (u8::from(b) << i)))
                     .collect();
                 crate::sha256_word::application(&message, identity)
