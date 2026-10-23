@@ -49,6 +49,8 @@ mod tests {
         app.trim_outputs = true;
         let canonical = app.create(0);
         let setup = Setup::new(canonical.trace).unwrap();
+        app.trim_outputs = false;
+        let control_setup = Setup::new(app.create(0).trace).unwrap();
         for seed in 0..8 {
             app.trim_outputs = false;
             let complete = app.create(seed);
@@ -59,6 +61,14 @@ mod tests {
             let words = fiat_shamir::merkle::hash_to_scalars(&trimmed.claim);
             let proof = setup.prove(&trimmed.trace, &words).unwrap();
             assert!(setup.verify(&words, &proof));
+            assert!(!control_setup.verify(&words, &proof));
+            assert!(setup.prove(&complete.trace, &words).is_none());
+            let mut wrong = words;
+            wrong[0] += F192::ONE;
+            assert!(!setup.verify(&wrong, &proof));
+            assert!(complete.trace.same_program(&app.with_trimming(false).create(0).trace));
+            app = Application::<Adder>::new().with_trimming(true);
+            assert!(trimmed.trace.same_program(&app.create(0).trace));
             let mut invalid = trimmed.trace;
             let input = invalid.nodes.iter().position(|node| node.op == Op::Input).unwrap();
             assert!(matches!(invalid.nodes[input + 1].op, Op::Mul(..)));
@@ -98,6 +108,13 @@ impl<W: Workload> Application<W> {
             trim_outputs,
             workload: PhantomData,
         }
+        .with_trimming(trim_outputs)
+    }
+
+    /// Research-only explicit policy override; production defaults remain unchanged.
+    pub fn with_trimming(mut self, enabled: bool) -> Self {
+        self.trim_outputs = enabled;
+        self
     }
 
     pub fn expected_claim(&self, seed: u64) -> [u8; 32] {
@@ -151,6 +168,24 @@ impl<W: Workload> Application<W> {
                 }
             }
         }
+        let input_rows = self
+            .circuit
+            .rows()
+            .iter()
+            .enumerate()
+            .skip(circuit_suite::PUBLIC_ROWS)
+            .filter(|(r, row)| [row.x, row.y, row.c] == [Src::Row(*r as u32), Src::Zero, Src::Zero])
+            .count();
+        let unused_sums = required
+            .iter()
+            .skip(circuit_suite::PUBLIC_ROWS)
+            .filter(|r| !r[0])
+            .count();
+        let unused_carries = required
+            .iter()
+            .skip(circuit_suite::PUBLIC_ROWS)
+            .filter(|r| !r[1])
+            .count();
         let read = |outputs: &[[S; 2]], src: Src, carry: usize| match src {
             Src::Zero => zero,
             Src::One => {
@@ -224,6 +259,11 @@ impl<W: Workload> Application<W> {
                 "boolean_log_rows":self.circuit.log_rows,
                 "trim_unused_outputs":self.trim_outputs,
                 "trace_nodes":trace_nodes,
+                "boolean_input_rows":input_rows,
+                "omitted_sums":unused_sums,
+                "omitted_carries":unused_carries,
+                "public_pack_bits":512,
+                "range_checks":0,
             }),
         }
     }

@@ -1,0 +1,74 @@
+[
+  {
+    "receipt": "C-compiler-build-t3",
+    "ok": true,
+    "sha256": "7ec154ae25fde6db66360a4ece1947322f0fa8769f8be86cc7cc650538b3a2e3",
+    "command": [
+      "/usr/bin/taskset",
+      "-c",
+      "24-35",
+      "cargo",
+      "build",
+      "--release",
+      "-p",
+      "format_recursion",
+      "--example",
+      "compiler_rows"
+    ]
+  },
+  {
+    "receipt": "C-release-gates-t1",
+    "ok": true,
+    "sha256": "191c07e0ce4e4839dd3ce2b8a076788c726213e1f8d4fdcfa6c7d7222ce0cc78",
+    "command": [
+      "/usr/bin/taskset",
+      "-c",
+      "24-35",
+      "cargo",
+      "test",
+      "--release",
+      "-p",
+      "format_recursion",
+      "-p",
+      "rec_aggregation",
+      "--lib",
+      "--examples"
+    ]
+  },
+  {
+    "receipt": "C-clippy-t1",
+    "ok": true,
+    "sha256": "66334a37b489f2a92a9c6d0b74c4664c8ebb4f37a0e41facdfa36daac958d737",
+    "command": [
+      "/usr/bin/taskset",
+      "-c",
+      "24-35",
+      "cargo",
+      "clippy",
+      "--release",
+      "-p",
+      "format_recursion",
+      "-p",
+      "rec_aggregation",
+      "--all-targets",
+      "--",
+      "-D",
+      "warnings"
+    ]
+  },
+  {
+    "receipt": "C-fmt-check-t1",
+    "ok": true,
+    "sha256": "26216e7da9c430b2603137b96d00bec226bf31e4a338eb2a9441ae7911b2b14c",
+    "command": [
+      "/usr/bin/taskset",
+      "-c",
+      "24-35",
+      "cargo",
+      "fmt",
+      "--all",
+      "--",
+      "--check"
+    ]
+  }
+]

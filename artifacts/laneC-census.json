@@ -1,0 +1,541 @@
+[
+  {
+    "receipt": "C-rows-blake1k-control-t1",
+    "arithmetic_rows": 1436512,
+    "checks": 8192,
+    "compressions": 39,
+    "cpus": "24-35",
+    "gates": {
+      "add": 976076,
+      "boolean_input": 8192,
+      "constant": 4,
+      "hash": 1,
+      "hash_high": 1,
+      "mul": 659171,
+      "pack": 4
+    },
+    "threads": 12,
+    "trace": {
+      "boolean_input_rows": 8192,
+      "boolean_log_rows": 19,
+      "kind": "native_application_witness",
+      "native_trace_creation_ms": 160.658105,
+      "omitted_carries": 0,
+      "omitted_sums": 0,
+      "public_pack_bits": 512,
+      "range_checks": 0,
+      "trace_nodes": 1643449,
+      "trim_unused_outputs": false,
+      "workload": "blake2s-1kib"
+    },
+    "trim": false,
+    "workload": "blake2s-1kib"
+  },
+  {
+    "receipt": "C-rows-blake1k-control-t1",
+    "proof_ms": 1431.319984,
+    "trim": false,
+    "verified": true,
+    "workload": "blake2s-1kib"
+  },
+  {
+    "receipt": "C-rows-blake1k-trim-t1",
+    "arithmetic_rows": 1251578,
+    "checks": 8192,
+    "compressions": 39,
+    "cpus": "24-35",
+    "gates": {
+      "add": 964460,
+      "boolean_input": 8192,
+      "constant": 4,
+      "hash": 1,
+      "hash_high": 1,
+      "mul": 474287,
+      "pack": 4
+    },
+    "threads": 12,
+    "trace": {
+      "boolean_input_rows": 8192,
+      "boolean_log_rows": 19,
+      "kind": "native_application_witness",
+      "native_trace_creation_ms": 154.352577,
+      "omitted_carries": 282080,
+      "omitted_sums": 24114,
+      "public_pack_bits": 512,
+      "range_checks": 0,
+      "trace_nodes": 1446949,
+      "trim_unused_outputs": true,
+      "workload": "blake2s-1kib"
+    },
+    "trim": true,
+    "workload": "blake2s-1kib"
+  },
+  {
+    "receipt": "C-rows-blake1k-trim-t1",
+    "proof_ms": 1551.5967320000002,
+    "trim": true,
+    "verified": true,
+    "workload": "blake2s-1kib"
+  },
+  {
+    "receipt": "C-rows-blake64-control-t1",
+    "arithmetic_rows": 120080,
+    "checks": 512,
+    "compressions": 39,
+    "cpus": "24-35",
+    "gates": {
+      "add": 59799,
+      "boolean_input": 512,
+      "constant": 4,
+      "hash": 1,
+      "hash_high": 1,
+      "mul": 40481,
+      "pack": 4
+    },
+    "threads": 12,
+    "trace": {
+      "boolean_input_rows": 512,
+      "boolean_log_rows": 15,
+      "kind": "native_application_witness",
+      "native_trace_creation_ms": 16.095971000000002,
+      "omitted_carries": 0,
+      "omitted_sums": 0,
+      "public_pack_bits": 512,
+      "range_checks": 0,
+      "trace_nodes": 100802,
+      "trim_unused_outputs": false,
+      "workload": "blake2s-64b"
+    },
+    "trim": false,
+    "workload": "blake2s-64b"
+  },
+  {
+    "receipt": "C-rows-blake64-control-t1",
+    "proof_ms": 126.619113,
+    "trim": false,
+    "verified": true,
+    "workload": "blake2s-64b"
+  },
+  {
+    "receipt": "C-rows-blake64-trim-t1",
+    "arithmetic_rows": 108891,
+    "checks": 512,
+    "compressions": 39,
+    "cpus": "24-35",
+    "gates": {
+      "add": 59193,
+      "boolean_input": 512,
+      "constant": 4,
+      "hash": 1,
+      "hash_high": 1,
+      "mul": 29297,
+      "pack": 4
+    },
+    "threads": 12,
+    "trace": {
+      "boolean_input_rows": 512,
+      "boolean_log_rows": 15,
+      "kind": "native_application_witness",
+      "native_trace_creation_ms": 12.289595,
+      "omitted_carries": 17510,
+      "omitted_sums": 1224,
+      "public_pack_bits": 512,
+      "range_checks": 0,
+      "trace_nodes": 89012,
+      "trim_unused_outputs": true,
+      "workload": "blake2s-64b"
+    },
+    "trim": true,
+    "workload": "blake2s-64b"
+  },
+  {
+    "receipt": "C-rows-blake64-trim-t1",
+    "proof_ms": 124.613715,
+    "trim": true,
+    "verified": true,
+    "workload": "blake2s-64b"
+  },
+  {
+    "receipt": "C-rows-falcon-control-t1",
+    "arithmetic_rows": 11960207,
+    "checks": 29760,
+    "compressions": 39,
+    "cpus": "24-35",
+    "gates": {
+      "add": 8657231,
+      "boolean_input": 29760,
+      "constant": 4,
+      "hash": 1,
+      "hash_high": 1,
+      "mul": 5624024,
+      "pack": 4
+    },
+    "threads": 12,
+    "trace": {
+      "boolean_input_rows": 29760,
+      "boolean_log_rows": 22,
+      "kind": "native_application_witness",
+      "native_trace_creation_ms": 1516.360543,
+      "omitted_carries": 0,
+      "omitted_sums": 0,
+      "public_pack_bits": 512,
+      "range_checks": 0,
+      "trace_nodes": 14311025,
+      "trim_unused_outputs": false,
+      "workload": "falcon512"
+    },
+    "trim": false,
+    "workload": "falcon512"
+  },
+  {
+    "receipt": "C-rows-falcon-control-t1",
+    "proof_ms": 11690.516485,
+    "trim": false,
+    "verified": true,
+    "workload": "falcon512"
+  },
+  {
+    "receipt": "C-rows-falcon-trim-t1",
+    "arithmetic_rows": 8798175,
+    "checks": 29760,
+    "compressions": 39,
+    "cpus": "24-35",
+    "gates": {
+      "add": 7296012,
+      "boolean_input": 29760,
+      "constant": 4,
+      "hash": 1,
+      "hash_high": 1,
+      "mul": 2818663,
+      "pack": 4
+    },
+    "threads": 12,
+    "trace": {
+      "boolean_input_rows": 29760,
+      "boolean_log_rows": 22,
+      "kind": "native_application_witness",
+      "native_trace_creation_ms": 1163.7690300000002,
+      "omitted_carries": 2308168,
+      "omitted_sums": 613447,
+      "public_pack_bits": 512,
+      "range_checks": 0,
+      "trace_nodes": 10144445,
+      "trim_unused_outputs": true,
+      "workload": "falcon512"
+    },
+    "trim": true,
+    "workload": "falcon512"
+  },
+  {
+    "receipt": "C-rows-falcon-trim-t1",
+    "proof_ms": 11169.143587,
+    "trim": true,
+    "verified": true,
+    "workload": "falcon512"
+  },
+  {
+    "receipt": "C-rows-keccak1k-control-t1",
+    "arithmetic_rows": 3315830,
+    "checks": 8192,
+    "compressions": 39,
+    "cpus": "24-35",
+    "gates": {
+      "add": 2461248,
+      "boolean_input": 8192,
+      "constant": 4,
+      "hash": 1,
+      "hash_high": 1,
+      "mul": 1545479,
+      "pack": 4
+    },
+    "threads": 12,
+    "trace": {
+      "boolean_input_rows": 8192,
+      "boolean_log_rows": 20,
+      "kind": "native_application_witness",
+      "native_trace_creation_ms": 803.644037,
+      "omitted_carries": 0,
+      "omitted_sums": 0,
+      "public_pack_bits": 512,
+      "range_checks": 0,
+      "trace_nodes": 4014929,
+      "trim_unused_outputs": false,
+      "workload": "keccak256-1KiB"
+    },
+    "trim": false,
+    "workload": "keccak256-1KiB"
+  },
+  {
+    "receipt": "C-rows-keccak1k-control-t1",
+    "proof_ms": 6165.571500999999,
+    "trim": false,
+    "verified": true,
+    "workload": "keccak256-1KiB"
+  },
+  {
+    "receipt": "C-rows-keccak1k-trim-t1",
+    "arithmetic_rows": 1897195,
+    "checks": 8192,
+    "compressions": 39,
+    "cpus": "24-35",
+    "gates": {
+      "add": 1728103,
+      "boolean_input": 8192,
+      "constant": 4,
+      "hash": 1,
+      "hash_high": 1,
+      "mul": 314048,
+      "pack": 4
+    },
+    "threads": 12,
+    "trace": {
+      "boolean_input_rows": 8192,
+      "boolean_log_rows": 20,
+      "kind": "native_application_witness",
+      "native_trace_creation_ms": 812.916022,
+      "omitted_carries": 742207,
+      "omitted_sums": 350513,
+      "public_pack_bits": 512,
+      "range_checks": 0,
+      "trace_nodes": 2050353,
+      "trim_unused_outputs": true,
+      "workload": "keccak256-1KiB"
+    },
+    "trim": true,
+    "workload": "keccak256-1KiB"
+  },
+  {
+    "receipt": "C-rows-keccak1k-trim-t1",
+    "proof_ms": 3661.058998,
+    "trim": true,
+    "verified": true,
+    "workload": "keccak256-1KiB"
+  },
+  {
+    "receipt": "C-rows-mpt-control-t1",
+    "arithmetic_rows": 26639333,
+    "checks": 62286,
+    "compressions": 39,
+    "cpus": "24-35",
+    "gates": {
+      "add": 19753772,
+      "boolean_input": 62286,
+      "constant": 4,
+      "hash": 1,
+      "hash_high": 1,
+      "mul": 12529201,
+      "pack": 4
+    },
+    "threads": 12,
+    "trace": {
+      "boolean_input_rows": 62286,
+      "boolean_log_rows": 23,
+      "kind": "native_application_witness",
+      "native_trace_creation_ms": 2887.0254600000003,
+      "omitted_carries": 0,
+      "omitted_sums": 0,
+      "public_pack_bits": 512,
+      "range_checks": 0,
+      "trace_nodes": 32345269,
+      "trim_unused_outputs": false,
+      "workload": "mpt-storage-proof"
+    },
+    "trim": false,
+    "workload": "mpt-storage-proof"
+  },
+  {
+    "receipt": "C-rows-mpt-trim-t1",
+    "arithmetic_rows": 15001840,
+    "checks": 62286,
+    "compressions": 39,
+    "cpus": "24-35",
+    "gates": {
+      "add": 13878182,
+      "boolean_input": 62286,
+      "constant": 4,
+      "hash": 1,
+      "hash_high": 1,
+      "mul": 2701054,
+      "pack": 4
+    },
+    "threads": 12,
+    "trace": {
+      "boolean_input_rows": 62286,
+      "boolean_log_rows": 23,
+      "kind": "native_application_witness",
+      "native_trace_creation_ms": 1666.962812,
+      "omitted_carries": 5749828,
+      "omitted_sums": 2649511,
+      "public_pack_bits": 512,
+      "range_checks": 0,
+      "trace_nodes": 16641532,
+      "trim_unused_outputs": true,
+      "workload": "mpt-storage-proof"
+    },
+    "trim": true,
+    "workload": "mpt-storage-proof"
+  },
+  {
+    "receipt": "C-rows-mpt-trim-t1",
+    "proof_ms": 11874.696319,
+    "trim": true,
+    "verified": true,
+    "workload": "mpt-storage-proof"
+  },
+  {
+    "receipt": "C-rows-sha1k-control-t1",
+    "arithmetic_rows": 2113328,
+    "checks": 8192,
+    "compressions": 39,
+    "cpus": "24-35",
+    "gates": {
+      "add": 1477827,
+      "boolean_input": 8192,
+      "constant": 4,
+      "hash": 1,
+      "hash_high": 1,
+      "mul": 1062868,
+      "pack": 4
+    },
+    "threads": 12,
+    "trace": {
+      "boolean_input_rows": 8192,
+      "boolean_log_rows": 20,
+      "kind": "native_application_witness",
+      "native_trace_creation_ms": 370.066344,
+      "omitted_carries": 0,
+      "omitted_sums": 0,
+      "public_pack_bits": 512,
+      "range_checks": 0,
+      "trace_nodes": 2548897,
+      "trim_unused_outputs": false,
+      "workload": "sha256-1kib"
+    },
+    "trim": false,
+    "workload": "sha256-1kib"
+  },
+  {
+    "receipt": "C-rows-sha1k-control-t1",
+    "proof_ms": 4977.059862,
+    "trim": false,
+    "verified": true,
+    "workload": "sha256-1kib"
+  },
+  {
+    "receipt": "C-rows-sha1k-trim-t1",
+    "arithmetic_rows": 1761212,
+    "checks": 8192,
+    "compressions": 39,
+    "cpus": "24-35",
+    "gates": {
+      "add": 1290190,
+      "boolean_input": 8192,
+      "constant": 4,
+      "hash": 1,
+      "hash_high": 1,
+      "mul": 781825,
+      "pack": 4
+    },
+    "threads": 12,
+    "trace": {
+      "boolean_input_rows": 8192,
+      "boolean_log_rows": 20,
+      "kind": "native_application_witness",
+      "native_trace_creation_ms": 322.61940599999997,
+      "omitted_carries": 610211,
+      "omitted_sums": 506479,
+      "public_pack_bits": 512,
+      "range_checks": 0,
+      "trace_nodes": 2080217,
+      "trim_unused_outputs": true,
+      "workload": "sha256-1kib"
+    },
+    "trim": true,
+    "workload": "sha256-1kib"
+  },
+  {
+    "receipt": "C-rows-sha1k-trim-t1",
+    "proof_ms": 5215.658696,
+    "trim": true,
+    "verified": true,
+    "workload": "sha256-1kib"
+  },
+  {
+    "receipt": "C-rows-shielded-control-t1",
+    "arithmetic_rows": 12377903,
+    "checks": 13440,
+    "compressions": 39,
+    "cpus": "24-35",
+    "gates": {
+      "add": 8808682,
+      "boolean_input": 13440,
+      "constant": 4,
+      "hash": 1,
+      "hash_high": 1,
+      "mul": 6291091,
+      "pack": 4
+    },
+    "threads": 12,
+    "trace": {
+      "boolean_input_rows": 13440,
+      "boolean_log_rows": 22,
+      "kind": "native_application_witness",
+      "native_trace_creation_ms": 3758.207272,
+      "omitted_carries": 0,
+      "omitted_sums": 0,
+      "public_pack_bits": 512,
+      "range_checks": 0,
+      "trace_nodes": 15113223,
+      "trim_unused_outputs": false,
+      "workload": "shielded-transfer"
+    },
+    "trim": false,
+    "workload": "shielded-transfer"
+  },
+  {
+    "receipt": "C-rows-shielded-control-t1",
+    "proof_ms": 23306.577161,
+    "trim": false,
+    "verified": true,
+    "workload": "shielded-transfer"
+  },
+  {
+    "receipt": "C-rows-shielded-trim-t1",
+    "arithmetic_rows": 10248052,
+    "checks": 13440,
+    "compressions": 39,
+    "cpus": "24-35",
+    "gates": {
+      "add": 7689763,
+      "boolean_input": 13440,
+      "constant": 4,
+      "hash": 1,
+      "hash_high": 1,
+      "mul": 4596470,
+      "pack": 4
+    },
+    "threads": 12,
+    "trace": {
+      "boolean_input_rows": 13440,
+      "boolean_log_rows": 22,
+      "kind": "native_application_witness",
+      "native_trace_creation_ms": 2655.214298,
+      "omitted_carries": 1570864,
+      "omitted_sums": 949941,
+      "public_pack_bits": 512,
+      "range_checks": 0,
+      "trace_nodes": 12299683,
+      "trim_unused_outputs": true,
+      "workload": "shielded-transfer"
+    },
+    "trim": true,
+    "workload": "shielded-transfer"
+  },
+  {
+    "receipt": "C-rows-shielded-trim-t1",
+    "proof_ms": 12240.314906,
+    "trim": true,
+    "verified": true,
+    "workload": "shielded-transfer"
+  }
+]
