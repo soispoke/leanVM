@@ -1,0 +1,17 @@
+{
+  "cpus": "24-35",
+  "threads": 12,
+  "binaries": {
+    "A": {
+      "path": "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/hometurf-L4k/falcon-abab/keccak_row_workloads",
+      "sha256": "cbadb0411155d194299afd8e843af29ae5d514d6a28557f82919626403dba8da"
+    },
+    "B": {
+      "path": "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/hometurf-L3c/abab/falcon_word_application",
+      "sha256": "72e2f63a32f47f4698db90d902901be802d6b43459b5e5ffddadb9d97aec0c25"
+    }
+  },
+  "A": "Keccak rows only",
+  "B": "Keccak rows plus word tables",
+  "seed": 0
+}

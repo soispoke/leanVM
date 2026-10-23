@@ -42,3 +42,5 @@ pub mod word_query_binding;
 pub mod word_lowering;
 
 pub mod falcon_word;
+
+pub mod shielded_word;
