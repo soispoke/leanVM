@@ -27,7 +27,7 @@ fn scalar_bytes(out: &mut Vec<u8>, v: F192) {
         out.extend(limb.to_le_bytes());
     }
 }
-fn label(claims: &[DeferredClaim], digest: &Hash) -> Vec<u8> {
+pub(crate) fn label(claims: &[DeferredClaim], digest: &Hash) -> Vec<u8> {
     let mut out = b"r1cs-deferred-matrix-fold-v1".to_vec();
     out.extend(digest);
     out.extend((claims.len() as u64).to_le_bytes());
@@ -41,7 +41,7 @@ fn label(claims: &[DeferredClaim], digest: &Hash) -> Vec<u8> {
     }
     out
 }
-fn label_rows(claims: &[WireClaim], digest: [S; 2]) -> Vec<(S, usize)> {
+pub(crate) fn label_rows(claims: &[WireClaim], digest: [S; 2]) -> Vec<(S, usize)> {
     let mut out = literal(b"r1cs-deferred-matrix-fold-v1");
     out.extend(digest.map(|v| (v, 16)));
     out.push((S::u(claims.len() as u64), 8));
@@ -70,7 +70,7 @@ fn app_indices(setups: &[&Setup], claims: &[DeferredClaim]) -> Vec<usize> {
         })
         .collect()
 }
-fn sumcheck(
+pub(crate) fn sumcheck(
     pairs: &mut [(Vec<F192>, Vec<F192>)],
     rounds: usize,
     zero_first: bool,
