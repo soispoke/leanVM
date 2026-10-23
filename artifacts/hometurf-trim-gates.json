@@ -1,0 +1,17 @@
+{
+  "policy_source_commit": "8ecd1757be6ae241c4eab47a26a42c5baf60c91a",
+  "measurement_commit": "89401e868d330e177e807aa4c900e5c8fa263831",
+  "decision": "USER APPROVED 2026-10-23 11:40 UTC",
+  "defaults_on": ["sha256-1kib", "keccak256-1KiB", "mpt-storage-proof"],
+  "defaults_off": ["blake2s-64b", "blake2s-1kib", "shielded-transfer", "falcon512", "unknown"],
+  "joint_log_inv_rate": 2,
+  "joint_inverse_commitment_rate": 4,
+  "gates": {
+    "fmt_check": "passed",
+    "clippy_all_targets_D_warnings": "passed",
+    "release_tests": {"format_recursion": 90, "rec_aggregation": 43, "rec_aggregation_ignored": 5, "circuit_suite": 77, "circuit_suite_ignored": 4},
+    "native_adder_cross_key_rejections": "passed",
+    "split_closure_rejections": "passed"
+  },
+  "evidence": "experiments/pcs-r1cs/evidence/2026-10-23-trim-defaults/README.md"
+}

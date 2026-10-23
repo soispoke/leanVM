@@ -1,0 +1,4 @@
+    Blocking waiting for file lock on build directory
+    Checking format_recursion v0.1.0 (/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/ht-L1/crates/format_recursion)
+    Checking rec_aggregation v0.1.0 (/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/ht-L1/crates/rec_aggregation)
+    Finished `release` profile [optimized] target(s) in 3m 47s
