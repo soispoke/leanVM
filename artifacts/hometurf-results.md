@@ -92,9 +92,9 @@ Wallet: R1CS is 2.48x faster.
 |---|---:|---:|---:|---:|
 | R1CS native hash rows | 214.7 | 528.6 | 274,272 | 5.43 |
 | R1CS gates (historical) | unmeasured | unmeasured | unmeasured | unmeasured |
-| RISC-V leanVM | 275.5 | 190.0 | 197,990 | 19.86 |
+| RISC-V leanVM | 150.8 | 189.9 | 197,990 | 12.79 |
 
-Wallet: R1CS is 1.28x faster.
+Wallet: leanVM is 1.42x faster.
 
 The brief cited earlier leanVM BLAKE times of 146 ms / 222 ms for 64 B / 1 KiB. The fresh same-slice reference-binary runs above are faster, so the verdict uses those fresh comparisons rather than the older figures.
 
