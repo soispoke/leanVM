@@ -180,9 +180,13 @@ mod tests {
             let proof = merge.prove(&trace, &ctx).unwrap();
             let accepts = |digest: &Hash, claims: &[DeferredClaim], proof: &Proof, gs: &[&Generator]| {
                 #[cfg(not(feature = "keccak-protocol"))]
-                { verify_root(&merge, digest, claims, proof, gs) }
+                {
+                    verify_root(&merge, digest, claims, proof, gs)
+                }
                 #[cfg(feature = "keccak-protocol")]
-                { verify_sparse_root(&merge, &ctx, digest, claims, proof, gs) }
+                {
+                    verify_sparse_root(&merge, &ctx, digest, claims, proof, gs)
+                }
             };
             let generators: Vec<_> = apps.iter().map(|s| Generator::new(&src, 8, s.key)).collect();
             let gs: Vec<_> = generators.iter().collect();
@@ -258,7 +262,7 @@ impl SparseSetup {
     pub fn new(program: Trace, ccs: bool) -> Option<Self> {
         Self::new_with_padding(program, ccs, None)
     }
-    pub fn new_with_padding(program: Trace, ccs: bool, dimensions: Option<(usize,usize)>) -> Option<Self> {
+    pub fn new_with_padding(program: Trace, ccs: bool, dimensions: Option<(usize, usize)>) -> Option<Self> {
         let mut program = crate::private_trace::PreparedProgram::new(program)?;
         let lower = program.lower_setup()?;
 
@@ -276,12 +280,17 @@ impl SparseSetup {
             compressions: lower.permutations,
             rebuild: Box::new(|| unreachable!()),
         };
-        let mut r = super::R1cs::lower_bounded(&source.circuit, &source.connectors, &source.values, source.fixed_len, 8);
+        let mut r =
+            super::R1cs::lower_bounded(&source.circuit, &source.connectors, &source.values, source.fixed_len, 8);
         if let Some((rows, cols)) = dimensions {
             let row_count = 1usize.checked_shl(rows.try_into().ok()?)?;
             let col_count = 1usize.checked_shl(cols.try_into().ok()?)?;
-            if r.rows() > row_count || r.origins.len() > col_count { return None; }
-            for matrix in &mut r.matrices { matrix.offsets.resize(row_count+1, matrix.entries.len()); }
+            if r.rows() > row_count || r.origins.len() > col_count {
+                return None;
+            }
+            for matrix in &mut r.matrices {
+                matrix.offsets.resize(row_count + 1, matrix.entries.len());
+            }
             r.origins.resize(col_count, super::Origin::Constant(F192::ZERO));
         }
         let setup = Setup::new(r, ccs);
@@ -308,17 +317,37 @@ impl SparseSetup {
 
 fn selected_blocks(values: &crate::private_trace::PreparedWitness) -> Vec<crate::row_hash::Block> {
     #[cfg(feature = "keccak-protocol")]
-    { assert!(values.compressions.is_empty()); values.permutations.clone() }
+    {
+        assert!(values.compressions.is_empty());
+        values.permutations.clone()
+    }
     #[cfg(not(feature = "keccak-protocol"))]
-    { values.compressions.clone() }
+    {
+        values.compressions.clone()
+    }
 }
 
 /// Complete native settlement: verify the wrapper and settle its fresh claim
 /// plus every carried claim against the trusted generator registry.
-pub fn verify_sparse_root(setup: &SparseSetup, context: &Hash, digest: &Hash, carried: &[DeferredClaim], proof: &Proof, generators: &[&super::generator::Generator]) -> bool {
-    if carried.len() != generators.len() { return false; }
-    let Some(own) = setup.verify(&output_fields(digest, carried), context, proof) else { return false; };
-    setup.generator.settle(&own) && carried.iter().zip(generators).all(|(claim, generator)| generator.settle(claim))
+pub fn verify_sparse_root(
+    setup: &SparseSetup,
+    context: &Hash,
+    digest: &Hash,
+    carried: &[DeferredClaim],
+    proof: &Proof,
+    generators: &[&super::generator::Generator],
+) -> bool {
+    if carried.len() != generators.len() {
+        return false;
+    }
+    let Some(own) = setup.verify(&output_fields(digest, carried), context, proof) else {
+        return false;
+    };
+    setup.generator.settle(&own)
+        && carried
+            .iter()
+            .zip(generators)
+            .all(|(claim, generator)| generator.settle(claim))
 }
 
 #[cfg(test)]
@@ -327,19 +356,28 @@ mod padding_tests {
     #[test]
     fn zero_padding_matches_sparse_matrices_and_complete_root() {
         trace::start();
-        let input = S::input(F192::new(7,11,13));
-        let digest = hash(&[(input,24)]);
+        let input = S::input(F192::new(7, 11, 13));
+        let digest = hash(&[(input, 24)]);
         let mut program = trace::take();
         program.public = digest.to_vec();
         let base = SparseSetup::new(program.clone(), false).unwrap();
-        let setup = SparseSetup::new_with_padding(program.clone(), false, Some((base.setup.row_log+1,base.setup.z_log+1))).unwrap();
-        let r:Vec<_>=(0..setup.setup.row_log).map(|i| F192::new(i as u64+17,19,31)).collect();
-        let c:Vec<_>=(0..setup.setup.z_log).map(|i| F192::new(i as u64+27,29,41)).collect();
-        assert_eq!(setup.generator.evaluate(&r,&c),setup.setup.matrix_evals(&r,&c));
-        let context=[87;32];
-        let proof=setup.prove(&program,&context).unwrap();
-        let outputs=private_recursion::outputs(&program);
-        let own=setup.verify(&outputs,&context,&proof).unwrap();
+        let setup = SparseSetup::new_with_padding(
+            program.clone(),
+            false,
+            Some((base.setup.row_log + 1, base.setup.z_log + 1)),
+        )
+        .unwrap();
+        let r: Vec<_> = (0..setup.setup.row_log)
+            .map(|i| F192::new(i as u64 + 17, 19, 31))
+            .collect();
+        let c: Vec<_> = (0..setup.setup.z_log)
+            .map(|i| F192::new(i as u64 + 27, 29, 41))
+            .collect();
+        assert_eq!(setup.generator.evaluate(&r, &c), setup.setup.matrix_evals(&r, &c));
+        let context = [87; 32];
+        let proof = setup.prove(&program, &context).unwrap();
+        let outputs = private_recursion::outputs(&program);
+        let own = setup.verify(&outputs, &context, &proof).unwrap();
         assert!(setup.generator.settle(&own));
     }
 }

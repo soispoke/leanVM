@@ -1,5 +1,6 @@
 //! Deferred sparse-matrix claims, using the leanVM tree's two-phase reduction.
 use super::spartan::Setup;
+use crate::row_hash::{K_LOG, PORTS, R1CS_DIGEST, SLOTS};
 use crate::{
     flock_trace,
     native_verifier::Claim,
@@ -10,7 +11,6 @@ use fiat_shamir::{
     merkle::{Hash, hash_to_scalars},
     transcript::Proof,
 };
-use crate::row_hash::{K_LOG, R1CS_DIGEST, PORTS, SLOTS};
 use flock::membership::Scalar;
 use pcs::{pack::LOG_PACKING, whir::INITIAL_FOLDING_FACTOR};
 use primitives::field::F192;
@@ -215,6 +215,23 @@ pub fn record_child(setup: &Setup, app_key: &Hash, public: &[F192], context: &Ha
     program
 }
 
+/// The comparison path that settles a child's matrix claims inside the trace.
+pub(crate) fn settle_in_rows(setup: &Setup, claim: &WireClaim) {
+    let rows = kernel(&claim.row_point);
+    let cols = kernel(&claim.col_point);
+    for (j, m) in setup.r1cs.matrices.iter().enumerate() {
+        let mut total = S::u(0);
+        for r in 0..m.rows() {
+            if m.row(r).is_empty() {
+                continue;
+            }
+            let value = m.row(r).iter().fold(S::u(0), |v, &(col, c)| v + S::c(c) * cols[col]);
+            total = total + rows[r] * value;
+        }
+        total.assert_eq(claim.matrix_values[j]);
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::super::{self as row_format, R1cs, generator::Generator};
@@ -222,7 +239,11 @@ mod tests {
     #[test]
     fn source_generator_matches_sparse_matrices_without_holding_csr() {
         parallel::init();
-        let cases = if cfg!(feature = "keccak-protocol") { ["shielded", "merkle"] } else { ["shielded", "merge"] };
+        let cases = if cfg!(feature = "keccak-protocol") {
+            ["shielded", "merkle"]
+        } else {
+            ["shielded", "merge"]
+        };
         for case in cases {
             let source = row_format::source(case);
             let setup = Setup::new(
@@ -342,22 +363,5 @@ mod tests {
             *bad.stream.last_mut().unwrap() += F192::ONE;
             assert!(setup.verify_deferred(&public, &context, &bad, false).is_none());
         }
-    }
-}
-
-/// The comparison path that settles a child's matrix claims inside the trace.
-pub(crate) fn settle_in_rows(setup: &Setup, claim: &WireClaim) {
-    let rows = kernel(&claim.row_point);
-    let cols = kernel(&claim.col_point);
-    for (j, m) in setup.r1cs.matrices.iter().enumerate() {
-        let mut total = S::u(0);
-        for r in 0..m.rows() {
-            if m.row(r).is_empty() {
-                continue;
-            }
-            let value = m.row(r).iter().fold(S::u(0), |v, &(col, c)| v + S::c(c) * cols[col]);
-            total = total + rows[r] * value;
-        }
-        total.assert_eq(claim.matrix_values[j]);
     }
 }

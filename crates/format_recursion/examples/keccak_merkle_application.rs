@@ -1,4 +1,4 @@
-//! Application hash-row experiment. Transcript and WHIR remain BLAKE2s.
+//! Native Keccak Merkle application; the feature selects transcript and PCS hashing.
 use format_recursion::native_hash::{Builder, Word};
 use std::time::Instant;
 #[global_allocator]

@@ -105,7 +105,13 @@ pub fn reduce_keccak(m: usize, c: &mut impl Channel) -> SliceClaim {
     reduce_with(m, flock::keccak::K_LOG, 0, keccak_bilinear, c)
 }
 
-fn reduce_with(m: usize, k_log: usize, constant_slot: usize, walk: fn(S, &[S], &[S]) -> S, c: &mut impl Channel) -> SliceClaim {
+fn reduce_with(
+    m: usize,
+    k_log: usize,
+    constant_slot: usize,
+    walk: fn(S, &[S], &[S]) -> S,
+    c: &mut impl Channel,
+) -> SliceClaim {
     assert!(m >= k_log);
     let mut r_rest: Vec<S> = flock::zerocheck::univariate_skip_optimized::small_challenges()
         .into_iter()
@@ -532,36 +538,60 @@ mod tests {
 
 fn keccak_bilinear(alpha: S, u: &[S], w: &[S]) -> S {
     use flock::keccak::{INPUT, OUTPUT, RC, STATE};
-    const ROT: [[usize; 5];5] = [[0,36,3,41,18],[1,44,10,45,2],[62,6,43,15,61],[28,55,25,21,56],[27,20,39,8,14]];
-    let at = |x:usize,y:usize,z:usize| 64*(x+5*y)+z;
+    const ROT: [[usize; 5]; 5] = [
+        [0, 36, 3, 41, 18],
+        [1, 44, 10, 45, 2],
+        [62, 6, 43, 15, 61],
+        [28, 55, 25, 21, 56],
+        [27, 20, 39, 8, 14],
+    ];
+    let at = |x: usize, y: usize, z: usize| 64 * (x + 5 * y) + z;
     assert_eq!(u.len(), 1 << flock::keccak::K_LOG);
     assert_eq!(w.len(), u.len());
     let one = w[0];
-    let mut va = u[0]*one;
-    let mut vb = u[0]*one;
-    let mut state = w[INPUT..INPUT+STATE].to_vec();
-    for j in 0..STATE { va=va+u[INPUT+j]*state[j]; vb=vb+u[INPUT+j]*one; }
-    for (r, rc) in RC.into_iter().enumerate() {
-        let columns: Vec<_> = (0..320).map(|j| {
-            let (x,z)=(j/64,j%64);
-            (1..5).fold(state[at(x,0,z)],|v,y|v+state[at(x,y,z)])
-        }).collect();
-        let mut linear = vec![S::u(0);STATE];
-        for x in 0..5 { for z in 0..64 {
-            let d=columns[((x+4)%5)*64+z]+columns[((x+1)%5)*64+(z+63)%64];
-            for y in 0..5 { linear[at(y,(2*x+3*y)%5,(z+ROT[x][y])%64)] = state[at(x,y,z)]+d; }
-        }}
-        for x in 0..5 { for y in 0..5 { for z in 0..64 {
-            let j=at(x,y,z);
-            let slot=INPUT+STATE+r*STATE+j;
-            va=va+u[slot]*(one+linear[at((x+1)%5,y,z)]);
-            vb=vb+u[slot]*linear[at((x+2)%5,y,z)];
-            state[j]=linear[j]+w[slot];
-            if x==0 && y==0 && (rc>>z)&1==1 { state[j]=state[j]+one; }
-        }}}
+    let mut va = u[0] * one;
+    let mut vb = u[0] * one;
+    let mut state = w[INPUT..INPUT + STATE].to_vec();
+    for j in 0..STATE {
+        va = va + u[INPUT + j] * state[j];
+        vb = vb + u[INPUT + j] * one;
     }
-    for j in 0..STATE { va=va+u[OUTPUT+j]*state[j]; vb=vb+u[OUTPUT+j]*one; }
-    va+alpha*vb
+    for (r, rc) in RC.into_iter().enumerate() {
+        let columns: Vec<_> = (0..320)
+            .map(|j| {
+                let (x, z) = (j / 64, j % 64);
+                (1..5).fold(state[at(x, 0, z)], |v, y| v + state[at(x, y, z)])
+            })
+            .collect();
+        let mut linear = vec![S::u(0); STATE];
+        for x in 0..5 {
+            for z in 0..64 {
+                let d = columns[((x + 4) % 5) * 64 + z] + columns[((x + 1) % 5) * 64 + (z + 63) % 64];
+                for y in 0..5 {
+                    linear[at(y, (2 * x + 3 * y) % 5, (z + ROT[x][y]) % 64)] = state[at(x, y, z)] + d;
+                }
+            }
+        }
+        for x in 0..5 {
+            for y in 0..5 {
+                for z in 0..64 {
+                    let j = at(x, y, z);
+                    let slot = INPUT + STATE + r * STATE + j;
+                    va = va + u[slot] * (one + linear[at((x + 1) % 5, y, z)]);
+                    vb = vb + u[slot] * linear[at((x + 2) % 5, y, z)];
+                    state[j] = linear[j] + w[slot];
+                    if x == 0 && y == 0 && (rc >> z) & 1 == 1 {
+                        state[j] = state[j] + one;
+                    }
+                }
+            }
+        }
+    }
+    for j in 0..STATE {
+        va = va + u[OUTPUT + j] * state[j];
+        vb = vb + u[OUTPUT + j] * one;
+    }
+    va + alpha * vb
 }
 
 #[cfg(test)]
@@ -569,16 +599,16 @@ mod keccak_matrix_tests {
     use super::*;
     #[test]
     fn symbolic_keccak_matrix_matches_native_forward() {
-        let field = |i:usize| F192::new(i as u64*371+17,i as u64*113+27,i as u64*971+31);
-        let n=1<<flock::keccak::K_LOG;
-        let u:Vec<_>=(0..n).map(field).collect();
-        let w:Vec<_>=(n..2*n).map(field).collect();
-        let alpha=field(2*n);
-        let (a,b)=flock::keccak::forward(&w);
-        let expected=(0..n).fold(F192::ZERO,|v,i|v+u[i]*(a[i]+alpha*b[i]));
+        let field = |i: usize| F192::new(i as u64 * 371 + 17, i as u64 * 113 + 27, i as u64 * 971 + 31);
+        let n = 1 << flock::keccak::K_LOG;
+        let u: Vec<_> = (0..n).map(field).collect();
+        let w: Vec<_> = (n..2 * n).map(field).collect();
+        let alpha = field(2 * n);
+        let (a, b) = flock::keccak::forward(&w);
+        let expected = (0..n).fold(F192::ZERO, |v, i| v + u[i] * (a[i] + alpha * b[i]));
         crate::trace::start();
-        let us:Vec<_>=u.into_iter().map(S::input).collect();
-        let ws:Vec<_>=w.into_iter().map(S::input).collect();
-        assert_eq!(keccak_bilinear(S::input(alpha),&us,&ws).value(),expected);
+        let us: Vec<_> = u.into_iter().map(S::input).collect();
+        let ws: Vec<_> = w.into_iter().map(S::input).collect();
+        assert_eq!(keccak_bilinear(S::input(alpha), &us, &ws).value(), expected);
     }
 }

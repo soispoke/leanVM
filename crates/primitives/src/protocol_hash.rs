@@ -1,7 +1,10 @@
 //! Protocol hash selection. The Keccak configuration keeps the transcript's
 //! domain-separated grinding chain and replaces its byte hash, not its layout.
 #[cfg(not(feature = "keccak-protocol"))]
-pub use crate::hash::{BATCH, BLOCK_LEN, Hasher, LANES, OUT_LEN, hash, hash_from_state, hash_many, hash_many_dyn_from_state, zero_prefix_state};
+pub use crate::hash::{
+    BATCH, BLOCK_LEN, Hasher, LANES, OUT_LEN, hash, hash_from_state, hash_many, hash_many_dyn_from_state,
+    zero_prefix_state,
+};
 #[cfg(not(feature = "keccak-protocol"))]
 pub type PrefixState = [u32; 8];
 
@@ -23,11 +26,17 @@ mod keccak_protocol {
         used: usize,
     }
     impl Default for Hasher {
-        fn default() -> Self { Self::new() }
+        fn default() -> Self {
+            Self::new()
+        }
     }
     impl Hasher {
         pub fn new() -> Self {
-            Self { state: [0; 25], buffer: [0; BLOCK_LEN], used: 0 }
+            Self {
+                state: [0; 25],
+                buffer: [0; BLOCK_LEN],
+                used: 0,
+            }
         }
         fn absorb(&mut self) {
             for (lane, bytes) in self.state.iter_mut().zip(self.buffer.as_chunks::<8>().0) {
@@ -43,7 +52,9 @@ mod keccak_protocol {
                 self.buffer[self.used..self.used + take].copy_from_slice(&bytes[..take]);
                 self.used += take;
                 bytes = &bytes[take..];
-                if self.used == BLOCK_LEN { self.absorb(); }
+                if self.used == BLOCK_LEN {
+                    self.absorb();
+                }
             }
             self
         }
@@ -64,19 +75,25 @@ mod keccak_protocol {
     }
     pub fn zero_prefix_state(blocks: usize) -> PrefixState {
         let mut state = [0; 25];
-        for _ in 0..blocks { keccak::Keccak::new().with_f1600(|f| f(&mut state)); }
+        for _ in 0..blocks {
+            keccak::Keccak::new().with_f1600(|f| f(&mut state));
+        }
         state
     }
     pub fn hash_from_state(bytes: &[u8], state: &PrefixState, offset: u64) -> [u8; OUT_LEN] {
         assert!(offset.is_multiple_of(BLOCK_LEN as u64));
-        let mut h = Hasher { state: *state, buffer: [0; BLOCK_LEN], used: 0 };
+        let mut h = Hasher {
+            state: *state,
+            buffer: [0; BLOCK_LEN],
+            used: 0,
+        };
         h.update(bytes).finalize()
     }
     pub fn hash_many_dyn_from_state(bytes: &[u8], len: usize, state: &PrefixState, offset: u64, out: &mut [u8]) {
         assert!(len > 0);
         assert!(out.len().is_multiple_of(OUT_LEN));
         assert_eq!(bytes.len(), out.len() / OUT_LEN * len);
-        for (input, digest) in bytes.chunks_exact(len).zip(out.chunks_exact_mut(OUT_LEN)) {
+        for (input, digest) in bytes.chunks_exact(len).zip(out.as_chunks_mut::<OUT_LEN>().0.iter_mut()) {
             digest.copy_from_slice(&hash_from_state(input, state, offset));
         }
     }
@@ -95,17 +112,28 @@ mod keccak_protocol {
                 let expected: [u8; 32] = sha3::Keccak256::digest(&bytes).into();
                 assert_eq!(hash(&bytes), expected, "length={len}");
                 let mut stream = Hasher::new();
-                for chunk in bytes.chunks(7) { stream.update(chunk); }
+                for chunk in bytes.chunks(7) {
+                    stream.update(chunk);
+                }
                 assert_eq!(stream.finalize(), expected);
                 if len > 0 {
                     let mut out = [0; 64];
-                    hash_many_dyn_from_state(&[bytes.as_slice(), bytes.as_slice()].concat(), len, &[0;25], 0, &mut out);
+                    hash_many_dyn_from_state(
+                        &[bytes.as_slice(), bytes.as_slice()].concat(),
+                        len,
+                        &[0; 25],
+                        0,
+                        &mut out,
+                    );
                     assert_eq!(&out[..32], &expected);
                     assert_eq!(&out[32..], &expected);
                 }
                 for blocks in [0, 1, 3] {
                     let full = [vec![0; blocks * BLOCK_LEN], bytes.clone()].concat();
-                    assert_eq!(hash_from_state(&bytes, &zero_prefix_state(blocks), (blocks * BLOCK_LEN) as u64), hash(&full));
+                    assert_eq!(
+                        hash_from_state(&bytes, &zero_prefix_state(blocks), (blocks * BLOCK_LEN) as u64),
+                        hash(&full)
+                    );
                 }
             }
         }

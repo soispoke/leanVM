@@ -368,7 +368,8 @@ fn application_inner(payload: &[u8], vm_output: bool) -> (Builder, Breakdown) {
     (c.builder, rows)
 }
 
-#[cfg(test)]
+// These fixtures exercise the legacy BLAKE2s application/bridge backend.
+#[cfg(all(test, not(feature = "keccak-protocol")))]
 mod tests {
     use super::*;
     use circuit_suite::shielded_blake2s::{generate, leanvm_input, reference};

@@ -199,7 +199,8 @@ impl KeccakBridge {
         blake_io: Vec<[usize; 18]>,
         padded: bool,
     ) -> Option<Self> {
-        if io_variables.is_empty()
+        if (cfg!(feature = "keccak-protocol") && !blake_io.is_empty())
+            || io_variables.is_empty()
             || io_variables.len() > MAX_BLOCKS
             || blake_io.len() > crate::private_bridge::MAX_BLOCKS
             || circuit.public.len() < 2
@@ -724,6 +725,7 @@ mod tests {
         assert!(!setup.verify(&public, &context, &tampered));
     }
     #[test]
+    #[cfg(not(feature = "keccak-protocol"))]
     fn mixed_hash_kinds_share_opening_and_reject_bad_rows() {
         use crate::native_hash::Builder;
         parallel::init();

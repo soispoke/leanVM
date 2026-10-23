@@ -338,7 +338,8 @@ fn phase(name: &str, start: std::time::Instant) {
     }
 }
 
-#[cfg(test)]
+// These fixtures exercise the legacy BLAKE2s application/bridge backend.
+#[cfg(all(test, not(feature = "keccak-protocol")))]
 mod tests {
     use super::*;
 
@@ -346,7 +347,8 @@ mod tests {
     fn joint_lookup_binds_statement_context_and_proof() {
         parallel::init();
         let payload = circuit_suite::shielded_blake2s::leanvm_input(0);
-        let digest = primitives::protocol_hash::hash(&circuit_suite::shielded_blake2s::reference::verify(&payload).unwrap());
+        let digest =
+            primitives::protocol_hash::hash(&circuit_suite::shielded_blake2s::reference::verify(&payload).unwrap());
         let bridge = LookupBridge::new(&payload).unwrap();
         let context = primitives::protocol_hash::hash(b"lookup-binding-test");
         let proof = bridge.prove(&payload, &context).unwrap();

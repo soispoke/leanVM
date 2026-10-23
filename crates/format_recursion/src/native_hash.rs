@@ -280,34 +280,52 @@ impl Builder {
 
     pub fn export_protocol_circuit(&self) -> (Circuit, Vec<crate::row_hash::Connectors>) {
         #[cfg(feature = "keccak-protocol")]
-        { self.export_keccak_circuit() }
+        {
+            self.export_keccak_circuit()
+        }
         #[cfg(not(feature = "keccak-protocol"))]
-        { self.export_circuit() }
+        {
+            self.export_circuit()
+        }
     }
     pub fn protocol_blocks(&self) -> Vec<crate::row_hash::Block> {
         #[cfg(feature = "keccak-protocol")]
-        { assert!(self.compressions.is_empty()); self.permutations.clone() }
+        {
+            assert!(self.compressions.is_empty());
+            self.permutations.clone()
+        }
         #[cfg(not(feature = "keccak-protocol"))]
-        { assert!(self.permutations.is_empty()); self.compressions.clone() }
+        {
+            assert!(self.permutations.is_empty());
+            self.compressions.clone()
+        }
     }
 
     /// Export every native Keccak I/O obligation with the arithmetic graph.
     pub fn export_keccak_circuit(&self) -> (Circuit, Vec<[usize; 50]>) {
-        assert!(self.compressions.is_empty(), "Keccak source export cannot discard BLAKE obligations");
+        assert!(
+            self.compressions.is_empty(),
+            "Keccak source export cannot discard BLAKE obligations"
+        );
         (self.circuit.clone(), self.keccak_connectors.clone())
     }
 
     /// Export the identical arithmetic graph and hash-port identities for format experiments.
     pub fn export_circuit(&self) -> (Circuit, Vec<[usize; 18]>) {
-        assert!(self.permutations.is_empty(), "BLAKE source export cannot discard Keccak obligations");
+        assert!(
+            self.permutations.is_empty(),
+            "BLAKE source export cannot discard Keccak obligations"
+        );
         (self.circuit.clone(), self.connectors.clone())
     }
 }
 
 #[cfg(test)]
 mod tests {
+    #[cfg(not(feature = "keccak-protocol"))]
     use super::*;
 
+    #[cfg(not(feature = "keccak-protocol"))]
     #[test]
     fn compression_chain_rejects_wrong_digest_and_witness_and_proof() {
         parallel::init();

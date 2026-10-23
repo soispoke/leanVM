@@ -47,7 +47,8 @@ pub fn create(merkle: bool, count: usize, tamper_path: bool) -> Application {
     Application { builder: b, output }
 }
 
-#[cfg(test)]
+// These fixtures exercise the legacy BLAKE2s application/bridge backend.
+#[cfg(all(test, not(feature = "keccak-protocol")))]
 mod tests {
     use super::*;
     use primitives::field::F192;

@@ -27,8 +27,10 @@ use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
 pub use fiat_shamir::merkle::{Hash, hash_leaf, hash_pair};
 use parallel::SendPtr;
 use primitives::field::F64;
-use primitives::protocol_hash::{PrefixState, BATCH, BLOCK_LEN, OUT_LEN, hash_many, hash_many_dyn_from_state, zero_prefix_state};
 use primitives::pretty_integer;
+use primitives::protocol_hash::{
+    BATCH, BLOCK_LEN, OUT_LEN, PrefixState, hash_many, hash_many_dyn_from_state, zero_prefix_state,
+};
 
 /// Nodes one climb takes at most: 32 KiB of digests, which stay in L1.
 const UNIT: usize = 1 << 10;

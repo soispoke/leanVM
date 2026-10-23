@@ -2,12 +2,16 @@
 //! The unchanged native hash relation shares one WHIR witness commitment.
 
 use super::{Matrix, R1cs};
+use crate::row_hash::{
+    Block as Compression, K_LOG, PORTS, R1CS_DIGEST, SLOTS, Setup as Blake2sSetup,
+    generate as generate_witness_with_ab_packed_and_lincheck, ring_open as ring_switch_open,
+    ring_verify as ring_switch_verify,
+};
 use fiat_shamir::{
     merkle::Hash,
     transcript::{Challenger, Proof, ProverState, Receiver, Transmitter, VerifierState},
 };
 use flock::zerocheck;
-use crate::row_hash::{Setup as Blake2sSetup, Block as Compression, K_LOG, R1CS_DIGEST, generate as generate_witness_with_ab_packed_and_lincheck, ring_open as ring_switch_open, ring_verify as ring_switch_verify, PORTS, SLOTS};
 use pcs::{
     pack::LOG_PACKING,
     stack_open::{StackClaim, open_batch_mixed_whir_stacked, verify_opening_batch_mixed_whir_stacked},

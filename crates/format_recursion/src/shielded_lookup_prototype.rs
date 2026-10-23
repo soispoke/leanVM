@@ -399,7 +399,8 @@ pub(crate) fn prepare(payload: &[u8]) -> Prepared {
         layout: query_layout,
     }
 }
-#[cfg(test)]
+// These fixtures exercise the legacy BLAKE2s application/bridge backend.
+#[cfg(all(test, not(feature = "keccak-protocol")))]
 mod tests {
     use super::*;
     #[test]

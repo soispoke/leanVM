@@ -192,6 +192,9 @@ mod tests {
         values[input.0] = F192::ZERO;
         let public: Vec<_> = program.public.iter().map(|s| values[s.0]).collect();
         let requests = requests(&program, &values, &public).unwrap();
-        assert_ne!(primitives::protocol_hash::hash(&requests[0].message), requests[0].digest);
+        assert_ne!(
+            primitives::protocol_hash::hash(&requests[0].message),
+            requests[0].digest
+        );
     }
 }

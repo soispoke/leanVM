@@ -62,7 +62,12 @@ fn main() {
         #[cfg(not(feature = "keccak-protocol"))]
         shapes: [(16, 16), (12, 12), (20, 20), (20, 20)],
         #[cfg(feature = "keccak-protocol")]
-        shapes: [(a.row_log, a.z_log), b.as_ref().map_or((a.row_log,a.z_log), |s| (s.row_log,s.z_log)), (22,22), (22,22)],
+        shapes: [
+            (a.row_log, a.z_log),
+            b.as_ref().map_or((a.row_log, a.z_log), |s| (s.row_log, s.z_log)),
+            (22, 22),
+            (22, 22),
+        ],
     };
     let mut leafproofs = Vec::new();
     let mut publics = Vec::new();
@@ -98,9 +103,18 @@ fn main() {
         firststatements.push(statement);
     }
     assert!(firsttraces[0].same_program(&firsttraces[1]));
-    let first = first::SparseSetup::new_with_padding(firsttraces[0].clone(), false, if cfg!(feature = "keccak-protocol") { Some((22,22)) } else { None }).unwrap();
+    let first = first::SparseSetup::new_with_padding(
+        firsttraces[0].clone(),
+        false,
+        if cfg!(feature = "keccak-protocol") {
+            Some((22, 22))
+        } else {
+            None
+        },
+    )
+    .unwrap();
     eprintln!("first layout {:?}", layout(&first.setup));
-    assert_eq!((first.setup.row_log,first.setup.z_log),schema.shapes[2]);
+    assert_eq!((first.setup.row_log, first.setup.z_log), schema.shapes[2]);
     let certs: Vec<_> = (0..2)
         .map(|i| Certificate {
             key: first.setup.key,
@@ -129,9 +143,18 @@ fn main() {
     let compressions = lower.compressions.len();
     let permutations = lower.permutations.len();
     drop(lower);
-    let node = first::SparseSetup::new_with_padding(canonical.clone(), false, if cfg!(feature = "keccak-protocol") { Some((22,22)) } else { None }).unwrap();
+    let node = first::SparseSetup::new_with_padding(
+        canonical.clone(),
+        false,
+        if cfg!(feature = "keccak-protocol") {
+            Some((22, 22))
+        } else {
+            None
+        },
+    )
+    .unwrap();
     eprintln!("node layout {:?}", layout(&node.setup));
-    assert_eq!((node.setup.row_log,node.setup.z_log),schema.shapes[3]);
+    assert_eq!((node.setup.row_log, node.setup.z_log), schema.shapes[3]);
     #[cfg(not(feature = "keccak-protocol"))]
     assert_eq!(layout(&first.setup), layout(&node.setup), "shared shape closure");
     let start = Instant::now();

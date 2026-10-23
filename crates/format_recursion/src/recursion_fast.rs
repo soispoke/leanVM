@@ -4,7 +4,9 @@
 //! circuit alone does not check child proofs and is not a recursive verifier.
 //! This adapter adds no Lean certificate or security claim for the proof backend.
 
-use circuit_suite::{Circuit, Ckt, Src, Wire, Word, blake2s, bytes_to_bits, read_statement};
+#[cfg(not(feature = "keccak-protocol"))]
+use circuit_suite::blake2s;
+use circuit_suite::{Circuit, Ckt, Src, Wire, Word, bytes_to_bits, read_statement};
 
 pub type Digest = [u8; 32];
 pub const CONTRACT_REVISION: &str = "15e4ae5eaba6a65211668c6e0f55f9fea1d9050d";
@@ -49,7 +51,10 @@ pub fn leaf_statement(end: &Digest, n: u64) -> Result<Digest, Error> {
     if n > CHAIN_CAP {
         return Err(Error::ChainTooLong);
     }
-    Ok(primitives::protocol_hash::hash(&tagged_bytes(TAG_LEAF, &[end, &enc64(n)])))
+    Ok(primitives::protocol_hash::hash(&tagged_bytes(
+        TAG_LEAF,
+        &[end, &enc64(n)],
+    )))
 }
 
 /// Independent native path: no circuit evaluation or prover advice is used.
@@ -91,7 +96,14 @@ fn tagged_circuit(c: &mut Ckt, tag: u8, parts: &[&[Wire]]) -> Word {
     for part in parts {
         message.extend_from_slice(part);
     }
-    blake2s::blake2s(c, &message)
+    #[cfg(not(feature = "keccak-protocol"))]
+    {
+        blake2s::blake2s(c, &message)
+    }
+    #[cfg(feature = "keccak-protocol")]
+    {
+        circuit_suite::keccak::keccak256(c, &message)
+    }
 }
 
 fn check_rows(c: &Ckt, row_limit: usize) -> Result<(), Error> {
@@ -164,12 +176,14 @@ impl LeafCircuit {
 mod tests {
     use super::*;
 
+    #[cfg(not(feature = "keccak-protocol"))]
     fn digest(hex: &str) -> Digest {
         assert_eq!(hex.len(), 64);
         std::array::from_fn(|i| u8::from_str_radix(&hex[2 * i..2 * i + 2], 16).unwrap())
     }
 
     #[test]
+    #[cfg(not(feature = "keccak-protocol"))]
     fn independent_hashlib_tag_vectors() {
         // Generated independently with Python hashlib.blake2s, not these helpers.
         let start = std::array::from_fn(|i| i as u8);
@@ -215,7 +229,15 @@ mod tests {
     fn leaf_circuit_binds_start_length_digest_and_padding() {
         let start = std::array::from_fn(|i| i as u8);
         for n in [0, 1, 2, 16] {
-            let leaf = LeafCircuit::build(n, 1 << 20).unwrap();
+            let leaf = LeafCircuit::build(
+                n,
+                if cfg!(feature = "keccak-protocol") {
+                    1 << 23
+                } else {
+                    1 << 20
+                },
+            )
+            .unwrap();
             leaf.circuit.check_wired().unwrap();
             assert_eq!(leaf.circuit.n_inputs(), 256);
             let public = LeafCircuit::public_statement(&expected_leaf(&start, n).unwrap());

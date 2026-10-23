@@ -472,7 +472,7 @@ pub fn shielded_source(seed: usize) -> Source {
     }
 }
 
-/// BLAKE2s membership of a private 32-byte leaf in a depth-16 binary tree.
+/// Protocol-hash membership of a private 32-byte leaf in a depth-16 binary tree.
 /// Sibling order is selected by sixteen Boolean private path bits.
 pub fn merkle_source(seed: usize) -> Source {
     fn build(seed: usize) -> crate::native_hash::Builder {
@@ -549,13 +549,19 @@ pub fn source(case: &str) -> Source {
         crate::closed_recursion::record_native_first(&bridge, &public[..public.len() - 4], &context, [&cert, &cert]);
     assert!(trace.satisfied());
     let lower = crate::private_trace::lower(&trace, &trace).unwrap();
-    assert!(lower.keccak_connectors.is_empty(), "sparse BLAKE source cannot discard Keccak obligations");
+    assert!(
+        lower.keccak_connectors.is_empty(),
+        "sparse BLAKE source cannot discard Keccak obligations"
+    );
     let fixed_len = lower.fixed_public.len();
     let prefix = public[..public.len() - 4].to_vec();
     let rebuild = Box::new(move || {
         let trace = crate::closed_recursion::record_native_first(&bridge, &prefix, &context, [&cert, &cert]);
         let lower = crate::private_trace::lower(&trace, &trace).unwrap();
-    assert!(lower.keccak_connectors.is_empty(), "sparse BLAKE source cannot discard Keccak obligations");
+        assert!(
+            lower.keccak_connectors.is_empty(),
+            "sparse BLAKE source cannot discard Keccak obligations"
+        );
         (lower.values, lower.compressions)
     });
     Source {
@@ -566,6 +572,65 @@ pub fn source(case: &str) -> Source {
         fixed_len,
         rebuild,
     }
+}
+
+#[cfg(feature = "keccak-protocol")]
+pub fn shielded_source(seed: usize) -> Source {
+    use circuit_suite::Workload;
+    use circuit_suite::shielded_keccak::ShieldedTransfer;
+    let mut c = circuit_suite::Ckt::new();
+    c.enable_native_keccak();
+    let public = ShieldedTransfer::build(&mut c);
+    let (circuit, outputs, calls) = c.finish_native_keccak(&public);
+    let circuit = Arc::new(circuit);
+    let outputs = Arc::new(outputs);
+    let calls = Arc::new(calls);
+    let make = move || {
+        let instance = ShieldedTransfer::instance(seed as u64);
+        let mut b = crate::native_hash::Builder::default();
+        let inputs: Vec<_> = instance.inputs.iter().map(|&x| b.input(u64::from(x))).collect();
+        let bits = crate::boolean_application::lower_with_keccak(&mut b, &circuit, &outputs, &inputs, &calls);
+        let one = b.one();
+        b.assert_eq(bits[256], one);
+        let mut words = Vec::new();
+        for chunk in bits[..256].chunks(64) {
+            words.push(b.pack(chunk));
+        }
+        let digest = b.hash_words(&words);
+        let expected = primitives::protocol_hash::hash(&instance.statement[..32]);
+        let actual: Vec<_> = digest.iter().flat_map(|&w| b.value(w).c0.to_le_bytes()).collect();
+        assert_eq!(actual, expected);
+        for word in digest {
+            b.expose(word);
+        }
+        b
+    };
+    let b = make();
+    let (circuit, connectors) = b.export_protocol_circuit();
+    let fixed_len = circuit.public.len() - 4;
+    Source {
+        circuit,
+        connectors,
+        compressions: b.protocol_blocks(),
+        values: b.values,
+        fixed_len,
+        rebuild: Box::new(move || {
+            let b = make();
+            (b.values.clone(), b.protocol_blocks())
+        }),
+    }
+}
+
+#[cfg(feature = "keccak-protocol")]
+pub fn source(case: &str) -> Source {
+    if case == "shielded" {
+        return shielded_source(0);
+    }
+    assert_eq!(
+        case, "merkle",
+        "legacy fixed BLAKE merge fixture is unavailable in the Keccak configuration"
+    );
+    merkle_source(0)
 }
 
 #[cfg(test)]
@@ -601,45 +666,4 @@ mod tests {
         assert!(!r.satisfied(&z));
         assert!(r.eliminated_definitions >= 2);
     }
-}
-
-#[cfg(feature = "keccak-protocol")]
-pub fn shielded_source(seed: usize) -> Source {
-    use circuit_suite::Workload;
-    use circuit_suite::shielded_keccak::ShieldedTransfer;
-    let mut c = circuit_suite::Ckt::new();
-    c.enable_native_keccak();
-    let public = ShieldedTransfer::build(&mut c);
-    let (circuit, outputs, calls) = c.finish_native_keccak(&public);
-    let circuit = Arc::new(circuit);
-    let outputs = Arc::new(outputs);
-    let calls = Arc::new(calls);
-    let make = move || {
-        let instance = ShieldedTransfer::instance(seed as u64);
-        let mut b = crate::native_hash::Builder::default();
-        let inputs: Vec<_> = instance.inputs.iter().map(|&x| b.input(u64::from(x))).collect();
-        let bits = crate::boolean_application::lower_with_keccak(&mut b, &circuit, &outputs, &inputs, &calls);
-        let one = b.one();
-        b.assert_eq(bits[256], one);
-        let mut words = Vec::new();
-        for chunk in bits[..256].chunks(64) { words.push(b.pack(chunk)); }
-        let digest = b.hash_words(&words);
-        let expected = primitives::protocol_hash::hash(&instance.statement[..32]);
-        let actual: Vec<_> = digest.iter().flat_map(|&w| b.value(w).c0.to_le_bytes()).collect();
-        assert_eq!(actual, expected);
-        for word in digest { b.expose(word); }
-        b
-    };
-    let b = make();
-    let (circuit, connectors) = b.export_protocol_circuit();
-    let fixed_len = circuit.public.len() - 4;
-    Source { circuit, connectors, compressions: b.protocol_blocks(), values:b.values,
-        fixed_len, rebuild:Box::new(move || { let b=make(); (b.values.clone(),b.protocol_blocks()) }) }
-}
-
-#[cfg(feature = "keccak-protocol")]
-pub fn source(case: &str) -> Source {
-    if case == "shielded" { return shielded_source(0); }
-    assert_eq!(case, "merkle", "legacy fixed BLAKE merge fixture is unavailable in the Keccak configuration");
-    merkle_source(0)
 }

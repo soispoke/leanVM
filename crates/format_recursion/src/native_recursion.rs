@@ -190,7 +190,8 @@ fn chunks(requests: &[Request]) -> Option<Vec<(usize, usize)>> {
     Some(chunks)
 }
 
-#[cfg(test)]
+// These fixtures exercise the legacy BLAKE2s application/bridge backend.
+#[cfg(all(test, not(feature = "keccak-protocol")))]
 mod tests {
     use super::*;
     use crate::trace::{self, S};

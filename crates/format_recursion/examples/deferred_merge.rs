@@ -68,7 +68,6 @@ fn main() {
     let mut proofs = Vec::new();
     let mut wallets = Vec::new();
     for i in 0..2 {
-
         let start_rss = rss("VmRSS:");
         let start = Instant::now();
         let (values, blocks) = (sources[i].rebuild)();
@@ -186,11 +185,18 @@ fn main() {
     let complete_root_start = Instant::now();
     if mode == "carried" {
         match &backend {
-            Backend::Sparse(s) => assert!(first::verify_sparse_root(s, &context, &digest, &reduction.carried, &proof, &gs)),
+            Backend::Sparse(s) => assert!(first::verify_sparse_root(
+                s,
+                &context,
+                &digest,
+                &reduction.carried,
+                &proof,
+                &gs
+            )),
             Backend::Fixed(s) => assert!(first::verify_root(s, &digest, &reduction.carried, &proof, &gs)),
         }
     }
-    let complete_root_ms = complete_root_start.elapsed().as_secs_f64()*1000.;
+    let complete_root_ms = complete_root_start.elapsed().as_secs_f64() * 1000.;
     let mut wrong = outputs.clone();
     *wrong.last_mut().unwrap() += F192::ONE;
     match &backend {
