@@ -96,6 +96,64 @@ pub fn verify_root(
     claims.iter().zip(generators).all(|(c, g)| g.settle(c))
 }
 
+pub fn record_direct(children: [&Setup; 2], public: [&[F192]; 2], context: &Hash, proofs: [&Proof; 2]) -> Trace {
+    trace::start();
+    let mut digests = Vec::new();
+    for i in 0..2 {
+        let (claim, digest) = deferred::verify_in_rows(children[i], &children[i].key, public[i], context, proofs[i]);
+        trace::mark("direct-matrix-evaluation");
+        deferred::settle_in_rows(children[i], &claim);
+        digests.extend(digest);
+    }
+    let mut parts = literal(b"r1cs-deferred-first-statement-v1");
+    parts.push((S::u(2), 8));
+    parts.extend(digests.into_iter().map(|s| (s, 16)));
+    let digest = hash(&parts);
+    let mut program = trace::take();
+    program.public = digest.to_vec();
+    program
+}
+
+/// A prepared sparse prover for this first-level circuit, sharing the existing
+/// witness schedule with the fixed-gate comparison backend.
+pub struct SparseSetup {
+    pub setup: Setup,
+    pub generator: super::generator::Generator,
+    program: crate::private_trace::PreparedProgram,
+}
+impl SparseSetup {
+    pub fn new(program: Trace, ccs: bool) -> Option<Self> {
+        let mut program = crate::private_trace::PreparedProgram::new(program)?;
+        let lower = program.lower_setup()?;
+        let source = super::Source {
+            fixed_len: lower.fixed_public.len(),
+            circuit: lower.circuit,
+            connectors: lower.connectors,
+            values: lower.values,
+            compressions: lower.compressions,
+            rebuild: Box::new(|| unreachable!()),
+        };
+        let r = super::R1cs::lower_bounded(&source.circuit, &source.connectors, &source.values, source.fixed_len, 8);
+        let setup = Setup::new(r, ccs);
+        let generator = super::generator::Generator::new(&source, 8, setup.key);
+        Some(Self {
+            setup,
+            generator,
+            program,
+        })
+    }
+    pub fn prove(&self, witness: &Trace, context: &Hash) -> Option<Proof> {
+        let values = self.program.prepare_witness(witness)?;
+        Some(self.setup.prove(&values.values, &values.compressions, context))
+    }
+    pub fn verify(&self, outputs: &[F192], context: &Hash, proof: &Proof) -> Option<DeferredClaim> {
+        let mut public = vec![F192::ONE];
+        public.extend_from_slice(outputs);
+        let verified = self.setup.verify_deferred(&public, context, proof, false)?;
+        Some(self.setup.claim(&verified))
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::super::{R1cs, Source, generator::Generator};
@@ -206,63 +264,5 @@ mod tests {
                 .satisfied()
             );
         }
-    }
-}
-
-pub fn record_direct(children: [&Setup; 2], public: [&[F192]; 2], context: &Hash, proofs: [&Proof; 2]) -> Trace {
-    trace::start();
-    let mut digests = Vec::new();
-    for i in 0..2 {
-        let (claim, digest) = deferred::verify_in_rows(children[i], &children[i].key, public[i], context, proofs[i]);
-        trace::mark("direct-matrix-evaluation");
-        deferred::settle_in_rows(children[i], &claim);
-        digests.extend(digest);
-    }
-    let mut parts = literal(b"r1cs-deferred-first-statement-v1");
-    parts.push((S::u(2), 8));
-    parts.extend(digests.into_iter().map(|s| (s, 16)));
-    let digest = hash(&parts);
-    let mut program = trace::take();
-    program.public = digest.to_vec();
-    program
-}
-
-/// A prepared sparse prover for this first-level circuit, sharing the existing
-/// witness schedule with the fixed-gate comparison backend.
-pub struct SparseSetup {
-    pub setup: Setup,
-    pub generator: super::generator::Generator,
-    program: crate::private_trace::PreparedProgram,
-}
-impl SparseSetup {
-    pub fn new(program: Trace, ccs: bool) -> Option<Self> {
-        let mut program = crate::private_trace::PreparedProgram::new(program)?;
-        let lower = program.lower_setup()?;
-        let source = super::Source {
-            fixed_len: lower.fixed_public.len(),
-            circuit: lower.circuit,
-            connectors: lower.connectors,
-            values: lower.values,
-            compressions: lower.compressions,
-            rebuild: Box::new(|| unreachable!()),
-        };
-        let r = super::R1cs::lower_bounded(&source.circuit, &source.connectors, &source.values, source.fixed_len, 8);
-        let setup = Setup::new(r, ccs);
-        let generator = super::generator::Generator::new(&source, 8, setup.key);
-        Some(Self {
-            setup,
-            generator,
-            program,
-        })
-    }
-    pub fn prove(&self, witness: &Trace, context: &Hash) -> Option<Proof> {
-        let values = self.program.prepare_witness(witness)?;
-        Some(self.setup.prove(&values.values, &values.compressions, context))
-    }
-    pub fn verify(&self, outputs: &[F192], context: &Hash, proof: &Proof) -> Option<DeferredClaim> {
-        let mut public = vec![F192::ONE];
-        public.extend_from_slice(outputs);
-        let verified = self.setup.verify_deferred(&public, context, proof, false)?;
-        Some(self.setup.claim(&verified))
     }
 }
