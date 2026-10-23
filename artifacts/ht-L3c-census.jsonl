@@ -1,0 +1,17 @@
+{"boolean_boundary":512,"native_boundary":0,"native_rows":0,"part":"start"}
+{"boolean_boundary":21568,"native_boundary":21056,"native_rows":21056,"part":"inputs"}
+{"boolean_boundary":39112,"native_boundary":61181,"native_rows":40125,"part":"statement digest SHAKE256(pk || m)"}
+{"boolean_boundary":53512,"native_boundary":104606,"native_rows":43425,"part":"HashToPoint SHAKE256"}
+{"boolean_boundary":62693,"native_boundary":126026,"native_rows":21420,"part":"HashToPoint sample tests"}
+{"boolean_boundary":317487,"native_boundary":389862,"native_rows":263836,"part":"HashToPoint compaction"}
+{"boolean_boundary":330287,"native_boundary":424166,"native_rows":34304,"part":"  h < q and s1 range"}
+{"boolean_boundary":364591,"native_boundary":493798,"native_rows":69632,"part":"  s2 and c - s1 as values mod q"}
+{"boolean_boundary":758700,"native_boundary":1842620,"native_rows":1348822,"part":"  NTT(s2)"}
+{"boolean_boundary":1157501,"native_boundary":3211653,"native_rows":1369033,"part":"  NTT(h)"}
+{"boolean_boundary":1545475,"native_boundary":4545561,"native_rows":1333908,"part":"  NTT(c - s1)"}
+{"boolean_boundary":1888414,"native_boundary":5567966,"native_rows":1022405,"part":"  pointwise products and quotient checks"}
+{"boolean_boundary":1908009,"native_boundary":5589467,"native_rows":21501,"part":"  validity"}
+{"boolean_boundary":2069017,"native_boundary":6065852,"native_rows":476385,"part":"norm"}
+{"boolean_boundary":2072026,"native_boundary":6076542,"native_rows":10690,"part":"encoding length and validity"}
+{"boolean_boundary":2097152,"native_boundary":6076543,"native_rows":1,"part":"public output and padding"}
+{"inputs":29760,"permutations":16,"total_native_lowering_rows":6076543}

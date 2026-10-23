@@ -111,6 +111,21 @@ impl Index {
             index_log_inv_rate: self.index_log_inv_rate,
         }
     }
+    /// First committed cell for each requested variable in the compact layout.
+    pub fn compact_variable_cells(&self, variables: &[usize]) -> Option<Vec<[usize; 3]>> {
+        let n = 1usize << self.log_rows;
+        let mut first = vec![None; self.circuit.variables];
+        for role in 0..4 {
+            for (row, entries) in self.rows.iter().enumerate() {
+                first[entries[role]].get_or_insert([
+                    3 * role * n + row,
+                    (3 * role + 1) * n + row,
+                    (3 * role + 2) * n + row,
+                ]);
+            }
+        }
+        variables.iter().map(|&v| first.get(v).copied().flatten()).collect()
+    }
     pub fn public_values(&self, values: &[F192]) -> Vec<F192> {
         self.circuit.public.iter().map(|&v| values[v]).collect()
     }

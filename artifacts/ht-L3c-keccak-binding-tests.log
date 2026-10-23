@@ -1,0 +1,10 @@
+    Finished `release` profile [optimized] target(s) in 0.23s
+     Running unittests src/lib.rs (../target-ht-L3c/release/deps/format_recursion-ee46bce9623bc0db)
+
+running 3 tests
+test keccak_bridge::tests::permutation_bridge_rejects_malformed_proofs_without_prover_prechecks ... ok
+test keccak_bridge::tests::mixed_hash_kinds_share_opening_and_reject_bad_rows ... ok
+test keccak_bridge::tests::shared_word_queries_open_against_joint_keccak_commitment ... ok
+
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 96 filtered out; finished in 0.33s
+

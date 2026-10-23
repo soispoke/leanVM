@@ -151,6 +151,13 @@ pub struct KeccakBridge {
     io_variables: Vec<[usize; 50]>,
     padding: [u64; 50],
     blake: Option<BlakeRows>,
+    word_queries: Option<crate::word_query_binding::Schedule>,
+}
+
+#[derive(Clone, Copy)]
+pub enum WordCoordinate {
+    Constant(F192),
+    Variable(usize),
 }
 
 struct BlakeRows {
@@ -307,7 +314,40 @@ impl KeccakBridge {
             io_variables,
             padding,
             blake,
+            word_queries: None,
         })
+    }
+    /// Freeze a padded query schedule over existing arithmetic variables.
+    /// Missing variables are rejected rather than silently added as advice.
+    pub fn with_word_queries(mut self, queries: &[[WordCoordinate; 6]]) -> Option<Self> {
+        use crate::word_query_binding::{Schedule, Source};
+        if queries.len() < 2 || !queries.len().is_power_of_two() || queries.len() > 1 << 22 {
+            return None;
+        }
+        let variables: Vec<_> = queries
+            .iter()
+            .flatten()
+            .filter_map(|c| match c {
+                WordCoordinate::Variable(v) => Some(*v),
+                WordCoordinate::Constant(_) => None,
+            })
+            .collect();
+        let cells = self.index.compact_variable_cells(&variables)?;
+        let mut cells = cells.into_iter();
+        let mut columns: [Vec<Source>; 6] = std::array::from_fn(|_| Vec::with_capacity(queries.len()));
+        for query in queries {
+            for (column, coordinate) in columns.iter_mut().zip(query) {
+                column.push(match coordinate {
+                    WordCoordinate::Constant(v) => Source::Constant(*v),
+                    WordCoordinate::Variable(_) => Source::Cells(cells.next()?),
+                });
+            }
+        }
+        self.word_queries = Some(Schedule {
+            stack_log: self.stack_log,
+            columns,
+        });
+        Some(self)
     }
     /// Translate only native witness claims; permutation-index claims use a
     /// different four-column layout and must never pass through this mapping.
@@ -513,6 +553,16 @@ impl KeccakBridge {
         blake_blocks: &[Compression],
         context: &Hash,
     ) -> Option<Proof> {
+        self.prove_mixed_with_word_advice(values, blocks, blake_blocks, context, None)
+    }
+    fn prove_mixed_with_word_advice(
+        &self,
+        values: &[F192],
+        blocks: &[Permutation],
+        blake_blocks: &[Compression],
+        context: &Hash,
+        word_advice: Option<(&[Vec<F192>; 6], &[(usize, u64)])>,
+    ) -> Option<Proof> {
         let values = self.extend_values(values);
         let public = self.index.public_values(&values);
         let lane_words = 1usize << (self.stack_log - INITIAL_FOLDING_FACTOR);
@@ -538,6 +588,47 @@ impl KeccakBridge {
             .in_scope(|| whir::commit(&stack, self.stack_log, INITIAL_FOLDING_FACTOR, JOINT_LOG_INV_RATE));
         let mut ps = ProverState::from_label(&self.label(&public, context));
         ps.add_root(&commitment.root);
+        let word_claim = if let Some(schedule) = &self.word_queries {
+            let honest_queries = schedule.query_columns(&stack)?;
+            let queries = word_advice.map_or(&honest_queries, |a| a.0);
+            let mut counts = crate::word_tables::Multiplicities::default();
+            for row in 0..if word_advice.is_none() { queries[0].len() } else { 0 } {
+                let mut tuple = [0; 6];
+                for (coordinate, column) in tuple.iter_mut().zip(queries) {
+                    let v = column[row];
+                    if v != F192::new(v.c0, 0, 0) {
+                        return None;
+                    }
+                    *coordinate = v.c0;
+                }
+                let table = crate::word_tables::TABLES.into_iter().find(|&t| t as u64 == tuple[0])?;
+                counts.add(table, &tuple)?;
+            }
+            let honest_counts: Vec<_> = counts.entries().collect();
+            let counts = word_advice.map_or(honest_counts.as_slice(), |a| a.1);
+            let evaluations = crate::word_lookup_reduction::prove(
+                queries[0].len().trailing_zeros() as usize,
+                queries,
+                counts,
+                &mut ps,
+            )?;
+            let gathered = crate::word_query_binding::prove(schedule, &stack, &evaluations, &mut ps)?;
+            let low_log = self.stack_log - INITIAL_FOLDING_FACTOR;
+            let weights = eq_table(&gathered.point[..low_log]);
+            let mut openings = Vec::with_capacity(self.committed_lanes());
+            for (lane, slice) in stack.chunks_exact(1 << low_log).enumerate() {
+                let value = whir::inner_product_base_ext(slice, &weights);
+                ps.add_scalar(value);
+                openings.push(StackClaim::Point {
+                    offset: lane << low_log,
+                    low_point: gathered.point[..low_log].to_vec(),
+                    value,
+                });
+            }
+            Some(openings)
+        } else {
+            None
+        };
         let (native_claims, index_claims) = tracing::info_span!("Arithmetic reduction")
             .in_scope(|| native_arithmetic::prove_reduction_compact(&self.index, &witness, &stack, &mut ps));
         drop(witness);
@@ -567,6 +658,9 @@ impl KeccakBridge {
                 value: c.value,
             })
             .collect();
+        if let Some(openings) = word_claim {
+            claims.extend(openings);
+        }
         claims.extend(self.claims(&point, &bridge_values));
         if let Some(b) = &self.blake {
             let point = ps.sample_vec(b.block_log);
@@ -600,6 +694,37 @@ impl KeccakBridge {
         let mut vs = VerifierState::from_label(&self.label(&public, context), proof);
         let Ok(root) = vs.next_root() else {
             return false;
+        };
+        let word_claim = if let Some(schedule) = &self.word_queries {
+            let Some(evaluations) =
+                crate::word_lookup_reduction::verify(schedule.columns[0].len().trailing_zeros() as usize, &mut vs)
+            else {
+                return false;
+            };
+            let Some(claim) = crate::word_query_binding::verify(schedule, &evaluations, &mut vs) else {
+                return false;
+            };
+            let low_log = self.stack_log - INITIAL_FOLDING_FACTOR;
+            let high_weights = eq_table(&claim.point[low_log..]);
+            let mut sum = F192::ZERO;
+            let mut openings = Vec::with_capacity(self.committed_lanes());
+            for (lane, &weight) in high_weights.iter().take(self.committed_lanes()).enumerate() {
+                let Ok(value) = vs.next_scalar() else {
+                    return false;
+                };
+                sum += weight * value;
+                openings.push(StackClaim::Point {
+                    offset: lane << low_log,
+                    low_point: claim.point[..low_log].to_vec(),
+                    value,
+                });
+            }
+            if sum != claim.value {
+                return false;
+            }
+            Some(openings)
+        } else {
+            None
         };
         let Some((native_claims, index_claims)) = native_arithmetic::verify_reduction(&self.index, &public, &mut vs)
         else {
@@ -635,6 +760,9 @@ impl KeccakBridge {
                 value: c.value,
             })
             .collect();
+        if let Some(openings) = word_claim {
+            claims.extend(openings);
+        }
         claims.extend(self.claims(&point, &bridge_values));
         if let Some(b) = &self.blake {
             let point = vs.sample_vec(b.block_log);
@@ -723,6 +851,56 @@ mod tests {
         tampered.stream[0] += F192::ONE;
         assert!(!setup.verify(&public, &context, &tampered));
     }
+    #[test]
+    fn shared_word_queries_open_against_joint_keccak_commitment() {
+        use crate::{
+            native_hash::Builder,
+            word_tables::{Multiplicities, Table},
+        };
+        use WordCoordinate::{Constant as C, Variable as V};
+        let mut b = Builder::default();
+        for value in [250, 10, 1, 5, 1] {
+            let v = b.input(value);
+            b.expose(v);
+        }
+        b.keccak_f([crate::native_hash::Word::ZERO; 25]);
+        let query = [C(F192::new(2, 0, 0)), V(2), V(3), V(4), V(5), V(6)];
+        let setup = b.setup_mixed().unwrap().with_word_queries(&[query; 2]).unwrap();
+        let context = primitives::hash::hash(b"joint-word-binding");
+        let public = b.public_values();
+        let proof = setup.prove_mixed(&b.values, &b.permutations, &[], &context).unwrap();
+        assert!(setup.verify(&public, &context, &proof));
+        let original = [2, 250, 10, 1, 5, 1];
+        let columns: [Vec<F192>; 6] = std::array::from_fn(|i| vec![F192::new(original[i], 0, 0); 2]);
+        let count = |tuple: &[u64; 6]| {
+            let mut counts = Multiplicities::default();
+            counts.add(Table::Add8, tuple).unwrap();
+            counts.add(Table::Add8, tuple).unwrap();
+            counts.entries().collect::<Vec<_>>()
+        };
+        let counts = count(&original);
+        for (coordinate, value) in [(3, 2), (4, 6), (5, 0), (0, 9), (1, 256)] {
+            let mut wrong = columns.clone();
+            wrong[coordinate][0] = F192::new(value, 0, 0);
+            let proof = setup
+                .prove_mixed_with_word_advice(&b.values, &b.permutations, &[], &context, Some((&wrong, &counts)))
+                .unwrap();
+            assert!(!setup.verify(&public, &context, &proof), "coordinate {coordinate}");
+        }
+        let other = [2, 249, 10, 1, 4, 1];
+        let wrong: [Vec<F192>; 6] = std::array::from_fn(|i| vec![F192::new(other[i], 0, 0); 2]);
+        let other_counts = count(&other);
+        for (columns, counts) in [(&wrong, &other_counts), (&columns, &other_counts)] {
+            let proof = setup
+                .prove_mixed_with_word_advice(&b.values, &b.permutations, &[], &context, Some((columns, counts)))
+                .unwrap();
+            assert!(
+                !setup.verify(&public, &context, &proof),
+                "binding or multiplicity forgery"
+            );
+        }
+    }
+
     #[test]
     fn mixed_hash_kinds_share_opening_and_reject_bad_rows() {
         use crate::native_hash::Builder;

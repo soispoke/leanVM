@@ -1,0 +1,9 @@
+   Compiling format_recursion v0.1.0 (/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/ht-L3c/crates/format_recursion)
+    Finished `release` profile [optimized] target(s) in 38.91s
+     Running unittests src/lib.rs (../target-ht-L3c/release/deps/format_recursion-ee46bce9623bc0db)
+
+running 1 test
+test keccak_bridge::tests::shared_word_queries_open_against_joint_keccak_commitment ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 98 filtered out; finished in 0.31s
+

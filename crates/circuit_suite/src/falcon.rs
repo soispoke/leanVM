@@ -1305,6 +1305,7 @@ pub(crate) fn relation(
     for s in s1 {
         ok.push(geq_const(c, &s.mag, q / 2 + 1).not());
     }
+    lap(c, "  h < q and s1 range");
     // d = c - s1, compressed once.
     let d: Vec<MV> = (0..n)
         .map(|i| {
@@ -1317,7 +1318,7 @@ pub(crate) fn relation(
         .collect();
     let s2v: Vec<MV> = s2.iter().map(|s| signed_mv(c, q, s.sign, &s.mag, false)).collect();
     let hv: Vec<MV> = h.iter().map(|w| MV::word(w)).collect();
-    lap(c, "  h < q, s1 range, s2 and c - s1 as values mod q");
+    lap(c, "  s2 and c - s1 as values mod q");
     let tight = bitlen(q) as u32 - 1;
     let fs2 = ntt_signed(c, m, s2v, log_n, fold, tight);
     lap(c, "  NTT(s2)");

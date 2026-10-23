@@ -9,6 +9,9 @@ use primitives::field::F192;
 pub struct Word(usize);
 impl Word {
     pub const ZERO: Self = Self(0);
+    pub(crate) fn variable(self) -> usize {
+        self.0
+    }
 }
 
 /// Circuit and witness builder. Constants are public anchors, private inputs
