@@ -1,0 +1,395 @@
+{
+  "scope": "Single-run development observations, sample 0 leaf 0; not matched trials or medians; no new security or Ethereum acceptance claim. Native client total adds trace construction and proof creation. Each independent verifier reconstructs setup and checks two base plus three successive mixed-height node certificates. Later heights reuse one leaf. Historical and native base proof systems and identity namespaces differ.",
+  "workspace": "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022",
+  "rows": [
+    {
+      "workload": "blake2s-64b",
+      "historical_proof_ms": 87.95417,
+      "historical_adaptation_ms": 5959.176474999999,
+      "native_trace_ms": 5.293324999999999,
+      "native_proof_ms": 124.685529,
+      "native_client_total_ms": 129.978854,
+      "native_base_adaptation_ms": 0.0,
+      "native_base_bytes": 247956,
+      "native_base_verify_ms": 5.98729,
+      "first_merge_ms": 4085.694859,
+      "first_root_bytes": 361196,
+      "first_root_verify_ms": 6.526162,
+      "height_three_root_bytes": 360716,
+      "node_shape": "PrivateShape { index: ArithmeticShape { log_rows: 22, public_log: 10, public_len: 1024, index_log_inv_rate: 4 }, n_blocks: 65536, block_log: 16, connector_start: 2097152, q_offset: 50331648, stack_log: 26 }",
+      "out_receipt": "application-split-native-blake64-quick-t1",
+      "verification_receipt": "application-native-blake64-verify-t1",
+      "historical_out_receipt": "application-blake2s-64b-closure-quick-t1",
+      "historical_verification_receipt": "application-blake2s-64b-verify-quick-t1",
+      "independently_verified_certificates": 5
+    },
+    {
+      "workload": "blake2s-1kib",
+      "historical_proof_ms": 1050.1795049999998,
+      "historical_adaptation_ms": 6343.535114,
+      "native_trace_ms": 124.20165800000001,
+      "native_proof_ms": 1520.417858,
+      "native_client_total_ms": 1644.619516,
+      "native_base_adaptation_ms": 0.0,
+      "native_base_bytes": 323356,
+      "native_base_verify_ms": 5.017883,
+      "first_merge_ms": 6009.6079070000005,
+      "first_root_bytes": 355980,
+      "first_root_verify_ms": 7.385318,
+      "height_three_root_bytes": 353580,
+      "node_shape": "PrivateShape { index: ArithmeticShape { log_rows: 22, public_log: 10, public_len: 1024, index_log_inv_rate: 4 }, n_blocks: 131072, block_log: 17, connector_start: 2228224, q_offset: 67108864, stack_log: 27 }",
+      "out_receipt": "application-native-blake1k-out-quick-t1",
+      "verification_receipt": "application-native-blake1k-verify-quick-t1",
+      "historical_out_receipt": "application-blake2s-1kib-closure-quick-t1",
+      "historical_verification_receipt": "application-blake2s-1kib-verify-quick-t1",
+      "independently_verified_certificates": 5
+    },
+    {
+      "workload": "sha256-1kib",
+      "historical_proof_ms": 1954.609687,
+      "historical_adaptation_ms": 7694.39793,
+      "native_trace_ms": 259.101176,
+      "native_proof_ms": 2990.51841,
+      "native_client_total_ms": 3249.6195860000003,
+      "native_base_adaptation_ms": 0.0,
+      "native_base_bytes": 347036,
+      "native_base_verify_ms": 6.902972999999999,
+      "first_merge_ms": 5760.220066000001,
+      "first_root_bytes": 354668,
+      "first_root_verify_ms": 6.670831000000001,
+      "height_three_root_bytes": 354060,
+      "node_shape": "PrivateShape { index: ArithmeticShape { log_rows: 22, public_log: 10, public_len: 1024, index_log_inv_rate: 4 }, n_blocks: 131072, block_log: 17, connector_start: 2359296, q_offset: 67108864, stack_log: 27 }",
+      "out_receipt": "application-native-sha1k-out-quick-t1",
+      "verification_receipt": "application-native-sha1k-verify-quick-t1",
+      "historical_out_receipt": "application-sha256-1kib-closure-quick-t1",
+      "historical_verification_receipt": "application-sha256-1kib-verify-quick-t1",
+      "independently_verified_certificates": 5
+    },
+    {
+      "workload": "keccak256-1kib",
+      "historical_proof_ms": 1854.712195,
+      "historical_adaptation_ms": 5248.376415,
+      "native_trace_ms": 312.86591200000004,
+      "native_proof_ms": 2689.758405,
+      "native_client_total_ms": 3002.6243170000002,
+      "native_base_adaptation_ms": 0.0,
+      "native_base_bytes": 346652,
+      "native_base_verify_ms": 11.160938999999999,
+      "first_merge_ms": 5396.0172330000005,
+      "first_root_bytes": 354316,
+      "first_root_verify_ms": 6.489222,
+      "height_three_root_bytes": 355468,
+      "node_shape": "PrivateShape { index: ArithmeticShape { log_rows: 22, public_log: 10, public_len: 1024, index_log_inv_rate: 4 }, n_blocks: 131072, block_log: 17, connector_start: 2359296, q_offset: 67108864, stack_log: 27 }",
+      "out_receipt": "application-native-keccak1k-out-quick-t1",
+      "verification_receipt": "application-native-keccak1k-verify-quick-t1",
+      "historical_out_receipt": "application-keccak256-1kib-closure-quick-t1",
+      "historical_verification_receipt": "application-keccak256-1kib-verify-quick-t1",
+      "independently_verified_certificates": 5
+    },
+    {
+      "workload": "mpt",
+      "historical_proof_ms": 14932.437698000002,
+      "historical_adaptation_ms": 5741.930462,
+      "native_trace_ms": 1346.434047,
+      "native_proof_ms": 12425.073331,
+      "native_client_total_ms": 13771.507378,
+      "native_base_adaptation_ms": 0.0,
+      "native_base_bytes": 386356,
+      "native_base_verify_ms": 8.01601,
+      "first_merge_ms": 5925.622208,
+      "first_root_bytes": 353740,
+      "first_root_verify_ms": 6.763364,
+      "height_three_root_bytes": 354348,
+      "node_shape": "PrivateShape { index: ArithmeticShape { log_rows: 22, public_log: 10, public_len: 1024, index_log_inv_rate: 4 }, n_blocks: 131072, block_log: 17, connector_start: 2359296, q_offset: 67108864, stack_log: 27 }",
+      "out_receipt": "application-native-mpt-out-quick-t2",
+      "verification_receipt": "application-native-mpt-verify-quick-t2",
+      "historical_out_receipt": "application-mpt-closure-quick-t1",
+      "historical_verification_receipt": "application-mpt-verify-quick-t1",
+      "independently_verified_certificates": 5
+    },
+    {
+      "workload": "shielded",
+      "historical_proof_ms": 6708.670758,
+      "historical_adaptation_ms": 5547.769606,
+      "native_trace_ms": 1028.402202,
+      "native_proof_ms": 12171.142455,
+      "native_client_total_ms": 13199.544656999999,
+      "native_base_adaptation_ms": 0.0,
+      "native_base_bytes": 385204,
+      "native_base_verify_ms": 5.655825,
+      "first_merge_ms": 6003.3621,
+      "first_root_bytes": 356012,
+      "first_root_verify_ms": 6.989464,
+      "height_three_root_bytes": 355180,
+      "node_shape": "PrivateShape { index: ArithmeticShape { log_rows: 22, public_log: 10, public_len: 1024, index_log_inv_rate: 4 }, n_blocks: 131072, block_log: 17, connector_start: 2359296, q_offset: 67108864, stack_log: 27 }",
+      "out_receipt": "application-native-shielded-out-quick-t1",
+      "verification_receipt": "application-native-shielded-verify-quick-t1",
+      "historical_out_receipt": "application-shielded-closure-quick-t1",
+      "historical_verification_receipt": "application-shielded-verify-quick-t1",
+      "independently_verified_certificates": 5
+    },
+    {
+      "workload": "falcon512",
+      "historical_proof_ms": 6607.320238000001,
+      "historical_adaptation_ms": 5261.261126,
+      "native_trace_ms": 1063.685195,
+      "native_proof_ms": 10924.761848999999,
+      "native_client_total_ms": 11988.447043999999,
+      "native_base_adaptation_ms": 0.0,
+      "native_base_bytes": 384756,
+      "native_base_verify_ms": 6.350681000000001,
+      "first_merge_ms": 6158.2235980000005,
+      "first_root_bytes": 353612,
+      "first_root_verify_ms": 7.121186,
+      "height_three_root_bytes": 354764,
+      "node_shape": "PrivateShape { index: ArithmeticShape { log_rows: 22, public_log: 10, public_len: 1024, index_log_inv_rate: 4 }, n_blocks: 131072, block_log: 17, connector_start: 2359296, q_offset: 67108864, stack_log: 27 }",
+      "out_receipt": "application-native-falcon512-out-quick-t2",
+      "verification_receipt": "application-native-falcon512-verify-quick-t2",
+      "historical_out_receipt": "application-falcon512-closure-quick-t1",
+      "historical_verification_receipt": "application-falcon512-verify-quick-t1",
+      "independently_verified_certificates": 5
+    }
+  ],
+  "receipts": {
+    "application-blake2s-64b-closure-quick-t1": {
+      "original_path": "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/application-blake2s-64b-closure-quick-t1",
+      "result_sha256": "2f7bfa6ff806bbd408f06bb101855cf59a924d89dc0559c43fc8e10fef40bf37",
+      "ok": true,
+      "files_unchanged": true
+    },
+    "application-blake2s-64b-verify-quick-t1": {
+      "original_path": "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/application-blake2s-64b-verify-quick-t1",
+      "result_sha256": "a1674b12186d7941d7afaaa4b71bf64fa7162d45f2cebd833d0fd81bce6f89dd",
+      "ok": true,
+      "files_unchanged": true
+    },
+    "application-split-native-blake64-quick-t1": {
+      "original_path": "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/application-split-native-blake64-quick-t1",
+      "result_sha256": "7545d51b34a36c16acdb134740003e79c10d4a88c34b6fd3b6cfa29bdd7cdbab",
+      "ok": true,
+      "files_unchanged": true
+    },
+    "application-native-blake64-verify-t1": {
+      "original_path": "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/application-native-blake64-verify-t1",
+      "result_sha256": "a19f65ce31e8f14eefcd9d6aed4a37695449e55de3a31174619ad1a35873ae08",
+      "ok": true,
+      "files_unchanged": true
+    },
+    "application-blake2s-1kib-closure-quick-t1": {
+      "original_path": "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/application-blake2s-1kib-closure-quick-t1",
+      "result_sha256": "bcd6dfde2acb1f26071fb8cc2015b91479daf7a9e1ed778d92ece56e9525570f",
+      "ok": true,
+      "files_unchanged": true
+    },
+    "application-blake2s-1kib-verify-quick-t1": {
+      "original_path": "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/application-blake2s-1kib-verify-quick-t1",
+      "result_sha256": "ddf6851b8c6ecd2390151ff8a19797736be7ad55c1eaf77b4f354d6a60386864",
+      "ok": true,
+      "files_unchanged": true
+    },
+    "application-native-blake1k-out-quick-t1": {
+      "original_path": "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/application-native-blake1k-out-quick-t1",
+      "result_sha256": "568b9fc7a14021aac72d3fccf6fdaa8e063f9d17689e3d32017d78b3f0a4e58c",
+      "ok": true,
+      "files_unchanged": true
+    },
+    "application-native-blake1k-verify-quick-t1": {
+      "original_path": "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/application-native-blake1k-verify-quick-t1",
+      "result_sha256": "14ac411a4493ee8e6c2553405761b71c7a1e0cd2b165742d0744edc2f5984a8b",
+      "ok": true,
+      "files_unchanged": true
+    },
+    "application-sha256-1kib-closure-quick-t1": {
+      "original_path": "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/application-sha256-1kib-closure-quick-t1",
+      "result_sha256": "f8a9e0c4b418a6707650b362f550a00cf3f3a2f688d6dc2aaf1a2c16484391ee",
+      "ok": true,
+      "files_unchanged": true
+    },
+    "application-sha256-1kib-verify-quick-t1": {
+      "original_path": "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/application-sha256-1kib-verify-quick-t1",
+      "result_sha256": "45160ad01122a98fcb969322762e7134108cb9ab5febaf6091a3d08bccbf947f",
+      "ok": true,
+      "files_unchanged": true
+    },
+    "application-native-sha1k-out-quick-t1": {
+      "original_path": "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/application-native-sha1k-out-quick-t1",
+      "result_sha256": "e8957af689a9db47e97dc23251ff442d9e3ddaeff138dfb1127e7d722805afa5",
+      "ok": true,
+      "files_unchanged": true
+    },
+    "application-native-sha1k-verify-quick-t1": {
+      "original_path": "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/application-native-sha1k-verify-quick-t1",
+      "result_sha256": "625e24f0b27bcdcdf970e2dd09a77ca8ea6366a12e545dd875017602d4c86ef0",
+      "ok": true,
+      "files_unchanged": true
+    },
+    "application-keccak256-1kib-closure-quick-t1": {
+      "original_path": "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/application-keccak256-1kib-closure-quick-t1",
+      "result_sha256": "ae2e76df18ee2c1b8eeea0b7b23ead30442e5fc3a23489c7144e9fc59776fb66",
+      "ok": true,
+      "files_unchanged": true
+    },
+    "application-keccak256-1kib-verify-quick-t1": {
+      "original_path": "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/application-keccak256-1kib-verify-quick-t1",
+      "result_sha256": "627b9bacd958c81a6a67d8c5f61ee023e6ecf2a2733f864b96c0a1a0a4812c6d",
+      "ok": true,
+      "files_unchanged": true
+    },
+    "application-native-keccak1k-out-quick-t1": {
+      "original_path": "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/application-native-keccak1k-out-quick-t1",
+      "result_sha256": "2768937704fd8d8fb70d13de96ed42c156f3c308377e827814d9770957cfee8a",
+      "ok": true,
+      "files_unchanged": true
+    },
+    "application-native-keccak1k-verify-quick-t1": {
+      "original_path": "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/application-native-keccak1k-verify-quick-t1",
+      "result_sha256": "a732f07cb74a0b67183f738d428b31168aa598848eb94fd39dddcf31ffa6faf3",
+      "ok": true,
+      "files_unchanged": true
+    },
+    "application-mpt-closure-quick-t1": {
+      "original_path": "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/application-mpt-closure-quick-t1",
+      "result_sha256": "35346e2a6918d3fa7848d7e8a60196cdb4d093701bd8ad09f1e4037e7e164694",
+      "ok": true,
+      "files_unchanged": true
+    },
+    "application-mpt-verify-quick-t1": {
+      "original_path": "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/application-mpt-verify-quick-t1",
+      "result_sha256": "f692b62f09eaf921d7ac1715f3b0d27022f484abf4e84344213e9241c7caf202",
+      "ok": true,
+      "files_unchanged": true
+    },
+    "application-native-mpt-out-quick-t2": {
+      "original_path": "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/application-native-mpt-out-quick-t2",
+      "result_sha256": "165f55a4b5e2f1cfc497c5e1c9b8b2977b72d06f7e8e39e278d5a29e1ef8ca2c",
+      "ok": true,
+      "files_unchanged": true
+    },
+    "application-native-mpt-verify-quick-t2": {
+      "original_path": "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/application-native-mpt-verify-quick-t2",
+      "result_sha256": "1b05b4cae9b604a77a54af95f4bf05ae7de53d8630ae34d00b1eab238ac2253a",
+      "ok": true,
+      "files_unchanged": true
+    },
+    "application-shielded-closure-quick-t1": {
+      "original_path": "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/application-shielded-closure-quick-t1",
+      "result_sha256": "cf558899f3da895e6e4217507ca5275f367ad7143e36b05180694fe12f12847c",
+      "ok": true,
+      "files_unchanged": true
+    },
+    "application-shielded-verify-quick-t1": {
+      "original_path": "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/application-shielded-verify-quick-t1",
+      "result_sha256": "5e68818eccb5b1b714f37c6da4ce52b5dc5ebb61a12b45e2ed077425e9f34893",
+      "ok": true,
+      "files_unchanged": true
+    },
+    "application-native-shielded-out-quick-t1": {
+      "original_path": "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/application-native-shielded-out-quick-t1",
+      "result_sha256": "cff9e7fe438fcede148f1cecca6acc53816e0d9cc754308d17ba594e15ac8232",
+      "ok": true,
+      "files_unchanged": true
+    },
+    "application-native-shielded-verify-quick-t1": {
+      "original_path": "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/application-native-shielded-verify-quick-t1",
+      "result_sha256": "fd8e41ff0aea5c1745901e965d145d93979c4a92f5d2d7e99f916ba46822c7c6",
+      "ok": true,
+      "files_unchanged": true
+    },
+    "application-falcon512-closure-quick-t1": {
+      "original_path": "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/application-falcon512-closure-quick-t1",
+      "result_sha256": "d8c5d3ca387b98eba75aa9f0a11effc76cb5f80c9e0b930a8e00c3e03b4a5d94",
+      "ok": true,
+      "files_unchanged": true
+    },
+    "application-falcon512-verify-quick-t1": {
+      "original_path": "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/application-falcon512-verify-quick-t1",
+      "result_sha256": "17e64ccc37550430bb132433411bdd8f477b3044c7aa96f85314b6cbc57f9bc6",
+      "ok": true,
+      "files_unchanged": true
+    },
+    "application-native-falcon512-out-quick-t2": {
+      "original_path": "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/application-native-falcon512-out-quick-t2",
+      "result_sha256": "c80a5a4970dd29b84ffe852a4eb342a3d60f9a9df788a108e2f918e15eb7f496",
+      "ok": true,
+      "files_unchanged": true
+    },
+    "application-native-falcon512-verify-quick-t2": {
+      "original_path": "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/application-native-falcon512-verify-quick-t2",
+      "result_sha256": "14d08c8f810aef362419ace448cae5daafe673a02be77faeb3777d15e3109029",
+      "ok": true,
+      "files_unchanged": true
+    },
+    "application-split-malformed-rejection-t2": {
+      "original_path": "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/application-split-malformed-rejection-t2",
+      "result_sha256": "3ecc1a97ca9542950506179b09dc6c7909d0409f6383f832e4c6b36d836705a8",
+      "ok": false,
+      "files_unchanged": true
+    },
+    "application-split-malformed-rejection-t3": {
+      "original_path": "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/application-split-malformed-rejection-t3",
+      "result_sha256": "f2cc9ce478b50280d0e437a4a6daea290a5be87fe9029b5aa27ce77e4f7bef88",
+      "ok": true,
+      "files_unchanged": true
+    },
+    "application-split-recheck-t1": {
+      "original_path": "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/application-split-recheck-t1",
+      "result_sha256": "58810f97600ae4b1a1ac30bf721a51ef228169718c2a2c9699d89daa9aa63770",
+      "ok": true,
+      "files_unchanged": true
+    },
+    "application-split-release-gates-t1": {
+      "original_path": "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/application-split-release-gates-t1",
+      "result_sha256": "c50caa009e2c401981129806076ce526797cc0b2e3e6d5fc8a80365e7d5dfd96",
+      "ok": false,
+      "files_unchanged": false
+    },
+    "application-native-adder-check-t1": {
+      "original_path": "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/application-native-adder-check-t1",
+      "result_sha256": "eaef9b3fb74dba001b545212c78d360ad76c838c37fcc2058e5bc63f94467cc7",
+      "ok": false,
+      "files_unchanged": true
+    },
+    "application-native-adder-check-t2": {
+      "original_path": "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/application-native-adder-check-t2",
+      "result_sha256": "8d41e245a7652d5395370799169dc4acbf95572602cddbfa983d10a012e1304c",
+      "ok": true,
+      "files_unchanged": true
+    },
+    "application-native-mpt-out-quick-t1": {
+      "original_path": "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/application-native-mpt-out-quick-t1",
+      "result_sha256": "5a1f50608bbeed1eeb013baadb5a71d334816cda83330affd31ae50c95340934",
+      "ok": false,
+      "files_unchanged": true
+    },
+    "application-native-mpt-capacity-diagnostic-t1": {
+      "original_path": "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/application-native-mpt-capacity-diagnostic-t1",
+      "result_sha256": "5a6496eadf57cfd0d4f8df7e782d94f478559c08c9ed8afeb896c544e3731f4d",
+      "ok": true,
+      "files_unchanged": true
+    },
+    "application-split-clippy-gate-t1": {
+      "original_path": "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/application-split-clippy-gate-t1",
+      "result_sha256": "228aa0dee71c635a407dff27855333ccd9169f64b3b09b9a4195cce93698eb64",
+      "ok": true,
+      "files_unchanged": true
+    },
+    "application-split-fmt-check-gate-t1": {
+      "original_path": "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/application-split-fmt-check-gate-t1",
+      "result_sha256": "769b17197dad0023d1bac3a9a0c50377fa54632df6067f3a52935634e97d15e0",
+      "ok": true,
+      "files_unchanged": true
+    },
+    "application-split-release-gates-t2": {
+      "original_path": "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/application-split-release-gates-t2",
+      "result_sha256": "e4a3b82665987de9d737eae25f072173c53b78f34efaf411976705e9fe24bfee",
+      "ok": true,
+      "files_unchanged": true
+    },
+    "application-native-adder-check-t3": {
+      "original_path": "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/application-native-adder-check-t3",
+      "result_sha256": "de4a9ec94c0c96dcfdb808b0efeeb2be47adb70535461b9349c16c2c05800971",
+      "ok": true,
+      "files_unchanged": true
+    }
+  }
+}
