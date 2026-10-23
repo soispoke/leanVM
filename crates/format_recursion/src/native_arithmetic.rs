@@ -173,10 +173,17 @@ fn stack_columns(cols: &[Vec<F192>; 4], column_stride: usize, capacity: usize) -
         stack.resize(words, F64::ZERO);
         stack
     };
-    parallel::chunks_mut(&mut stack, n, |slot, dst| {
+    // Native columns have power-of-two length. Smaller tasks stay within one
+    // limb column and expose more parallelism than its twelve populated limbs.
+    let chunk_len = n.min(4096);
+    parallel::chunks_mut(&mut stack, chunk_len, |chunk, dst| {
+        let at = chunk * chunk_len;
+        let slot = at / n;
+        let first = at % n;
         let limb = slot % column_stride;
         if limb < 3 {
-            for (dest, value) in dst.iter_mut().zip(&cols[slot / column_stride]) {
+            let len = dst.len();
+            for (dest, value) in dst.iter_mut().zip(&cols[slot / column_stride][first..first + len]) {
                 *dest = F64(match limb {
                     0 => value.c0,
                     1 => value.c1,
