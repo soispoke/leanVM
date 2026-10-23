@@ -381,8 +381,10 @@ mod tests {
             let digest = reference::verify(&payload).unwrap();
             let public = app.public_values();
             let expected: Vec<_> = digest
-                .chunks(8)
-                .map(|b| primitives::field::F192::new(u64::from_le_bytes(b.try_into().unwrap()), 0, 0))
+                .as_chunks::<8>()
+                .0
+                .iter()
+                .map(|b| primitives::field::F192::new(u64::from_le_bytes(*b), 0, 0))
                 .collect();
             assert_eq!(&public[public.len() - 4..], expected.as_slice());
             assert_eq!(app.compressions.len(), 105);
@@ -391,8 +393,10 @@ mod tests {
             assert_eq!(matched.compressions.len(), 106);
             let final_digest = primitives::hash::hash(&digest);
             let expected: Vec<_> = final_digest
-                .chunks_exact(8)
-                .map(|b| primitives::field::F192::new(u64::from_le_bytes(b.try_into().unwrap()), 0, 0))
+                .as_chunks::<8>()
+                .0
+                .iter()
+                .map(|b| primitives::field::F192::new(u64::from_le_bytes(*b), 0, 0))
                 .collect();
             let public = matched.public_values();
             assert_eq!(&public[public.len() - 4..], expected.as_slice());

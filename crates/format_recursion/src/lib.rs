@@ -16,8 +16,8 @@ pub mod public_plan;
 pub mod recursion_fast;
 pub mod replay;
 pub mod trace;
-pub mod xmss_application;
 mod verifier;
+pub mod xmss_application;
 
 pub use verifier::{Child, record, record_bound};
 

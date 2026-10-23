@@ -39,8 +39,10 @@ fn main() {
     claim.extend(reference);
     let expected_digest = primitives::hash::hash(&claim);
     let expected: Vec<_> = expected_digest
-        .chunks_exact(8)
-        .map(|w| primitives::field::F192::new(u64::from_le_bytes(w.try_into().unwrap()), 0, 0))
+        .as_chunks::<8>()
+        .0
+        .iter()
+        .map(|w| primitives::field::F192::new(u64::from_le_bytes(*w), 0, 0))
         .collect();
     assert_eq!(&public[public.len() - 4..], expected);
     let context = primitives::hash::hash(b"hometurf-native-hash-application-v1");
@@ -55,7 +57,7 @@ fn main() {
         let shape = setup.verifier_shape();
         println!(
             "{}",
-            serde_json::json!({"wallet_prove_s":elapsed,"output":expected_digest.chunks_exact(8).map(|w|u64::from_le_bytes(w.try_into().unwrap())).collect::<Vec<_>>(),"proof_bytes":encoded.len(),"compressions":witness.compressions.len(),"native_log_rows":shape.index.log_rows,"hash_block_log":shape.block_log,"committed_words":shape.committed_lanes()*(1usize << (shape.stack_log-pcs::whir::INITIAL_FOLDING_FACTOR))})
+            serde_json::json!({"wallet_prove_s":elapsed,"output":expected_digest.as_chunks::<8>().0.iter().map(|w|u64::from_le_bytes(*w)).collect::<Vec<_>>(),"proof_bytes":encoded.len(),"compressions":witness.compressions.len(),"native_log_rows":shape.index.log_rows,"hash_block_log":shape.block_log,"committed_words":shape.committed_lanes()*(1usize << (shape.stack_log-pcs::whir::INITIAL_FOLDING_FACTOR))})
         );
     } else {
         let encoded = std::fs::read(path).unwrap();

@@ -22,8 +22,10 @@ fn main() {
             .unwrap();
     let digest = primitives::hash::hash(&digest);
     let expected: Vec<_> = digest
-        .chunks_exact(8)
-        .map(|b| primitives::field::F192::new(u64::from_le_bytes(b.try_into().unwrap()), 0, 0))
+        .as_chunks::<8>()
+        .0
+        .iter()
+        .map(|b| primitives::field::F192::new(u64::from_le_bytes(*b), 0, 0))
         .collect();
     assert_eq!(&public[public.len() - 4..], expected.as_slice());
     assert_eq!(canonical.compressions.len(), 106);
