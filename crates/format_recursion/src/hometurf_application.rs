@@ -16,7 +16,7 @@ pub fn create(merkle: bool, count: usize, tamper_path: bool) -> Application {
     let mode = b.constant(u64::from(merkle));
     let n = b.constant(count as u64);
     let index = b.input(if merkle { 0x5555_5555 & ((1u64 << count) - 1) } else { 0 });
-    let directions = if merkle { b.bits(index, count) } else { Vec::new() };
+    let directions = if merkle { b.bits(index, 64) } else { Vec::new() };
     let mut value = seed;
     for level in 0..count {
         let sibling = if merkle {
