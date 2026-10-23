@@ -31,3 +31,6 @@ pub mod shielded_lookup;
 pub mod shielded_lookup_prototype;
 
 pub mod application_lowering;
+
+pub mod keccak_bridge;
+pub mod boolean_application;

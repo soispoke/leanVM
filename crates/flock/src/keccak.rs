@@ -8,9 +8,9 @@
 //!
 //! ```text
 //!   slot 0                    the constant one        A = B = z_0
-//!   1 ..= 1600                the input state         A = z_i,   B = z_0
-//!   1601 + 1600 r + j         round r's chi product   A = 1 ⊕ b[x+1], B = b[x+2]
-//!   39,401 ..= 41,000         the output state        A = s_24[j], B = z_0
+//!   64 .. 1664                the input state         A = z_i,   B = z_0
+//!   1664 + 1600 r + j         round r's chi product   A = 1 ⊕ b[x+1], B = b[x+2]
+//!   40,064 .. 41,664         the output state        A = s_24[j], B = z_0
 //!   the rest                  zero                    A = B = 0
 //! ```
 //!
@@ -21,6 +21,8 @@
 //! fold runs its transpose backwards. Each product slot depends only on earlier slots, so a
 //! satisfying witness is unique given the input: the block computes exactly the
 //! permutation of its input into its pinned output.
+pub mod reduction;
+
 use crate::lincheck::LincheckCircuit;
 use primitives::field::F192;
 
@@ -28,9 +30,10 @@ pub const K_LOG: usize = 16;
 pub const STATE: usize = 1600;
 const ROUNDS: usize = 24;
 const PIN: usize = 0;
-const INPUT: usize = 1;
+/// Whole-word I/O offsets let the native bridge open each lane directly.
+pub const INPUT: usize = 64;
 const PRODUCTS: usize = INPUT + STATE;
-const OUTPUT: usize = PRODUCTS + ROUNDS * STATE;
+pub const OUTPUT: usize = PRODUCTS + ROUNDS * STATE;
 /// Slots a block uses; the other `2^K_LOG − USED` are zero.
 pub const USED: usize = OUTPUT + STATE;
 const _: () = assert!(USED <= 1 << K_LOG);

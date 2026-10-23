@@ -5,7 +5,7 @@ use flock::hash::{Compression, blake2s_compress};
 use primitives::field::F192;
 
 /// A packed pair of little-endian u32 words in a native circuit.
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct Word(usize);
 impl Word {
     pub const ZERO: Self = Self(0);
@@ -19,6 +19,8 @@ pub struct Builder {
     pub values: Vec<F192>,
     pub compressions: Vec<Compression>,
     connectors: Vec<[usize; 18]>,
+    pub permutations: Vec<flock::keccak::reduction::Permutation>,
+    keccak_connectors: Vec<[usize; 50]>,
 }
 
 impl Default for Builder {
@@ -33,6 +35,8 @@ impl Default for Builder {
             values: vec![F192::ZERO, F192::ONE],
             compressions: Vec::new(),
             connectors: Vec::new(),
+            permutations: Vec::new(),
+            keccak_connectors: Vec::new(),
         }
     }
 }
@@ -172,6 +176,27 @@ impl Builder {
         result
     }
 
+    /// One native Keccak-f[1600] row. All 25 input and output lanes are
+    /// bound to the permutation witness by the Keccak bridge opening.
+    pub fn keccak_f(&mut self, input: [Word; 25]) -> [Word; 25] {
+        let lanes = input.map(|w| self.value(w).c0);
+        let output = flock::keccak::reduction::permute(&lanes);
+        let result = output.map(|w| self.input(w));
+        let io = std::array::from_fn(|i| if i < 25 { input[i].0 } else { result[i - 25].0 });
+        self.keccak_connectors.push(io);
+        self.permutations.push(lanes);
+        result
+    }
+
+    /// Keccak-only application bridge. Mixed BLAKE2s/Keccak circuits require a
+    /// shared commitment adapter and must not silently use either single bridge.
+    pub fn setup_keccak(&self) -> Option<crate::keccak_bridge::KeccakBridge> {
+        if !self.compressions.is_empty() {
+            return None;
+        }
+        crate::keccak_bridge::KeccakBridge::new(self.circuit.clone(), self.keccak_connectors.clone())
+    }
+
     /// Hash an aligned byte string, with zero padding of its last block.
     /// Every supplied word is part of the message; lengths are circuit metadata.
     pub fn hash_words(&mut self, words: &[Word]) -> [Word; 4] {
@@ -199,6 +224,9 @@ impl Builder {
     }
 
     pub fn setup(&self) -> Option<PrivateBridge> {
+        if !self.permutations.is_empty() {
+            return None;
+        }
         PrivateBridge::new(self.circuit.clone(), self.connectors.clone())
     }
 }
