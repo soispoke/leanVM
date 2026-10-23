@@ -113,6 +113,7 @@ fn main() {
     assert_eq!(parallel::num_threads(), 12);
     let args: Vec<_> = std::env::args().collect();
     match args[1].as_str() {
+        "shielded" => run::<circuit_suite::shielded_keccak::ShieldedTransfer>(&args),
         "falcon" => run::<circuit_suite::falcon::Falcon512>(&args),
         "keccak" => run::<circuit_suite::keccak::Keccak256OneKiB>(&args),
         "mpt" => run::<circuit_suite::mpt::MptStorageProof>(&args),

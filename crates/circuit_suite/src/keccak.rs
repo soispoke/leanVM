@@ -775,6 +775,12 @@ pub fn keccak256(c: &mut Ckt, msg: &[Wire]) -> Vec<Wire> {
     sponge(c, &blocks, &[blocks.len()], &mut stats).pop().unwrap()
 }
 
+/// Independent RustCrypto reference, with Ethereum Keccak padding.
+pub fn keccak256_native(message: &[u8]) -> [u8; 32] {
+    use sha3::Digest;
+    sha3::Keccak256::digest(message).into()
+}
+
 /// The bits of `bytes`, low bit first in each byte.
 pub fn bits_of(bytes: &[u8]) -> Vec<bool> {
     bytes

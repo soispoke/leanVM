@@ -220,6 +220,32 @@ impl Builder {
         h
     }
 
+    /// Keccak-256 of an aligned byte string, each word serialized little-endian.
+    /// Ethereum suffix 0x01 and final 0x80; all 17 rate lanes are used.
+    pub fn keccak256_words(&mut self, words: &[Word]) -> [Word; 4] {
+        let mut state = [Word::ZERO; 25];
+        let blocks = words.len() / 17 + 1;
+        for block in 0..blocks {
+            for (i, lane) in state.iter_mut().enumerate().take(17) {
+                let at = block * 17 + i;
+                let input = if at < words.len() {
+                    words[at]
+                } else if at == words.len() {
+                    self.constant(1)
+                } else {
+                    Word::ZERO
+                };
+                *lane = self.gate(*lane, self.one(), input);
+            }
+            if block + 1 == blocks {
+                let last = self.constant(1u64 << 63);
+                state[16] = self.gate(state[16], self.one(), last);
+            }
+            state = self.keccak_f(state);
+        }
+        state[..4].try_into().unwrap()
+    }
+
     /// Select b when bit is one, a otherwise. The selector is constrained Boolean.
     pub fn select(&mut self, bit: Word, a: Word, b: Word) -> Word {
         self.boolean(bit);
@@ -278,5 +304,24 @@ mod tests {
         assert!(!setup.verify(&public, &[23; 32], &tampered));
         b.values[first[0].0] += F192::ONE;
         assert!(setup.prove(&b.values, &b.compressions, &[23; 32]).is_none());
+    }
+}
+
+#[cfg(test)]
+mod keccak_sponge_tests {
+    use super::*;
+
+    #[test]
+    fn full_rate_and_padding_boundaries_match_reference() {
+        for len in [0, 1, 4, 8, 16, 17, 18, 33, 34, 128] {
+            let mut b = Builder::default();
+            let words: Vec<_> = (0..len).map(|i| b.input(i as u64 * 0x10001 + 17)).collect();
+            let bytes: Vec<_> = words.iter().flat_map(|&w| b.value(w).c0.to_le_bytes()).collect();
+            let digest = b.keccak256_words(&words);
+            let actual: Vec<_> = digest.iter().flat_map(|&w| b.value(w).c0.to_le_bytes()).collect();
+            assert_eq!(actual, circuit_suite::keccak::keccak256_native(&bytes), "words={len}");
+            assert_eq!(b.permutations.len(), len / 17 + 1);
+            assert!(b.compressions.is_empty());
+        }
     }
 }
