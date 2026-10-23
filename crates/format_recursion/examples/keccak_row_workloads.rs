@@ -22,7 +22,9 @@ fn create<W: Workload>(
     }
     assert_eq!(statement, instance.statement, "independent application statement");
     let mut message: Vec<_> = identity
-        .as_chunks::<8>().0.iter()
+        .as_chunks::<8>()
+        .0
+        .iter()
         .map(|word| b.constant(u64::from_le_bytes(*word)))
         .collect();
     for chunk in bits.as_chunks::<128>().0.iter() {

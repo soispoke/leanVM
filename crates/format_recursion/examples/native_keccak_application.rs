@@ -54,7 +54,9 @@ fn application(seed: u64, bit_circuit: Option<&(circuit_suite::Circuit, Vec<circ
         b.expose(word);
     }
     let expected: Vec<_> = instance.statement[..32]
-        .as_chunks::<8>().0.iter()
+        .as_chunks::<8>()
+        .0
+        .iter()
         .map(|v| primitives::field::F192::new(u64::from_le_bytes(*v), 0, 0))
         .collect();
     let public = b.public_values();
