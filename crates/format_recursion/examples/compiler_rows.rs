@@ -108,7 +108,7 @@ fn run<W: Workload>(trim: bool, prove: bool) {
     let lower = private_trace::lower(&created.trace, &created.trace).expect("lowering");
     println!(
         "{}",
-        serde_json::json!({"workload":W::NAME,"trim":trim,"trace":created.report,
+        serde_json::json!({"role":"ONE-TIME setup","scope":"static circuit metadata","workload":W::NAME,"trim":trim,"trace":created.report,
         "gates":gates,"arithmetic_rows":lower.circuit.rows.len(),
         "compressions":lower.compressions.len(),"checks":created.trace.checks.len(),
         "cpus":"24-35","threads":12})

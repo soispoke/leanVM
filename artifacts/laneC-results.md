@@ -1,12 +1,12 @@
 # Lane C: WALLET time to mempool-ready proof
 
-Snapshot: `8db3aaa7`, from lane A's dirty tree based on `ab39e040`. No pushes. All builds and measurements use CPUs 24-35, CARGO_BUILD_JOBS=12, RAYON_NUM_THREADS=12, LEANVM_NUM_THREADS=12. Timings are single development screens, not medians. Receipts are `C-*` under the parent workspace, using Yukon `2e90b37`.
+Snapshot: `8db3aaa7`, from lane A's dirty tree based on `ab39e040`. No pushes. All builds and measurements use CPUs 24-35, CARGO_BUILD_JOBS=12, RAYON_NUM_THREADS=12, LEANVM_NUM_THREADS=12. Historical timings are single development screens; BLAKE2s 64 B is superseded by the ABAB medians below. Receipts are `C-*` under the parent workspace, using Yukon `2e90b37`.
 
 ## Metric roles and BLAKE2s 64 B ABAB confirmation
 
 Every metric uses these role labels: WALLET is per transaction (witness plus the one proof sent, serialized bytes, transaction RAM); MEMPOOL NODE is native verification ms; AGGREGATOR is node merging; ONE-TIME setup is per-application key construction and static circuit metadata. ONE-TIME setup is never added to WALLET transaction latency. Historical values below retain this same role mapping. This lane does not report AGGREGATOR timing in the ABAB screen.
 
-The earlier WALLET 363 ms control versus 157 ms trimmed pair is noisy single-run evidence and is superseded for decisions by the ABAB confirmation below. Three ABAB blocks, six fresh-process samples per policy, are running on CPUs 24-35 with 12 threads. A is complete-output control and B is trimmed. Each WALLET transaction uses the same input seed. The WALLET timing path is the reconciled split base proof. ONE-TIME setup wallet key construction and WALLET RAM use a separate base-key-only process that never constructs a node key; its certificate must match the timed WALLET certificate byte-for-byte. Linux RSS high-water is reset immediately before witness creation, so the prior ONE-TIME setup memory peak is excluded from the WALLET transaction peak. The retained wallet key and allocator-resident pages at transaction start are reported as the WALLET RAM baseline.
+The earlier WALLET 363 ms control versus 157 ms trimmed pair is noisy single-run evidence and is superseded for decisions by the ABAB confirmation below. Three ABAB blocks, six fresh-process samples per policy, completed on CPUs 24-35 with 12 threads. A is complete-output control and B is trimmed. Each WALLET transaction uses the same input seed. The WALLET timing path is the reconciled split base proof. ONE-TIME setup wallet key construction and WALLET RAM use a separate base-key-only process that never constructs a node key; its certificate must match the timed WALLET certificate byte-for-byte. Linux RSS high-water is reset immediately before witness creation, so the prior ONE-TIME setup memory peak is excluded from the WALLET transaction peak. The retained wallet key and allocator-resident pages at transaction start are reported as the WALLET RAM baseline.
 
 ABAB result (three ABAB blocks, six fresh-process samples per policy):
 
@@ -14,6 +14,13 @@ ABAB result (three ABAB blocks, six fresh-process samples per policy):
 |---|---:|---:|---:|---:|---:|---:|---:|---:|
 |A control|143.80 [127.58, 161.17]|7.90|135.27|247,956|134,710|4.99|99.63|190,844|
 |B trimmed|141.75 [128.62, 169.29]|6.00|136.09|250,500|149,432|6.16|84.07|180,826|
+
+|Policy|WALLET transaction start RSS KiB|WALLET transaction peak RSS KiB|WALLET additional peak RSS KiB|
+|---|---:|---:|---:|
+|A control|190,844|325,346|134,710|
+|B trimmed|180,826|330,108|149,432|
+
+WALLET RAM rows are medians from the separate wallet-only processes. They include the resident wallet base key and allocator pages, exclude the aggregator node key, and exclude the earlier ONE-TIME setup high-water mark. Additional peak is measured per sample above transaction start. It is RSS, not allocated-byte accounting or a claim about other wallet implementations. ONE-TIME setup wallet key time includes circuit construction, canonical witness and base-key construction; it excludes runtime initialization and every transaction. The split-key preprocessing measurement is separately tagged ONE-TIME setup and is not the wallet-only key figure.
 
 **Decision:** BLAKE2s 64 B trimming is not an accepted optimization from this ABAB screen. WALLET median time improves only 2.04 ms (1.4%), ranges overlap, WALLET proof bytes increase 2,544 B, WALLET transaction RAM increases 14,722 KiB, and MEMPOOL NODE median verification increases 1.16 ms. ONE-TIME wallet key setup is separate and falls by 15.56 ms in this sample; it is never added to WALLET transaction time. The full per-sample records and receipt names are in `artifacts/laneC-abab.json`; summaries are in `artifacts/laneC-abab-summary.json`.
 
@@ -40,12 +47,12 @@ The headline metric is witness construction plus creation and serialization of t
 |1|keccak256-1KiB|4093.24|1885.49|-2207.75 ms (-53.9%)|346,652 / 324,060|6.14 / 5.76|
 |2|sha256-1kib|3362.06|2064.20|-1297.87 ms (-38.6%)|347,036 / 323,836|5.86 / 5.80|
 |3|falcon512|13713.04|13153.26|-559.77 ms (-4.1%)|384,756 / 384,596|8.65 / 6.27|
-|4|blake2s-64b|363.51|157.42|-206.08 ms (-56.7%)|247,956 / 250,500|7.44 / 7.24|
-|5|blake2s-1kib|1936.10|1834.82|-101.28 ms (-5.2%)|323,356 / 324,124|9.90 / 6.64|
+|4|blake2s-1kib|1936.10|1834.82|-101.28 ms (-5.2%)|323,356 / 324,124|9.90 / 6.64|
+|5|blake2s-64b (ABAB medians)|143.80|141.75|-2.04 ms (-1.4%; not accepted)|247,956 / 250,500|4.99 / 6.16|
 |6|shielded-transfer|13243.01|13476.35|+233.34 ms (+1.8%)|385,204 / 384,660|6.76 / 6.61|
 | |mpt-storage-proof|unavailable|13704.73|unranked|unavailable / 386,356|unavailable / 6.06|
 
-Ranking is by absolute change in time to mempool-ready proof (most time saved first), within each matched workload pair. It does not compare unlike workload latencies as optimization wins. Rows and backend-only proof timings are supporting evidence. One run per policy, CPUs 24-35, 12 threads, seed 20261024. MPT default already trims and its complete-output proof is infeasible. All feasible matched pairs are complete; all generated wallet certificates passed native verification.
+Ranking is by absolute change in time to mempool-ready proof (most time saved first), within each matched workload pair. It does not compare unlike workload latencies as optimization wins. Rows and backend-only proof timings are supporting evidence. BLAKE2s 64 B uses six samples per policy from three ABAB blocks; other workload figures remain single runs. CPUs 24-35, 12 threads, seed 20261024. MPT default already trims and its complete-output proof is infeasible. All feasible matched pairs are complete; all generated wallet certificates passed native verification.
 
 ## Padding census and boundary priority
 
@@ -126,10 +133,12 @@ Lane A: cherry-pick only the compiler screen commit on top of your current tree,
 
 `compiler_rows --prove` now measures the split-closure base certificate, with per-relation setup excluded. It measures the full `Application::create` call for the wallet witness, then `prove_base` plus certificate serialization, and reports their sum as time to mempool-ready proof. Mempool nodes verify this certificate natively, and aggregators merge it as-is. Verification timing is recorded separately. `artifacts/laneC-mempool.json` contains all witness/proof components, certificate bytes, native verification times and base shapes from the passing `C-mempool-*` receipts. The earlier backend-only screen remains preserved as historical compiler evidence, without using it to rank rollout candidates.
 
-Using time to mempool-ready proof, the strongest absolute savings were Keccak (2,207.75 ms) and SHA256 (1,297.87 ms), followed by Falcon (559.77 ms), BLAKE2s 64 B (206.08 ms), and BLAKE2s 1 KiB (101.28 ms). Shielded regressed by 233.34 ms. These are single-run development screens, not robust estimates. Both BLAKE2s candidates increased certificate bytes. Production defaults remain unchanged; default BLAKE2s 64 B measured 247,956 B, matching the required baseline. MPT already uses the trimmed policy, so it has no candidate-versus-default improvement claim.
+Using the historical single-run WALLET time to mempool-ready proof, the observed absolute savings were Keccak (2,207.75 ms) and SHA256 (1,297.87 ms), followed by Falcon (559.77 ms), BLAKE2s 64 B (206.08 ms), and BLAKE2s 1 KiB (101.28 ms). Shielded regressed by 233.34 ms. These are single-run development screens, not robust estimates. Both BLAKE2s candidates increased certificate bytes. The historical BLAKE2s 64 B timing claim above is superseded by ABAB: WALLET 143.80 → 141.75 ms, with no accepted win. Production defaults remain unchanged; WALLET default BLAKE2s 64 B measured 247,956 B, matching the required baseline. MPT already uses the trimmed policy, so it has no candidate-versus-default improvement claim.
 
 
 The reporting-only harness update passed `C-mempool-tests-t1` (release compiler_rows example tests), `C-mempool-clippy-t1` (both packages, all targets, `-D warnings`), and `C-mempool-fmt-check-t1`. The previous full library/example release gate remains preserved; library and compiler-policy implementations were not changed by the reporting update. No pushes.
 
 
 Reconciliation receipts: `C-reconcile-build-t1`, `C-reconcile-compiler-t1`, `C-reconcile-application-t1`, `C-reconcile-independent-verify-t1` (five saved certificates), `C-reconcile-clippy-t1` and `C-reconcile-fmt-check-t1` all passed with frozen sources. The only source update adds optional certificate export and key/hash reporting to the research tool. No proving implementation, parameter, verifier check or policy default changed.
+
+The ABAB harness update passed `C-abab-tests-t1`, `C-abab-clippy-t1` and `C-abab-fmt-check-t1`. The native adder regression still rejects wrong claims and forged non-Boolean witnesses. No verifier checks, proof parameters or production defaults changed.
