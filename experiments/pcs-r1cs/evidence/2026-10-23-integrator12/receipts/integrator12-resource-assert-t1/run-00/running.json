@@ -1,0 +1,9 @@
+{
+  "pid": 134303,
+  "command": [
+    "/usr/bin/python3.12",
+    "-c",
+    "import json,os; assert os.sched_getaffinity(0)==set(range(12)); assert all(os.environ[k]==\"12\" for k in (\"CARGO_BUILD_JOBS\",\"RAYON_NUM_THREADS\",\"LEANVM_NUM_THREADS\")); print(json.dumps({\"kind\":\"resource_assertion\",\"threads\":12,\"cpus\":\"0-11\",\"status\":\"passed\"}))"
+  ],
+  "started_utc": "2026-10-23T11:18:01.224821+00:00"
+}

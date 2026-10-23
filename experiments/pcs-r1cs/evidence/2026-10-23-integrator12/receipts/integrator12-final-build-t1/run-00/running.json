@@ -1,0 +1,14 @@
+{
+  "pid": 141655,
+  "command": [
+    "/root/.rustup/toolchains/1.99.1-x86_64-unknown-linux-gnu/bin/cargo",
+    "build",
+    "--locked",
+    "--release",
+    "-p",
+    "rec_aggregation",
+    "--example",
+    "application_role_profile"
+  ],
+  "started_utc": "2026-10-23T11:21:54.348643+00:00"
+}

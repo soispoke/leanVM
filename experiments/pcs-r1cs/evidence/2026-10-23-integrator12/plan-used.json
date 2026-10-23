@@ -1,0 +1,53 @@
+{
+  "objective": "Direct native R1CS application base proofs merged under a pinned recursive node key; preserve the legacy quotient adaptation measurements.",
+  "base": "ab39e040",
+  "stage": "integrator: accept or reject reported lane commits, gate frozen sources, push, then quick 12-thread reference matrix",
+  "gates": [
+    "Canonical valid fixed program with two canonical hash limbs",
+    "Reject foreign program constants, invalid base equations, noncanonical output, altered statement, height and recursive proof",
+    "Repeated and mixed height composition using one key",
+    "Existing chain closure regression",
+    "Actual independently referenced application fixtures; separate-process verification of two base certificates and three mixed-height node certificates",
+    "Yukon source and executable identity checks, release tests, Clippy"
+  ],
+  "measurement": "Report native trace construction, native application proof creation, zero extra base adaptation, node merges, certificate sizes and verification independently; compare with saved legacy quotient plus adaptation measurements.",
+  "security": "Experimental native/Flock/PCS composition, no new formal proof claimed. Fixed application relation per common key; no universal application acceptance claim.",
+  "resource_policy": {
+    "supersedes": "earlier 16-thread timed/build slice policy",
+    "lane_A_cpus": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11
+    ],
+    "prover_threads": 12,
+    "LEANVM_NUM_THREADS": 12,
+    "RAYON_NUM_THREADS": 12,
+    "CARGO_BUILD_JOBS": 12,
+    "lane_B_cpus": [
+      12,
+      13,
+      14,
+      15,
+      16,
+      17,
+      18,
+      19,
+      20,
+      21,
+      22,
+      23
+    ],
+    "taskset": "0-11",
+    "matched_metrics": "artifacts/matched-12t.jsonl",
+    "scope": "all lane A builds, gates and timed runs; previous non-12-thread results are unmatched"
+  }
+}

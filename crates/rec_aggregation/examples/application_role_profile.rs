@@ -15,7 +15,20 @@ use std::{path::Path, time::Instant};
 #[global_allocator]
 static ALLOCATOR: Jemalloc = Jemalloc;
 
-fn save(path: Option<&Path>, certificate: &Certificate) {
+fn report(mut value: serde_json::Value) {
+    value["threads"] = parallel::num_threads().into();
+    value["cpus"] = std::fs::read_to_string("/proc/self/status")
+        .ok()
+        .and_then(|status| {
+            status
+                .lines()
+                .find_map(|line| line.strip_prefix("Cpus_allowed_list:").map(|s| s.trim().to_owned()))
+        })
+        .into();
+    println!("{value}");
+}
+
+fn save(path: Option<&Path>, bytes: &[u8]) {
     if let Some(path) = path {
         use std::io::Write;
         std::fs::OpenOptions::new()
@@ -23,7 +36,7 @@ fn save(path: Option<&Path>, certificate: &Certificate) {
             .create_new(true)
             .open(path)
             .unwrap()
-            .write_all(&certificate.encode().unwrap())
+            .write_all(bytes)
             .unwrap();
     }
 }
@@ -42,7 +55,7 @@ fn run<W: Workload>(role: &str, seed: u64, input: Option<&Path>, output: Option<
             created.child.log_rows,
             created.report["log_rows"].as_u64().unwrap() as usize
         );
-        println!("{}", created.report);
+        report(created.report.clone());
         return;
     }
     let setup_start = Instant::now();
@@ -52,20 +65,34 @@ fn run<W: Workload>(role: &str, seed: u64, input: Option<&Path>, output: Option<
         let canonical = application.create(20261023);
         (application, canonical.trace)
     };
-    if role == "native-client" {
+    if role == "native-client" || role == "mempool" {
         let setup = {
             let _quiet = bench::suppress_tracing();
             Setup::new(canonical).unwrap()
         };
-        println!(
-            "{}",
-            serde_json::json!({"kind":"role_setup","role":role,"workload":W::NAME,
+        report(serde_json::json!({"kind":"role_setup","role":role,"workload":W::NAME,
             "setup_ms":setup_start.elapsed().as_secs_f64()*1000.,"key":setup.bridge.index.root,
-            "shape":format!("{:?}",setup.bridge.verifier_shape()),"index":setup.bridge.index.shape()})
-        );
+            "shape":format!("{:?}",setup.bridge.verifier_shape()),"index":setup.bridge.index.shape()}));
+        if role == "mempool" {
+            let bytes = std::fs::read(input.expect("mempool requires --input certificate")).unwrap();
+            let expected = application.expected_claim(seed);
+            let words = fiat_shamir::merkle::hash_to_scalars(&expected);
+            let (verified, verification) = plan.measure_quiet(|_| {
+                let certificate = Certificate::decode(&bytes).unwrap();
+                certificate.height == 0 && certificate.statement == expected && setup.verify(&words, &certificate.proof)
+            });
+            assert!(verified);
+            report(
+                serde_json::json!({"kind":"role_measurement","role":role,"workload":W::NAME,"seed":seed,
+                "decode_verify_ms":verification.mean()*1000.,"certificate_bytes":bytes.len(),
+                "certificate_digest":primitives::hash::hash(&bytes),
+                "peak_rss_bytes":bench::peak_rss_bytes(),"status":"verified"}),
+            );
+            return;
+        }
         let created =
             tracing::info_span!("Native application witness and reference").in_scope(|| application.create(seed));
-        println!("{}", created.report);
+        report(created.report.clone());
         let words = fiat_shamir::merkle::hash_to_scalars(&created.claim);
         let (certificate, proving) = plan.measure_quiet(|_| {
             tracing::info_span!("Native client proof").in_scope(|| {
@@ -79,14 +106,16 @@ fn run<W: Workload>(role: &str, seed: u64, input: Option<&Path>, output: Option<
         });
         let (verified, verification) = plan.measure_quiet(|_| setup.verify(&words, &certificate.proof));
         assert!(verified);
-        save(output, &certificate);
-        println!(
-            "{}",
+        let encoding_start = Instant::now();
+        let bytes = certificate.encode().unwrap();
+        let encoding_ms = encoding_start.elapsed().as_secs_f64() * 1000.;
+        save(output, &bytes);
+        report(
             serde_json::json!({"kind":"role_measurement","role":role,"workload":W::NAME,"seed":seed,
             "application_proof_ms":proving.mean()*1000.,"native_trace_creation_ms":created.report["native_trace_creation_ms"],
-            "verify_ms":verification.mean()*1000.,"certificate_bytes":certificate.encode().unwrap().len(),
-            "certificate_digest":primitives::hash::hash(&certificate.encode().unwrap()),
-            "statement":certificate.statement,"peak_rss_bytes":bench::peak_rss_bytes(),"status":"verified"})
+            "verify_ms":verification.mean()*1000.,"encoding_ms":encoding_ms,"certificate_bytes":bytes.len(),
+            "certificate_digest":primitives::hash::hash(&bytes),
+            "statement":certificate.statement,"peak_rss_bytes":bench::peak_rss_bytes(),"status":"verified"}),
         );
     } else {
         assert_eq!(role, "merge");
@@ -95,12 +124,9 @@ fn run<W: Workload>(role: &str, seed: u64, input: Option<&Path>, output: Option<
             let _quiet = bench::suppress_tracing();
             SplitClosedSetup::from_program(canonical).unwrap()
         };
-        println!(
-            "{}",
-            serde_json::json!({"kind":"role_setup","role":role,"workload":W::NAME,
+        report(serde_json::json!({"kind":"role_setup","role":role,"workload":W::NAME,
             "setup_ms":setup_start.elapsed().as_secs_f64()*1000.,"base_key":setup.base_key(),"node_key":setup.node_key(),
-            "base_shape":format!("{:?}",setup.base_shape()),"node_shape":format!("{:?}",setup.node_shape())})
-        );
+            "base_shape":format!("{:?}",setup.base_shape()),"node_shape":format!("{:?}",setup.node_shape())}));
         let input = input.expect("merge requires --input with saved application_tree certificates");
         let read = |name| Certificate::decode(&std::fs::read(input.join(name)).unwrap()).unwrap();
         let manifest: serde_json::Value =
@@ -124,14 +150,16 @@ fn run<W: Workload>(role: &str, seed: u64, input: Option<&Path>, output: Option<
             certificate.statement,
             format_recursion::recursion_fast::node_statement(&left.statement, &right.statement)
         );
-        save(output, &certificate);
-        println!(
-            "{}",
+        let encoding_start = Instant::now();
+        let bytes = certificate.encode().unwrap();
+        let encoding_ms = encoding_start.elapsed().as_secs_f64() * 1000.;
+        save(output, &bytes);
+        report(
             serde_json::json!({"kind":"role_measurement","role":role,"workload":W::NAME,"height":height,
             "merge_ms":proving.mean()*1000.,"verify_ms":verification.mean()*1000.,
-            "certificate_bytes":certificate.encode().unwrap().len(),
-            "certificate_digest":primitives::hash::hash(&certificate.encode().unwrap()),
-            "statement":certificate.statement,"peak_rss_bytes":bench::peak_rss_bytes(),"status":"verified"})
+            "encoding_ms":encoding_ms,"certificate_bytes":bytes.len(),
+            "certificate_digest":primitives::hash::hash(&bytes),
+            "statement":certificate.statement,"peak_rss_bytes":bench::peak_rss_bytes(),"status":"verified"}),
         );
     }
 }
@@ -146,7 +174,7 @@ fn main() {
             .map_or_else(|| default.to_owned(), |p| p[1].clone())
     };
     let role = arg("--role", "native-client");
-    assert!(["native-client", "quotient-client", "merge"].contains(&role.as_str()));
+    assert!(["native-client", "quotient-client", "mempool", "merge"].contains(&role.as_str()));
     let seed = arg("--seed", "20261024").parse().unwrap();
     let height = arg("--height", "1").parse().unwrap();
     let input = args.windows(2).find(|p| p[0] == "--input").map(|p| Path::new(&p[1]));
