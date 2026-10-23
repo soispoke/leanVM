@@ -17,9 +17,16 @@ pub enum Table {
     ByteAdd,
 }
 
+pub fn small_tables() -> bool {
+    static SMALL: std::sync::OnceLock<bool> = std::sync::OnceLock::new();
+    *SMALL.get_or_init(|| std::env::var_os("LOOKUP_SMALL").is_some())
+}
+pub fn table_log() -> usize { if small_tables() { 10 } else { 18 } }
+
 impl Table {
     /// Number of fixed rows in the table side of the bus.
-    pub const fn rows(self) -> usize {
+    pub fn rows(self) -> usize {
+        if small_tables() { return match self { Self::Range16 => 256, Self::ByteLogic => 256, Self::ByteAdd => 512 }; }
         match self {
             Self::Range16 => 1 << 16,
             Self::ByteLogic => 1 << 16,
@@ -32,19 +39,21 @@ impl Table {
         if index >= self.rows() {
             return None;
         }
+        let bits = if small_tables() { 4 } else { 8 };
+        let mask = (1 << bits) - 1;
         Some(match self {
             Self::Range16 => vec![index as u64],
             Self::ByteLogic => {
-                let a = (index & 255) as u64;
-                let b = (index >> 8) as u64;
+                let a = (index & mask) as u64;
+                let b = (index >> bits) as u64;
                 vec![a, b, a ^ b, a & b]
             }
             Self::ByteAdd => {
-                let a = (index & 255) as u64;
-                let b = ((index >> 8) & 255) as u64;
-                let carry = (index >> 16) as u64;
+                let a = (index & mask) as u64;
+                let b = ((index >> bits) & mask) as u64;
+                let carry = (index >> (2 * bits)) as u64;
                 let sum = a + b + carry;
-                vec![a, b, carry, sum & 255, sum >> 8]
+                vec![a, b, carry, sum & mask as u64, sum >> bits]
             }
         })
     }
@@ -54,11 +63,13 @@ impl Table {
         if values.len() != self.tuple_width() {
             return None;
         }
+        let radix = if small_tables() { 16 } else { 256 };
+        let range = if small_tables() { 256 } else { 65536 };
         let index = match self {
-            Self::Range16 if values[0] < 65536 => values[0] as usize,
-            Self::ByteLogic if values[0] < 256 && values[1] < 256 => (values[0] + 256 * values[1]) as usize,
-            Self::ByteAdd if values[0] < 256 && values[1] < 256 && values[2] < 2 => {
-                (values[0] + 256 * values[1] + 65536 * values[2]) as usize
+            Self::Range16 if values[0] < range => values[0] as usize,
+            Self::ByteLogic if values[0] < radix && values[1] < radix => (values[0] + radix * values[1]) as usize,
+            Self::ByteAdd if values[0] < radix && values[1] < radix && values[2] < 2 => {
+                (values[0] + radix * values[1] + radix * radix * values[2]) as usize
             }
             _ => return None,
         };
@@ -190,7 +201,7 @@ mod tests {
                 assert!(Table::ByteLogic.index(&logic).is_some());
                 for carry in 0..2 {
                     let sum = a + b + carry;
-                    assert!(Table::ByteAdd.index(&[a, b, carry, sum & 255, sum >> 8]).is_some());
+                    assert!(Table::ByteAdd.index(&[a, b, carry, sum & mask as u64, sum >> bits]).is_some());
                     assert!(
                         Table::ByteAdd
                             .index(&[a, b, carry, (sum + 1) & 255, sum >> 8])

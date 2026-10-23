@@ -74,7 +74,9 @@ impl C {
     fn byte(&mut self, v: u64) -> Word {
         let w = self.b.input(v);
         let z = self.b.zero();
-        self.read(Table::ByteLogic, vec![w, z, w, z]);
+        if crate::shielded_lookup::small_tables() {
+            self.read(Table::Range16, vec![w]);
+        } else { self.read(Table::ByteLogic, vec![w, z, w, z]); }
         w
     }
     fn pack(&mut self, bytes: &[Word]) -> Word {
@@ -129,7 +131,22 @@ impl C {
             let total = self.v(a) + self.v(b) + self.v(carry);
             let sum = self.b.input(total & 255);
             let next = self.b.input(total >> 8);
-            self.read(Table::ByteAdd, vec![a, b, carry, sum, next]);
+            if crate::shielded_lookup::small_tables() {
+                let split = |w: Word, this: &mut Self| {
+                    let low = this.b.input(this.v(w) & 15);
+                    let high = this.b.input(this.v(w) >> 4);
+                    let weight = this.k(16);
+                    let packed = this.b.gate(high, weight, low);
+                    this.b.assert_eq(w, packed);
+                    (low, high)
+                };
+                let (al, ah) = split(a, self);
+                let (bl, bh) = split(b, self);
+                let (sl, sh) = split(sum, self);
+                let mid = self.b.input((self.v(al) + self.v(bl) + self.v(carry)) >> 4);
+                self.read(Table::ByteAdd, vec![al, bl, carry, sl, mid]);
+                self.read(Table::ByteAdd, vec![ah, bh, mid, sh, next]);
+            } else { self.read(Table::ByteAdd, vec![a, b, carry, sum, next]); }
             out.push(sum);
             carry = next;
         }
@@ -273,8 +290,9 @@ pub(crate) fn prepare(payload: &[u8]) -> Prepared {
     // RANGE16 on the six 128-bit value words; checked bytes also feed all hashes.
     for at in [64, 80, 200, 924, 1616, 1664] {
         for bytes in input[at..at + 16].chunks(2) {
-            let limb = c.pack(bytes);
-            c.read(Table::Range16, vec![limb]);
+            if crate::shielded_lookup::small_tables() {
+                for &byte in bytes { c.read(Table::Range16, vec![byte]); }
+            } else { let limb = c.pack(bytes); c.read(Table::Range16, vec![limb]); }
         }
     }
     let statement = c.hash(Some(8), &[&nfs[0], &nfs[1], &cms[0], &cms[1], &input[..136]]);
@@ -303,12 +321,12 @@ pub(crate) fn prepare(payload: &[u8]) -> Prepared {
     let arithmetic_rows = c.b.rows();
     let arithmetic_valid = c.b.satisfied();
     let mut query_columns: [Vec<Word>; 6] = std::array::from_fn(|_| Vec::new());
-    let mut multiplicities = vec![0u64; 1 << 18];
+    let mut multiplicities = vec![0u64; 1 << crate::shielded_lookup::table_log()];
     for read in &c.reads {
         let (tag, base) = match read.table {
             Table::Range16 => (0, 0),
-            Table::ByteLogic => (1, 1 << 16),
-            Table::ByteAdd => (2, 1 << 17),
+            Table::ByteLogic => (1, Table::Range16.rows()),
+            Table::ByteAdd => (2, Table::Range16.rows() + Table::ByteLogic.rows()),
         };
         let tag = c.b.constant(tag);
         query_columns[0].push(tag);

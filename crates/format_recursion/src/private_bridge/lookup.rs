@@ -35,7 +35,7 @@ impl LookupBridge {
         }
         let table_digest = primitives::hash::hash(&bytes);
         let shape = lookup_reduction::Shape {
-            table_log: 18,
+            table_log: shielded_lookup::table_log(),
             query_log: prepared.layout.log_queries,
             count_bits: 13,
         };
@@ -49,7 +49,8 @@ impl LookupBridge {
         })
     }
     fn layout(&self) -> (usize, usize, usize) {
-        let origin = 1usize << self.shape.leaf_log();
+        let alignment = (1usize << self.base.index.log_rows).max(1usize << (K_LOG - LOG_PACKING + self.base.block_log));
+        let origin = (1usize << self.shape.leaf_log()).div_ceil(alignment) * alignment;
         let end = origin + self.base.q_offset + (1usize << (K_LOG - LOG_PACKING + self.base.block_log));
         let log = end.next_power_of_two().trailing_zeros() as usize;
         let lane = 1usize << (log - INITIAL_FOLDING_FACTOR);
