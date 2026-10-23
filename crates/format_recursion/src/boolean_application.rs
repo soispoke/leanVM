@@ -129,3 +129,39 @@ pub fn lower_with_keccak(
     assert!(inputs.next().is_none());
     sources.iter().map(|&src| read(&outputs, src, 0, one)).collect()
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    #[test]
+    fn native_permutation_placeholders_are_bound_by_bridge() {
+        parallel::init();
+        let mut c = circuit_suite::Ckt::new();
+        c.enable_native_keccak();
+        let input = c.inputs(1600);
+        let output = circuit_suite::keccak::keccak_f(&mut c,&input);
+        let (circuit,sources,calls) = c.finish_native_keccak(&output[..512]);
+        let state: [u64;25] = std::array::from_fn(|i|i as u64*12345);
+        let mut b = Builder::default();
+        let inputs: Vec<_> = (0..1600).map(|i|b.input(state[i/64]>>(i%64)&1)).collect();
+        let bits = lower_with_keccak(&mut b,&circuit,&sources,&inputs,&calls);
+        let expected = flock::keccak::reduction::permute(&state);
+        for (i,chunk) in bits.chunks(64).enumerate() {
+            let word = b.pack(chunk);
+            assert_eq!(b.value(word).c0,expected[i]);
+            b.expose(word);
+        }
+        let public = b.public_values();
+        let bridge = b.setup_mixed().unwrap();
+        let proof = bridge.prove_mixed(&b.values,&b.permutations,&b.compressions,&[14;32]).unwrap();
+        assert!(bridge.verify(&public,&[14;32],&proof));
+    }
+    #[test]
+    #[should_panic(expected="native Keccak calls require")]
+    fn ordinary_boolean_finish_cannot_discard_native_checks() {
+        let mut c = circuit_suite::Ckt::new();
+        c.enable_native_keccak();
+        let output = c.keccak_permutation(&vec![circuit_suite::Wire::ZERO;1600]);
+        c.finish(&output[..512]);
+    }
+}

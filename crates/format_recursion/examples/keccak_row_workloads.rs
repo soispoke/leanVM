@@ -22,21 +22,21 @@ fn create<W: Workload>(
     }
     assert_eq!(statement, instance.statement, "independent application statement");
     let mut message: Vec<_> = identity
-        .chunks_exact(8)
-        .map(|word| b.constant(u64::from_le_bytes(word.try_into().unwrap())))
+        .as_chunks::<8>().0.iter()
+        .map(|word| b.constant(u64::from_le_bytes(*word)))
         .collect();
-    for chunk in bits.chunks_exact(128) {
+    for chunk in bits.as_chunks::<128>().0.iter() {
         let reversed: Vec<_> = (0..16)
             .rev()
             .flat_map(|byte| (0..8).map(move |bit| chunk[8 * byte + bit]))
             .collect();
-        for word in reversed.chunks_exact(64) {
+        for word in reversed.as_chunks::<64>().0.iter() {
             message.push(b.pack(word));
         }
     }
     let digest = b.hash_words(&message);
     let mut expected = identity.to_vec();
-    for chunk in statement.chunks_exact(16) {
+    for chunk in statement.as_chunks::<16>().0.iter() {
         expected.extend(chunk.iter().rev());
     }
     let expected = primitives::hash::hash(&expected);
