@@ -71,6 +71,14 @@ impl Wire {
         }
     }
 
+    pub fn native_source(self) -> (Src, usize, bool) {
+        match self.kind {
+            Kind::Const(v) => (if v { Src::One } else { Src::Zero }, 0, self.neg),
+            Kind::Sum(r) => (Src::Row(r), 0, self.neg),
+            Kind::Carry(r) => (Src::Row(r), 1, self.neg),
+        }
+    }
+
     /// Its value in an evaluation of the circuit (`Circuit::values`).
     pub fn value(self, values: &[u8]) -> bool {
         self.neg
@@ -99,8 +107,16 @@ pub fn read_u64(values: &[u8], bits: &[Wire]) -> u64 {
 }
 
 /// A circuit under construction.
+#[derive(Clone, Debug)]
+pub struct KeccakCall {
+    pub input: Vec<Wire>,
+    pub output_start: usize,
+}
+
 pub struct Ckt {
     b: Builder,
+    native_keccak: bool,
+    keccak_calls: Vec<KeccakCall>,
     /// A carry read as a bit: row `r`'s carry is the bit of row `to_sum[r]`.
     to_sum: HashMap<u32, u32>,
     /// A bit read as a carry: row `r`'s bit is the carry of row `to_carry[r]`, whose bit is its negation.
@@ -123,12 +139,37 @@ impl Ckt {
     pub fn new() -> Self {
         Self {
             b: Builder::new(),
+            native_keccak: false,
+            keccak_calls: Vec::new(),
             to_sum: HashMap::new(),
             to_carry: HashMap::new(),
             positive: HashMap::new(),
             input_rows: std::collections::HashSet::new(),
             conversions: [0; 3],
         }
+    }
+
+    /// Research compiler mode: a fixed permutation schedule replaces only
+    /// Keccak internals. These placeholder inputs require the native bridge;
+    /// they must never be treated as an ordinary Boolean application proof.
+    pub fn enable_native_keccak(&mut self) {
+        self.native_keccak = true;
+    }
+    pub fn native_keccak_enabled(&self) -> bool {
+        self.native_keccak
+    }
+    pub fn keccak_calls(&self) -> &[KeccakCall] {
+        &self.keccak_calls
+    }
+    pub fn keccak_permutation(&mut self, input: &[Wire]) -> Vec<Wire> {
+        assert!(self.native_keccak && input.len() == 1600);
+        let output_start = self.rows();
+        let output = self.inputs(1600);
+        self.keccak_calls.push(KeccakCall {
+            input: input.to_vec(),
+            output_start,
+        });
+        output
     }
 
     /// Rows so far, the 512 public rows included.
@@ -410,6 +451,14 @@ impl Ckt {
 
     /// Close the circuit: `public` are the statement's 512 bits, byte by byte, low bit first. The rows are the
     /// fewest power of two that holds them, at least `2^MIN_LOG_ROWS`.
+    pub fn finish_native_keccak(mut self, public: &[Wire]) -> (Circuit, Vec<Src>, Vec<KeccakCall>) {
+        assert!(self.native_keccak);
+        self.native_keccak = false;
+        let calls = std::mem::take(&mut self.keccak_calls);
+        let (circuit, sources) = self.finish(public);
+        (circuit, sources, calls)
+    }
+
     pub fn finish(self, public: &[Wire]) -> (Circuit, Vec<Src>) {
         let log = self.log_rows_for(public);
         self.finish_at(log, public)
@@ -425,6 +474,10 @@ impl Ckt {
     /// [`Ckt::finish`] on `2^log_rows` rows. Also returns the public bits' sources, rows whose bit is the public
     /// bit and whose carry is zero.
     pub fn finish_at(mut self, log_rows: usize, public: &[Wire]) -> (Circuit, Vec<Src>) {
+        assert!(
+            !self.native_keccak,
+            "native Keccak calls require finish_native_keccak and the native bridge"
+        );
         assert_eq!(public.len(), PUBLIC_BITS);
         let mut published = HashMap::new();
         let srcs: Vec<Src> = public

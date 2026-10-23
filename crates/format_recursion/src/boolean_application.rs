@@ -42,6 +42,22 @@ fn mul(b: &mut Builder, x: Word, y: Word) -> Word {
 /// Inputs must be the circuit's free bits in input-row order. They are checked
 /// Boolean here, including when callers provide existing native variables.
 pub fn lower(b: &mut Builder, circuit: &Circuit, sources: &[Src], inputs: &[Word]) -> Vec<Word> {
+    lower_with_keccak(b, circuit, sources, inputs, &[])
+}
+
+pub fn lower_with_keccak(
+    b: &mut Builder,
+    circuit: &Circuit,
+    sources: &[Src],
+    inputs: &[Word],
+    calls: &[circuit_suite::KeccakCall],
+) -> Vec<Word> {
+    let starts: std::collections::HashMap<_, _> = calls.iter().map(|call| (call.output_start, call)).collect();
+    let mut placeholders = vec![false; circuit.rows().len()];
+    for call in calls {
+        placeholders[call.output_start..call.output_start + 1600].fill(true);
+    }
+
     let one = b.one();
     let mut required = vec![[false; 2]; circuit.rows().len()];
     for &src in sources {
@@ -50,6 +66,14 @@ pub fn lower(b: &mut Builder, circuit: &Circuit, sources: &[Src], inputs: &[Word
         }
     }
     for (r, row) in circuit.rows().iter().enumerate().skip(PUBLIC_ROWS).rev() {
+        if let Some(call) = starts.get(&r) {
+            for wire in &call.input {
+                let (src, component, _) = wire.native_source();
+                if let Src::Row(from) = src {
+                    required[from as usize][component] = true;
+                }
+            }
+        }
         if required[r].iter().any(|&v| v) {
             for (src, component) in [(row.x, 0), (row.y, 0), (row.c, 1)] {
                 if let Src::Row(from) = src {
@@ -61,6 +85,27 @@ pub fn lower(b: &mut Builder, circuit: &Circuit, sources: &[Src], inputs: &[Word
     let mut outputs = vec![[Word::ZERO; 2]; circuit.rows().len()];
     let mut inputs = inputs.iter();
     for (r, row) in circuit.rows().iter().enumerate().skip(PUBLIC_ROWS) {
+        if let Some(call) = starts.get(&r) {
+            let bits: Vec<_> = call
+                .input
+                .iter()
+                .map(|&wire| {
+                    let (src, component, neg) = wire.native_source();
+                    let value = read(&outputs, src, component, one);
+                    if neg { xor(b, value, one) } else { value }
+                })
+                .collect();
+            let lanes: [Word; 25] = std::array::from_fn(|i| b.pack(&bits[64 * i..64 * (i + 1)]));
+            let result = b.keccak_f(lanes);
+            for (i, lane) in result.into_iter().enumerate() {
+                for (j, bit) in b.bits(lane, 64).into_iter().enumerate() {
+                    outputs[r + 64 * i + j] = [bit, Word::ZERO];
+                }
+            }
+        }
+        if placeholders[r] {
+            continue;
+        }
         if [row.x, row.y, row.c] == [Src::Row(r as u32), Src::Zero, Src::Zero] {
             let bit = *inputs.next().expect("Boolean input row");
             b.boolean(bit);
