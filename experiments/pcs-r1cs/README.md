@@ -1,5 +1,7 @@
 # leanPCS and structured leanR1CS
 
+The [matched common-key leanVM comparison](evidence/2026-10-23-common-key-vm-comparison/README.md) now reuses one key per backend across all measured levels. At eight chain16 leaves, native/VM all creation is 19.890/7.284 s and final merge is 1.266/0.860 s over three alternating pairs. Native has faster complete Rust root verification. Leaf creation starts from raw hash inputs and is not work a builder repeats when it receives existing client proofs; real application wrapping and dependency-list aggregation remain unmeasured.
+
 This research branch compares where an application's quotient PIOP is checked. **leanPCS** checks it in the EVM and aggregates its PCS openings. **leanR1CS** checks it inside the aggregate; the application contract emits a claim. Both use leanVM's recursive prover and WHIR opening verification.
 
 **Measured result:** with Keccak for PCS and native BLAKE2s for R1CS, aggregate proving cost is comparable on seven statements, batches of 1/2/4/8, and recursive trees. R1CS uses much less application-check execution gas. Compact generator descriptions cover all nine circuits in 0.9-16.1 kB per app. This does not establish a universal winner; the largest circuits still exceed this quotient prover's implementation limit.

@@ -44,6 +44,7 @@
 //! run, so there is no hand-mirrored copy of the protocol to drift.
 
 pub mod chain_tree;
+pub mod common_chain_tree;
 pub mod tree;
 
 use bincode::Options as _;

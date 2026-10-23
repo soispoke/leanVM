@@ -55,7 +55,7 @@ fn helpers() -> &'static str {
     include_str!("../../guests/chain_tree.py")
 }
 
-fn canonical_source(cell_counts: &[usize]) -> String {
+pub(super) fn canonical_source(cell_counts: &[usize]) -> String {
     let source = include_str!("../../guests/lean_ethereum.py");
     let first = "\ndef main():";
     let second = "\ndef aggregate_claims(";
@@ -80,7 +80,7 @@ fn canonical_source(cell_counts: &[usize]) -> String {
     text
 }
 
-fn compile_source(source: String, kbc: usize) -> Program {
+pub(super) fn compile_source(source: String, kbc: usize) -> Program {
     let mut p = compile(&parse_with_replacements(&source, &placeholder_map(kbc)).expect("tree guest parses"));
     p.min_log_committed = MU_MIN;
     p
