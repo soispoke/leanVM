@@ -116,3 +116,5 @@ Phase-1 frozen source `3bf7091f937e25d55f171c4bc86be5c3b5f634e9`, binary SHA256 
 ## Verdict
 
 Keccak as a native application hash makes Keccak-256 decisively faster, brings MPT near the historical leanVM reference, and halves Falcon's paired commitment and wallet time. The real encoded ML-DSA circuit is measured and matches L5, but remains much slower and larger than leanVM; the bit-level comparison is a census/projection fallback. Keccak's larger native relation costs more than BLAKE2s per call and per byte in this implementation. The protocol-hash feasibility screen does not support a viable under-one-second merge, so BLAKE2s stays the protocol hash. No security claim or full switched-protocol benchmark is made.
+
+Final source audit: release rebuild at `6cfbbee1` passes; the parameterized default circuit recount remains exactly 29,944,283 Boolean frontend rows and 99 native permutations (`P/artifacts/hometurf-L4k-final-default-census.log`). Latest mixed-bridge regressions pass both tests, including malformed-proof rejection without prover prechecks. No timed jobs remain running.
