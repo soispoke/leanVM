@@ -13,7 +13,7 @@ use fiat_shamir::{
     transcript::{Challenger, Proof, ProverState, Transmitter},
 };
 use primitives::{
-    field::F192,
+    field::{F192, mul4},
     multilinear::{eq_table, poly_eval},
 };
 
@@ -84,12 +84,21 @@ fn sumcheck(
                 [a[0] * b[0], F192::ZERO]
             } else {
                 parallel::map_reduce(
-                    a.len() / 2,
+                    (a.len() / 2).div_ceil(4),
                     || [F192::ZERO; 2],
-                    |i| {
+                    |block| {
+                        let at = |v: &[F192], lane: usize, high: bool| {
+                            v.get(8 * block + 2 * lane + usize::from(high))
+                                .copied()
+                                .unwrap_or(F192::ZERO)
+                        };
+                        let al: [F192; 4] = std::array::from_fn(|k| at(a, k, false));
+                        let bl: [F192; 4] = std::array::from_fn(|k| at(b, k, false));
+                        let ad: [F192; 4] = std::array::from_fn(|k| al[k] + at(a, k, true));
+                        let bd: [F192; 4] = std::array::from_fn(|k| bl[k] + at(b, k, true));
                         [
-                            a[2 * i] * b[2 * i],
-                            (a[2 * i] + a[2 * i + 1]) * (b[2 * i] + b[2 * i + 1]),
+                            mul4(al, bl).into_iter().fold(F192::ZERO, |x, y| x + y),
+                            mul4(ad, bd).into_iter().fold(F192::ZERO, |x, y| x + y),
                         ]
                     },
                     |x, y| [x[0] + y[0], x[1] + y[1]],
@@ -113,8 +122,29 @@ fn sumcheck(
                 }
             } else {
                 let half = a.len() / 2;
-                *a = parallel::map_collect(half, |i| a[2 * i] + r * (a[2 * i] + a[2 * i + 1]));
-                *b = parallel::map_collect(half, |i| b[2 * i] + r * (b[2 * i] + b[2 * i + 1]));
+                let mut na = vec![F192::ZERO; half];
+                let mut nb = vec![F192::ZERO; half];
+                parallel::chunks_mut2(&mut na, &mut nb, 4096, |chunk, oa, ob| {
+                    for (block, (aa, bb)) in oa.chunks_mut(4).zip(ob.chunks_mut(4)).enumerate() {
+                        let start = chunk * 4096 + block * 4;
+                        let al: [F192; 4] =
+                            std::array::from_fn(|k| a.get(2 * (start + k)).copied().unwrap_or(F192::ZERO));
+                        let bl: [F192; 4] =
+                            std::array::from_fn(|k| b.get(2 * (start + k)).copied().unwrap_or(F192::ZERO));
+                        let ad =
+                            std::array::from_fn(|k| al[k] + a.get(2 * (start + k) + 1).copied().unwrap_or(F192::ZERO));
+                        let bd =
+                            std::array::from_fn(|k| bl[k] + b.get(2 * (start + k) + 1).copied().unwrap_or(F192::ZERO));
+                        let ap = mul4([r; 4], ad);
+                        let bp = mul4([r; 4], bd);
+                        for k in 0..aa.len() {
+                            aa[k] = al[k] + ap[k];
+                            bb[k] = bl[k] + bp[k];
+                        }
+                    }
+                });
+                *a = na;
+                *b = nb;
             }
         }
     }

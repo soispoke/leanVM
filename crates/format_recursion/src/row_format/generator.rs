@@ -1,7 +1,10 @@
 //! A fixed source-program walk for matrix evaluations, without CSR matrices.
 use super::{Form, Origin, Source, remap, sum};
 use fiat_shamir::merkle::Hash;
-use primitives::{field::F192, multilinear::eq_table};
+use primitives::{
+    field::{F192, mul4},
+    multilinear::eq_table,
+};
 use std::{
     collections::{BTreeMap, HashMap},
     sync::Arc,
@@ -304,9 +307,24 @@ impl Generator {
         let cw = eq_table(col_point);
         let at = self.source_values(&cw);
         parallel::map_reduce(
-            self.rows.len(),
+            self.rows.len().div_ceil(4),
             || [F192::ZERO; 3],
-            |r| self.row_values(r, &at, &cw).map(|v| rw[r] * v),
+            |block| {
+                let values: [[F192; 3]; 4] = std::array::from_fn(|k| {
+                    let r = 4 * block + k;
+                    if r < self.rows.len() {
+                        self.row_values(r, &at, &cw)
+                    } else {
+                        [F192::ZERO; 3]
+                    }
+                });
+                let weights = std::array::from_fn(|k| rw.get(4 * block + k).copied().unwrap_or(F192::ZERO));
+                std::array::from_fn(|j| {
+                    mul4(weights, std::array::from_fn(|k| values[k][j]))
+                        .into_iter()
+                        .fold(F192::ZERO, |x, y| x + y)
+                })
+            },
             |a, b| std::array::from_fn(|i| a[i] + b[i]),
         )
     }
