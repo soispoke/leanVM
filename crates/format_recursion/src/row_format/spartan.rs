@@ -359,16 +359,9 @@ impl Setup {
         ps.add_scalars(&[av, bv, cv]);
         let alpha = ps.sample();
         let alpha2 = alpha * alpha;
-        let mut g = vec![F192::ZERO; n];
-        tracing::info_span!("Sparse matrix row folding").in_scope(|| {
-            for (m, weight) in self.r1cs.matrices.iter().zip([F192::ONE, alpha, alpha2]) {
-                let fold = m.fold_rows(&row_weights, n);
-                parallel::chunks_mut(&mut g, 4096, |c, out| {
-                    for (j, v) in out.iter_mut().enumerate() {
-                        *v += scaled(weight, fold[c * 4096 + j]);
-                    }
-                });
-            }
+        let g = tracing::info_span!("Sparse matrix row folding").in_scope(|| {
+            let folds = parallel::map_collect(3, |i| self.r1cs.matrices[i].fold_rows(&row_weights, n));
+            parallel::map_collect(n, |i| folds[0][i] + alpha * folds[1][i] + alpha2 * folds[2][i])
         });
         drop(row_weights);
         let claim = av + alpha * bv + alpha2 * cv;
