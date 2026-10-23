@@ -11,6 +11,58 @@ use std::{
 
 pub mod spartan;
 
+/// Record one synthetic sparse-index PCS component, excluding memory checks.
+pub fn record_sparse_pcs_component(
+    proof: &fiat_shamir::transcript::Proof,
+    columns: &[usize],
+    nlog: usize,
+    words: usize,
+) -> serde_json::Value {
+    use crate::{
+        trace::{self, S},
+        verifier::{Transcript, eq, verify_basis_opening_lanes_rate},
+    };
+    trace::start();
+    let label = b"conditional-sparse-pcs-components-v1";
+    let parts: Vec<_> = label
+        .chunks(24)
+        .map(|chunk| {
+            let mut bytes = [0; 24];
+            bytes[..chunk.len()].copy_from_slice(chunk);
+            let limb = |i| u64::from_le_bytes(bytes[i..i + 8].try_into().unwrap());
+            (S::c(F192::new(limb(0), limb(8), limb(16))), chunk.len())
+        })
+        .collect();
+    let seed = trace::hash(&parts);
+    let mut t = Transcript::from_state(proof, seed);
+    let root = t.root();
+    let point: Vec<_> = (0..nlog).map(|_| t.sample()).collect();
+    let beta = t.sample();
+    let target = t.next();
+    let log_n = words.next_power_of_two().trailing_zeros() as usize;
+    let lanes = words >> (log_n - pcs::whir::INITIAL_FOLDING_FACTOR);
+    verify_basis_opening_lanes_rate(&mut t, log_n, 2, lanes, root, target, |x| {
+        let mut result = S::u(0);
+        let mut at = 0;
+        let mut power = S::u(1);
+        for &l in columns {
+            let selector = x[l..].iter().enumerate().fold(S::u(1), |s, (j, &v)| {
+                s * if (at >> (j + l)) & 1 == 1 { v } else { S::u(1) + v }
+            });
+            result = result + power * selector * eq(&point[..l], &x[..l]);
+            at += 1usize << l;
+            power = power * beta;
+        }
+        result
+    });
+    t.finish();
+    let mut program = trace::take();
+    program.public = seed.to_vec();
+    assert!(program.satisfied());
+    let lower = crate::private_trace::lower(&program, &program).unwrap();
+    serde_json::json!({"native_rows":lower.circuit.rows.len(),"compressions":lower.compressions.len(),"kind":"synthetic PCS verifier component; excludes SPARK memory/product checks"})
+}
+
 pub type Form = Vec<(usize, F192)>;
 
 #[derive(Clone, Default)]
