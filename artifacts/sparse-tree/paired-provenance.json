@@ -1,0 +1,14 @@
+{
+  "order": [
+    "paired-baseline-1",
+    "paired-generator-1",
+    "paired-baseline-2",
+    "paired-generator-2",
+    "paired-baseline-3",
+    "paired-generator-3"
+  ],
+  "binaries": {
+    "/tmp/L2r-bc1f691a-merge": "b7d2a81243591e8ee482f268066e17828298a6362f09ecd2905496f3a0853313",
+    "/tmp/L2r-generator-merge": "72db824e6c3081ae3a09fd2ab059ca1dd53e29cb7c396e4b6a29442559740775"
+  }
+}

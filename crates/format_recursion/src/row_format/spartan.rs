@@ -35,22 +35,13 @@ fn dot(a: &[F192], b: &[F192]) -> F192 {
 
 impl Matrix {
     pub(crate) fn fold_rows(&self, weights: &[F192], n: usize) -> Vec<F192> {
-        // Sparse rows are independent.  Accumulate per worker, then reduce the
-        // dense column vectors once; this removes the serial CSR traversal from
-        // the mixed prover while preserving deterministic field arithmetic.
-        let chunk = self.rows().div_ceil(12).max(1);
-        let partials = parallel::map_collect(self.rows().div_ceil(chunk), |part| {
-            let start = part * chunk;
-            let end = (start + chunk).min(self.rows());
-            let mut local = vec![F192::ZERO; n];
-            for (r, &w) in weights.iter().enumerate().take(end).skip(start) {
-                for &(col, c) in self.row(r) {
-                    local[col] += scaled(c, w);
-                }
+        let mut out = vec![F192::ZERO; n];
+        for (r, &w) in weights.iter().enumerate().take(self.rows()) {
+            for &(col, c) in self.row(r) {
+                out[col] += scaled(c, w);
             }
-            local
-        });
-        parallel::map_collect(n, |col| partials.iter().fold(F192::ZERO, |sum, local| sum + local[col]))
+        }
+        out
     }
 }
 

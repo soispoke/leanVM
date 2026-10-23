@@ -221,6 +221,24 @@ mod tests {
             let r: Vec<_> = (0..setup.row_log).map(|i| F192::new((i + 3) as u64, 19, 31)).collect();
             let c: Vec<_> = (0..setup.z_log).map(|i| F192::new((i + 7) as u64, 29, 41)).collect();
             assert_eq!(generator.evaluate(&r, &c), setup.matrix_evals(&r, &c), "{case}");
+            let cw = primitives::multilinear::eq_table(&c);
+            let rw = primitives::multilinear::eq_table(&r);
+            let theta = F192::new(11, 17, 23);
+            let products = setup
+                .r1cs
+                .matrices
+                .each_ref()
+                .map(|m| m.product(&cw, 1 << setup.row_log));
+            let expected: Vec<_> = (0..1 << setup.row_log)
+                .map(|i| products[0][i] + theta * products[1][i] + theta * theta * products[2][i])
+                .collect();
+            assert_eq!(generator.row_product(&cw, theta), expected, "{case} forward");
+            let expected = setup
+                .r1cs
+                .matrices
+                .each_ref()
+                .map(|m| m.fold_rows(&rw, 1 << setup.z_log));
+            assert_eq!(generator.column_products(&rw), expected, "{case} transpose");
         }
     }
     #[test]

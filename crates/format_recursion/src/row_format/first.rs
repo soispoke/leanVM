@@ -146,6 +146,14 @@ mod tests {
             ];
             let digest = statement_digest(children, [&public, &public]);
             let reduction = fold::prove(&apps, &fresh, &digest);
+            let generated: Vec<_> = apps.iter().map(|s| Generator::new(&src, 8, s.key)).collect();
+            let gs: Vec<_> = generated.iter().collect();
+            let alternate = fold::prove_generated(&apps, &gs, &fresh, &digest);
+            assert_eq!(
+                bincode::serialize(&reduction).unwrap(),
+                bincode::serialize(&alternate).unwrap()
+            );
+
             assert!(fold::record(&apps, &fresh, &digest, &reduction).satisfied());
             let trace = record(
                 &apps,

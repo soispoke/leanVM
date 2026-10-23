@@ -29,9 +29,19 @@ pub struct Generator {
     pub row_log: usize,
     pub col_log: usize,
     defs: Vec<Option<Form>>,
-    fixed: HashMap<usize, F192>,
+    fixed: Vec<Option<F192>>,
     map: Vec<usize>,
     rows: Vec<Row>,
+}
+
+fn mul(k: F192, v: F192) -> F192 {
+    if k == F192::ZERO {
+        F192::ZERO
+    } else if k == F192::ONE {
+        v
+    } else {
+        k * v
+    }
 }
 
 fn form(id: usize, defs: &[Option<Form>], fixed: &HashMap<usize, F192>) -> Arc<Form> {
@@ -179,7 +189,7 @@ impl Generator {
             row_log: rows.len().next_power_of_two().trailing_zeros() as usize,
             col_log: origins.len().next_power_of_two().trailing_zeros() as usize,
             defs,
-            fixed,
+            fixed: (0..c.variables).map(|i| fixed.get(&i).copied()).collect(),
             map,
             rows,
         }
@@ -187,22 +197,17 @@ impl Generator {
     pub fn rows(&self) -> usize {
         self.rows.len()
     }
-    #[tracing::instrument(skip_all, name = "Generator matrix settlement")]
-    pub fn evaluate(&self, row_point: &[F192], col_point: &[F192]) -> [F192; 3] {
-        assert_eq!(row_point.len(), self.row_log);
-        assert_eq!(col_point.len(), self.col_log);
-        let rw = eq_table(row_point);
-        let cw = eq_table(col_point);
-        let at = parallel::map_collect(self.map.len(), |i| {
-            if let Some(&v) = self.fixed.get(&i) {
-                return v * cw[0];
+    fn source_values(&self, cw: &[F192]) -> Vec<F192> {
+        parallel::map_collect(self.map.len(), |i| {
+            if let Some(v) = self.fixed[i] {
+                return mul(v, cw[0]);
             }
             if let Some(f) = &self.defs[i] {
                 return f.iter().fold(F192::ZERO, |s, &(j, k)| {
                     if self.map[j] == usize::MAX {
                         s
                     } else {
-                        s + k * cw[self.map[j]]
+                        s + mul(k, cw[self.map[j]])
                     }
                 });
             }
@@ -211,24 +216,97 @@ impl Generator {
             } else {
                 cw[self.map[i]]
             }
+        })
+    }
+    fn row_values(&self, r: usize, at: &[F192], cw: &[F192]) -> [F192; 3] {
+        match &self.rows[r] {
+            Row::Product([a, b, u, d]) => [at[*a], at[*b], at[*u] + at[*d]],
+            Row::Linear { other, scale, u, d } => [mul(*scale, at[*other]) + at[*u] + at[*d], cw[0], F192::ZERO],
+            Row::Port { dest, source } => {
+                let v = match *source {
+                    Origin::Variable(i) => at[i],
+                    Origin::Constant(v) => mul(v, cw[0]),
+                };
+                [cw[*dest] + v, cw[0], F192::ZERO]
+            }
+        }
+    }
+    /// Forward source walk: the batched A/B/C product at every native row.
+    pub fn row_product(&self, cw: &[F192], theta: F192) -> Vec<F192> {
+        assert_eq!(cw.len(), 1 << self.col_log);
+        let at = self.source_values(cw);
+        let theta2 = theta * theta;
+        parallel::map_collect(1 << self.row_log, |r| {
+            if r >= self.rows.len() {
+                return F192::ZERO;
+            }
+            let [a, b, c] = self.row_values(r, &at, cw);
+            a + theta * b + theta2 * c
+        })
+    }
+    /// Transpose source walk. Accumulate adjoints on source wires, then
+    /// distribute bounded affine definitions to native witness columns.
+    pub fn column_products(&self, rw: &[F192]) -> [Vec<F192>; 3] {
+        assert_eq!(rw.len(), 1 << self.row_log);
+        let products = parallel::map_collect(3, |matrix| {
+            let mut adj = vec![F192::ZERO; self.map.len()];
+            let mut out = vec![F192::ZERO; 1 << self.col_log];
+            for (r, row) in self.rows.iter().enumerate() {
+                let w = rw[r];
+                match (matrix, row) {
+                    (0, Row::Product([a, _, _, _])) => adj[*a] += w,
+                    (1, Row::Product([_, b, _, _])) => adj[*b] += w,
+                    (2, Row::Product([_, _, u, d])) => {
+                        adj[*u] += w;
+                        adj[*d] += w;
+                    }
+                    (0, Row::Linear { other, scale, u, d }) => {
+                        adj[*other] += mul(*scale, w);
+                        adj[*u] += w;
+                        adj[*d] += w;
+                    }
+                    (0, Row::Port { dest, source }) => {
+                        out[*dest] += w;
+                        match *source {
+                            Origin::Variable(i) => adj[i] += w,
+                            Origin::Constant(v) => out[0] += mul(v, w),
+                        }
+                    }
+                    (1, Row::Linear { .. } | Row::Port { .. }) => out[0] += w,
+                    _ => {}
+                }
+            }
+            for (i, w) in adj.into_iter().enumerate() {
+                if w == F192::ZERO {
+                    continue;
+                }
+                if let Some(v) = self.fixed[i] {
+                    out[0] += mul(v, w);
+                } else if let Some(f) = &self.defs[i] {
+                    for &(j, k) in f {
+                        if self.map[j] != usize::MAX {
+                            out[self.map[j]] += mul(k, w);
+                        }
+                    }
+                } else if self.map[i] != usize::MAX {
+                    out[self.map[i]] += w;
+                }
+            }
+            out
         });
+        products.try_into().unwrap()
+    }
+    #[tracing::instrument(skip_all, name = "Generator matrix settlement")]
+    pub fn evaluate(&self, row_point: &[F192], col_point: &[F192]) -> [F192; 3] {
+        assert_eq!(row_point.len(), self.row_log);
+        assert_eq!(col_point.len(), self.col_log);
+        let rw = eq_table(row_point);
+        let cw = eq_table(col_point);
+        let at = self.source_values(&cw);
         parallel::map_reduce(
             self.rows.len(),
             || [F192::ZERO; 3],
-            |r| {
-                let values = match &self.rows[r] {
-                    Row::Product([a, b, u, d]) => [at[*a], at[*b], at[*u] + at[*d]],
-                    Row::Linear { other, scale, u, d } => [*scale * at[*other] + at[*u] + at[*d], cw[0], F192::ZERO],
-                    Row::Port { dest, source } => {
-                        let v = match *source {
-                            Origin::Variable(i) => at[i],
-                            Origin::Constant(v) => v * cw[0],
-                        };
-                        [cw[*dest] + v, cw[0], F192::ZERO]
-                    }
-                };
-                values.map(|v| rw[r] * v)
-            },
+            |r| self.row_values(r, &at, &cw).map(|v| rw[r] * v),
             |a, b| std::array::from_fn(|i| a[i] + b[i]),
         )
     }
