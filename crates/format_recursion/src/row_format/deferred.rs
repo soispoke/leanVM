@@ -242,6 +242,48 @@ mod tests {
         }
     }
     #[test]
+    fn merkle_application_matches_blake2s_and_rejects_wrong_statement_and_proof() {
+        parallel::init();
+        let seed = 1usize;
+        let source = row_format::merkle_source(seed);
+        let fresh = row_format::merkle_source(seed + 1);
+        assert_eq!(source.program_digest(), fresh.program_digest());
+        let leaf: Vec<_> = (0..4)
+            .flat_map(|i| ((seed as u64) * 0x10001 + i + 17).to_le_bytes())
+            .collect();
+        let mut node = primitives::hash::hash(&leaf);
+        for level in 0..16 {
+            let sibling: Vec<_> = (0..4)
+                .flat_map(|i| ((seed as u64 + 3) * 0x1000001 + (level * 4 + i) as u64).to_le_bytes())
+                .collect();
+            let mut input = Vec::new();
+            if (seed + level) & 1 == 1 {
+                input.extend(node);
+                input.extend(&sibling);
+            } else {
+                input.extend(&sibling);
+                input.extend(node);
+            }
+            node = primitives::hash::hash(&input);
+        }
+        let setup = Setup::new(
+            R1cs::lower_bounded(&source.circuit, &source.connectors, &source.values, source.fixed_len, 8),
+            false,
+        );
+        let public = setup.public(&source.values);
+        let digest: Vec<_> = public[1..].iter().flat_map(|w| w.c0.to_le_bytes()).collect();
+        assert_eq!(digest, node);
+        let ctx = [91; 32];
+        let proof = setup.prove(&source.values, &source.compressions, &ctx);
+        assert!(setup.verify_deferred(&public, &ctx, &proof, true).is_some());
+        let mut wrong = public.clone();
+        wrong[1] += F192::ONE;
+        assert!(setup.verify_deferred(&wrong, &ctx, &proof, true).is_none());
+        let mut wrong = proof.clone();
+        *wrong.stream.last_mut().unwrap() += F192::ONE;
+        assert!(setup.verify_deferred(&public, &ctx, &wrong, true).is_none());
+    }
+    #[test]
     fn deferred_child_replay_agrees_and_binds_identity_and_values() {
         parallel::init();
         let source = row_format::source("shielded");

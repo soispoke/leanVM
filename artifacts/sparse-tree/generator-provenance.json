@@ -1,0 +1,15 @@
+{
+  "evidence_commit": "4091a3b88a78e798e19b4d005ff43b398a374fa1",
+  "binaries": {
+    "bc1f691a": "b7d2a81243591e8ee482f268066e17828298a6362f09ecd2905496f3a0853313",
+    "generator": "72db824e6c3081ae3a09fd2ab059ca1dd53e29cb7c396e4b6a29442559740775",
+    "generator-fixed": "db87a3c59e562fe1d96eb5cec75897908cf8c7c5f1eec0f995b75f64888c1298",
+    "generator-combined": "94b81695394d0f82bebbcf20d1b827aa13113fd21345045087e37dff7c29b51f",
+    "generator-simd": "113d899c58206cf7e6810f91703098a303fae20b8a41a8a7439c173267425f64"
+  },
+  "cores": "12-23",
+  "threads": 12,
+  "order": "For each group: same/mixed, mixed/same, same/mixed. merkle-control substitutes merkle for mixed. paired-fixed alternates baseline/candidate within each case.",
+  "build": "Rust 1.99.1 release; cores 48-63; CARGO_BUILD_JOBS=4",
+  "note": "All timings include fresh wallet proofs in each process; setup excluded from merge. Native matrix fold uses source walks; wallet and outer Spartan retain CSR."
+}
