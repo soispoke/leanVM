@@ -20,7 +20,7 @@ def run(command, output, error, repo):
     if status:
         raise RuntimeError(f"{command} exited {status}: {error.read_text()}")
     rows = [json.loads(line) for line in output.read_text().splitlines() if line.startswith("{")]
-    row = next(row for row in rows if "wallet_prove_s" in row or "verify_ms" in row)
+    row = next(row for row in rows if "wallet_prove_s" in row or "verify_ms" in row or "mempool_verify_ms" in row)
     row["process_peak_rss_kib"] = usage.ru_maxrss
     return row
 

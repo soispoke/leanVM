@@ -3,6 +3,25 @@ use format_recursion::trace::{self, S, Trace, hash};
 use primitives::field::F192;
 use std::{marker::PhantomData, time::Instant};
 
+/// Relation-specific defaults approved for native output trimming. Unknown
+/// relations retain every output until their policy is explicitly reviewed.
+pub const DEFAULT_OUTPUT_TRIMMING: &[(&str, bool)] = &[
+    ("blake2s-64b", false),
+    ("blake2s-1kib", false),
+    ("sha256-1kib", true),
+    ("keccak256-1KiB", true),
+    ("mpt-storage-proof", true),
+    ("shielded-transfer", false),
+    ("falcon512", false),
+];
+
+fn default_output_trimming(relation: &str) -> bool {
+    DEFAULT_OUTPUT_TRIMMING
+        .iter()
+        .find(|(name, _)| *name == relation)
+        .is_some_and(|(_, enabled)| *enabled)
+}
+
 /// Compile the workload itself, not a verifier for another application proof.
 pub struct Application<W> {
     circuit: Circuit,
@@ -62,6 +81,9 @@ mod tests {
             let proof = setup.prove(&trimmed.trace, &words).unwrap();
             assert!(setup.verify(&words, &proof));
             assert!(!control_setup.verify(&words, &proof));
+            let complete_proof = control_setup.prove(&complete.trace, &words).unwrap();
+            assert!(control_setup.verify(&words, &complete_proof));
+            assert!(!setup.verify(&words, &complete_proof));
             assert!(setup.prove(&complete.trace, &words).is_none());
             let mut wrong = words;
             wrong[0] += F192::ONE;
@@ -98,9 +120,7 @@ impl<W: Workload> Application<W> {
         for s in &circuit.sigma {
             identity.extend(s.to_le_bytes());
         }
-        // Large Boolean applications otherwise exceed the native row cap.
-        // Specialize from the fixed circuit, never from private witness values.
-        let trim_outputs = circuit.log_rows >= 23;
+        let trim_outputs = default_output_trimming(W::NAME);
         Self {
             circuit,
             sources,
@@ -111,7 +131,7 @@ impl<W: Workload> Application<W> {
         .with_trimming(trim_outputs)
     }
 
-    /// Research-only explicit policy override; production defaults remain unchanged.
+    /// Research-only override of the relation default; changes the pinned circuit key.
     pub fn with_trimming(mut self, enabled: bool) -> Self {
         self.trim_outputs = enabled;
         self
