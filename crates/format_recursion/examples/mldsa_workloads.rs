@@ -20,6 +20,7 @@ fn create<W: Workload>(
     for (i, bit) in bits.iter().enumerate() {
         statement[i / 8] |= (b.value(*bit).c0 as u8) << (i % 8);
     }
+    eprintln!("mldsa evaluated statement {statement:02x?}");
     assert_eq!(statement, instance.statement, "independent application statement");
     for word in bits.as_chunks::<64>().0.iter().take(4) {
         let packed = b.pack(word);
@@ -56,6 +57,19 @@ fn run<W: Workload>(args: &[String]) {
     let identity = [0; 32];
     let canonical = create::<W>(&circuit, &sources, &calls, seed, identity);
     let public = canonical.public_values();
+    if args[3] == "evaluate" {
+        let shape = format_recursion::keccak_bridge::KeccakShape::plan(
+            canonical.rows(),
+            public.len(),
+            canonical.permutations.len(),
+        )
+        .unwrap();
+        println!(
+            "{}",
+            serde_json::json!({"kind":"evaluated-census","core_rows":core_rows,"arithmetic_rows":canonical.rows(),"permutations":calls.len(),"padded_arithmetic_rows":1usize<<shape.index.log_rows,"committed_words":shape.committed_lanes()*(1usize<<(shape.stack_log-pcs::whir::INITIAL_FOLDING_FACTOR))})
+        );
+        return;
+    }
     let start = Instant::now();
     let setup = canonical.setup_mixed().unwrap();
     let shape = setup.verifier_shape();
