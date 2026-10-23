@@ -76,7 +76,9 @@ impl C {
         let z = self.b.zero();
         if crate::shielded_lookup::small_tables() {
             self.read(Table::Range16, vec![w]);
-        } else { self.read(Table::ByteLogic, vec![w, z, w, z]); }
+        } else {
+            self.read(Table::ByteLogic, vec![w, z, w, z]);
+        }
         w
     }
     fn pack(&mut self, bytes: &[Word]) -> Word {
@@ -146,7 +148,9 @@ impl C {
                 let mid = self.b.input((self.v(al) + self.v(bl) + self.v(carry)) >> 4);
                 self.read(Table::ByteAdd, vec![al, bl, carry, sl, mid]);
                 self.read(Table::ByteAdd, vec![ah, bh, mid, sh, next]);
-            } else { self.read(Table::ByteAdd, vec![a, b, carry, sum, next]); }
+            } else {
+                self.read(Table::ByteAdd, vec![a, b, carry, sum, next]);
+            }
             out.push(sum);
             carry = next;
         }
@@ -291,8 +295,13 @@ pub(crate) fn prepare(payload: &[u8]) -> Prepared {
     for at in [64, 80, 200, 924, 1616, 1664] {
         for bytes in input[at..at + 16].chunks(2) {
             if crate::shielded_lookup::small_tables() {
-                for &byte in bytes { c.read(Table::Range16, vec![byte]); }
-            } else { let limb = c.pack(bytes); c.read(Table::Range16, vec![limb]); }
+                for &byte in bytes {
+                    c.read(Table::Range16, vec![byte]);
+                }
+            } else {
+                let limb = c.pack(bytes);
+                c.read(Table::Range16, vec![limb]);
+            }
         }
     }
     let statement = c.hash(Some(8), &[&nfs[0], &nfs[1], &cms[0], &cms[1], &input[..136]]);

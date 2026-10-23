@@ -122,7 +122,7 @@ The old universal split node remains measured at 3.48 s, 67,108,864 joint words 
 
 L3 measured 1.631 s for the first merge of two distinct native shielded spends. LeanVM same-program first/tree merges remain about 0.33-0.40 s in L2 receipts, with different application fixtures clearly named there. This evidence does not establish R1CS aggregation parity or end-to-end mixed merges below one second. The shared-top Merkle screen was rejected: no padding threshold was crossed and timings were mixed; its verifier patch must not be presented as an accepted optimization.
 
-Lookup tables/census are experimental analysis only. The imported shielded lookup prototype does not prove lookup membership and deliberately exposes no setup/proving API. The wallet table uses the complete Boolean nonhash shielded rules and native compression bindings, not the lookup prototype. See `hometurf-L4.md` for measured and analytic recursion details, and `hometurf-statements.md` for exact fixtures.
+The experimental shared-root lookup bridge now proves a multiplicity-aware product bus over fixed tables. It commits Boolean integer-count bits before the bus challenges and opens both count evaluations and all six query coordinates against the joint arithmetic/hash root. This is a prototype, excluded from the benchmark table. The wallet table uses the complete Boolean nonhash shielded rules and native compression bindings, not the lookup prototype. See `hometurf-L4.md` for measured and analytic recursion details, and `hometurf-statements.md` for exact fixtures.
 
 **Soundness and release evidence**
 

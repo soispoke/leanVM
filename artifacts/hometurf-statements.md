@@ -35,7 +35,7 @@ The VM additionally hashes public committed values to a four-word output, binds 
 
 ## Shielded relation
 
-The complete BLAKE2s-edition spend is ported in `circuit_suite::shielded_blake2s`, with native compression calls in `shielded_application::application_vm`. Deterministic `leanvm_input(0)` matches the VM host's first spend byte for byte. The circuit retains all rule checks and Boolean input/range checks, hashes105 application compressions and one final public-output compression. Its public output words are [8148722794000879574,12273388761951158148,13463691297944637417,5783332347444188522]. The lookup prototype exposes census information only and supplies no proving/setup API; it is excluded from the wallet comparison.
+The complete BLAKE2s-edition spend is ported in `circuit_suite::shielded_blake2s`, with native compression calls in `shielded_application::application_vm`. Deterministic `leanvm_input(0)` matches the VM host's first spend byte for byte. The circuit retains all rule checks and Boolean input/range checks, hashes105 application compressions and one final public-output compression. Its public output words are [8148722794000879574,12273388761951158148,13463691297944637417,5783332347444188522]. The lookup census and the experimental shared-root LookupBridge are excluded from the wallet comparison. The latter supplies a separate proving API and binds query copies and Boolean multiplicity bits to the joint root.
 
 ## Measurement and artifacts
 
@@ -43,4 +43,4 @@ The complete BLAKE2s-edition spend is ported in `circuit_suite::shielded_blake2s
 
 ## Baseline push
 
-L1 native hash benchmark evidence and frozen release gates were archived and pushed fast-forward to `publish/research/r1cs-recursive-verifier` at commit `ed65df0f`. The newer L3 shared-root lookup prototype remains unintegrated pending independent build/tests and a complete binding review. Corrected L4 census commits are likewise retained as follow-up analysis; the rejected shared-parent patch is not enabled.
+L1 native hash benchmark evidence and frozen release gates were archived and pushed fast-forward to `publish/research/r1cs-recursive-verifier` at commit `ed65df0f`. The committed L3 shared-root lookup prototype and corrected L4 census/report commits were subsequently integrated and gated. The rejected shared-parent patch is archived only and is not enabled. Lane worktree edits were not imported.

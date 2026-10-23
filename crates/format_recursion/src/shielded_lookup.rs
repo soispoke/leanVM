@@ -3,8 +3,8 @@
 //! The production bus is `leanvm_core::leaf`: fixed table blocks push every
 //! table row, a committed multiplicity column expands reads, and one batched
 //! GKR grand product proves push/pull balance. This module fixes the exact
-//! table domains and counts the rows that the spend emits. It deliberately
-//! does not claim integration into `PrivateBridge` yet.
+//! table domains and counts the rows that the spend emits. The experimental
+//! `private_bridge::lookup` module binds this bus to the joint witness.
 
 /// Fixed lookup domains proposed for the shielded relation.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -21,12 +21,20 @@ pub fn small_tables() -> bool {
     static SMALL: std::sync::OnceLock<bool> = std::sync::OnceLock::new();
     *SMALL.get_or_init(|| std::env::var_os("LOOKUP_SMALL").is_some())
 }
-pub fn table_log() -> usize { if small_tables() { 10 } else { 18 } }
+pub fn table_log() -> usize {
+    if small_tables() { 10 } else { 18 }
+}
 
 impl Table {
     /// Number of fixed rows in the table side of the bus.
     pub fn rows(self) -> usize {
-        if small_tables() { return match self { Self::Range16 => 256, Self::ByteLogic => 256, Self::ByteAdd => 512 }; }
+        if small_tables() {
+            return match self {
+                Self::Range16 => 256,
+                Self::ByteLogic => 256,
+                Self::ByteAdd => 512,
+            };
+        }
         match self {
             Self::Range16 => 1 << 16,
             Self::ByteLogic => 1 << 16,
@@ -195,16 +203,18 @@ mod tests {
     use super::*;
     #[test]
     fn byte_tables_match_integer_semantics_and_reject_malformed_requests() {
-        for a in 0..256u64 {
-            for b in 0..256u64 {
+        let bits = if small_tables() { 4 } else { 8 };
+        let mask = (1u64 << bits) - 1;
+        for a in 0..=mask {
+            for b in 0..=mask {
                 let logic = [a, b, a ^ b, a & b];
                 assert!(Table::ByteLogic.index(&logic).is_some());
                 for carry in 0..2 {
                     let sum = a + b + carry;
-                    assert!(Table::ByteAdd.index(&[a, b, carry, sum & mask as u64, sum >> bits]).is_some());
+                    assert!(Table::ByteAdd.index(&[a, b, carry, sum & mask, sum >> bits]).is_some());
                     assert!(
                         Table::ByteAdd
-                            .index(&[a, b, carry, (sum + 1) & 255, sum >> 8])
+                            .index(&[a, b, carry, (sum + 1) & mask, sum >> bits])
                             .is_none()
                     );
                 }

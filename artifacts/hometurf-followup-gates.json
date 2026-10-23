@@ -1,0 +1,38 @@
+{
+  "toolchain": "1.99.1",
+  "cpus": "48-63",
+  "CARGO_BUILD_JOBS": 4,
+  "integrated_L3": [
+    "705a9671",
+    "b6d047ad",
+    "7450742d"
+  ],
+  "integrated_L4": [
+    "ae3d6726",
+    "420d63a5",
+    "74c73163",
+    "f80e0c09"
+  ],
+  "checks": {
+    "fmt": "passed",
+    "clippy_all_targets_D_warnings": "passed",
+    "format_recursion_release_lib": {
+      "passed": 90
+    },
+    "rec_aggregation_release_lib": {
+      "passed": 43,
+      "ignored": 5
+    }
+  },
+  "source_sha256": {
+    "crates/format_recursion/src/lookup_reduction.rs": "8292b13d1c4d4f27a68e08b9189f98e4011cb141549cf85cc7f693f67e047679",
+    "crates/format_recursion/src/private_bridge/lookup.rs": "a69617e475dde9c373e65d113eb118a6327f7b4d59b2d210bf1226957cc92b08",
+    "crates/format_recursion/src/shielded_lookup.rs": "62cdcaff0fdb7bd57e0391dd53589a93c7383db1900408454a8b219460dc27a5",
+    "crates/format_recursion/src/shielded_lookup_prototype.rs": "70772f324c5189719bafe80b1d7d9decd0f3343722324bee51d0356d8c9b8331",
+    "crates/format_recursion/src/closed_recursion.rs": "a269ab3c7721091b6ea1c9c675ab1c1d668690d150f100f265ef91003d6c61bb",
+    "crates/format_recursion/src/private_verifier.rs": "f9b9a14a36bd67c1d22b269fd62fead231e474c17029ab5cd32c90a46708c929",
+    "crates/rec_aggregation/examples/native_first_profile.rs": "ce8b46a0d7af34d9364f4d81fbb9727ffc75c904f50ab0c204d2dd2ff4de996e"
+  },
+  "binding_review": "Joint root precedes bus challenges. Six query coordinate evaluations and both multiplicity evaluations are opened. Fixed tables, shape and context bind the transcript. Index openings and transcript finish are checked. No formal soundness theorem is claimed.",
+  "rejections": "Full bridge test rejects changed digest, context, proof stream and malformed committed multiplicities; reduction test rejects out-of-table reads."
+}

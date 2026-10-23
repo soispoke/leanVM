@@ -50,7 +50,15 @@ fn main() {
     let compressions = lower.compressions.len();
     let mut kinds = std::collections::BTreeMap::<&str, usize>::new();
     for &[a, b, c, d] in &lower.circuit.rows {
-        let k = if a == b && c == 0 && d == a { "boolean" } else if b == 1 && c == 0 { "copy_or_equality" } else if b == 1 { "linear_add" } else { "multiply_add" };
+        let k = if a == b && c == 0 && d == a {
+            "boolean"
+        } else if b == 1 && c == 0 {
+            "copy_or_equality"
+        } else if b == 1 {
+            "linear_add"
+        } else {
+            "multiply_add"
+        };
         *kinds.entry(k).or_default() += 1;
     }
     println!("ROW_KINDS {}", serde_json::to_string(&kinds).unwrap());
