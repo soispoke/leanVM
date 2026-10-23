@@ -111,6 +111,69 @@ impl Lowering {
         let (_, carry) = self.add(value, &constant);
         self.b.assert_eq(carry, Word::ZERO);
     }
+    /// Modular addition of little-endian byte limbs.
+    pub fn add_mod(&mut self, a: &[Word], b: &[Word], modulus: u64) -> Vec<Word> {
+        let (mut sum, carry) = self.add(a, b);
+        sum.push(carry);
+        self.remainder(&sum, modulus)
+    }
+    /// Unsigned subtraction modulo the fixed limb width. Carry is one iff a >= b.
+    pub fn subtract(&mut self, a: &[Word], b: &[Word]) -> (Vec<Word>, Word) {
+        assert_eq!(a.len(), b.len());
+        let one = self.b.one();
+        let mask = self.b.constant(255);
+        let mut carry = one;
+        let mut out = Vec::with_capacity(a.len());
+        for (&a, &b) in a.iter().zip(b) {
+            let complement = self.b.gate(b, one, mask);
+            let (sum, next) = self.add8(a, complement, carry);
+            out.push(sum);
+            carry = next;
+        }
+        (out, carry)
+    }
+    pub fn sub_mod(&mut self, a: &[Word], b: &[Word], modulus: u64) -> Vec<Word> {
+        assert_eq!(a.len(), b.len());
+        let constant: Vec<_> = (0..a.len())
+            .map(|i| self.b.constant((modulus >> (8 * i)) & 255))
+            .collect();
+        let (mut sum, carry) = self.add(a, &constant);
+        sum.push(carry);
+        let mut right = b.to_vec();
+        right.push(Word::ZERO);
+        let (diff, no_borrow) = self.subtract(&sum, &right);
+        self.b.assert_eq(no_borrow, self.b.one());
+        self.remainder(&diff, modulus)
+    }
+    /// Modular multiplication of little-endian byte limbs.
+    pub fn mul_mod(&mut self, a: &[Word], b: &[Word], modulus: u64) -> Vec<Word> {
+        let product = self.mul(a, b);
+        self.remainder(&product, modulus)
+    }
+    /// A byte-table NTT butterfly network with ordinary constant roots.
+    pub fn ntt(&mut self, mut values: Vec<Vec<Word>>, roots: &[u64], modulus: u64) -> Vec<Vec<Word>> {
+        let n = values.len();
+        assert!(n.is_power_of_two() && roots.len() >= n);
+        let mut len = n / 2;
+        let mut k = 1;
+        while len > 0 {
+            for start in (0..n).step_by(2 * len) {
+                let constant = self.b.constant(roots[k]);
+                let twiddle = self.unpack(constant, 2);
+                for j in start..start + len {
+                    let product = self.mul_mod(&values[j + len], &twiddle, modulus);
+                    let sum = self.add_mod(&values[j], &product, modulus);
+                    let diff = self.sub_mod(&values[j], &product, modulus);
+                    values[j] = sum;
+                    values[j + len] = diff;
+                }
+                k += 1;
+            }
+            len /= 2;
+        }
+        values
+    }
+
     /// Euclidean remainder, checked with byte multiplication and addition.
     /// The modulus is a circuit constant, never a lookup-table parameter.
     pub fn remainder(&mut self, value: &[Word], modulus: u64) -> Vec<Word> {
@@ -168,6 +231,40 @@ impl Lowering {
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]
+    fn ntt_matches_direct_negacyclic_evaluations_and_opens() {
+        let modulus = 12289;
+        let n = 8usize;
+        let roots = circuit_suite::falcon::zetas(modulus, 3);
+        let input: Vec<_> = (0..n).map(|i| (i as u64 * 6151 + 12288) % modulus).collect();
+        let mut c = Lowering::default();
+        let words: Vec<_> = input
+            .iter()
+            .map(|&v| {
+                let w = c.b.input(v);
+                c.unpack(w, 2)
+            })
+            .collect();
+        let output = c.ntt(words, &roots, modulus);
+        let psi = roots[n / 2];
+        for (i, bytes) in output.iter().enumerate() {
+            let br = i.reverse_bits() >> (usize::BITS - 3);
+            let point = circuit_suite::falcon::powmod(psi, (2 * br + 1) as u64, modulus);
+            let expected = input.iter().rev().fold(0, |acc, &v| (acc * point + v) % modulus);
+            let packed = c.pack(bytes);
+            assert_eq!(c.value(packed), expected, "output {i}");
+            c.b.expose(packed);
+        }
+        assert!(c.b.satisfied());
+        c.b.keccak_f([Word::ZERO; 25]);
+        let setup = c.setup().expect("NTT queries all have committed witness cells");
+        let context = primitives::hash::hash(b"word-ntt");
+        let proof = setup
+            .prove_mixed(&c.b.values, &c.b.permutations, &[], &context)
+            .unwrap();
+        assert!(setup.verify(&c.b.public_values(), &context, &proof));
+    }
+
     #[test]
     fn byte_arithmetic_uses_same_tables_and_joint_opening() {
         let mut c = Lowering::default();

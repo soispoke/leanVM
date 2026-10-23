@@ -1,0 +1,8 @@
+{"part":"bounds","queries":3072,"rows":7680}
+{"part":"modular conversion","queries":96768,"rows":233984}
+{"part":"NTT(s2)","queries":445694,"rows":1012989}
+{"part":"NTT(h)","queries":445694,"rows":1012989}
+{"part":"NTT(c-s1)","queries":445694,"rows":1012989}
+{"part":"pointwise products","queries":46080,"rows":105472}
+{"part":"norm","queries":25605,"rows":56331}
+{"arithmetic_witness_satisfied":true,"full_application":false,"total_integer_rows":3448578,"total_queries":1512703}

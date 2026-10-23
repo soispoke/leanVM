@@ -1,0 +1,1 @@
+{"all_512_outputs_match_direct_evaluation":true,"component":"NTT(h)","full_application":false,"n":512,"native_rows":1012989,"queries":445694,"total_rows_with_inputs_and_output_packing":1015549,"witness_values":1791749}

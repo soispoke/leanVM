@@ -40,3 +40,5 @@ pub mod word_tables;
 pub mod word_lookup_reduction;
 pub mod word_query_binding;
 pub mod word_lowering;
+
+pub mod falcon_word;
