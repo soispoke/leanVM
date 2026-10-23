@@ -742,6 +742,39 @@ pub fn tree_only_census() -> Option<(PrivateShape, usize, usize, usize)> {
     None
 }
 
+/// Record two complete native-hash bridge verifiers with pinned key/context.
+/// The public prefix is trusted setup data; each child's final four words
+/// are bound to its 32-byte statement. This is a first-level recorder only.
+pub fn record_native_first(
+    bridge: &crate::private_bridge::PrivateBridge,
+    prefix: &[F192],
+    context: &Hash,
+    children: [&Certificate;2],
+) -> Trace {
+    trace::start();
+    let root = digest_constant(&bridge.index.root);
+    let ctx = digest_constant(context);
+    let mut digests = Vec::new();
+    for child in children {
+        let digest = hash_to_scalars(&child.statement).map(S::input);
+        for w in digest { range(w,128); }
+        let mut public: Vec<_> = prefix.iter().copied().map(S::c).collect();
+        public.extend([digest[0].slice(0,64),digest[0].slice(64,64),
+                       digest[1].slice(0,64),digest[1].slice(64,64)]);
+        public.extend(padding().map(S::c));
+        let seed = hash(&private_verifier::label(bridge,root,ctx,&public));
+        let mut t = Transcript::from_state(&child.proof,seed);
+        private_verifier::verify(bridge,root,&public,&mut t);
+        t.finish();
+        digests.push(digest);
+    }
+    let digest = hash(&[(S::u(0x4e),1),(digests[0][0],16),(digests[0][1],16),
+                       (digests[1][0],16),(digests[1][1],16)]);
+    let mut program = trace::take();
+    program.public = digest.to_vec();
+    program
+}
+
 /// Experimental first-level aggregation with a pinned base key only.
 /// It accepts exactly two height-zero certificates and cannot verify tree proofs.
 pub struct FirstMergeSetup {
