@@ -1,0 +1,1 @@
+{"distinct_children":true,"merge2to1_s":1.690672771,"proof_bytes":317064,"shape":"PrivateShape { index: ArithmeticShape { log_rows: 20, public_log: 9, public_len: 435, index_log_inv_rate: 4 }, n_blocks: 21990, block_log: 15, connector_start: 753664, q_offset: 16777216, stack_log: 25 }"}
