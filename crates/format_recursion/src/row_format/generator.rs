@@ -83,13 +83,19 @@ impl Generator {
                 .get(&a)
                 .map(|&k| (b, k))
                 .or_else(|| fixed.get(&b).map(|&k| (a, k)));
-            if cap > 0 && !used[d] && !assigned[d] && !fixed.contains_key(&d) && d != a && d != b && d != u {
-                if let Some((v, k)) = factor {
-                    let candidate = sum([(form(v, &defs, &fixed), k), (form(u, &defs, &fixed), F192::ONE)]);
-                    if candidate.len() <= cap {
-                        defs[d] = Some(candidate);
-                        removed[r] = true;
-                    }
+            if cap > 0
+                && !used[d]
+                && !assigned[d]
+                && !fixed.contains_key(&d)
+                && d != a
+                && d != b
+                && d != u
+                && let Some((v, k)) = factor
+            {
+                let candidate = sum([(form(v, &defs, &fixed), k), (form(u, &defs, &fixed), F192::ONE)]);
+                if candidate.len() <= cap {
+                    defs[d] = Some(candidate);
+                    removed[r] = true;
                 }
             }
             for i in [a, b, u] {
@@ -182,7 +188,7 @@ impl Generator {
             }
         }
         for (_, _, f) in &materialized {
-            insert(&[f.clone()]);
+            insert(std::slice::from_ref(f));
         }
         for (dest, source, f) in materialized {
             let mut relation: BTreeMap<usize, F192> = remap(&f, &map).into_iter().collect();

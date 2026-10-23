@@ -1,0 +1,17 @@
+{
+  "commit": "d7f65e582b5c44f51f82b6df76151b1bd8efbe9a",
+  "binary_sha256": "540039ea5635a2ba8d16c01dae375f570548117f2be6510240bb215dc18b1cd7",
+  "order": [
+    "node-final-same-1",
+    "node-final-mixed-1",
+    "node-final-mixed-2",
+    "node-final-same-2",
+    "node-final-same-3",
+    "node-final-mixed-3"
+  ],
+  "cpus": "12-23",
+  "threads": 12,
+  "fold": "source forward/transpose walks, bounded affine addressing",
+  "tree_depth": 2,
+  "fresh_wallet_proofs": 4
+}
