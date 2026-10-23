@@ -1,0 +1,53 @@
+{
+  "base": "1f50df0a8aa50c9490e38c705f5b11b723c1d2a4",
+  "tested_source_commit": "b61693d0",
+  "lane_tips": {
+    "L2b": "6fe04622",
+    "L4b": "796cf1b0",
+    "L3c": "4353823c"
+  },
+  "cpus": "48-63",
+  "cargo_build_jobs": 4,
+  "runtime_threads": 12,
+  "default_max_log_rows": 24,
+  "experimental_feature": "experimental-log26",
+  "opt_in_max_log_rows": 26,
+  "fmt": "passed",
+  "clippy_default_release_all_targets_D_warnings": "passed",
+  "clippy_log26_release_all_targets_D_warnings": "passed",
+  "format_recursion": {
+    "passed": 110,
+    "ignored": 1
+  },
+  "rec_aggregation": {
+    "passed": 43,
+    "ignored": 5
+  },
+  "circuit_suite": {
+    "passed": 78,
+    "ignored": 4
+  },
+  "flock_keccak": {
+    "passed": 6
+  },
+  "doc_tests": "passed",
+  "word_adversarial_runs": {
+    "falcon": 1,
+    "sha256": 1,
+    "shielded": 1
+  },
+  "explicit_log26_cap_test": 1,
+  "key_claim_program_shape_reconciliation": 7,
+  "sparse_tree_rejection_cases": 8,
+  "sparse_tree_node_key_reuse": "passed",
+  "mldsa_verifier_rejection_cases": [
+    "signature",
+    "message",
+    "key",
+    "z",
+    "hint"
+  ],
+  "evidence_files_verified_unchanged": 19,
+  "performance_measurements": "none; incidental timers in regression logs are not benchmark evidence",
+  "conflicts": "module export list combined mechanically; shared metric ledger replaced by requested current coordinator snapshot"
+}

@@ -1,0 +1,78 @@
+{
+  "artifacts/hometurf-sparse-tree.md": {
+    "source": "../artifacts/hometurf-sparse-tree.md",
+    "sha256": "206e5cf1a007e60623d60fc597c136c1d45c60f2f1f09481041917cc92e1b4e6"
+  },
+  "artifacts/hometurf-keccak-rows.md": {
+    "source": "../artifacts/hometurf-keccak-rows.md",
+    "sha256": "18c20008732021b8673df6af847cc3d5b4885f7c4b29291b5014b8e60bf4fac6"
+  },
+  "artifacts/hometurf-word-tables.md": {
+    "source": "../artifacts/hometurf-word-tables.md",
+    "sha256": "938a8b35389caed01e9d33009ac6ebc5dff9e35d8990bf3f515f63042abef063"
+  },
+  "artifacts/hometurf-keccak-word-tables.md": {
+    "source": "../artifacts/hometurf-keccak-word-tables.md",
+    "sha256": "ea31e433d3cca0e33c6b64fa37cb8f856cbdd7d47cec2ca9e9500d261bfdcabf"
+  },
+  "artifacts/hometurf-mldsa-leanvm.md": {
+    "source": "../artifacts/hometurf-mldsa-leanvm.md",
+    "sha256": "86df94673ed23ed161299b87b00058f944295e56947f536a4ca4a361eae733cd"
+  },
+  "artifacts/hometurf-12t.jsonl": {
+    "source": "../artifacts/hometurf-12t.jsonl",
+    "sha256": "2ee1e543c3a43d60952d820f2fdf5250c704d17ca4eb7611a4ca84cbfd60aaa0"
+  },
+  "artifacts/sparse-tree/node-summary.json": {
+    "source": "../ht-L2r/artifacts/sparse-tree/node-summary.json",
+    "sha256": "eaba805e5b73fd66410b2a6dda6f4b2a14a154afa86c89b24c2e1bc7623c2ca8"
+  },
+  "artifacts/sparse-tree/outerparallel-summary.json": {
+    "source": "../ht-L2r/artifacts/sparse-tree/outerparallel-summary.json",
+    "sha256": "772e8dd7151aa26203f31c25c92b730f3e1253dceca9b6a384fcf2627215ed92"
+  },
+  "artifacts/sparse-tree/settlement-summary.json": {
+    "source": "../ht-L2r/artifacts/sparse-tree/settlement-summary.json",
+    "sha256": "1b94c36c0747b0a0d3937fbd3a1c49cdf3b4efac7e808749f51fe445eb3cdcde"
+  },
+  "artifacts/sparse-tree/summary.json": {
+    "source": "../ht-L2r/artifacts/sparse-tree/summary.json",
+    "sha256": "a3b339b2da249de2b818bf4499207a4737ecd95c241f725eb3afd8a328ff5556"
+  },
+  "artifacts/hometurf-L4k/protocol-proxy-summary.json": {
+    "source": "../artifacts/hometurf-L4k/protocol-proxy-summary.json",
+    "sha256": "6ec5eef219e6226625376e2ee2203c9bf14069b9102bf5ea906bd910ae92fe3e"
+  },
+  "artifacts/hometurf-L4k/mldsa-summary.json": {
+    "source": "../artifacts/hometurf-L4k/mldsa-summary.json",
+    "sha256": "fd659c00d00c1cd2f4becffac1fed237d6e2f2bcf1c746ea19c689a4e732f3b1"
+  },
+  "artifacts/hometurf-L4k/mpt-abab/summary.json": {
+    "source": "../artifacts/hometurf-L4k/mpt-abab/summary.json",
+    "sha256": "e96565609f5d540e0d0c1605b11501c422f4dd4b8f73b26762f4ede64acc9288"
+  },
+  "artifacts/hometurf-L4k/falcon-abab/summary.json": {
+    "source": "../artifacts/hometurf-L4k/falcon-abab/summary.json",
+    "sha256": "c0b98c5bb3c4bffa52253d2dfd274a698a5261fc9d82504f2cc51518f5611e41"
+  },
+  "artifacts/hometurf-L4k/keccak-abab/summary.json": {
+    "source": "../artifacts/hometurf-L4k/keccak-abab/summary.json",
+    "sha256": "0c9adb80198f935536e581fb5b615a309d634f0e71e22081ce8ea69ca8388233"
+  },
+  "artifacts/hometurf-L3c/abab/summary.json": {
+    "source": "../artifacts/hometurf-L3c/abab/summary.json",
+    "sha256": "a706bf695483424d51665a830c402ffbb760e882588642fda40d778a96f70d2d"
+  },
+  "artifacts/hometurf-L3c/generality/shielded-small-summary.json": {
+    "source": "../artifacts/hometurf-L3c/generality/shielded-small-summary.json",
+    "sha256": "fdbbe452a7aa55ae12abc395935020284fb657bc851225950b99709e3a897d9a"
+  },
+  "artifacts/hometurf-L3c/generality/shielded-native-summary.json": {
+    "source": "../artifacts/hometurf-L3c/generality/shielded-native-summary.json",
+    "sha256": "705cece873f44d236d93d1ed60f202d9316baf7ff59fb123d3e8397c69d3704e"
+  },
+  "artifacts/hometurf-L3c/generality/sha256-summary.json": {
+    "source": "../artifacts/hometurf-L3c/generality/sha256-summary.json",
+    "sha256": "decd3e9484591fe06e9f2c25bb3e529bb7033e2e7bea924fe72281da1da731b6"
+  }
+}

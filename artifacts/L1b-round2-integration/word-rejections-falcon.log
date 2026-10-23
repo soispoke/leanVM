@@ -1,0 +1,21 @@
+   Compiling flock v0.1.0 (/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/ht-L1b/crates/flock)
+   Compiling evm v0.1.0 (/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/ht-L1b/crates/evm)
+   Compiling leanvm_core v0.1.0 (/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/ht-L1b/crates/leanvm_core)
+   Compiling circuit_suite v0.1.0 (/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/ht-L1b/crates/circuit_suite)
+   Compiling format_recursion v0.1.0 (/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/ht-L1b/crates/format_recursion)
+    Finished `release` profile [optimized] target(s) in 1m 13s
+     Running unittests src/lib.rs (../target-ht-L1b/release/deps/format_recursion-0886cb874632c5a3)
+
+running 1 test
+rejected: wrong carry
+rejected: wrong sum
+rejected: wrong product
+rejected: wrong tag
+rejected: out of range
+test keccak_bridge::tests::falcon_word_verifier_rejections_without_prechecks has been running for over 60 seconds
+rejected: altered multiplicity
+rejected: wrong Keccak output
+test keccak_bridge::tests::falcon_word_verifier_rejections_without_prechecks ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 110 filtered out; finished in 78.51s
+

@@ -1,0 +1,28 @@
+   Compiling syn v2.0.118
+   Compiling smallvec v1.15.2
+   Compiling tracing-attributes v0.1.31
+   Compiling serde_derive v1.0.228
+   Compiling thiserror-impl v2.0.18
+   Compiling tracing v0.1.44
+   Compiling thiserror v2.0.18
+   Compiling tracing-subscriber v0.3.23
+   Compiling serde v1.0.228
+   Compiling tracing-forest v0.3.1
+   Compiling primitives v0.1.0 (/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/ht-L1b/crates/primitives)
+   Compiling fiat_shamir v0.1.0 (/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/ht-L1b/crates/fiat_shamir)
+   Compiling bench v0.1.0 (/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/ht-L1b/crates/bench)
+   Compiling pcs v0.1.0 (/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/ht-L1b/crates/pcs)
+   Compiling flock v0.1.0 (/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/ht-L1b/crates/flock)
+    Finished `release` profile [optimized] target(s) in 47.36s
+     Running unittests src/lib.rs (../target-ht-L1b/release/deps/flock-50e1783eab32794b)
+
+running 6 tests
+test keccak::tests::reference_matches_known_answers ... ok
+test keccak::tests::fold_is_the_transpose_of_the_walk ... ok
+test keccak::tests::witness_satisfies_exactly_the_permutation ... ok
+test keccak::reduction::tests::packed_witness_matches_bit_circuit_and_full_reduction ... ok
+test keccak::tests::lincheck_roundtrip_over_permutations ... ok
+test keccak::tests::block_round_is_exactly_the_reference_round ... ok
+
+test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 64 filtered out; finished in 4.05s
+

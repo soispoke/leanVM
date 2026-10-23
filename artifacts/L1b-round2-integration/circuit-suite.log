@@ -1,0 +1,135 @@
+   Compiling bytes v1.12.1
+   Compiling hashbrown v0.17.1
+   Compiling const-hex v1.19.1
+   Compiling serde_core v1.0.228
+   Compiling serde v1.0.228
+   Compiling alloy-rlp v0.3.16
+   Compiling hex v0.4.3
+   Compiling ruint v1.20.0
+   Compiling aurora-engine-modexp v1.3.0
+   Compiling alloy-primitives v1.7.2
+   Compiling revm-primitives v20.2.1
+   Compiling alloy-eip7702 v0.6.3
+   Compiling revm-bytecode v6.2.2
+   Compiling alloy-eip2930 v0.2.4
+   Compiling revm-precompile v25.0.0
+   Compiling revm-state v7.0.5
+   Compiling serde_json v1.0.151
+   Compiling revm-database-interface v7.0.5
+   Compiling primitives v0.1.0 (/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/ht-L1b/crates/primitives)
+   Compiling revm-context-interface v9.0.0
+   Compiling revm-interpreter v24.0.0
+   Compiling revm-context v8.0.4
+   Compiling fiat_shamir v0.1.0 (/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/ht-L1b/crates/fiat_shamir)
+   Compiling revm-handler v8.1.0
+   Compiling pcs v0.1.0 (/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/ht-L1b/crates/pcs)
+   Compiling revm-database v7.0.5
+   Compiling revm-inspector v8.1.0
+   Compiling bincode v1.3.3
+   Compiling flock v0.1.0 (/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/ht-L1b/crates/flock)
+   Compiling revm v27.1.0
+   Compiling evm v0.1.0 (/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/ht-L1b/crates/evm)
+   Compiling circuit_suite v0.1.0 (/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/ht-L1b/crates/circuit_suite)
+    Finished `release` profile [optimized] target(s) in 1m 04s
+     Running unittests src/lib.rs (../target-ht-L1b/release/deps/circuit_suite-670681c04b07d437)
+
+running 82 tests
+test blake2s::tests::reference_is_rfc_7693 ... ok
+test falcon::tests::carry_conversion_and_negation_share_the_same_row ... ok
+test falcon::tests::native_ntt_is_the_negacyclic_product ... ok
+test falcon::tests::native_verifier_on_fixtures_and_kat ... ok
+test falcon::tests::lin_mod_q_and_signed_words ... ok
+test falcon::tests::compress_and_acc_match_native ... ok
+test blake2s::tests::one_kib_workload ... ok
+test falcon::tests::norm_and_encoding_exhaustive ... ok
+test blake2s::tests::digests_match_the_reference_at_every_block_boundary ... ok
+test keccak::tests::native_round_is_keccak_f ... ok
+test falcon::tests::point_check_exhaustive ... ok
+test falcon::tests::compaction_exhaustive ... ok
+test keccak::tests::sliced_round_is_the_native_round ... ok
+test describe::tests::a_description_is_its_circuit ... ok
+test mldsa::tests::modular_products_and_usehint_boundaries ... ok
+test falcon::tests::geq_and_or_chains_exhaustive ... ok
+test falcon::tests::relation_q17_every_s1 ... ok
+test falcon::tests::falcon512_kat_through_circuit ... ok
+test mpt::tests::empty_trie_root ... ok
+test mpt::tests::ethereum_secure_trie_vectors ... ok
+test keccak::tests::one_round_on_every_input_of_weight_at_most_two ... ok
+test mpt::tests::mainnet_proofs_verify_natively ... ok
+test falcon::tests::ntt_gadget_matches_native ... ok
+test mpt::tests::mainnet_weth_with_a_deeper_storage_bound ... ignored, builds a second full circuit (storage bound 9 nodes); run with --ignored
+test falcon::tests::report_rows ... ok
+test falcon::tests::falcon512_negatives ... ok
+test falcon::tests::falcon512_norm_boundary ... ok
+test falcon::tests::keccak_matches_sha3 ... ok
+test mpt::tests::synthetic_paths_verify_with_alloy ... ok
+test nonnative::tests::addmod_submod_lt_exhaustive ... ok
+test falcon::tests::falcon512_valid_and_invalid ... ok
+test nonnative::tests::gadget_costs ... ok
+test nonnative::tests::invmod_eqmod_congruence_sound_and_complete ... ok
+test nonnative::tests::mulmod_is_sound_and_complete_for_every_hint ... ok
+test nonnative::tests::naf_digits_sum_back ... ok
+test nonnative::tests::product_rows_by_threshold ... ok
+test nonnative::tests::products_match_bigint ... ok
+test poseidon::tests::count_1k ... ignored
+test poseidon::tests::full_1k_matches_reference ... ignored
+test poseidon::tests::materialise_sound_and_complete_for_every_hint ... ok
+test poseidon::tests::optimised_form_is_the_permutation ... ok
+test poseidon::tests::reference_matches_published_vector ... ok
+test falcon::tests::relation_exhaustive_q5 ... ok
+test keccak::tests::keccak_f_on_random_states ... ok
+test nonnative::tests::mulmod_full_size ... ok
+test keccak::tests::report_counts ... ok
+test secp256k1::tests::debug_checks ... ignored
+test secp256k1::tests::constants_and_native_arithmetic_match_k256 ... ok
+test keccak::tests::workload_one_kib ... ok
+test keccak::tests::keccak256_of_several_lengths has been running for over 60 seconds
+test mpt::tests::bounded_exhaustive_slots has been running for over 60 seconds
+test mpt::tests::bounded_exhaustive_whole_circuit has been running for over 60 seconds
+test mpt::tests::bounded_whole_circuit_three_levels has been running for over 60 seconds
+test mpt::tests::full_circuit_is_wired_and_matches_the_reference has been running for over 60 seconds
+test mpt::tests::mainnet_tricrypto2_slot_one has been running for over 60 seconds
+test mpt::tests::malicious_hints_and_bytes has been running for over 60 seconds
+test poseidon::tests::sbox_sound_and_complete_for_every_hint ... ok
+test mpt::tests::real_trie_proofs_with_idle_slots has been running for over 60 seconds
+test mpt::tests::report_counts ... ok
+test sha256::tests::adder_matches_native ... ok
+test sha256::tests::an_adder_of_four_words_takes_three_rows_a_bit ... ok
+test sha256::tests::carry_copy_sets_cover_their_xors ... ok
+test sha256::tests::compression_matches_native ... ok
+test mpt::tests::mainnet_tricrypto2_slot_one ... ok
+test mpt::tests::real_trie_proofs_with_idle_slots ... ok
+test sha256::tests::rows_per_compression ... ok
+test sha256::tests::sigma_and_choice_match_native ... ok
+test shielded::tests::gadgets_match_native ... ok
+test shielded::tests::generated_spends_are_valid_and_mutations_break_one_rule ... ok
+test shielded::tests::reference_matches_the_public_fixtures ... ok
+test sha256::tests::hash_matches_sha2_on_every_padding_shape ... ok
+test mpt::tests::synthetic_and_built_proofs_verify_natively has been running for over 60 seconds
+test sha256::tests::one_kib_workload ... ok
+test tests::an_adder_is_a_row_a_bit ... ok
+test mpt::tests::full_circuit_is_wired_and_matches_the_reference ... ok
+test tests::words_add_subtract_compare ... ok
+test tests::every_three_bit_gadget_on_every_input ... ok
+test shielded_blake2s::tests::gate_circuit_matches_blake2s_reference ... ok
+test secp256k1::tests::row_breakdown ... ok
+test keccak::tests::keccak256_of_several_lengths ... ok
+test shielded::tests::shielded_transfer ... ok
+test poseidon::tests::row_breakdown has been running for over 60 seconds
+test poseidon::tests::sponge_one_permutation_matches_reference has been running for over 60 seconds
+test secp256k1::tests::double_add_sound_for_every_hint has been running for over 60 seconds
+test mpt::tests::synthetic_and_built_proofs_verify_natively ... ok
+test secp256k1::tests::point_add_sound_for_every_hint has been running for over 60 seconds
+test mpt::tests::bounded_whole_circuit_three_levels ... ok
+test secp256k1::tests::point_add_sound_for_every_hint ... ok
+test mpt::tests::bounded_exhaustive_slots ... ok
+test poseidon::tests::row_breakdown ... ok
+test secp256k1::tests::whole_verification has been running for over 60 seconds
+test mpt::tests::bounded_exhaustive_whole_circuit ... ok
+test poseidon::tests::sponge_one_permutation_matches_reference ... ok
+test mpt::tests::malicious_hints_and_bytes ... ok
+test secp256k1::tests::double_add_sound_for_every_hint ... ok
+test secp256k1::tests::whole_verification ... ok
+
+test result: ok. 78 passed; 0 failed; 4 ignored; 0 measured; 0 filtered out; finished in 331.38s
+

@@ -1,0 +1,16 @@
+mldsa stage decode rows 1475224
+mldsa stage ExpandA rows 3442232
+mldsa stage forward NTT rows 13250045
+mldsa stage complete rows 29944283 perms 99
+mldsa evaluated statement [0f, bd, bd, c8, 10, 5b, 98, 7a, 48, e7, 5e, 21, 4b, b7, 15, 4f, e9, 8d, 3c, 49, 36, 91, b7, 41, 98, 42, c6, 43, 74, de, fc, ea, 01, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00]
+{"core_rows":29944283,"kind":"setup","native_rows":63472024,"permutations":99,"setup_s":23.215732459,"shape":"KeccakShape { index: ArithmeticShape { log_rows: 26, public_log: 7, public_len: 120, index_log_inv_rate: 4 }, n_blocks: 99, block_log: 7, connector_start: 63472256, q_log: 17, q_offset: 805306368, stack_log: 30 }"}
+mldsa evaluated statement [62, 5b, 7c, e9, 09, b8, f8, b9, 50, 2a, d0, 1b, 27, 8a, 95, 4c, 57, 97, 67, c7, 47, 93, 9d, 94, 43, b7, d9, 9b, 6c, de, d6, 38, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00]
+{"case":"signature","kind":"verifier-rejection","prechecks":false,"seconds":51.190876329}
+mldsa evaluated statement [22, 74, 26, 19, 90, bc, 5d, 3c, 0b, 5a, 8f, 0c, 71, ed, d3, 36, a6, a2, 15, 81, 7f, 57, 54, 54, 76, 0b, a7, 28, 17, 04, e8, 53, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00]
+{"case":"message","kind":"verifier-rejection","prechecks":false,"seconds":50.978397699}
+mldsa evaluated statement [60, 4c, 8a, 5d, ec, cb, 4e, 05, 40, 33, 80, fc, 13, 1b, 2a, 7e, eb, 85, 69, 97, 64, bf, c3, 5c, 0e, 1b, 09, 8c, 64, 14, 8a, 5e, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00]
+{"case":"key","kind":"verifier-rejection","prechecks":false,"seconds":49.954663135}
+mldsa evaluated statement [62, 5b, 7c, e9, 09, b8, f8, b9, 50, 2a, d0, 1b, 27, 8a, 95, 4c, 57, 97, 67, c7, 47, 93, 9d, 94, 43, b7, d9, 9b, 6c, de, d6, 38, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00]
+{"case":"z","kind":"verifier-rejection","prechecks":false,"seconds":50.22517795}
+mldsa evaluated statement [62, 5b, 7c, e9, 09, b8, f8, b9, 50, 2a, d0, 1b, 27, 8a, 95, 4c, 57, 97, 67, c7, 47, 93, 9d, 94, 43, b7, d9, 9b, 6c, de, d6, 38, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00]
+{"case":"hint","kind":"verifier-rejection","prechecks":false,"seconds":52.06893894}
