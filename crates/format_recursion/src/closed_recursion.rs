@@ -661,6 +661,73 @@ impl SplitClosedSetup {
     }
 }
 
+
+/// Experimental first-level aggregation with a pinned base key only.
+/// It accepts exactly two height-zero certificates and cannot verify tree proofs.
+pub struct FirstMergeSetup {
+    base: Setup,
+    first: Setup,
+    pub arithmetic_rows: usize,
+    pub compressions: usize,
+    pub products: usize,
+}
+
+fn record_first(base: &Setup, children: [&Certificate; 2]) -> Trace {
+    trace::start();
+    let root = digest_constant(&base.bridge.index.root);
+    let ctx = digest_constant(&base.context);
+    let mut words = Vec::new();
+    for child in children {
+        let digest = hash_to_scalars(&child.statement).map(S::input);
+        for word in digest { range(word, 128); }
+        let mut public: Vec<_> = base.fixed_public.iter().copied().map(S::c).collect();
+        public.extend(digest);
+        public.extend(padding().map(S::c));
+        let seed = hash(&private_verifier::label(&base.bridge, root, ctx, &public));
+        let mut t = Transcript::from_state(&child.proof, seed);
+        private_verifier::verify(&base.bridge, root, &public, &mut t);
+        t.finish();
+        words.push(digest);
+    }
+    let output = hash(&[(S::u(0x4e), 1), (words[0][0],16), (words[0][1],16),
+                       (words[1][0],16), (words[1][1],16)]);
+    let mut result = trace::take();
+    result.public = output.to_vec();
+    result
+}
+
+impl FirstMergeSetup {
+    pub fn new(program: Trace) -> Option<Self> {
+        if program.public.len() != 2 || !program.satisfied() { return None; }
+        let words = std::array::from_fn(|i| program.nodes[program.public[i].0].value);
+        let base = Setup::new(program.clone())?;
+        let canonical = Certificate { height: 0, statement: fiat_shamir::merkle::scalars_to_hash(&words).ok()?,
+            proof: base.prove(&program, &words)? };
+        let trace = record_first(&base, [&canonical, &canonical]);
+        let lower = private_trace::lower(&trace, &trace)?;
+        let arithmetic_rows = lower.circuit.rows.len();
+        let compressions = lower.compressions.len();
+        let products = trace.nodes.iter().filter(|n| matches!(n.op, crate::trace::Op::Mul(..))).count();
+        drop(lower);
+        // Distinct domain plus the base root pinned as constants in the circuit.
+        let first = Setup::new_with_context(trace, primitives::hash::hash(b"format-first-merge-v1"))?;
+        Some(Self { base, first, arithmetic_rows, compressions, products })
+    }
+    pub fn shape(&self) -> PrivateShape { self.first.bridge.verifier_shape() }
+    pub fn verify(&self, certificate: &Certificate) -> bool {
+        certificate.height == 1 && self.first.verify(&hash_to_scalars(&certificate.statement), &certificate.proof)
+    }
+    pub fn prove(&self, left: &Certificate, right: &Certificate) -> Option<Certificate> {
+        for child in [left,right] {
+            if child.height != 0 || !self.base.verify(&hash_to_scalars(&child.statement), &child.proof) { return None; }
+        }
+        let trace = record_first(&self.base, [left,right]);
+        let statement = crate::recursion_fast::node_statement(&left.statement, &right.statement);
+        let proof = self.first.prove(&trace, &hash_to_scalars(&statement))?;
+        Some(Certificate { height: 1, statement, proof })
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
