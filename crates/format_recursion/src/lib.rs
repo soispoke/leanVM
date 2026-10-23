@@ -6,6 +6,7 @@ pub mod closed_recursion;
 pub mod flock_trace;
 pub mod hash_batch;
 pub mod native_arithmetic;
+pub mod native_hash;
 pub mod native_recursion;
 pub mod private_bridge;
 pub mod private_recursion;
