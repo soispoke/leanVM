@@ -1,0 +1,44 @@
+{
+  "implementation_commit": "bf78cd98",
+  "rule": "Trim iff actual final padded arithmetic log_rows or hash-slot exponent decreases; equal shapes retain the untrimmed graph",
+  "decision_inputs": [
+    "fixed circuit wiring",
+    "public-output sources"
+  ],
+  "witness_dependent": false,
+  "joint_inverse_commitment_rate": 4,
+  "retiming_performed": false,
+  "reconciliation": {
+    "workloads": 7,
+    "same_program": true,
+    "same_key": true,
+    "same_claim": true
+  },
+  "toolchain": "1.99.1",
+  "cpus": "48-63",
+  "CARGO_BUILD_JOBS": 4,
+  "gates": {
+    "fmt": "passed",
+    "clippy_release_all_targets_D_warnings": "passed",
+    "release": {
+      "circuit_suite": {
+        "passed": 77,
+        "ignored": 4
+      },
+      "format_recursion": {
+        "passed": 92,
+        "ignored": 0
+      },
+      "rec_aggregation": {
+        "passed": 43,
+        "ignored": 5
+      }
+    },
+    "doc_tests": "passed",
+    "cross_key_rejections": "passed",
+    "split_closure_rejections": "passed",
+    "pure_circuit_selection": "passed",
+    "connector_alignment_and_cap_enforcement": "passed"
+  },
+  "evidence": "experiments/pcs-r1cs/evidence/2026-10-23-automatic-trimming/README.md"
+}

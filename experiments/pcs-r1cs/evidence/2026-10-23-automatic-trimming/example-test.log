@@ -1,0 +1,11 @@
+    Blocking waiting for file lock on build directory
+   Compiling format_recursion v0.1.0 (/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/ht-L1/crates/format_recursion)
+   Compiling rec_aggregation v0.1.0 (/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/ht-L1/crates/rec_aggregation)
+    Finished `release` profile [optimized] target(s) in 5m 29s
+     Running unittests examples/application_role_profile.rs (../target-ht-L1/release/examples/application_role_profile-5be7fa0993fa4bcd)
+
+running 1 test
+test native_application_support::tests::native_adder_compilation_binds_inputs_and_preserves_trimmed_outputs ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 2.61s
+

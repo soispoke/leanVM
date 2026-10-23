@@ -1,0 +1,11 @@
+{
+  "source_commit": "bf78cd987ea25c7b809b24586741163f7065c9c3",
+  "executable_sha256": "db69eb5b18bf0e21e2e55978c67ea8daa8294566df30f16679cd81d83443fc9a",
+  "checked_workloads": 7,
+  "same_program": true,
+  "same_key": true,
+  "same_claim": true,
+  "retiming_performed": false,
+  "cpus": "48-63",
+  "threads": 12
+}
