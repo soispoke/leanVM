@@ -40,3 +40,7 @@ The complete BLAKE2s-edition spend is ported in `circuit_suite::shielded_blake2s
 ## Measurement and artifacts
 
 `experiments/pcs-r1cs/measure_hometurf.py` runs native wallets on CPUs0-11 with twelve threads, then verifies each proof in a new process. It checks VM output parity and appends the required schema to P/artifacts/hometurf-12t.jsonl. Wallet timings include witness, proof and encoding; verify timings include decoding. Process RSS includes fixture/setup. Deterministic signing and index setup are excluded from wallet time. Source commits and comparison-binary SHA values are in note fields. Current final summaries are in P/artifacts/hometurf-L1-final; proof transport bytes and committed witness words are separate metrics.
+
+## Baseline push
+
+L1 native hash benchmark evidence and frozen release gates were archived and pushed fast-forward to `publish/research/r1cs-recursive-verifier` at commit `ed65df0f`. The newer L3 shared-root lookup prototype remains unintegrated pending independent build/tests and a complete binding review. Corrected L4 census commits are likewise retained as follow-up analysis; the rejected shared-parent patch is not enabled.
