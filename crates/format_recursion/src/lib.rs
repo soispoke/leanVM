@@ -26,3 +26,5 @@ pub mod native_verifier;
 pub mod private_verifier;
 
 pub mod shielded_application;
+pub mod shielded_lookup;
+pub mod shielded_lookup_prototype;
