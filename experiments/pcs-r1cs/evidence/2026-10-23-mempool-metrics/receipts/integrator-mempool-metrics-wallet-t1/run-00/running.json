@@ -1,0 +1,13 @@
+{
+  "pid": 177048,
+  "command": [
+    "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/target-vm-common/release/examples/application_role_profile",
+    "--workload",
+    "blake2s-64b",
+    "--role",
+    "native-client",
+    "--out",
+    "../artifacts/integrator-mempool-metrics-base.cert"
+  ],
+  "started_utc": "2026-10-23T11:54:24.881314+00:00"
+}

@@ -1,4 +1,4 @@
-//! Actual application proof creation, explicit adaptation and repeated common key recursion.
+//! Actual application proof creation, an explicit wrap proof and repeated common key recursion.
 mod application_support;
 use application_support::Application;
 use circuit_suite::Workload;
@@ -10,6 +10,19 @@ use std::{path::Path, time::Instant};
 
 #[global_allocator]
 static ALLOC: tikv_jemallocator::Jemalloc = tikv_jemallocator::Jemalloc;
+
+fn report(mut value: serde_json::Value) {
+    value["threads"] = parallel::num_threads().into();
+    value["cpus"] = std::fs::read_to_string("/proc/self/status")
+        .ok()
+        .and_then(|status| {
+            status
+                .lines()
+                .find_map(|line| line.strip_prefix("Cpus_allowed_list:").map(|s| s.trim().to_owned()))
+        })
+        .into();
+    println!("{value}");
+}
 
 fn peak_rss_kib() -> Option<u64> {
     let status = std::fs::read_to_string("/proc/self/status").ok()?;
@@ -25,28 +38,19 @@ fn peak_rss_kib() -> Option<u64> {
 fn run<W: Workload>(samples: usize, seed: u64, client_only: bool, output: Option<&Path>, verify: Option<&Path>) {
     let start = Instant::now();
     let application = Application::<W>::new();
-    println!(
-        "{}",
-        serde_json::json!({"kind":"client_setup", "workload":W::NAME,
-        "elapsed_ms":start.elapsed().as_secs_f64()*1000., "app_id":application.id})
-    );
+    report(serde_json::json!({"kind":"client_setup", "workload":W::NAME,
+        "elapsed_ms":start.elapsed().as_secs_f64()*1000., "app_id":application.id}));
     let setup = if client_only {
         None
     } else {
         let canonical = application.create(seed);
-        println!(
-            "{}",
-            serde_json::json!({"kind":"canonical_client", "measurement":canonical.report})
-        );
+        report(serde_json::json!({"kind":"canonical_client", "measurement":canonical.report}));
         let program = record_bound(&canonical.child, &application.id);
         assert!(program.satisfied());
         let start = Instant::now();
         let setup = ClosedSetup::from_program(program).expect("application verifier closes");
-        println!(
-            "{}",
-            serde_json::json!({"kind":"recursive_setup", "workload":W::NAME,
-            "elapsed_ms":start.elapsed().as_secs_f64()*1000., "key":setup.key(), "shape":format!("{:?}",setup.shape())})
-        );
+        report(serde_json::json!({"kind":"recursive_setup", "workload":W::NAME,
+            "elapsed_ms":start.elapsed().as_secs_f64()*1000., "key":setup.key(), "shape":format!("{:?}",setup.shape())}));
         Some(setup)
     };
     if let Some(directory) = verify {
@@ -83,9 +87,8 @@ fn run<W: Workload>(samples: usize, seed: u64, client_only: bool, output: Option
                 checked += 1;
             }
         }
-        println!(
-            "{}",
-            serde_json::json!({"kind":"independent_verification","workload":W::NAME,"certificates":checked,"status":"verified"})
+        report(
+            serde_json::json!({"kind":"independent_verification","workload":W::NAME,"certificates":checked,"status":"verified"}),
         );
         return;
     }
@@ -102,28 +105,31 @@ fn run<W: Workload>(samples: usize, seed: u64, client_only: bool, output: Option
         .unwrap();
     }
     for sample in 0..samples {
-        let mut adapted = Vec::new();
+        let mut wrapped = Vec::new();
         for leaf in 0..2 {
             let mut created = application.create(seed + 1 + 2 * sample as u64 + leaf);
             created.report["sample"] = sample.into();
             created.report["leaf"] = leaf.into();
-            println!("{}", created.report);
+            report(created.report.clone());
             if let Some(setup) = &setup {
                 let start = Instant::now();
                 let trace = record_bound(&created.child, &application.id);
                 assert!(trace.satisfied());
-                let certificate = setup.prove_program(&trace).expect("fresh application adaptation");
-                let adapt_ms = start.elapsed().as_secs_f64() * 1000.;
+                let certificate = setup.prove_program(&trace).expect("fresh wrap proof");
+                let wrap_proof_ms = start.elapsed().as_secs_f64() * 1000.;
                 assert_eq!(certificate.statement, created.claim);
                 let start = Instant::now();
                 assert!(setup.verify(&certificate));
                 let verify_ms = start.elapsed().as_secs_f64() * 1000.;
-                println!(
-                    "{}",
-                    serde_json::json!({"kind":"adapt", "workload":W::NAME,
-                    "sample":sample,"leaf":leaf,"adapt_ms":adapt_ms,"verify_ms":verify_ms,
-                    "certificate_bytes":certificate.encode().unwrap().len(), "height":certificate.height, "statement":certificate.statement,"status":"verified"})
-                );
+                let encoding_start = Instant::now();
+                let bytes = certificate.encode().unwrap();
+                let encoding_ms = encoding_start.elapsed().as_secs_f64() * 1000.;
+                let application_proof_ms = created.report["create_ms"].as_f64().unwrap();
+                report(serde_json::json!({"kind":"wrap_proof", "workload":W::NAME,
+                    "sample":sample,"leaf":leaf,"wrap_proof_ms":wrap_proof_ms,
+                    "encoding_ms":encoding_ms,"time_to_mempool_ready_proof_ms":application_proof_ms+wrap_proof_ms+encoding_ms,
+                    "mempool_proof_bytes":bytes.len(),"native_verification_ms":verify_ms,
+                    "verification_process":"same_process_diagnostic", "height":certificate.height, "statement":certificate.statement,"status":"verified"}));
                 if let Some(directory) = output {
                     std::fs::write(
                         directory.join(format!("app-{sample}-{leaf}.cert")),
@@ -148,31 +154,28 @@ fn run<W: Workload>(samples: usize, seed: u64, client_only: bool, output: Option
                     assert!(setup.prove_program(&invalid).is_none());
                     assert!(setup.prove_leaf(&[0; 32]).is_none());
                 }
-                adapted.push(certificate);
+                wrapped.push(certificate);
             }
         }
         if let Some(setup) = &setup {
-            let mut current = adapted[0].clone();
+            let mut current = wrapped[0].clone();
             for height in 1..=3 {
                 let start = Instant::now();
                 let next = setup
-                    .prove_node(&current, &adapted[1])
+                    .prove_node(&current, &wrapped[1])
                     .expect("repeated and mixed height merge");
                 let merge_ms = start.elapsed().as_secs_f64() * 1000.;
                 assert_eq!(next.height, height);
                 assert_eq!(
                     next.statement,
-                    format_recursion::recursion_fast::node_statement(&current.statement, &adapted[1].statement)
+                    format_recursion::recursion_fast::node_statement(&current.statement, &wrapped[1].statement)
                 );
                 let start = Instant::now();
                 assert!(setup.verify(&next));
                 let verify_ms = start.elapsed().as_secs_f64() * 1000.;
-                println!(
-                    "{}",
-                    serde_json::json!({"kind":"merge", "workload":W::NAME,
-                    "sample":sample,"height":height,"merge_ms":merge_ms,"verify_ms":verify_ms,
-                    "certificate_bytes":next.encode().unwrap().len(),"key":setup.key(),"shape":format!("{:?}",setup.shape()),"status":"verified"})
-                );
+                report(serde_json::json!({"kind":"merge", "workload":W::NAME,
+                    "sample":sample,"height":height,"merge_time_ms":merge_ms,"native_verification_ms":verify_ms,
+                    "merged_proof_bytes":next.encode().unwrap().len(),"key":setup.key(),"shape":format!("{:?}",setup.shape()),"status":"verified"}));
                 if let Some(directory) = output {
                     std::fs::write(
                         directory.join(format!("node-{sample}-{height}.cert")),
@@ -185,7 +188,7 @@ fn run<W: Workload>(samples: usize, seed: u64, client_only: bool, output: Option
             let mut bad = current.clone();
             bad.statement[0] ^= 1;
             assert!(!setup.verify(&bad));
-            assert!(setup.prove_node(&bad, &adapted[0]).is_none());
+            assert!(setup.prove_node(&bad, &wrapped[0]).is_none());
             bad = current.clone();
             bad.height -= 1;
             assert!(!setup.verify(&bad));
@@ -194,11 +197,8 @@ fn run<W: Workload>(samples: usize, seed: u64, client_only: bool, output: Option
             assert!(!setup.verify(&bad));
         }
     }
-    println!(
-        "{}",
-        serde_json::json!({"kind":"complete","workload":W::NAME,
-        "client_only":client_only,"samples":samples,"peak_rss_kib":peak_rss_kib(),"status":"verified"})
-    );
+    report(serde_json::json!({"kind":"complete","workload":W::NAME,
+        "client_only":client_only,"samples":samples,"peak_rss_kib":peak_rss_kib(),"status":"verified"}));
 }
 
 fn main() {

@@ -1,0 +1,30 @@
+{
+  "threads": 12,
+  "cpus": "0-11",
+  "frozen_gates": [
+    "integrator-mempool-metrics-final-fmt-t1",
+    "integrator-mempool-metrics-final-clippy-t1",
+    "integrator-mempool-metrics-final-release-t1",
+    "integrator-mempool-metrics-final-example-t1",
+    "integrator-mempool-metrics-final-build-t1"
+  ],
+  "proofs": [
+    {
+      "kind": "base",
+      "bytes": 247956,
+      "blake2s": "b708b4bb428ba7d64d77f02ed38ddad6b7a868b77185b058bc2cc64b69dabe0e",
+      "exact_historical_match": true,
+      "threads": 12,
+      "cpus": "0-11"
+    },
+    {
+      "kind": "node",
+      "bytes": 361196,
+      "blake2s": "1f5566c9e0f2d063233683965ef299cd032ddcd61ae9372582aa36b14e87e269",
+      "exact_historical_match": true,
+      "threads": 12,
+      "cpus": "0-11"
+    }
+  ],
+  "scope": "reporting/interface checks; no optimization or timing comparison"
+}

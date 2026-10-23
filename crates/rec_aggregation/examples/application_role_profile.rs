@@ -28,6 +28,20 @@ fn report(mut value: serde_json::Value) {
     println!("{value}");
 }
 
+fn hash_arg(flag: &str) -> [u8; 32] {
+    let args: Vec<_> = std::env::args().collect();
+    let hex = args
+        .windows(2)
+        .find(|pair| pair[0] == flag)
+        .expect("required statement and pinned base key")[1]
+        .as_str();
+    assert!(
+        hex.is_ascii() && hex.len() == 64,
+        "hash must be 64 hexadecimal characters"
+    );
+    std::array::from_fn(|i| u8::from_str_radix(&hex[2 * i..2 * i + 2], 16).expect("hexadecimal hash"))
+}
+
 fn save(path: Option<&Path>, bytes: &[u8]) {
     if let Some(path) = path {
         use std::io::Write;
@@ -75,7 +89,9 @@ fn run<W: Workload>(role: &str, seed: u64, input: Option<&Path>, output: Option<
             "shape":format!("{:?}",setup.bridge.verifier_shape()),"index":setup.bridge.index.shape()}));
         if role == "mempool" {
             let bytes = std::fs::read(input.expect("mempool requires --input certificate")).unwrap();
-            let expected = application.expected_claim(seed);
+            let expected = hash_arg("--statement");
+            let pinned_base_key = hash_arg("--base-key");
+            assert_eq!(setup.bridge.index.root, pinned_base_key, "trusted base key mismatch");
             let words = fiat_shamir::merkle::hash_to_scalars(&expected);
             let (verified, verification) = plan.measure_quiet(|_| {
                 let certificate = Certificate::decode(&bytes).unwrap();
@@ -83,10 +99,12 @@ fn run<W: Workload>(role: &str, seed: u64, input: Option<&Path>, output: Option<
             });
             assert!(verified);
             report(
-                serde_json::json!({"kind":"role_measurement","role":role,"workload":W::NAME,"seed":seed,
-                "decode_verify_ms":verification.mean()*1000.,"certificate_bytes":bytes.len(),
+                serde_json::json!({"kind":"role_measurement","role":role,"workload":W::NAME,
+                "native_verification_ms":verification.mean()*1000.,"mempool_verify_ms":verification.mean()*1000.,
+                "mempool_proof_bytes":bytes.len(),"verification_process":"standalone",
+                "statement":expected,"pinned_base_key":pinned_base_key,
                 "certificate_digest":primitives::hash::hash(&bytes),
-                "peak_rss_bytes":bench::peak_rss_bytes(),"status":"verified"}),
+                "peak_mempool_ram_bytes":bench::peak_rss_bytes(),"status":"verified"}),
             );
             return;
         }
@@ -104,7 +122,7 @@ fn run<W: Workload>(role: &str, seed: u64, input: Option<&Path>, output: Option<
                 }
             })
         });
-        let (verified, verification) = plan.measure_quiet(|_| setup.verify(&words, &certificate.proof));
+        let (verified, _) = plan.measure_quiet(|_| setup.verify(&words, &certificate.proof));
         assert!(verified);
         let encoding_start = Instant::now();
         let bytes = certificate.encode().unwrap();
@@ -112,10 +130,13 @@ fn run<W: Workload>(role: &str, seed: u64, input: Option<&Path>, output: Option<
         save(output, &bytes);
         report(
             serde_json::json!({"kind":"role_measurement","role":role,"workload":W::NAME,"seed":seed,
-            "application_proof_ms":proving.mean()*1000.,"native_trace_creation_ms":created.report["native_trace_creation_ms"],
-            "verify_ms":verification.mean()*1000.,"encoding_ms":encoding_ms,"certificate_bytes":bytes.len(),
-            "certificate_digest":primitives::hash::hash(&bytes),
-            "statement":certificate.statement,"peak_rss_bytes":bench::peak_rss_bytes(),"status":"verified"}),
+            "witness_ms":created.report["native_trace_creation_ms"],"proof_creation_ms":proving.mean()*1000.,
+            "encoding_ms":encoding_ms,"time_to_mempool_ready_proof_ms":
+                created.report["native_trace_creation_ms"].as_f64().unwrap()+proving.mean()*1000.+encoding_ms,
+            "wallet_prove_s":(created.report["native_trace_creation_ms"].as_f64().unwrap()+proving.mean()*1000.+encoding_ms)/1000.,
+            "wallet_proof_bytes":bytes.len(),"mempool_proof_bytes":bytes.len(),
+            "wallet_peak_rss_kib":bench::peak_rss_bytes()/1024,"certificate_digest":primitives::hash::hash(&bytes),
+            "statement":certificate.statement,"peak_client_ram_bytes":bench::peak_rss_bytes(),"status":"verified"}),
         );
     } else {
         assert_eq!(role, "merge");
@@ -156,10 +177,13 @@ fn run<W: Workload>(role: &str, seed: u64, input: Option<&Path>, output: Option<
         save(output, &bytes);
         report(
             serde_json::json!({"kind":"role_measurement","role":role,"workload":W::NAME,"height":height,
-            "merge_ms":proving.mean()*1000.,"verify_ms":verification.mean()*1000.,
-            "encoding_ms":encoding_ms,"certificate_bytes":bytes.len(),
+            "merge_time_ms":proving.mean()*1000.,"merge2to1_leaf_s":(height==1).then_some(proving.mean()),
+            "left_height":left.height,"right_height":right.height,
+            "native_verification_ms":verification.mean()*1000.,"verification_process":"same_process_diagnostic",
+            "encoding_ms":encoding_ms,"merged_proof_bytes":bytes.len(),
             "certificate_digest":primitives::hash::hash(&bytes),
-            "statement":certificate.statement,"peak_rss_bytes":bench::peak_rss_bytes(),"status":"verified"}),
+            "statement":certificate.statement,"merge_peak_rss_kib":bench::peak_rss_bytes()/1024,
+            "peak_aggregator_ram_bytes":bench::peak_rss_bytes(),"status":"verified"}),
         );
     }
 }

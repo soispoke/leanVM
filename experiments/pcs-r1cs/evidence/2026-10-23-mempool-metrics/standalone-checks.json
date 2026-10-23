@@ -1,0 +1,31 @@
+{
+  "threads": 12,
+  "cpus": "0-11",
+  "proof_bytes": 247956,
+  "exact_historical_match": true,
+  "statement": "964ddc1f34c11c8e39a2158edc298d4c8f58a76c66be421459403432c81c9bdd",
+  "pinned_base_key": "b5ccfba0d20e58b7ce1f6130dfa3427ddc38cff33ab749fbda4e546b6634fb1d",
+  "checks": [
+    {
+      "receipt": "integrator-mempool-metrics-valid-t1",
+      "expected_acceptance": true,
+      "observed_acceptance": true,
+      "threads": 12,
+      "cpus": "0-11"
+    },
+    {
+      "receipt": "integrator-mempool-metrics-wrong-statement-t1",
+      "expected_acceptance": false,
+      "observed_acceptance": false,
+      "threads": 12,
+      "cpus": "0-11"
+    },
+    {
+      "receipt": "integrator-mempool-metrics-wrong-key-t1",
+      "expected_acceptance": false,
+      "observed_acceptance": false,
+      "threads": 12,
+      "cpus": "0-11"
+    }
+  ]
+}
