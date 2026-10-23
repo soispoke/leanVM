@@ -25,15 +25,19 @@ enum Row {
     },
 }
 
+enum Binding {
+    Constant(F192),
+    Column(usize),
+    Affine(Form),
+}
+
 /// Trusted compilation metadata for a source generator, never a stored A/B/C.
 /// Definitions are bounded affine source instructions, shared across their uses.
 pub struct Generator {
     pub app_key: Hash,
     pub row_log: usize,
     pub col_log: usize,
-    defs: Vec<Option<Form>>,
-    fixed: Vec<Option<F192>>,
-    map: Vec<usize>,
+    bindings: Vec<Binding>,
     rows: Vec<Row>,
 }
 
@@ -187,13 +191,55 @@ impl Generator {
                 rows.push(Row::Port { dest, source });
             }
         }
+        // Only source wires consumed by retained instructions need a forward
+        // value or transpose adjoint. Compile their affine addressing once.
+        let mut ids = HashMap::new();
+        let mut bindings = Vec::new();
+        let mut compact = |id: &mut usize| {
+            let index = *ids.entry(*id).or_insert_with(|| {
+                let binding = if let Some(&v) = fixed.get(id) {
+                    Binding::Constant(v)
+                } else if let Some(f) = &defs[*id] {
+                    Binding::Affine(
+                        f.iter()
+                            .filter_map(|&(j, k)| (map[j] != usize::MAX).then_some((map[j], k)))
+                            .collect(),
+                    )
+                } else if map[*id] != usize::MAX {
+                    Binding::Column(map[*id])
+                } else {
+                    Binding::Constant(F192::ZERO)
+                };
+                let index = bindings.len();
+                bindings.push(binding);
+                index
+            });
+            *id = index;
+        };
+        for row in &mut rows {
+            match row {
+                Row::Product(ids) => {
+                    for id in ids {
+                        compact(id);
+                    }
+                }
+                Row::Linear { other, u, d, .. } => {
+                    compact(other);
+                    compact(u);
+                    compact(d);
+                }
+                Row::Port {
+                    source: Origin::Variable(id),
+                    ..
+                } => compact(id),
+                _ => {}
+            }
+        }
         Self {
             app_key,
             row_log: rows.len().next_power_of_two().trailing_zeros() as usize,
             col_log: origins.len().next_power_of_two().trailing_zeros() as usize,
-            defs,
-            fixed: (0..c.variables).map(|i| fixed.get(&i).copied()).collect(),
-            map,
+            bindings,
             rows,
         }
     }
@@ -201,24 +247,10 @@ impl Generator {
         self.rows.len()
     }
     fn source_values(&self, cw: &[F192]) -> Vec<F192> {
-        parallel::map_collect(self.map.len(), |i| {
-            if let Some(v) = self.fixed[i] {
-                return mul(v, cw[0]);
-            }
-            if let Some(f) = &self.defs[i] {
-                return f.iter().fold(F192::ZERO, |s, &(j, k)| {
-                    if self.map[j] == usize::MAX {
-                        s
-                    } else {
-                        s + mul(k, cw[self.map[j]])
-                    }
-                });
-            }
-            if self.map[i] == usize::MAX {
-                F192::ZERO
-            } else {
-                cw[self.map[i]]
-            }
+        parallel::map_collect(self.bindings.len(), |i| match &self.bindings[i] {
+            Binding::Constant(v) => mul(*v, cw[0]),
+            Binding::Column(j) => cw[*j],
+            Binding::Affine(f) => f.iter().fold(F192::ZERO, |s, &(j, k)| s + mul(k, cw[j])),
         })
     }
     fn row_values(&self, r: usize, at: &[F192], cw: &[F192]) -> [F192; 3] {
@@ -252,7 +284,7 @@ impl Generator {
     pub fn column_products(&self, rw: &[F192]) -> [Vec<F192>; 3] {
         assert_eq!(rw.len(), 1 << self.row_log);
         let products = parallel::map_collect(3, |matrix| {
-            let mut adj = vec![F192::ZERO; self.map.len()];
+            let mut adj = vec![F192::ZERO; self.bindings.len()];
             let mut out = vec![F192::ZERO; 1 << self.col_log];
             for (r, row) in self.rows.iter().enumerate() {
                 let w = rw[r];
@@ -283,16 +315,14 @@ impl Generator {
                 if w == F192::ZERO {
                     continue;
                 }
-                if let Some(v) = self.fixed[i] {
-                    out[0] += mul(v, w);
-                } else if let Some(f) = &self.defs[i] {
-                    for &(j, k) in f {
-                        if self.map[j] != usize::MAX {
-                            out[self.map[j]] += mul(k, w);
+                match &self.bindings[i] {
+                    Binding::Constant(v) => out[0] += mul(*v, w),
+                    Binding::Column(j) => out[*j] += w,
+                    Binding::Affine(f) => {
+                        for &(j, k) in f {
+                            out[j] += mul(k, w);
                         }
                     }
-                } else if self.map[i] != usize::MAX {
-                    out[self.map[i]] += w;
                 }
             }
             out

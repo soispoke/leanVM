@@ -70,6 +70,18 @@ pub(crate) fn verify_in_rows(
         got.assert_eq(want);
     }
     let public: Vec<_> = public.iter().copied().map(S::input).collect();
+    verify_shape_in_rows(setup, identity, &public, context, proof)
+}
+
+/// Matrix identity is supplied by the parent and carried to a trusted root
+/// registry. The proof layout remains fixed; no child proof check is skipped.
+pub(crate) fn verify_shape_in_rows(
+    setup: &Setup,
+    identity: [S; 2],
+    public: &[S],
+    context: &Hash,
+    proof: &Proof,
+) -> (WireClaim, [S; 2]) {
     public[0].assert_eq(S::u(1));
     let mut label = literal(b"standard-spartan-deferred-native-hash-v2");
     label.extend(identity.map(|s| (s, 16)));

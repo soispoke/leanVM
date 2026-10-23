@@ -14,6 +14,7 @@ pub mod first;
 pub mod fold;
 pub mod generator;
 pub mod spartan;
+pub mod tree;
 
 /// Record one synthetic sparse-index PCS component, excluding memory checks.
 pub fn record_sparse_pcs_component(

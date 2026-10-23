@@ -1,0 +1,3 @@
+first layout [20, 20, 14, 164, 8, 16384, 4194304, 23, 8388608]
+node layout [20, 20, 14, 164, 8, 16384, 4194304, 23, 8388608]
+same node key reused for node + node; all active slots settled; this reuse regression shares leaves across its two independently proved nodes
