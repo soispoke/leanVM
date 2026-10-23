@@ -9,6 +9,10 @@ use std::{
     sync::Arc,
 };
 
+pub mod deferred;
+pub mod first;
+pub mod fold;
+pub mod generator;
 pub mod spartan;
 
 /// Record one synthetic sparse-index PCS component, excluding memory checks.
@@ -449,24 +453,28 @@ impl Source {
     }
 }
 
+pub fn shielded_source(seed: usize) -> Source {
+    let payload = circuit_suite::shielded_blake2s::leanvm_input(seed);
+    let b = crate::shielded_application::application_vm(&payload).0;
+    let (circuit, connectors) = b.export_circuit();
+    let fixed_len = circuit.public.len() - 4;
+    let rebuild = Box::new(move || {
+        let b = crate::shielded_application::application_vm(&payload).0;
+        (b.values, b.compressions)
+    });
+    Source {
+        circuit,
+        connectors,
+        values: b.values,
+        compressions: b.compressions,
+        fixed_len,
+        rebuild,
+    }
+}
+
 pub fn source(case: &str) -> Source {
     if case == "shielded" {
-        let payload = circuit_suite::shielded_blake2s::leanvm_input(0);
-        let b = crate::shielded_application::application_vm(&payload).0;
-        let (circuit, connectors) = b.export_circuit();
-        let fixed_len = circuit.public.len() - 4;
-        let rebuild = Box::new(move || {
-            let b = crate::shielded_application::application_vm(&payload).0;
-            (b.values, b.compressions)
-        });
-        return Source {
-            circuit,
-            connectors,
-            values: b.values,
-            compressions: b.compressions,
-            fixed_len,
-            rebuild,
-        };
+        return shielded_source(0);
     }
     assert_eq!(case, "merge");
     let mut b = crate::native_hash::Builder::default();
