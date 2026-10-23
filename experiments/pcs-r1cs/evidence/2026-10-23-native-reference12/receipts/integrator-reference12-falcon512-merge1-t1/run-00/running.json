@@ -1,0 +1,17 @@
+{
+  "pid": 154249,
+  "command": [
+    "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/target-vm-common/release/examples/application_role_profile",
+    "--workload",
+    "falcon512",
+    "--role",
+    "merge",
+    "--height",
+    "1",
+    "--input",
+    "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/split-native-falcon512-quick-t2",
+    "--out",
+    "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/integrator-reference12/falcon512-node1.cert"
+  ],
+  "started_utc": "2026-10-23T11:31:09.399627+00:00"
+}

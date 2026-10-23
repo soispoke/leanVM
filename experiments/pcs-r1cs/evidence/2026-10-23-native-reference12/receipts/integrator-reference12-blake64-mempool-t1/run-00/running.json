@@ -1,0 +1,13 @@
+{
+  "pid": 143931,
+  "command": [
+    "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/target-vm-common/release/examples/application_role_profile",
+    "--workload",
+    "blake2s-64b",
+    "--role",
+    "mempool",
+    "--input",
+    "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/integrator-reference12/blake64-base.cert"
+  ],
+  "started_utc": "2026-10-23T11:24:42.335593+00:00"
+}

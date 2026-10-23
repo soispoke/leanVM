@@ -1,0 +1,13 @@
+{
+  "pid": 150298,
+  "command": [
+    "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/target-vm-common/release/examples/application_role_profile",
+    "--workload",
+    "shielded-transfer",
+    "--role",
+    "native-client",
+    "--out",
+    "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/integrator-reference12/shielded-base.cert"
+  ],
+  "started_utc": "2026-10-23T11:27:53.064374+00:00"
+}

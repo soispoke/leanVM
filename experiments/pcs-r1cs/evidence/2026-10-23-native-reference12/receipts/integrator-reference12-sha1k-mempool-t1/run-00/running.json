@@ -1,0 +1,13 @@
+{
+  "pid": 145281,
+  "command": [
+    "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/target-vm-common/release/examples/application_role_profile",
+    "--workload",
+    "sha256-1kib",
+    "--role",
+    "mempool",
+    "--input",
+    "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/integrator-reference12/sha1k-base.cert"
+  ],
+  "started_utc": "2026-10-23T11:25:46.006188+00:00"
+}

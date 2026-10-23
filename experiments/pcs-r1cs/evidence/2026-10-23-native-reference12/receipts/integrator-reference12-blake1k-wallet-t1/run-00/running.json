@@ -1,0 +1,13 @@
+{
+  "pid": 144324,
+  "command": [
+    "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/target-vm-common/release/examples/application_role_profile",
+    "--workload",
+    "blake2s-1kib",
+    "--role",
+    "native-client",
+    "--out",
+    "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/integrator-reference12/blake1k-base.cert"
+  ],
+  "started_utc": "2026-10-23T11:25:04.216758+00:00"
+}

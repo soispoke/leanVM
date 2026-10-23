@@ -1,0 +1,36 @@
+{
+  "threads": 12,
+  "cpus": "0-11",
+  "lane": "A",
+  "original_commit": "2d490c4fb8b5f544cbaa2ee526636e839f6cb98f",
+  "integrated_commit": "783855cd",
+  "gates": [
+    "integrator12-C2-final-fmt-t1",
+    "integrator12-C2-final-clippy-t1",
+    "integrator12-C2-final-release-t1",
+    "integrator12-C2-final-example-t1",
+    "integrator12-C2-final-build-t1"
+  ],
+  "frozen_source_hashes_match": true,
+  "role_executable_sha256": "a847cf2afbdb1e362e2822b18554fed20933a5eaca14576ab1415118fedab138",
+  "reference_measured_commit": "8715195359dee5cc52a54bd8ef72580d45286581",
+  "role_executable_unchanged": true,
+  "proofs": [
+    {
+      "kind": "base",
+      "bytes": 247956,
+      "blake2s": "b708b4bb428ba7d64d77f02ed38ddad6b7a868b77185b058bc2cc64b69dabe0e",
+      "exact_historical_match": true,
+      "threads": 12,
+      "cpus": "0-11"
+    },
+    {
+      "kind": "node",
+      "bytes": 361196,
+      "blake2s": "1f5566c9e0f2d063233683965ef299cd032ddcd61ae9372582aa36b14e87e269",
+      "exact_historical_match": true,
+      "threads": 12,
+      "cpus": "0-11"
+    }
+  ]
+}

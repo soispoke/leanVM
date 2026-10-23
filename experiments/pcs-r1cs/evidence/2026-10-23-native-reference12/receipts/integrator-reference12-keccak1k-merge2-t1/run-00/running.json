@@ -1,0 +1,17 @@
+{
+  "pid": 149171,
+  "command": [
+    "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/target-vm-common/release/examples/application_role_profile",
+    "--workload",
+    "keccak256-1KiB",
+    "--role",
+    "merge",
+    "--height",
+    "2",
+    "--input",
+    "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/split-native-keccak1k-quick-t1",
+    "--out",
+    "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/integrator-reference12/keccak1k-node2.cert"
+  ],
+  "started_utc": "2026-10-23T11:27:23.853968+00:00"
+}

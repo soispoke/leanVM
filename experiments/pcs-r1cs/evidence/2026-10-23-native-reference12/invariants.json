@@ -1,0 +1,200 @@
+[
+  {
+    "workload": "blake2s-64b",
+    "receipt": "integrator-reference12-blake64-wallet-t1",
+    "bytes": 247956,
+    "blake2s": "b708b4bb428ba7d64d77f02ed38ddad6b7a868b77185b058bc2cc64b69dabe0e",
+    "exact_historical_match": true,
+    "historical": "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/split-native-blake64-quick-t1/app-0-0.cert",
+    "threads": 12,
+    "cpus": "0-11",
+    "commit": "8715195359dee5cc52a54bd8ef72580d45286581"
+  },
+  {
+    "workload": "blake2s-64b",
+    "receipt": "integrator-reference12-blake64-merge1-t1",
+    "bytes": 361196,
+    "blake2s": "1f5566c9e0f2d063233683965ef299cd032ddcd61ae9372582aa36b14e87e269",
+    "exact_historical_match": true,
+    "historical": "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/split-native-blake64-quick-t1/node-0-1.cert",
+    "threads": 12,
+    "cpus": "0-11",
+    "commit": "8715195359dee5cc52a54bd8ef72580d45286581"
+  },
+  {
+    "workload": "blake2s-64b",
+    "receipt": "integrator-reference12-blake64-merge2-t1",
+    "bytes": 360524,
+    "blake2s": "4b8cbef1bc6cb953c9b2bb0c28772ff22eb77f7900cfd222d536b31817b72415",
+    "exact_historical_match": true,
+    "historical": "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/split-native-blake64-quick-t1/node-0-2.cert",
+    "threads": 12,
+    "cpus": "0-11",
+    "commit": "8715195359dee5cc52a54bd8ef72580d45286581"
+  },
+  {
+    "workload": "blake2s-1kib",
+    "receipt": "integrator-reference12-blake1k-wallet-t1",
+    "bytes": 323356,
+    "blake2s": "0c9cd0591181ed8e0f00c5175859c8d3d8cebc45a59981e568b1dfdfef9ae5b2",
+    "exact_historical_match": true,
+    "historical": "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/split-native-blake1k-quick-t1/app-0-0.cert",
+    "threads": 12,
+    "cpus": "0-11",
+    "commit": "8715195359dee5cc52a54bd8ef72580d45286581"
+  },
+  {
+    "workload": "blake2s-1kib",
+    "receipt": "integrator-reference12-blake1k-merge1-t1",
+    "bytes": 355980,
+    "blake2s": "90c7ceb7e626b61d19214694d76e64ff27de84ecb95263481c420a61fd436aee",
+    "exact_historical_match": true,
+    "historical": "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/split-native-blake1k-quick-t1/node-0-1.cert",
+    "threads": 12,
+    "cpus": "0-11",
+    "commit": "8715195359dee5cc52a54bd8ef72580d45286581"
+  },
+  {
+    "workload": "blake2s-1kib",
+    "receipt": "integrator-reference12-blake1k-merge2-t1",
+    "bytes": 354732,
+    "blake2s": "f2cf79af6b878dcae0998fe8ddd31a0980e4704fe97b37336d9cd5f70999a06d",
+    "exact_historical_match": true,
+    "historical": "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/split-native-blake1k-quick-t1/node-0-2.cert",
+    "threads": 12,
+    "cpus": "0-11",
+    "commit": "8715195359dee5cc52a54bd8ef72580d45286581"
+  },
+  {
+    "workload": "sha256-1kib",
+    "receipt": "integrator-reference12-sha1k-wallet-t1",
+    "bytes": 347036,
+    "blake2s": "d36a577d32a9dc3060282977068a2028d7fa014d28164a0a244f8bec524b6e9c",
+    "exact_historical_match": true,
+    "historical": "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/split-native-sha1k-quick-t1/app-0-0.cert",
+    "threads": 12,
+    "cpus": "0-11",
+    "commit": "8715195359dee5cc52a54bd8ef72580d45286581"
+  },
+  {
+    "workload": "sha256-1kib",
+    "receipt": "integrator-reference12-sha1k-merge1-t1",
+    "bytes": 354668,
+    "blake2s": "b9a5a87bcb0fa1b161e83312c94f2a53153dfe556f009366b6204c8449fc0e47",
+    "exact_historical_match": true,
+    "historical": "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/split-native-sha1k-quick-t1/node-0-1.cert",
+    "threads": 12,
+    "cpus": "0-11",
+    "commit": "8715195359dee5cc52a54bd8ef72580d45286581"
+  },
+  {
+    "workload": "sha256-1kib",
+    "receipt": "integrator-reference12-sha1k-merge2-t1",
+    "bytes": 354796,
+    "blake2s": "000c16bccb2fb4cff353dd6890466cba6755ae737666b434da90d5dec757264e",
+    "exact_historical_match": true,
+    "historical": "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/split-native-sha1k-quick-t1/node-0-2.cert",
+    "threads": 12,
+    "cpus": "0-11",
+    "commit": "8715195359dee5cc52a54bd8ef72580d45286581"
+  },
+  {
+    "workload": "keccak256-1KiB",
+    "receipt": "integrator-reference12-keccak1k-wallet-t1",
+    "bytes": 346652,
+    "blake2s": "34aead7285ffea5af600f3e56b408efd84f990a1b83d5bf5920e325d84b77850",
+    "exact_historical_match": true,
+    "historical": "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/split-native-keccak1k-quick-t1/app-0-0.cert",
+    "threads": 12,
+    "cpus": "0-11",
+    "commit": "8715195359dee5cc52a54bd8ef72580d45286581"
+  },
+  {
+    "workload": "keccak256-1KiB",
+    "receipt": "integrator-reference12-keccak1k-merge1-t1",
+    "bytes": 354316,
+    "blake2s": "8a20a0656e08735c497f565451d15f09495122260755aeb37d0d3001005a41d8",
+    "exact_historical_match": true,
+    "historical": "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/split-native-keccak1k-quick-t1/node-0-1.cert",
+    "threads": 12,
+    "cpus": "0-11",
+    "commit": "8715195359dee5cc52a54bd8ef72580d45286581"
+  },
+  {
+    "workload": "keccak256-1KiB",
+    "receipt": "integrator-reference12-keccak1k-merge2-t1",
+    "bytes": 355564,
+    "blake2s": "5318cb5d13c18b130e9458a955c08badfd1d3a0f6392e50084abfdf498664cd9",
+    "exact_historical_match": true,
+    "historical": "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/split-native-keccak1k-quick-t1/node-0-2.cert",
+    "threads": 12,
+    "cpus": "0-11",
+    "commit": "8715195359dee5cc52a54bd8ef72580d45286581"
+  },
+  {
+    "workload": "shielded-transfer",
+    "receipt": "integrator-reference12-shielded-wallet-t1",
+    "bytes": 385204,
+    "blake2s": "910aec6da08a227f0b4a588abf7ecb63f6e83acaea78717c777ff9aed2bd0941",
+    "exact_historical_match": true,
+    "historical": "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/split-native-shielded-quick-t1/app-0-0.cert",
+    "threads": 12,
+    "cpus": "0-11",
+    "commit": "8715195359dee5cc52a54bd8ef72580d45286581"
+  },
+  {
+    "workload": "shielded-transfer",
+    "receipt": "integrator-reference12-shielded-merge1-t1",
+    "bytes": 356012,
+    "blake2s": "e982c7e16e7ac0e62478bc8b86fe2d27e7a4c7814c74c56edf9e9d562d01d861",
+    "exact_historical_match": true,
+    "historical": "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/split-native-shielded-quick-t1/node-0-1.cert",
+    "threads": 12,
+    "cpus": "0-11",
+    "commit": "8715195359dee5cc52a54bd8ef72580d45286581"
+  },
+  {
+    "workload": "shielded-transfer",
+    "receipt": "integrator-reference12-shielded-merge2-t1",
+    "bytes": 354668,
+    "blake2s": "3f7d09af42d918b97de1725760de44fd2f0ce369506bfc9bdaffd5594fd3b5f2",
+    "exact_historical_match": true,
+    "historical": "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/split-native-shielded-quick-t1/node-0-2.cert",
+    "threads": 12,
+    "cpus": "0-11",
+    "commit": "8715195359dee5cc52a54bd8ef72580d45286581"
+  },
+  {
+    "workload": "falcon512",
+    "receipt": "integrator-reference12-falcon512-wallet-t1",
+    "bytes": 384756,
+    "blake2s": "a40a96a27fb60eebe2303234421191ef38d5052a0888ae3da8ff64ddaf3d26ed",
+    "exact_historical_match": true,
+    "historical": "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/split-native-falcon512-quick-t2/app-0-0.cert",
+    "threads": 12,
+    "cpus": "0-11",
+    "commit": "8715195359dee5cc52a54bd8ef72580d45286581"
+  },
+  {
+    "workload": "falcon512",
+    "receipt": "integrator-reference12-falcon512-merge1-t1",
+    "bytes": 353612,
+    "blake2s": "3a08ddf084d1d38aa4b261ece79fe12737a68ddfead2b4c6b4278e020d0bd8ac",
+    "exact_historical_match": true,
+    "historical": "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/split-native-falcon512-quick-t2/node-0-1.cert",
+    "threads": 12,
+    "cpus": "0-11",
+    "commit": "8715195359dee5cc52a54bd8ef72580d45286581"
+  },
+  {
+    "workload": "falcon512",
+    "receipt": "integrator-reference12-falcon512-merge2-t1",
+    "bytes": 356044,
+    "blake2s": "835096f865381adf2d6a13b0d12788bf4f3cd78850958e4593adad64c42a2fdc",
+    "exact_historical_match": true,
+    "historical": "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/split-native-falcon512-quick-t2/node-0-2.cert",
+    "threads": 12,
+    "cpus": "0-11",
+    "commit": "8715195359dee5cc52a54bd8ef72580d45286581"
+  }
+]

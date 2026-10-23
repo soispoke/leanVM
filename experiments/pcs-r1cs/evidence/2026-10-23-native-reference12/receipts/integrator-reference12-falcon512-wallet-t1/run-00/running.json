@@ -1,0 +1,13 @@
+{
+  "pid": 153580,
+  "command": [
+    "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/target-vm-common/release/examples/application_role_profile",
+    "--workload",
+    "falcon512",
+    "--role",
+    "native-client",
+    "--out",
+    "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/integrator-reference12/falcon512-base.cert"
+  ],
+  "started_utc": "2026-10-23T11:30:16.805731+00:00"
+}

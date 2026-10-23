@@ -1,0 +1,17 @@
+{
+  "pid": 151834,
+  "command": [
+    "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/target-vm-common/release/examples/application_role_profile",
+    "--workload",
+    "shielded-transfer",
+    "--role",
+    "merge",
+    "--height",
+    "1",
+    "--input",
+    "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/split-native-shielded-quick-t1",
+    "--out",
+    "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/integrator-reference12/shielded-node1.cert"
+  ],
+  "started_utc": "2026-10-23T11:28:37.034634+00:00"
+}

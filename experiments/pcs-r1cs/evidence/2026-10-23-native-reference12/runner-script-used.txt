@@ -1,0 +1,87 @@
+#!/usr/bin/env python3
+import fcntl, hashlib, json, os, subprocess, sys, time
+from pathlib import Path
+base=Path(__file__).resolve().parent
+tree=base/'application-closure'
+os.sched_setaffinity(0,range(12))
+commit=subprocess.check_output(['git','rev-parse','HEAD'],cwd=tree,text=True).strip()
+assert commit==sys.argv[1], 'Reference requires frozen pushed tip'
+remote=subprocess.check_output(['git','ls-remote','publish','refs/heads/research/r1cs-recursive-verifier'],cwd=tree,text=True).split()[0]
+assert remote==commit, 'Push source before timing reference'
+binary=base/'target-vm-common/release/examples/application_role_profile'
+binary_hash=hashlib.sha256(binary.read_bytes()).hexdigest()
+output=base/'artifacts/integrator-reference12'
+output.mkdir(exist_ok=False)
+workloads=[('blake2s-64b','blake64'),('blake2s-1kib','blake1k'),('sha256-1kib','sha1k'),('keccak256-1KiB','keccak1k'),('shielded-transfer','shielded'),('falcon512','falcon512')]
+records=[]
+invariants=[]
+def emit(workload,role,metric,value,unit,label,**extra):
+ row=dict(path='r1cs-native',workload=workload,role=role,metric=metric,value=value,unit=unit,threads=12,cpus='0-11',receipt=label,lane='A',commit=commit,**extra)
+ records.append(row)
+ with (base/'artifacts/matched-12t.jsonl').open('a') as f:
+  fcntl.flock(f,fcntl.LOCK_EX); f.write(json.dumps(row,sort_keys=True)+'\n');f.flush();os.fsync(f.fileno());fcntl.flock(f,fcntl.LOCK_UN)
+ (output/'matched.jsonl').write_text(''.join(json.dumps(r,sort_keys=True)+'\n' for r in records))
+def run(workload,label,cmd):
+ assert not (base/label).exists(), 'Never overwrite or rerun an existing receipt'
+ print('START',label,flush=True)
+ result=subprocess.Popen(['taskset','-c','0-11','python3',str(base/'run-application-command.py'),'application-closure',label,str(binary),'--workload',workload,*cmd],cwd=tree)
+ previous={}; peak_cpu=0.;samples=0
+ while result.poll() is None:
+  now=time.monotonic()
+  for proc in Path('/proc').glob('[0-9]*'):
+   try:
+    if (proc/'exe').resolve()!=binary.resolve(): continue
+    fields=(proc/'stat').read_text().rsplit(')',1)[1].split()
+    ticks=int(fields[11])+int(fields[12])
+    for task in (proc/'task').iterdir():
+     status=(task/'status').read_text()
+     mask=next(line.split(':',1)[1].strip() for line in status.splitlines() if line.startswith('Cpus_allowed_list:'))
+     assert mask=='0-11', (task,mask)
+    if proc.name in previous:
+     before,t=previous[proc.name]
+     peak_cpu=max(peak_cpu,100.*(ticks-before)/os.sysconf('SC_CLK_TCK')/(now-t));samples+=1
+    previous[proc.name]=(ticks,now)
+   except (FileNotFoundError,ProcessLookupError,PermissionError): pass
+  time.sleep(1)
+ assert result.returncode==0,(label,result.returncode)
+ cpu=dict(receipt=label,peak_sampled_cpu_percent=peak_cpu,samples=samples,threads=12,cpus='0-11',scope='process CPU across threads; one-second samples; all thread affinity masks checked')
+ with (output/'cpu-observations.jsonl').open('a') as f: f.write(json.dumps(cpu,sort_keys=True)+'\n')
+ receipt=json.loads((base/label/'result.json').read_text())
+ assert receipt['ok'] and receipt['files_unchanged']
+ assert receipt['threads']==12 and receipt['cpus']=='0-11'
+ events=[json.loads(line) for line in (base/label/'run-00/stdout.log').read_text().splitlines() if line.startswith('{')]
+ assert events and all(e['threads']==12 and e['cpus']=='0-11' for e in events)
+ assert hashlib.sha256(binary.read_bytes()).hexdigest()==binary_hash
+ setup=next(e for e in events if e['kind']=='role_setup')
+ measurement=next(e for e in events if e['kind']=='role_measurement')
+ assert measurement['status']=='verified'
+ emit(workload,'setup',measurement['role']+'_setup',setup['setup_ms'],'ms',label)
+ print('FINISH',label,json.dumps(measurement),flush=True)
+ return measurement
+def check(workload,label,actual,old):
+ a=actual.read_bytes();b=old.read_bytes();assert a==b,(actual,old)
+ invariants.append(dict(workload=workload,receipt=label,bytes=len(a),blake2s=hashlib.blake2s(a).hexdigest(),exact_historical_match=True,historical=str(old),threads=12,cpus='0-11',commit=commit))
+ (output/'invariants.json').write_text(json.dumps(invariants,indent=2)+'\n')
+for workload,short in workloads:
+ historical=base/('artifacts/split-native-'+short+'-quick-'+('t2' if short=='falcon512' else 't1'))
+ cert=output/(short+'-base.cert')
+ label='integrator-reference12-'+short+'-wallet-t1'
+ m=run(workload,label,['--role','native-client','--out',str(cert)])
+ check(workload,label,cert,historical/'app-0-0.cert')
+ for metric,key,unit in [('native_trace_creation','native_trace_creation_ms','ms'),('native_proof_creation','application_proof_ms','ms'),('proof_encoding','encoding_ms','ms'),('proof_bytes','certificate_bytes','bytes'),('peak_process_ram','peak_rss_bytes','bytes')]:
+  emit(workload,'wallet',metric,m[key],unit,label)
+ emit(workload,'wallet','time_to_mempool_ready_proof',(m['native_trace_creation_ms']+m['application_proof_ms']+m['encoding_ms'])/1000.,'s',label)
+ label='integrator-reference12-'+short+'-mempool-t1'
+ m=run(workload,label,['--role','mempool','--input',str(cert)])
+ emit(workload,'mempool','decode_and_native_verification',m['decode_verify_ms'],'ms',label)
+ emit(workload,'mempool','proof_bytes',m['certificate_bytes'],'bytes',label)
+ emit(workload,'mempool','peak_process_ram',m['peak_rss_bytes'],'bytes',label)
+ for height in (1,2):
+  label=f'integrator-reference12-{short}-merge{height}-t1'
+  cert=output/f'{short}-node{height}.cert'
+  m=run(workload,label,['--role','merge','--height',str(height),'--input',str(historical),'--out',str(cert)])
+  check(workload,label,cert,historical/f'node-0-{height}.cert')
+  emit(workload,'aggregator','leaf_merge' if height==1 else 'node_merge',m['merge_ms']/1000.,'s',label,height=height)
+  for metric,key,unit in [('verification','verify_ms','ms'),('proof_bytes','certificate_bytes','bytes'),('peak_process_ram','peak_rss_bytes','bytes'),('proof_encoding','encoding_ms','ms')]:
+   emit(workload,'aggregator',metric,m[key],unit,label,height=height)
+print('MATRIX PASSED',commit,flush=True)
