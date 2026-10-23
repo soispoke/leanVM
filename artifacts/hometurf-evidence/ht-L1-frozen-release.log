@@ -1,0 +1,171 @@
+   Compiling alloy-primitives v1.7.2
+   Compiling revm-primitives v20.2.1
+   Compiling alloy-eip2930 v0.2.4
+   Compiling alloy-eip7702 v0.6.3
+   Compiling revm-bytecode v6.2.2
+   Compiling revm-precompile v25.0.0
+   Compiling ethereum_serde_utils v0.8.1
+   Compiling revm-state v7.0.5
+   Compiling ethereum_ssz v0.10.4
+   Compiling revm-database-interface v7.0.5
+   Compiling revm-context-interface v9.0.0
+   Compiling revm-database v7.0.5
+   Compiling revm-interpreter v24.0.0
+   Compiling revm-context v8.0.4
+   Compiling revm-handler v8.1.0
+   Compiling xmss v0.1.0 (/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/ht-L1/crates/xmss)
+   Compiling revm-inspector v8.1.0
+   Compiling revm v27.1.0
+   Compiling evm v0.1.0 (/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/ht-L1/crates/evm)
+   Compiling circuit_suite v0.1.0 (/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/ht-L1/crates/circuit_suite)
+   Compiling format_recursion v0.1.0 (/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/ht-L1/crates/format_recursion)
+   Compiling rec_aggregation v0.1.0 (/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/ht-L1/crates/rec_aggregation)
+    Finished `release` profile [optimized] target(s) in 1m 05s
+     Running unittests src/lib.rs (../target-ht-L1/release/deps/format_recursion-7266ce94e0ccecb5)
+
+running 88 tests
+test boolean_field::tests::sparse_base_maps_match_native_on_every_binary_basis_vector ... ok
+test boolean_field::tests::profile_multiplication_cutoffs_and_check_native_values ... ok
+test boolean_field::tests::windowed_linear_maps_match_native_on_a_complete_binary_basis ... ok
+test closed_recursion::tests::first_merge_rejects_malformed_child_without_host_admission ... ok
+test closed_recursion::tests::height_maximum_matches_integer_order_at_boundaries ... ok
+test closed_recursion::tests::height_successor_is_nonwrapping ... ok
+test boolean_field::tests::five_product_matches_native_on_every_binary_basis_pair ... ok
+test flock_trace::tests::polynomial_lagrange_and_ring_views_match_at_random_and_domain_points ... ok
+test flock_trace::tests::reduction_matches_reference_and_rejects_changed_terminal_slice ... ok
+test flock_trace::tests::reduction_records_its_transcript_hashes_and_has_fixed_program ... ok
+test flock_trace::tests::symbolic_matrix_walk_matches_reference ... ok
+test hash_batch::tests::an_unbound_proof_of_unrelated_hashes_is_rejected ... ok
+test hash_batch::tests::binding_point_detects_every_io_column_including_padding ... ok
+test hash_batch::tests::honest_and_adversarial_public_batch ... ok
+test hash_batch::tests::public_io_matches_packed_flock_layout ... ok
+test hometurf_application::tests::merkle_path_and_proof_tampering_are_rejected ... ok
+test native_arithmetic::tests::compact_preparation_and_reduction_preserve_every_limb_claim_and_transcript ... ok
+test native_arithmetic::tests::deferred_native_evaluations_match_reference_for_dense_sparse_and_boundary_lengths ... ok
+test native_arithmetic::tests::factored_index_opening_matches_the_complete_dense_proof ... ok
+test native_arithmetic::tests::native_circuit_proves_and_rejects_gate_public_and_transcript_changes ... ok
+test native_arithmetic::tests::parallel_opening_weights_preserve_overlapping_claim_accumulation ... ok
+test native_arithmetic::tests::shared_copy_fingerprints_match_reference_including_zero_one_and_extension_cells ... ok
+test native_hash::tests::compression_chain_rejects_wrong_digest_and_witness_and_proof ... ok
+test native_recursion::tests::complete_certificate_binds_public_requests_context_and_components ... ok
+test native_recursion::tests::compression_chunks_have_fixed_order_and_boundaries ... ok
+test native_verifier::tests::alternate_index_rate_records_and_binds_production_profile ... ok
+test native_verifier::tests::complete_recorder_enforces_same_public_context_index_and_proof ... ok
+test native_verifier::tests::product_recorder_matches_concrete_even_odd_and_zero_depths ... ok
+test private_bridge::tests::bridge_shape_is_bounded_and_all_named_words_are_valid_variables ... ok
+test private_bridge::tests::compact_joint_layout_keeps_flock_aligned_and_disjoint ... ok
+test private_bridge::tests::compact_native_views_and_claims_preserve_every_used_limb ... ok
+test private_bridge::tests::connector_triples_keep_original_words_and_constrain_their_helpers ... ok
+test private_bridge::tests::joint_rate_profile_uses_validated_production_parameters ... ok
+test private_bridge::tests::private_chain_proves_without_disclosed_requests_and_rejects_mutations ... ok
+test closed_recursion::tests::split_closure_directly_merges_base_proofs_and_rejects_unauthenticated_children ... ok
+test closed_recursion::tests::fixed_base_relation_closes_and_enforces_equations_without_host_admission ... ok
+test private_trace::tests::aligned_hashes_route_private_limbs_and_type_unused_words ... ok
+test private_trace::tests::aligned_slice_types_omitted_source_limbs_and_rejects_compensating_high_bits ... ok
+test private_trace::tests::aligned_slices_and_packs_reuse_bridge_typing_and_preserve_shape ... ok
+test private_trace::tests::all_widths_have_exact_sparse_projections_and_checked_bounds ... ok
+test private_trace::tests::decompositions_are_cached_and_boolean ... ok
+test private_trace::tests::explicit_width_checks_bind_all_original_high_bits ... ok
+test private_trace::tests::fixed_hash_prefixes_are_folded_but_private_zero_words_are_not ... ok
+test private_trace::tests::fixed_program_checks_and_constants_cannot_be_changed ... ok
+test private_trace::tests::fully_fixed_hashes_keep_one_bridge_block_and_bind_outputs ... ok
+test private_trace::tests::lookup_tables_preserve_variable_and_constraint_order ... ok
+test private_trace::tests::multiply_add_fusion_preserves_observable_intermediates_and_inputs ... ok
+test private_trace::tests::native_operations_and_private_projections_are_constrained ... ok
+test private_trace::tests::opposite_selections_share_checks_without_freeing_the_selector ... ok
+test private_trace::tests::packed_hash_halves_and_selects_keep_native_widths ... ok
+test private_trace::tests::preflight_rejects_small_budgets_and_reuses_projected_bits ... ok
+test private_trace::tests::prepared_program_matches_reference_and_binds_structure_and_outputs ... ok
+test private_trace::tests::private_hash_routing_matches_native_boundaries_and_chains ... ok
+test private_trace::tests::private_range_typing_batches_fourteen_unique_words_and_checks_budget ... ok
+test private_trace::tests::range_checks_use_private_typing_and_exact_partial_words ... ok
+test private_trace::tests::sparse_projections_and_hashes_keep_exact_full_source_semantics ... ok
+test private_trace::tests::sparse_projections_only_decompose_touched_typed_limbs ... ok
+test private_trace::tests::typing_compression_uses_all_fourteen_free_input_words ... ok
+test private_trace::tests::witness_schedule_matches_all_helper_values_for_hashes_projections_and_frobenius ... ok
+test private_recursion::tests::private_leaf_proofs_bind_fresh_statements_and_strict_bytes ... ok
+test public_plan::tests::projected_inputs_require_consistent_overlaps_and_isolation ... ok
+test public_plan::tests::repeated_hash_sources_and_lengths_are_bound ... ok
+test public_plan::tests::zero_tails_and_boolean_selection_are_checked ... ok
+test recursion_fast::tests::independent_hashlib_tag_vectors ... ok
+test recursion_fast::tests::leaf_circuit_binds_start_length_digest_and_padding ... ok
+test recursion_fast::tests::native_node_relation_requires_actual_child_acceptance_and_caps ... ok
+test recursion_fast::tests::node_gadget_binds_order_and_both_children ... ok
+test recursion_fast::tests::reject_chain_and_construction_caps_before_large_work ... ok
+test replay::tests::replay_cannot_stand_in_for_hash_verification ... ok
+test replay::tests::replay_checks_every_arithmetic_kind_and_public_output ... ok
+test shielded_application::tests::shapes_and_rejections ... ok
+test shielded_lookup::tests::byte_tables_match_integer_semantics_and_reject_malformed_requests ... ok
+test shielded_lookup::tests::domains_and_row_model_are_fixed ... ok
+test shielded_lookup::tests::tampered_multiplicity_is_rejected ... ok
+test shielded_lookup_prototype::tests::three_shapes_and_all_rule_mutations ... ok
+test trace::tests::concatenation_preserves_all_dependencies_checks_and_outputs ... ok
+test trace::tests::constant_sharing_keeps_recorded_operations_independent_of_input_values ... ok
+test trace::tests::constants_share_only_public_values_and_reset_with_each_trace ... ok
+test trace::tests::field_operations_match_native_and_bind_their_inputs ... ok
+test private_verifier::tests::private_argument_records_complete_verifier_and_binds_key_public_context ... ok
+test trace::tests::merkle_selection_uses_the_constrained_bit ... ok
+test trace::tests::nonzero_advice_is_constrained ... ok
+test trace::tests::hashes_match_native_across_block_boundaries ... ok
+test verifier::tests::merkle_sources_enforce_serialized_word_and_digest_ranges ... ok
+test verifier::tests::merkle_paths_enforce_omitted_zero_lanes ... ok
+test xmss_application::tests::exact_leanvm_signature_and_malformed_claims ... ok
+test private_bridge::tests::verifier_rejects_invalid_private_bindings_without_prover_prechecks ... ok
+test closed_recursion::tests::common_key_verifies_leaf_and_repeated_composition_and_rejects_wrong_claims ... ok
+
+test result: ok. 88 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 50.33s
+
+     Running unittests src/lib.rs (../target-ht-L1/release/deps/rec_aggregation-9196c24e5b7a544a)
+
+running 48 tests
+test aggregation::chain_tree::tests::exact_tagged_leaf_execution ... ok
+test aggregation::chain_tree::tests::forwarded_claim_schema_is_exact ... ok
+test aggregation::common_chain_tree::tests::guest_height_matches_checked_integer_successor ... ok
+test aggregation::common_chain_tree::tests::common_key_leaf_execution_and_binding ... ok
+test aggregation::tests::aggregate_hints_bind ... ignored
+test aggregation::tests::aggregate_many_leaf_index_groups ... ok
+test aggregation::tests::aggregate_mixed_leaf ... ok
+test aggregation::tests::a_node_may_publish_less_than_it_covers ... ok
+test aggregation::chain_tree::tests::actual_root_rejects_deferred_record_attacks ... ok
+test aggregation::tests::aggregate_one_key_two_messages ... ok
+test aggregation::tests::aggregate_mixed_two_to_one ... ok
+test aggregation::tests::aggregate_one_sphincs_signer ... ok
+test aggregation::tests::aggregate_one_signer ... ok
+test aggregation::tests::aggregate_rejects_a_bad_signature ... ignored
+test aggregation::tests::aggregate_statement_binds ... ignored
+test aggregation::tests::aggregate_three_levels ... ignored
+test aggregation::tests::aggregate_one_scheme_per_child ... ok
+test aggregation::common_chain_tree::tests::actual_common_key_repeated_and_mixed_height_composition ... ok
+test aggregation::tests::aggregate_overlapping_signers ... ok
+test aggregation::tests::aggregate_with_a_da_payload ... ok
+test aggregation::tests::da_blob_proof ... ignored
+test aggregation::tests::aggregate_two_leaf_indices ... ok
+test aggregation::tests::aggregate_two_to_one ... ok
+test aggregation::tests::da_guest_bounds_coverage_slots ... ok
+test aggregation::tests::ceil_log_hints_enforce_rounding_and_floor ... ok
+test aggregation::tests::da_guest_checks_commitment_and_codewords ... ok
+test aggregation::tests::da_guest_hashes_root_lists ... ok
+test aggregation::tests::da_row_shape_checks_power_of_two_boundaries ... ok
+test aggregation::tests::every_guest_blake2s_metadata_cell_is_written_first ... ok
+test aggregation::tests::da_row_count_is_a_run_time_parameter ... ok
+test aggregation::tests::guest_compiles_reproducibly ... ok
+test aggregation::tests::da_root_lists_merge_two_and_three ... ok
+test aggregation::tests::invalid_blob_sizes_are_rejected ... ok
+test aggregation::tests::invalid_da_selections_are_rejected_before_building_the_proof ... ok
+test aggregation::tests::keygen_and_verification_hash_domains_are_disjoint ... ok
+test aggregation::tests::leaf_claim_matches_the_general_path ... ok
+test aggregation::tests::malformed_raw_signature_is_an_error ... ok
+test aggregation::tests::malformed_raw_sphincs_signature_is_an_error ... ok
+test aggregation::tests::max_keys_bound_is_exclusive ... ok
+test aggregation::tests::no_payload_publishes_the_empty_root_list ... ok
+test aggregation::tests::guest_merkle_children_bind_every_link ... ok
+test aggregation::tests::signature_claims_keep_the_wire_layout ... ok
+test aggregation::tests::signature_tweaks_align_with_distinct_domains ... ok
+test aggregation::tests::raw_signatures_follow_the_table_not_the_leaf_indices ... ok
+test hash_chain::blake2s_hash_chain ... ok
+test signers_cache::tests::signer_seed_uses_more_than_one_byte ... ok
+test aggregation::tests::guest_column_selectors_match_native_eq ... ok
+test aggregation::tests::da_roots_accumulate_and_can_be_selected_or_omitted ... ok
+
+test result: ok. 43 passed; 0 failed; 5 ignored; 0 measured; 0 filtered out; finished in 70.57s
+

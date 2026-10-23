@@ -1,0 +1,27 @@
+   Compiling alloy-rlp v0.3.16
+   Compiling ruint v1.20.0
+   Compiling alloy-primitives v1.7.2
+   Compiling revm-primitives v20.2.1
+   Compiling alloy-eip7702 v0.6.3
+   Compiling alloy-eip2930 v0.2.4
+   Compiling revm-bytecode v6.2.2
+   Compiling revm-precompile v25.0.0
+   Compiling revm-state v7.0.5
+   Compiling revm-database-interface v7.0.5
+   Compiling revm-context-interface v9.0.0
+   Compiling revm-database v7.0.5
+   Compiling revm-interpreter v24.0.0
+   Compiling revm-context v8.0.4
+   Compiling revm-handler v8.1.0
+   Compiling revm-inspector v8.1.0
+   Compiling revm v27.1.0
+   Compiling evm v0.1.0 (/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/ht-L1/crates/evm)
+   Compiling circuit_suite v0.1.0 (/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/ht-L1/crates/circuit_suite)
+    Finished `release` profile [optimized] target(s) in 55.02s
+     Running unittests src/lib.rs (../target-ht-L1/release/deps/circuit_suite-670681c04b07d437)
+
+running 1 test
+test shielded_blake2s::tests::gate_circuit_matches_blake2s_reference ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 80 filtered out; finished in 1.07s
+

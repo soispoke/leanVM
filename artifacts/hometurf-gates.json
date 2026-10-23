@@ -1,0 +1,110 @@
+{
+  "base_commit": "0830fb9a57650bd6134f7d57ff7d5f477da184f2",
+  "tested_source_commit": "ee7c0c7d8618189d005b8c130b12b7e78294319a",
+  "rust_toolchain": "1.99.1",
+  "build_test_cpus": "48-63",
+  "CARGO_BUILD_JOBS": 4,
+  "test_threads": 4,
+  "native_pool_threads": 12,
+  "checks": [
+    {
+      "command": "cargo fmt --all -- --check",
+      "status": "passed",
+      "log": "hometurf-evidence/ht-L1-frozen-fmt.log"
+    },
+    {
+      "command": "cargo clippy --release -p format_recursion -p rec_aggregation -p circuit_suite --all-targets -- -D warnings",
+      "status": "passed",
+      "log": "hometurf-evidence/ht-L1-frozen-clippy.log"
+    },
+    {
+      "command": "cargo test --release -p format_recursion -p rec_aggregation -p circuit_suite -- --test-threads=4",
+      "status": "passed",
+      "counts": {
+        "circuit_suite": {
+          "passed": 77,
+          "ignored": 4
+        },
+        "format_recursion": {
+          "passed": 88,
+          "ignored": 0
+        },
+        "rec_aggregation": {
+          "passed": 43,
+          "ignored": 5
+        }
+      },
+      "log": "hometurf-evidence/ht-L1-release-all-final.log"
+    },
+    {
+      "command": "cargo test --release -p format_recursion -p rec_aggregation --lib -- --test-threads=4",
+      "status": "passed",
+      "counts": {
+        "format_recursion": {
+          "passed": 88,
+          "ignored": 0
+        },
+        "rec_aggregation": {
+          "passed": 43,
+          "ignored": 5
+        }
+      },
+      "log": "hometurf-evidence/ht-L1-frozen-release.log"
+    },
+    {
+      "command": "cargo test --release -p circuit_suite shielded_blake2s -- --test-threads=4",
+      "status": "passed",
+      "passed": 1,
+      "log": "hometurf-evidence/ht-L1-frozen-shielded-release.log"
+    },
+    {
+      "command": "cargo build --release -p format_recursion --example native_hash_application --example hometurf_native --example xmss_native --example shielded_native",
+      "status": "passed",
+      "log": "hometurf-evidence/ht-L1-frozen-app-build.log"
+    }
+  ],
+  "tested_source_sha256": {
+    "Cargo.lock": "70469729c99784b56e11f91e5a5e6fb65cdbf0518f89c188cbd99b2488026f4d",
+    "crates/circuit_suite/src/lib.rs": "bf98a8fe963d58a97cf8cd83a75d5221e990c03a2af3b1252cfdc01d86077821",
+    "crates/circuit_suite/src/shielded_blake2s.rs": "7068700e4d686c6e77373d666524490fce9a1c2bcaa31d7e939da7689ff8aa0d",
+    "crates/format_recursion/Cargo.toml": "53c00ddde7110d02a23108ab09daecbd09324ea27d2957d3f7a2626a5200669d",
+    "crates/format_recursion/examples/hometurf_native.rs": "4ed2aa16b646dbac717c2519f65eb078e8acbc1e1e31f588bc37b2f02cfdee60",
+    "crates/format_recursion/examples/native_hash_application.rs": "ce749e068b79a4e21167635fe0632ec434d7f2e8f81517508a7c880fc1a2d5c1",
+    "crates/format_recursion/examples/shielded_native.rs": "8b9cf7f03a5fa4fee492e0d8f7e765a631ffdae412c73220c6289c68f55914cb",
+    "crates/format_recursion/examples/xmss_native.rs": "c307f3a4420901ecf8d82547577ea45882a5915ef158a457dd5e2962e9bd3e38",
+    "crates/format_recursion/src/closed_recursion.rs": "823abbcac5b69f2a221468e4acaab6ef4ffa6015da5a60380c59c76c5189f86b",
+    "crates/format_recursion/src/hometurf_application.rs": "85e307bc47791afb94abfeab819c2307fbe737cd3c1be350b2be25d275eb2b51",
+    "crates/format_recursion/src/lib.rs": "ef416a50e339e9d1886fd39816ac9742a7a58717c5e2ec9e0147b45ba4c3dd26",
+    "crates/format_recursion/src/native_hash.rs": "d59a9fcf3037fd2e9d9ab39903936ffcf987e1a852ceef7c8d0a7a0ad95b0a55",
+    "crates/format_recursion/src/private_verifier.rs": "cc6c10f59f5feca2fc23d903e0ca821d3d6b1dd85381b51a92ab5e0d78ed3f31",
+    "crates/format_recursion/src/shielded_application.rs": "47a1388ed1040aa0981f8a98fc1eba85fd4fb662c62caa34fe5b554e18b11bfd",
+    "crates/format_recursion/src/shielded_lookup.rs": "0e89170aeb4b4b9935687b10d5e84181c4092a932a26630ec090969e31e498f4",
+    "crates/format_recursion/src/shielded_lookup_prototype.rs": "0a25642d58e6f196d3f82e5728c5719e1ee40cb18513ab77945289447e6ef452",
+    "crates/format_recursion/src/xmss_application.rs": "dd2abbe4d45550f8b39c6661663c734b8b02b2a1d4e832f79d7e3dc56e1688bf",
+    "crates/rec_aggregation/examples/first_merge_profile.rs": "1df02b6652eeee688fcbabfd06c8efad0e324150bec97d2ce9ab640e59b6cb48",
+    "crates/rec_aggregation/examples/native_first_profile.rs": "ceb7261bd915fbfdecf7b7bff2ab2324075ff4cff0e0f3e16fb5d3e1ae663bcb",
+    "crates/rec_aggregation/examples/tree_shape_census.rs": "bf6ff7c8621a57ea314d7532c115158f1cfa8c8ad36d65dc8b5832526822435f",
+    "experiments/pcs-r1cs/measure_hometurf.py": "afae93abace00c3f6a2a1dd0d51cc78b9007f5ba690e9b447c5452aa3c036433"
+  },
+  "integration": {
+    "L3": [
+      "11276e8f",
+      "168ea19e",
+      "7b49025a",
+      "36e634b1",
+      "63773d41"
+    ],
+    "L4": [
+      "2bd61869",
+      "0e25a804",
+      "c93d62c7",
+      "d699ea0e",
+      "e81b3d2c",
+      "f9848123"
+    ]
+  },
+  "remaining_followups": [
+    "Review and integrate newer L3 shared-root lookup prototype after its own tests and security-binding review",
+    "Review corrected L4 census/report commits after baseline push; broken dbd06360 not integrated"
+  ]
+}

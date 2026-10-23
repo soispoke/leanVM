@@ -10,91 +10,91 @@ R1CS measurements come from `hometurf-L1-final/*-summary.json` and the final L1 
 
 | System | Wallet ms | RAM MiB | Proof bytes | Verify ms |
 |---|---:|---:|---:|---:|
-| R1CS native hash rows | 22.5 | 72.7 | 193,880 | 3.85 |
+| R1CS native hash rows | 26.0 | 70.6 | 193,880 | 4.79 |
 | R1CS gates (historical) | 106.1 | 334.9 | 247,956 | 5.21 |
 | RISC-V leanVM | 82.2 | 100.6 | 172,830 | 17.05 |
 
-Wallet: R1CS is 3.66x faster.
+Wallet: R1CS is 3.16x faster.
 
 **blake2s-1kib**
 
 | System | Wallet ms | RAM MiB | Proof bytes | Verify ms |
 |---|---:|---:|---:|---:|
-| R1CS native hash rows | 22.9 | 70.7 | 194,336 | 3.80 |
+| R1CS native hash rows | 35.5 | 69.7 | 194,336 | 6.09 |
 | R1CS gates (historical) | 1307.4 | 3985.0 | 323,356 | 6.97 |
 | RISC-V leanVM | 184.3 | 172.6 | 196,166 | 14.53 |
 
-Wallet: R1CS is 8.04x faster.
+Wallet: R1CS is 5.19x faster.
 
 **hashchain-16**
 
 | System | Wallet ms | RAM MiB | Proof bytes | Verify ms |
 |---|---:|---:|---:|---:|
-| R1CS native hash rows | 21.3 | 73.1 | 193,824 | 4.30 |
+| R1CS native hash rows | 27.9 | 70.9 | 193,824 | 4.16 |
 | R1CS gates (historical) | unmeasured | unmeasured | unmeasured | unmeasured |
 | RISC-V leanVM | 75.9 | 96.1 | 170,358 | 12.72 |
 
-Wallet: R1CS is 3.57x faster.
+Wallet: R1CS is 2.72x faster.
 
 **hashchain-256**
 
 | System | Wallet ms | RAM MiB | Proof bytes | Verify ms |
 |---|---:|---:|---:|---:|
-| R1CS native hash rows | 34.5 | 99.5 | 200,440 | 4.81 |
+| R1CS native hash rows | 51.0 | 101.9 | 200,440 | 7.16 |
 | R1CS gates (historical) | unmeasured | unmeasured | unmeasured | unmeasured |
 | RISC-V leanVM | 129.7 | 121.7 | 188,990 | 13.13 |
 
-Wallet: R1CS is 3.77x faster.
+Wallet: R1CS is 2.55x faster.
 
 **hashchain-4096**
 
 | System | Wallet ms | RAM MiB | Proof bytes | Verify ms |
 |---|---:|---:|---:|---:|
-| R1CS native hash rows | 259.9 | 617.5 | 265,512 | 6.05 |
+| R1CS native hash rows | 343.9 | 618.4 | 265,512 | 5.83 |
 | R1CS gates (historical) | unmeasured | unmeasured | unmeasured | unmeasured |
 | RISC-V leanVM | 495.0 | 554.8 | 219,894 | 13.10 |
 
-Wallet: R1CS is 1.90x faster.
+Wallet: R1CS is 1.44x faster.
 
 **merkle-20**
 
 | System | Wallet ms | RAM MiB | Proof bytes | Verify ms |
 |---|---:|---:|---:|---:|
-| R1CS native hash rows | 23.6 | 71.0 | 191,504 | 4.32 |
+| R1CS native hash rows | 28.0 | 68.9 | 194,656 | 4.22 |
 | R1CS gates (historical) | unmeasured | unmeasured | unmeasured | unmeasured |
 | RISC-V leanVM | 73.8 | 99.2 | 170,838 | 16.77 |
 
-Wallet: R1CS is 3.12x faster.
+Wallet: R1CS is 2.63x faster.
 
 **merkle-32**
 
 | System | Wallet ms | RAM MiB | Proof bytes | Verify ms |
 |---|---:|---:|---:|---:|
-| R1CS native hash rows | 23.5 | 69.3 | 193,928 | 4.51 |
+| R1CS native hash rows | 23.9 | 68.1 | 194,400 | 4.97 |
 | R1CS gates (historical) | unmeasured | unmeasured | unmeasured | unmeasured |
 | RISC-V leanVM | 79.9 | 102.7 | 174,110 | 13.45 |
 
-Wallet: R1CS is 3.41x faster.
+Wallet: R1CS is 3.34x faster.
 
 **leanxmss**
 
 | System | Wallet ms | RAM MiB | Proof bytes | Verify ms |
 |---|---:|---:|---:|---:|
-| R1CS native hash rows | 42.5 | 110.6 | 208,656 | 4.67 |
+| R1CS native hash rows | 41.4 | 112.4 | 208,656 | 4.61 |
 | R1CS gates (historical) | unmeasured | unmeasured | unmeasured | unmeasured |
 | RISC-V leanVM | 103.0 | 121.7 | 187,974 | 12.54 |
 
-Wallet: R1CS is 2.42x faster.
+Wallet: R1CS is 2.48x faster.
 
 **shielded**
 
 | System | Wallet ms | RAM MiB | Proof bytes | Verify ms |
 |---|---:|---:|---:|---:|
-| R1CS native hash rows | 204.1 | 550.0 | 274,272 | 5.77 |
+| R1CS native hash rows | 214.7 | 528.6 | 274,272 | 5.43 |
 | R1CS gates (historical) | unmeasured | unmeasured | unmeasured | unmeasured |
 | RISC-V leanVM | 275.5 | 190.0 | 197,990 | 19.86 |
 
-Wallet: R1CS is 1.35x faster.
+Wallet: R1CS is 1.28x faster.
 
 The brief cited earlier leanVM BLAKE times of 146 ms / 222 ms for 64 B / 1 KiB. The fresh same-slice reference-binary runs above are faster, so the verdict uses those fresh comparisons rather than the older figures.
 
