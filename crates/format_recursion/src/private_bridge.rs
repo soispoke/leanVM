@@ -28,7 +28,7 @@ const SLOTS: [usize; 18] = [0, 1, 2, 3, 4, 5, 6, 7, 10, 11, 12, 13, 14, 15, 16, 
 pub(crate) const JOINT_LOG_INV_RATE: usize = 2;
 const INDEX_LOG_INV_RATE: usize = 4;
 const MIN_BLOCKS: usize = 128;
-const MAX_BLOCKS: usize = 1 << 16;
+pub(crate) const MAX_BLOCKS: usize = 1 << 17;
 
 /// Four native columns have three F64 limbs each. Unlike the standalone
 /// arithmetic stack, this joint commitment does not retain each fourth slot.

@@ -28,7 +28,7 @@ pub struct Node {
     pub value: F192,
 }
 
-#[derive(Default)]
+#[derive(Clone, Default)]
 pub struct Trace {
     pub nodes: Vec<Node>,
     pub checks: Vec<(S, S)>,
@@ -49,6 +49,11 @@ pub struct S(pub usize);
 pub fn start() {
     CONSTANTS.with(|c| c.borrow_mut().clear());
     TRACE.with(|t| *t.borrow_mut() = Trace::default());
+}
+/// Continue a fixed recorded program, without carrying another recording's constant cache.
+pub(crate) fn resume(program: Trace) {
+    CONSTANTS.with(|c| c.borrow_mut().clear());
+    TRACE.with(|t| *t.borrow_mut() = program);
 }
 pub fn take() -> Trace {
     CONSTANTS.with(|c| c.borrow_mut().clear());

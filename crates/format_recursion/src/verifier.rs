@@ -21,6 +21,7 @@ pub(crate) struct Transcript<'a> {
     proof: std::borrow::Cow<'a, RawProof>,
     compressed: Option<&'a Proof>,
     placeholder: bool,
+    well_formed: bool,
     state: [S; 2],
     cursor: usize,
     phase: usize,
@@ -33,6 +34,7 @@ impl<'a> Transcript<'a> {
             proof: std::borrow::Cow::Borrowed(proof),
             compressed: None,
             placeholder: false,
+            well_formed: true,
             state,
             cursor: 0,
             phase: 0,
@@ -48,6 +50,7 @@ impl<'a> Transcript<'a> {
             }),
             compressed: Some(proof),
             placeholder: false,
+            well_formed: true,
             state,
             cursor: 0,
             phase: 0,
@@ -63,6 +66,7 @@ impl<'a> Transcript<'a> {
             }),
             compressed: None,
             placeholder: true,
+            well_formed: true,
             state,
             cursor: 0,
             phase: 0,
@@ -88,7 +92,10 @@ impl<'a> Transcript<'a> {
         let x = S::input(if self.placeholder {
             F192::ZERO
         } else {
-            self.proof.stream[self.cursor]
+            self.proof.stream.get(self.cursor).copied().unwrap_or_else(|| {
+                self.well_formed = false;
+                F192::ZERO
+            })
         });
         self.cursor += 1;
         x
@@ -143,32 +150,56 @@ impl<'a> Transcript<'a> {
         base: bool,
         live_lanes: usize,
     ) -> Vec<Vec<S>> {
-        let expanded;
-        let paths = if self.placeholder {
-            expanded = queries
+        let words = if base { lanes } else { 3 * lanes };
+        let dummy_paths = || {
+            queries
                 .iter()
                 .map(|query| fiat_shamir::merkle::RawMerklePath {
                     leaf_index: query.value().c0 as usize,
-                    leaf_data: vec![primitives::field::F64::ZERO; if base { lanes } else { 3 * lanes }],
+                    leaf_data: vec![primitives::field::F64::ZERO; words],
                     path: vec![[0; 32]; depth],
                 })
-                .collect::<Vec<_>>();
+                .collect::<Vec<_>>()
+        };
+        let expanded;
+        let paths = if self.placeholder {
+            expanded = dummy_paths();
             self.phase += queries.len();
             expanded.as_slice()
         } else if let Some(proof) = self.compressed {
-            let root_bytes = fiat_shamir::merkle::scalars_to_hash(&root.map(S::value)).expect("canonical root");
             let query_values: Vec<_> = queries.iter().map(|q| q.value().c0 as usize).collect();
             let row_words = if base { live_lanes } else { 3 * lanes };
-            let leaf_words = if base { lanes } else { 3 * lanes };
-            expanded = proof.merkle[self.phase]
-                .open(&root_bytes, 1 << depth, &query_values, row_words, leaf_words)
-                .expect("well-formed compressed Merkle witness");
+            let opened = fiat_shamir::merkle::scalars_to_hash(&root.map(S::value))
+                .ok()
+                .and_then(|root_bytes| {
+                    proof
+                        .merkle
+                        .get(self.phase)?
+                        .open(&root_bytes, 1 << depth, &query_values, row_words, words)
+                });
+            expanded = opened.unwrap_or_else(|| {
+                self.well_formed = false;
+                dummy_paths()
+            });
             self.phase += 1;
             expanded.as_slice()
         } else {
-            let paths = &self.proof.merkle[self.phase..self.phase + queries.len()];
+            let supplied = self.proof.merkle.get(self.phase..self.phase + queries.len());
             self.phase += queries.len();
-            paths
+            match supplied {
+                Some(paths)
+                    if paths
+                        .iter()
+                        .all(|p| p.path.len() == depth && p.leaf_data.len() == words) =>
+                {
+                    paths
+                }
+                _ => {
+                    self.well_formed = false;
+                    expanded = dummy_paths();
+                    expanded.as_slice()
+                }
+            }
         };
         let mut rows = Vec::new();
         for (&query, path) in queries.iter().zip(paths) {
@@ -229,15 +260,12 @@ impl<'a> Transcript<'a> {
         rows
     }
     pub(crate) fn finish(&self) {
-        if self.placeholder {
-            return;
-        }
-        assert_eq!(self.cursor, self.proof.stream.len(), "all scalars consumed");
-        assert_eq!(
-            self.phase,
-            self.compressed.map_or(self.proof.merkle.len(), |p| p.merkle.len()),
-            "all Merkle paths consumed"
-        );
+        let consumed = self.placeholder
+            || (self.cursor == self.proof.stream.len()
+                && self.phase == self.compressed.map_or(self.proof.merkle.len(), |p| p.merkle.len()));
+        // Witness decoding failures become a fixed acceptance equation. The
+        // caller gates it with the other equations for an inactive branch.
+        S::input(F192::new(u64::from(self.well_formed && consumed), 0, 0)).assert_eq(S::u(1));
     }
 }
 

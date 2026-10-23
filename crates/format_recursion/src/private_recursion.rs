@@ -16,10 +16,10 @@ pub const PROOF_CAP: usize = 1 << 20;
 pub struct Setup {
     pub bridge: PrivateBridge,
     program: private_trace::PreparedProgram,
-    fixed_public: Vec<F192>,
+    pub(crate) fixed_public: Vec<F192>,
     raw_fixed_len: usize,
-    outputs: usize,
-    context: Hash,
+    pub(crate) outputs: usize,
+    pub(crate) context: Hash,
 }
 
 impl Setup {

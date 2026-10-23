@@ -134,7 +134,7 @@ impl Default for Limits {
         Self {
             rows: 1 << 25,
             variables: 1 << 25,
-            compressions: 1 << 16,
+            compressions: crate::private_bridge::MAX_BLOCKS,
         }
     }
 }
