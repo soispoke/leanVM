@@ -117,3 +117,19 @@ Source `08305593`, frozen executable SHA256 `14a95283564332164d5b17ef5961d40b910
 | Scheduled Keccak permutations | 99 |
 
 Wallet timer covers fresh witness, proof, and serialization; excludes fixed setup. Total process duration is 113.159163 s; RSS includes the whole process. Separate verification rebuilds preprocessing before the verification timer. The bit-level circuit evaluates to **41,996,576 Boolean frontend rows**, **88,479,644 arithmetic rows**, **134,217,728 padded rows**, **1,644,167,168 committed words**, and zero native permutations. This exceeds the roughly 200 GiB projected whole-process budget (the native layout already peaks at 106.98 GiB), so no bit-level proof was attempted; its cost is a census/projection fallback rather than an ABAB measurement. A single accepted fixture does not establish complete circuit correctness; verifier-target mutation proofs remain pending.
+
+## Conditional projection cross-check (not prover measurements)
+
+L3b width scaling gives projected per-256-point-NTT costs of 393628*(4/9)*(23/14) = **287410.920635 Boolean rows** (linear width), or **472175.083900 Boolean rows** (quadratic width). Projected scalar product cost is (342939/512)*(23/14)^2 = **1807.783911 Boolean rows**. Thus 13 transforms + 5120 scalar products project to **12,992,195.59–15,394,129.71 Boolean rows**, before parsing, rejection sampling, reduction canonicalization, hints, checks and digest encoding. The implemented circuit census supersedes this incomplete modular subtotal.
+
+For the requested historical Falcon scaling, use projected t=13.4*(R/8,800,000) seconds and projected RAM=27.5*(R/8,800,000) GiB. Substituting the actual ML-DSA arithmetic censuses gives these deliberately rough projections (different compiler and padding effects limit calibration):
+
+| Projected cross-check | Projected rows | Projected words (layout) | Projected wallet s | Projected whole-process GiB |
+|---|---:|---:|---:|---:|
+| ML-DSA bit-level | 88,479,644 | 1,644,167,168 | 134.730367 | 276.498888 |
+| ML-DSA native Keccak | 63,472,024 | 822,083,584 | 96.650582 | 198.350075 |
+| Falcon native Keccak, conditional 57% SHAKE premise | 3,892,820 | 51,380,224 | 5.765434 | 12.165063 |
+
+Falcon projection arithmetic: residual rows=8.8M*(1-0.57)=3.784M; an upper whole-envelope connector proxy from the matched Keccak application is 54410/8=6801.25 rows/permutation, giving projected R=3.784M+16*6801.25=3,892,820. Projected time=13.4*0.43+16*0.000214614825=5.765434 s. Projected RAM=27.5*(3892820/8.8M)=12.165063 GiB. Projected commitment uses 2^22 arithmetic height with 16 native calls, 12 compact arithmetic F64 columns and aligned hash packing, yielding 51,380,224 words. This assumes the supplied 57% census applies to the historical row unit; it is a conditional model, not an exact compiler prediction. The measured Falcon native result is 5.877517 s, 13.403473 GiB, 6,077,055 arithmetic rows and 102,760,448 words; its larger final padding illustrates the model's limit.
+
+For ML-DSA fallback planning, the bit-level layout has twice the native commitment. Scaling the native single-screen time/RSS by two projects **144.231594 s / 213.951157 GiB** (not measured), versus the historical row-linear projection above. Both RAM models exceed about 200 GiB. No bit-level proof was attempted and no bit-level proof bytes/verify latency is claimed.

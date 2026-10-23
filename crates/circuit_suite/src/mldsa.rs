@@ -2,6 +2,21 @@
 //! Finite circuit families expose rejection budgets and reject exhausted executions.
 use crate::{Ckt, Instance, PUBLIC_BITS, Wire, Word, Workload, bytes_to_bits};
 const Q: u64 = 8_380_417;
+/// Public circuit-shape budgets. An exhausted execution returns validity zero.
+/// Increase the budget and regenerate preprocessing to cover a longer rejection tail.
+#[derive(Clone, Copy, Debug)]
+pub struct RejectionBudget {
+    pub matrix_blocks: usize,
+    pub challenge_blocks: usize,
+}
+impl Default for RejectionBudget {
+    fn default() -> Self {
+        Self {
+            matrix_blocks: 5,
+            challenge_blocks: 1,
+        }
+    }
+}
 fn konst(x: u64, n: usize) -> Word {
     Ckt::constant_word(x.into(), n)
 }
@@ -131,9 +146,15 @@ fn ntt(c: &mut Ckt, mut a: Vec<Word>, inverse: bool) -> Vec<Word> {
 /// Stable prefix-count compaction shared with the Falcon frontend.
 fn compact(c: &mut Ckt, candidates: Vec<Word>) -> (Vec<Word>, Wire) {
     let reject: Vec<_> = candidates.iter().map(|v| lt(c, v, &konst(Q, 23)).not()).collect();
-    crate::falcon::compact(c, &candidates, &reject, 256, 5)
+    crate::falcon::compact(
+        c,
+        &candidates,
+        &reject,
+        256,
+        (candidates.len() - 256 + 1).next_power_of_two().ilog2() as usize,
+    )
 }
-fn expand_a(c: &mut Ckt, rho: &[Wire], checks: &mut Word) -> Vec<Vec<Vec<Word>>> {
+fn expand_a(c: &mut Ckt, rho: &[Wire], checks: &mut Word, blocks: usize) -> Vec<Vec<Vec<Word>>> {
     (0..4)
         .map(|row| {
             (0..4)
@@ -141,7 +162,7 @@ fn expand_a(c: &mut Ckt, rho: &[Wire], checks: &mut Word) -> Vec<Vec<Vec<Word>>>
                     let mut input = rho.to_vec();
                     input.extend(konst(col, 8));
                     input.extend(konst(row, 8));
-                    let stream = crate::falcon::shake(c, &input, 840, 168);
+                    let stream = crate::falcon::shake(c, &input, blocks * 168, 168);
                     let candidates = stream.as_chunks::<24>().0.iter().map(|w| w[..23].to_vec()).collect();
                     let (a, ok) = compact(c, candidates);
                     checks.push(ok);
@@ -151,8 +172,8 @@ fn expand_a(c: &mut Ckt, rho: &[Wire], checks: &mut Word) -> Vec<Vec<Vec<Word>>>
         })
         .collect()
 }
-fn ball(c: &mut Ckt, seed: &[Wire], checks: &mut Word) -> Vec<Word> {
-    let stream = crate::falcon::shake256(c, seed, 136);
+fn ball(c: &mut Ckt, seed: &[Wire], checks: &mut Word, blocks: usize) -> Vec<Word> {
+    let stream = crate::falcon::shake256(c, seed, blocks * 136);
     // Store each coefficient as (nonzero,negative). No field multiplications here.
     let mut p = vec![vec![Wire::ZERO; 2]; 256];
     let mut step = konst(0, 6);
@@ -266,6 +287,11 @@ fn high_bits(c: &mut Ckt, r: &[Wire], hint: Wire) -> Word {
 /// Standard byte encodings in the order pk || message || signature. Public digest is
 /// exactly L5's BLAKE2s(validity_u64_le || pk || message), followed by validity.
 pub fn build(c: &mut Ckt) -> Word {
+    build_with_budget(c, RejectionBudget::default())
+}
+
+pub fn build_with_budget(c: &mut Ckt, budget: RejectionBudget) -> Word {
+    assert!(budget.matrix_blocks >= 5 && budget.challenge_blocks >= 1);
     let pk = c.inputs(1312 * 8);
     let message = c.inputs(32 * 8);
     let sig = c.inputs(2420 * 8);
@@ -287,14 +313,14 @@ pub fn build(c: &mut Ckt) -> Word {
     }
     let h = hints(c, &sig[(32 + 2304) * 8..], &mut checks);
     eprintln!("mldsa stage decode rows {}", c.rows());
-    let a = expand_a(c, &pk[..256], &mut checks);
+    let a = expand_a(c, &pk[..256], &mut checks, budget.matrix_blocks);
     eprintln!("mldsa stage ExpandA rows {}", c.rows());
     let tr = crate::falcon::shake256(c, &pk, 64);
     let mut mp = tr;
     mp.extend(konst(0, 16));
     mp.extend(&message);
     let mu = crate::falcon::shake256(c, &mp, 64);
-    let challenge = ball(c, &sig[..256], &mut checks);
+    let challenge = ball(c, &sig[..256], &mut checks, budget.challenge_blocks);
     let chat = ntt(c, challenge, false);
     let zhat: Vec<_> = z.into_iter().map(|p| ntt(c, p, false)).collect();
     let t1: Vec<Vec<Word>> = pk[256..]
@@ -410,6 +436,18 @@ mod tests {
             (8191, 1 << 22),
         ] {
             assert_eq!(eval(|c, x| mul(c, &x[..23], &x[23..]), &[(a, 23), (b, 23)]), a * b % Q);
+        }
+        for k in 1..256 {
+            let coefficient = zeta(k);
+            let value = (k as u64 * 3211237) % Q;
+            assert_eq!(
+                eval(|c, x| mul(c, x, &konst(coefficient, 23)), &[(value, 23)]),
+                value * coefficient % Q
+            );
+            assert_eq!(
+                eval(|c, x| mul(c, x, &konst(coefficient, 23)), &[(Q - 1, 23)]),
+                (Q - 1) * coefficient % Q
+            );
         }
         let gamma2 = (Q - 1) / 88;
         for r in [0, 1, gamma2, gamma2 + 1, 2 * gamma2, Q - gamma2 - 1, Q - gamma2, Q - 1] {
