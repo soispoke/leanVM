@@ -107,7 +107,7 @@ Source `08305593`, frozen executable SHA256 `14a95283564332164d5b17ef5961d40b910
 | Metric | Measured native Keccak rows |
 |---|---:|
 | Wallet s (one fresh process) | 72.115797074 |
-| Whole-process peak RSS KiB | 112,171,024 (106.975578 GiB) |
+| Whole-process peak RSS KiB | 112,171,024 (106.974625 GiB) |
 | Proof bytes | 427,336 |
 | Standalone verify ms (one separate process) | 14.874831 |
 | Boolean frontend rows | 29,944,283 |
@@ -132,4 +132,12 @@ For the requested historical Falcon scaling, use projected t=13.4*(R/8,800,000) 
 
 Falcon projection arithmetic: residual rows=8.8M*(1-0.57)=3.784M; an upper whole-envelope connector proxy from the matched Keccak application is 54410/8=6801.25 rows/permutation, giving projected R=3.784M+16*6801.25=3,892,820. Projected time=13.4*0.43+16*0.000214614825=5.765434 s. Projected RAM=27.5*(3892820/8.8M)=12.165063 GiB. Projected commitment uses 2^22 arithmetic height with 16 native calls, 12 compact arithmetic F64 columns and aligned hash packing, yielding 51,380,224 words. This assumes the supplied 57% census applies to the historical row unit; it is a conditional model, not an exact compiler prediction. The measured Falcon native result is 5.877517 s, 13.403473 GiB, 6,077,055 arithmetic rows and 102,760,448 words; its larger final padding illustrates the model's limit.
 
-For ML-DSA fallback planning, the bit-level layout has twice the native commitment. Scaling the native single-screen time/RSS by two projects **144.231594 s / 213.951157 GiB** (not measured), versus the historical row-linear projection above. Both RAM models exceed about 200 GiB. No bit-level proof was attempted and no bit-level proof bytes/verify latency is claimed.
+For ML-DSA fallback planning, the bit-level layout has twice the native commitment. Scaling the native single-screen time/RSS by two projects **144.231594 s / 213.949249 GiB** (not measured), versus the historical row-linear projection above. Both RAM models exceed about 200 GiB. No bit-level proof was attempted and no bit-level proof bytes/verify latency is claimed.
+
+## Final ML-DSA native sampling (six fresh processes)
+
+Wallet samples in seconds: 63.335309594, 62.365164051, 61.582902022, 64.228073837, 61.845881241, 70.953303600. Median **62.8502368225 s**, median whole-process RSS **112,180,428 KiB (106.983593 GiB)**, **427,336 proof bytes**, separate-process verify **14.874831 ms**. Shape stays **63,472,024 arithmetic rows / 67,108,864 padded rows / 822,083,584 committed words / 99 permutations**. These are six native samples, not an ABAB speedup claim: the bit-level proof uses the authorized memory fallback. All seven proof artifacts including the screen are byte-identical (SHA256 `b35e8f96ce34ace5f0528ea0034d0294d2c622ca4e8d2affc6b2ab10d196b5e7`), so the separate verification covers the repeated deterministic artifact. Full receipts: `P/artifacts/hometurf-L4k/mldsa-native-r{1..6}.*`; summary: `mldsa-summary.json`.
+
+L5's current matched inverse-rate-2 reference is **6.4366 s / 8,411,200 KiB**, and its SDK Keccak permutation screen is 5.412373 s (one sample). The R1CS circuit uses the identical encoded fixture and public digest, but includes proof serialization in its wallet timer while L5 excludes it. The 62.85 s native circuit remains about 9.8x slower than L5's matched 6.44 s reference; this is not a timing-boundary-controlled ratio. L5's updated Falcon reference is 0.5313 s, superseding the historical 1.02 s context above. Native Keccak cuts measured Falcon wallet time by 2.02x within the paired R1CS compiler; it does not establish parity with leanVM.
+
+Regression gates: 78 circuit-suite release tests passed, 4 ignored, no failures; doctest runner passes with explicit installed RUSTDOC; all-target release clippy passes for Flock/circuit_suite/format_recursion. The modular test covers all 255 NTT twiddle constants and UseHint boundary cases. ML-DSA verifier-target mutations are running; no rejection claim is made until the ordinary verifier has actually rejected each unchecked proof.
