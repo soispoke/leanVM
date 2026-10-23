@@ -1,0 +1,20 @@
+{
+  "A": {
+    "wallet_prove_s": 0.5079942120000001,
+    "peak_rss_kib": 982922.0,
+    "proof_bytes": 293824.0,
+    "verify_ms": 11.2706745,
+    "rows": 348049.0,
+    "words": 6422528.0,
+    "application_permutations": 56.0
+  },
+  "B": {
+    "wallet_prove_s": 0.8091827395,
+    "peak_rss_kib": 980804.0,
+    "proof_bytes": 286896.0,
+    "verify_ms": 11.018627500000001,
+    "rows": 348067.0,
+    "words": 6422528.0,
+    "application_permutations": 56.0
+  }
+}

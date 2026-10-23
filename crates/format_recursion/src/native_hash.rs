@@ -9,9 +9,6 @@ use primitives::field::F192;
 pub struct Word(usize);
 impl Word {
     pub const ZERO: Self = Self(0);
-    pub(crate) fn variable(self) -> usize {
-        self.0
-    }
 }
 
 /// Circuit and witness builder. Constants are public anchors, private inputs
@@ -201,6 +198,9 @@ impl Builder {
     }
 
     pub fn setup_mixed(&self) -> Option<crate::keccak_bridge::KeccakBridge> {
+        if cfg!(feature = "keccak-protocol") && !self.compressions.is_empty() {
+            return None;
+        }
         PrivateBridge::new_mixed(
             self.circuit.clone(),
             self.connectors.clone(),
@@ -210,6 +210,12 @@ impl Builder {
 
     /// Hash an aligned byte string, with zero padding of its last block.
     /// Every supplied word is part of the message; lengths are circuit metadata.
+    #[cfg(feature = "keccak-protocol")]
+    pub fn hash_words(&mut self, words: &[Word]) -> [Word; 4] {
+        self.keccak256_words(words)
+    }
+
+    #[cfg(not(feature = "keccak-protocol"))]
     pub fn hash_words(&mut self, words: &[Word]) -> [Word; 4] {
         let iv = flock::hash::param_iv();
         let mut h = std::array::from_fn(|i| self.constant(u64::from(iv[2 * i]) | (u64::from(iv[2 * i + 1]) << 32)));
@@ -221,6 +227,32 @@ impl Builder {
             h = self.compress(h, m, counter, flags);
         }
         h
+    }
+
+    /// Keccak-256 of an aligned byte string, each word serialized little-endian.
+    /// Ethereum suffix 0x01 and final 0x80; all 17 rate lanes are used.
+    pub fn keccak256_words(&mut self, words: &[Word]) -> [Word; 4] {
+        let mut state = [Word::ZERO; 25];
+        let blocks = words.len() / 17 + 1;
+        for block in 0..blocks {
+            for (i, lane) in state.iter_mut().enumerate().take(17) {
+                let at = block * 17 + i;
+                let input = if at < words.len() {
+                    words[at]
+                } else if at == words.len() {
+                    self.constant(1)
+                } else {
+                    Word::ZERO
+                };
+                *lane = self.gate(*lane, self.one(), input);
+            }
+            if block + 1 == blocks {
+                let last = self.constant(1u64 << 63);
+                state[16] = self.gate(state[16], self.one(), last);
+            }
+            state = self.keccak_f(state);
+        }
+        state[..4].try_into().unwrap()
     }
 
     /// Select b when bit is one, a otherwise. The selector is constrained Boolean.
@@ -246,16 +278,54 @@ impl Builder {
         PrivateBridge::new(self.circuit.clone(), self.connectors.clone())
     }
 
+    pub fn export_protocol_circuit(&self) -> (Circuit, Vec<crate::row_hash::Connectors>) {
+        #[cfg(feature = "keccak-protocol")]
+        {
+            self.export_keccak_circuit()
+        }
+        #[cfg(not(feature = "keccak-protocol"))]
+        {
+            self.export_circuit()
+        }
+    }
+    pub fn protocol_blocks(&self) -> Vec<crate::row_hash::Block> {
+        #[cfg(feature = "keccak-protocol")]
+        {
+            assert!(self.compressions.is_empty());
+            self.permutations.clone()
+        }
+        #[cfg(not(feature = "keccak-protocol"))]
+        {
+            assert!(self.permutations.is_empty());
+            self.compressions.clone()
+        }
+    }
+
+    /// Export every native Keccak I/O obligation with the arithmetic graph.
+    pub fn export_keccak_circuit(&self) -> (Circuit, Vec<[usize; 50]>) {
+        assert!(
+            self.compressions.is_empty(),
+            "Keccak source export cannot discard BLAKE obligations"
+        );
+        (self.circuit.clone(), self.keccak_connectors.clone())
+    }
+
     /// Export the identical arithmetic graph and hash-port identities for format experiments.
     pub fn export_circuit(&self) -> (Circuit, Vec<[usize; 18]>) {
+        assert!(
+            self.permutations.is_empty(),
+            "BLAKE source export cannot discard Keccak obligations"
+        );
         (self.circuit.clone(), self.connectors.clone())
     }
 }
 
 #[cfg(test)]
 mod tests {
+    #[cfg(not(feature = "keccak-protocol"))]
     use super::*;
 
+    #[cfg(not(feature = "keccak-protocol"))]
     #[test]
     fn compression_chain_rejects_wrong_digest_and_witness_and_proof() {
         parallel::init();
@@ -281,5 +351,24 @@ mod tests {
         assert!(!setup.verify(&public, &[23; 32], &tampered));
         b.values[first[0].0] += F192::ONE;
         assert!(setup.prove(&b.values, &b.compressions, &[23; 32]).is_none());
+    }
+}
+
+#[cfg(test)]
+mod keccak_sponge_tests {
+    use super::*;
+
+    #[test]
+    fn full_rate_and_padding_boundaries_match_reference() {
+        for len in [0, 1, 4, 8, 16, 17, 18, 33, 34, 128] {
+            let mut b = Builder::default();
+            let words: Vec<_> = (0..len).map(|i| b.input(i as u64 * 0x10001 + 17)).collect();
+            let bytes: Vec<_> = words.iter().flat_map(|&w| b.value(w).c0.to_le_bytes()).collect();
+            let digest = b.keccak256_words(&words);
+            let actual: Vec<_> = digest.iter().flat_map(|&w| b.value(w).c0.to_le_bytes()).collect();
+            assert_eq!(actual, circuit_suite::keccak::keccak256_native(&bytes), "words={len}");
+            assert_eq!(b.permutations.len(), len / 17 + 1);
+            assert!(b.compressions.is_empty());
+        }
     }
 }

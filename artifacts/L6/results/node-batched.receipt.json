@@ -1,0 +1,15 @@
+{
+  "command": [
+    "taskset",
+    "-c",
+    "12-23",
+    "env",
+    "RAYON_NUM_THREADS=12",
+    "LEANVM_NUM_THREADS=12",
+    "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/bin-L6-batched-transcript/sparse_tree"
+  ],
+  "exit_code": 0,
+  "peak_rss_kib": 5956116,
+  "whole_process_s": 28.894377567019546,
+  "binary_sha256": "c971fdb9905903f158495e77cafa11b575e7b7813eb85697fd21d8f73ba1d79c"
+}

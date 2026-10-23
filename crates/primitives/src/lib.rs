@@ -5,6 +5,7 @@ pub mod bits;
 pub mod field;
 pub mod hash;
 pub mod multilinear;
+pub mod protocol_hash;
 pub mod stream;
 
 use std::mem::{MaybeUninit, needs_drop};

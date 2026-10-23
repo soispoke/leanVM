@@ -34,10 +34,10 @@ fn main() {
     let canonical = application(bytes);
     let setup = canonical.setup().unwrap();
     let public = canonical.public_values();
-    let reference = primitives::hash::hash(&(0..bytes).map(|i| (i % 251) as u8).collect::<Vec<_>>());
+    let reference = primitives::protocol_hash::hash(&(0..bytes).map(|i| (i % 251) as u8).collect::<Vec<_>>());
     let mut claim = (bytes as u64).to_le_bytes().to_vec();
     claim.extend(reference);
-    let expected_digest = primitives::hash::hash(&claim);
+    let expected_digest = primitives::protocol_hash::hash(&claim);
     let expected: Vec<_> = expected_digest
         .as_chunks::<8>()
         .0
@@ -45,7 +45,7 @@ fn main() {
         .map(|w| primitives::field::F192::new(u64::from_le_bytes(*w), 0, 0))
         .collect();
     assert_eq!(&public[public.len() - 4..], expected);
-    let context = primitives::hash::hash(b"hometurf-native-hash-application-v1");
+    let context = primitives::protocol_hash::hash(b"hometurf-native-hash-application-v1");
     if mode == "prove" {
         drop(canonical);
         let start = Instant::now();

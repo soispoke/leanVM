@@ -89,7 +89,7 @@ fn wallet_resources<W: Workload>(trim: bool) {
         "workload":W::NAME,"trim":trim,"transaction_peak_rss_kib":peak_kib,
         "cpus":"24-35","threads":parallel::num_threads(),
         "transaction_start_rss_kib":baseline_kib,"transaction_additional_peak_rss_kib":peak_kib.saturating_sub(baseline_kib),
-        "proof_bytes":bytes.len(),"certificate_hash":primitives::hash::hash(&bytes),
+        "proof_bytes":bytes.len(),"certificate_hash":primitives::protocol_hash::hash(&bytes),
         "scope":"transaction phase RSS with wallet base key resident; setup high-water reset; no node key"})
     );
     let verify_start = Instant::now();
@@ -105,7 +105,7 @@ fn wallet_resources<W: Workload>(trim: bool) {
         serde_json::json!({"role":"WALLET","kind":"wallet_only_mempool_ready_proof",
         "workload":W::NAME,"trim":trim,"seed":seed(),"witness_ms":witness_ms,"proof_ms":proof_ms,
         "time_to_mempool_ready_proof_ms":witness_ms+proof_ms,"proof_bytes":bytes.len(),
-        "certificate_hash":primitives::hash::hash(&bytes),"base_key":setup.bridge.index.root,
+        "certificate_hash":primitives::protocol_hash::hash(&bytes),"base_key":setup.bridge.index.root,
         "base_shape":format!("{:?}",setup.bridge.verifier_shape()),"verified":true,
         "cpus":"24-35","threads":parallel::num_threads(),
         "scope":"base key only; complete backend proof and Certificate envelope; byte reconciliation required"})
@@ -181,7 +181,7 @@ fn leaf_merge<W: Workload>(trim: bool) {
         "merge_peak_rss_kib":peak,"merge_start_rss_kib":baseline,
         "incoming_pair_verify_ms":incoming_verify_ms,"merged_native_verify_ms":root_verify_ms,
         "base_key":setup.base_key(),"node_key":setup.node_key(),
-        "certificate_hash":primitives::hash::hash(&bytes),"verified":true,
+        "certificate_hash":primitives::protocol_hash::hash(&bytes),"verified":true,
         "heterogeneous_merge":false,"cpus":"24-35","threads":parallel::num_threads(),
         "scope":"two distinct SHA256 base proofs; prove_node with both child checks and output serialization; setup excluded"})
     );
@@ -277,7 +277,7 @@ fn run<W: Workload>(trim: bool, prove: bool) {
             "proof_bytes":bytes.len(),
             "base_shape":format!("{:?}", setup.base_shape()),
             "base_key":setup.base_key(),"node_key":setup.node_key(),
-            "certificate_hash":primitives::hash::hash(&bytes),"cpus":"24-35","threads":12,"verified":true})
+            "certificate_hash":primitives::protocol_hash::hash(&bytes),"cpus":"24-35","threads":12,"verified":true})
         );
     }
 }

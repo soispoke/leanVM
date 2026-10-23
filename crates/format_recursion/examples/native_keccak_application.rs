@@ -88,7 +88,7 @@ fn main() {
     let canonical = application(seed, bit_circuit.as_ref());
     let setup = canonical.setup_keccak().unwrap();
     let public = canonical.public_values();
-    let context = primitives::hash::hash(b"hometurf-keccak-native-application-v1");
+    let context = primitives::protocol_hash::hash(b"hometurf-keccak-native-application-v1");
     if mode == "prove" {
         drop(canonical);
         let start = Instant::now();

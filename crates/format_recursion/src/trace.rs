@@ -1,5 +1,7 @@
 use crate::boolean_field::{linear, mul};
-use circuit_suite::{Ckt, Wire, Word, blake2s};
+#[cfg(not(feature = "keccak-protocol"))]
+use circuit_suite::blake2s;
+use circuit_suite::{Ckt, Wire, Word};
 use flock::membership::Scalar;
 use primitives::field::F192;
 use std::{
@@ -210,7 +212,7 @@ pub fn hash(parts: &[(S, usize)]) -> [S; 2] {
         let words: Vec<u8> = [x.c0, x.c1, x.c2].iter().flat_map(|x| x.to_le_bytes()).collect();
         bytes.extend_from_slice(&words[..len]);
     }
-    let digest = primitives::hash::hash(&bytes);
+    let digest = primitives::protocol_hash::hash(&bytes);
     let halves = fiat_shamir::merkle::hash_to_scalars(&digest);
     let lo = node(Op::Hash(parts.to_vec()), halves[0]);
     let hi = node(Op::HashHigh(lo), halves[1]);
@@ -276,7 +278,7 @@ impl Trace {
         let claims = self.public.clone();
         CONSTANTS.with(|c| c.borrow_mut().clear());
         TRACE.with(|t| *t.borrow_mut() = self);
-        let domain = digest_constant(&primitives::hash::hash(b"matched-application-batch-v1"));
+        let domain = digest_constant(&primitives::protocol_hash::hash(b"matched-application-batch-v1"));
         let mut parts = vec![
             (domain[0], 16),
             (domain[1], 16),
@@ -306,7 +308,13 @@ impl Trace {
                 Op::Frobenius(..) => "frobenius",
                 Op::Slice(..) => "bit_slice",
                 Op::Pack(..) => "bit_pack",
-                Op::Hash(..) => "blake2s_call",
+                Op::Hash(..) => {
+                    if cfg!(feature = "keccak-protocol") {
+                        "keccak_call"
+                    } else {
+                        "blake2s_call"
+                    }
+                }
                 Op::HashHigh(..) => "hash_high_half",
                 Op::Select(..) => "select",
             };
@@ -324,7 +332,14 @@ impl Trace {
         self.nodes
             .iter()
             .map(|n| match &n.op {
-                Op::Hash(parts) => parts.iter().map(|(_, len)| len).sum::<usize>().div_ceil(64).max(1),
+                Op::Hash(parts) => {
+                    let bytes = parts.iter().map(|(_, len)| len).sum::<usize>();
+                    if cfg!(feature = "keccak-protocol") {
+                        bytes / 136 + 1
+                    } else {
+                        bytes.div_ceil(64).max(1)
+                    }
+                }
                 _ => 0,
             })
             .sum()
@@ -400,7 +415,14 @@ impl Trace {
                             .iter()
                             .flat_map(|(a, n)| get(*a)[..8 * n].iter().copied())
                             .collect();
-                        blake2s::blake2s(&mut c, &message)
+                        #[cfg(not(feature = "keccak-protocol"))]
+                        {
+                            blake2s::blake2s(&mut c, &message)
+                        }
+                        #[cfg(feature = "keccak-protocol")]
+                        {
+                            circuit_suite::keccak::keccak256(&mut c, &message)
+                        }
                     };
                     hash_outputs.insert(index, digest[128..].to_vec());
                     let mut w = digest[..128].to_vec();
@@ -609,7 +631,7 @@ mod tests {
                 })
                 .collect();
             let digest = hash(&parts);
-            let expected = digest_constant(&primitives::hash::hash(&bytes));
+            let expected = digest_constant(&primitives::protocol_hash::hash(&bytes));
             for i in 0..2 {
                 digest[i].assert_eq(expected[i]);
             }

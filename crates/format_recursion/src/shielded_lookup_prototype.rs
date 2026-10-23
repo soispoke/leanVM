@@ -399,7 +399,8 @@ pub(crate) fn prepare(payload: &[u8]) -> Prepared {
         layout: query_layout,
     }
 }
-#[cfg(test)]
+// These fixtures exercise the legacy BLAKE2s application/bridge backend.
+#[cfg(all(test, not(feature = "keccak-protocol")))]
 mod tests {
     use super::*;
     #[test]
@@ -411,7 +412,7 @@ mod tests {
             assert!(result.arithmetic_valid && result.lookup_valid);
             assert_eq!(
                 result.digest,
-                primitives::hash::hash(&reference::verify(&payload).unwrap())
+                primitives::protocol_hash::hash(&reference::verify(&payload).unwrap())
             );
             assert_eq!(result.compressions, 106);
             println!("{result:?}");

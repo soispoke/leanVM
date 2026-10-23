@@ -36,13 +36,4 @@ pub mod application_lowering;
 pub mod boolean_application;
 pub mod keccak_bridge;
 
-pub mod word_lookup_reduction;
-pub mod word_lowering;
-pub mod word_query_binding;
-pub mod word_tables;
-
-pub mod falcon_word;
-
-pub mod shielded_word;
-
-pub mod sha256_word;
+pub mod row_hash;

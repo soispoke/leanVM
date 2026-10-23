@@ -41,7 +41,7 @@ fn create<W: Workload>(
     for chunk in statement.as_chunks::<16>().0.iter() {
         expected.extend(chunk.iter().rev());
     }
-    let expected = primitives::hash::hash(&expected);
+    let expected = primitives::protocol_hash::hash(&expected);
     let actual: Vec<_> = digest.iter().flat_map(|&word| b.value(word).c0.to_le_bytes()).collect();
     assert_eq!(actual, expected, "canonical application claim");
     for word in digest {
@@ -82,7 +82,7 @@ fn run<W: Workload>(args: &[String]) {
         "{}",
         serde_json::json!({"kind":"setup","setup_s":start.elapsed().as_secs_f64(),"core_rows":core_rows,"native_rows":canonical.rows(),"permutations":calls.len(),"shape":format!("{shape:?}")})
     );
-    let context = primitives::hash::hash(format!("keccak-rows-relation:{}", W::NAME).as_bytes());
+    let context = primitives::protocol_hash::hash(format!("keccak-rows-relation:{}", W::NAME).as_bytes());
     if args[3] == "prove" {
         drop(canonical);
         let start = Instant::now();
@@ -95,7 +95,7 @@ fn run<W: Workload>(args: &[String]) {
         std::fs::write(&args[4], &encoded).unwrap();
         println!(
             "{}",
-            serde_json::json!({"kind":"wallet","workload":W::NAME,"native_keccak":native,"wallet_prove_s":elapsed,"proof_bytes":encoded.len(),"permutations":calls.len(),"arithmetic_rows":witness.rows(),"padded_arithmetic_rows":1usize<<shape.index.log_rows,"committed_words":shape.committed_lanes()*(1usize<<(shape.stack_log-pcs::whir::INITIAL_FOLDING_FACTOR)),"statement":W::instance(seed).statement.to_vec()})
+            serde_json::json!({"kind":"wallet","workload":W::NAME,"native_keccak":native,"wallet_prove_s":elapsed,"proof_bytes":encoded.len(),"permutations":witness.permutations.len(),"application_permutations":calls.len(),"blake2s_compressions":witness.compressions.len(),"arithmetic_rows":witness.rows(),"padded_arithmetic_rows":1usize<<shape.index.log_rows,"committed_words":shape.committed_lanes()*(1usize<<(shape.stack_log-pcs::whir::INITIAL_FOLDING_FACTOR)),"statement":W::instance(seed).statement.to_vec()})
         );
     } else {
         let encoded = std::fs::read(&args[4]).unwrap();
@@ -113,8 +113,8 @@ fn main() {
     assert_eq!(parallel::num_threads(), 12);
     let args: Vec<_> = std::env::args().collect();
     match args[1].as_str() {
+        "shielded" => run::<circuit_suite::shielded_keccak::ShieldedTransfer>(&args),
         "falcon" => run::<circuit_suite::falcon::Falcon512>(&args),
-        "sha256" => run::<circuit_suite::sha256::Sha256OneKiB>(&args),
         "keccak" => run::<circuit_suite::keccak::Keccak256OneKiB>(&args),
         "mpt" => run::<circuit_suite::mpt::MptStorageProof>(&args),
         _ => panic!("unknown workload"),

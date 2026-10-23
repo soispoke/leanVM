@@ -1,5 +1,6 @@
 //! Deferred sparse-matrix claims, using the leanVM tree's two-phase reduction.
 use super::spartan::Setup;
+use crate::row_hash::{K_LOG, PORTS, R1CS_DIGEST, SLOTS};
 use crate::{
     flock_trace,
     native_verifier::Claim,
@@ -10,12 +11,10 @@ use fiat_shamir::{
     merkle::{Hash, hash_to_scalars},
     transcript::Proof,
 };
-use flock::hash::{K_LOG, R1CS_DIGEST};
 use flock::membership::Scalar;
 use pcs::{pack::LOG_PACKING, whir::INITIAL_FOLDING_FACTOR};
 use primitives::field::F192;
 
-const SLOTS: [usize; 18] = [0, 1, 2, 3, 4, 5, 6, 7, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19];
 pub(crate) fn literal(bytes: &[u8]) -> Vec<(S, usize)> {
     bytes
         .chunks(24)
@@ -153,9 +152,12 @@ pub(crate) fn verify_shape_in_rows(
         });
     }
     trace::mark("sparse-flock-reduction");
+    #[cfg(not(feature = "keccak-protocol"))]
     let flock = flock_trace::reduce(K_LOG + setup.r1cs.block_log, &mut t);
+    #[cfg(feature = "keccak-protocol")]
+    let flock = flock_trace::reduce_keccak(K_LOG + setup.r1cs.block_log, &mut t);
     let point: Vec<_> = (0..setup.r1cs.block_log).map(|_| t.sample()).collect();
-    let values: [S; 18] = std::array::from_fn(|_| t.next());
+    let values: [S; PORTS] = std::array::from_fn(|_| t.next());
     let blocks = 1usize << setup.r1cs.block_log;
     let stride = K_LOG - LOG_PACKING;
     for (slot, &value) in values.iter().enumerate() {
@@ -237,7 +239,12 @@ mod tests {
     #[test]
     fn source_generator_matches_sparse_matrices_without_holding_csr() {
         parallel::init();
-        for case in ["shielded", "merge"] {
+        let cases = if cfg!(feature = "keccak-protocol") {
+            ["shielded", "merkle"]
+        } else {
+            ["shielded", "merge"]
+        };
+        for case in cases {
             let source = row_format::source(case);
             let setup = Setup::new(
                 R1cs::lower_bounded(&source.circuit, &source.connectors, &source.values, source.fixed_len, 8),
@@ -280,7 +287,7 @@ mod tests {
         let leaf: Vec<_> = (0..4)
             .flat_map(|i| ((seed as u64) * 0x10001 + i + 17).to_le_bytes())
             .collect();
-        let mut node = primitives::hash::hash(&leaf);
+        let mut node = primitives::protocol_hash::hash(&leaf);
         for level in 0..16 {
             let sibling: Vec<_> = (0..4)
                 .flat_map(|i| ((seed as u64 + 3) * 0x1000001 + (level * 4 + i) as u64).to_le_bytes())
@@ -293,7 +300,7 @@ mod tests {
                 input.extend(&sibling);
                 input.extend(node);
             }
-            node = primitives::hash::hash(&input);
+            node = primitives::protocol_hash::hash(&input);
         }
         let setup = Setup::new(
             R1cs::lower_bounded(&source.circuit, &source.connectors, &source.values, source.fixed_len, 8),

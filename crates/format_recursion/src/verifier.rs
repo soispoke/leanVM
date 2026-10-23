@@ -23,6 +23,8 @@ pub(crate) struct Transcript<'a> {
     placeholder: bool,
     well_formed: bool,
     state: [S; 2],
+    #[cfg(feature = "keccak-batched-transcript")]
+    pending: Vec<S>,
     cursor: usize,
     phase: usize,
 }
@@ -36,6 +38,8 @@ impl<'a> Transcript<'a> {
             placeholder: false,
             well_formed: true,
             state,
+            #[cfg(feature = "keccak-batched-transcript")]
+            pending: Vec::new(),
             cursor: 0,
             phase: 0,
         }
@@ -52,6 +56,8 @@ impl<'a> Transcript<'a> {
             placeholder: false,
             well_formed: true,
             state,
+            #[cfg(feature = "keccak-batched-transcript")]
+            pending: Vec::new(),
             cursor: 0,
             phase: 0,
         }
@@ -68,6 +74,8 @@ impl<'a> Transcript<'a> {
             placeholder: true,
             well_formed: true,
             state,
+            #[cfg(feature = "keccak-batched-transcript")]
+            pending: Vec::new(),
             cursor: 0,
             phase: 0,
         }
@@ -80,7 +88,36 @@ impl<'a> Transcript<'a> {
         coefficients[0] = claim + equality * coefficients[1..].iter().copied().fold(S::u(0), |a, b| a + b);
         coefficients
     }
+    #[cfg(feature = "keccak-batched-transcript")]
+    fn batch(&mut self, tag: u64) {
+        let mut parts = vec![
+            (self.state[0], 16),
+            (self.state[1], 16),
+            (S::u(self.pending.len() as u64), 8),
+        ];
+        parts.extend(self.pending.drain(..).map(|x| (x, 24)));
+        parts.push((S::u(tag), 8));
+        self.state = hash(&parts);
+    }
+    #[cfg(feature = "keccak-batched-transcript")]
+    fn flush(&mut self) {
+        if !self.pending.is_empty() {
+            self.batch(1);
+        }
+    }
     fn step(&mut self, x: S, tag: u64) -> [S; 2] {
+        #[cfg(feature = "keccak-batched-transcript")]
+        {
+            if tag == 1 {
+                self.pending.push(x);
+                return self.state;
+            }
+            if tag == 2 {
+                self.batch(2);
+                return self.state;
+            }
+            self.flush();
+        }
         self.state = hash(&[(self.state[0], 16), (self.state[1], 16), (x, 24), (S::u(tag), 8)]);
         self.state
     }
@@ -121,6 +158,8 @@ impl<'a> Transcript<'a> {
         [a, target + b, b]
     }
     pub(crate) fn grind(&mut self, bits: usize) {
+        #[cfg(feature = "keccak-batched-transcript")]
+        self.flush();
         let nonce = self.raw();
         if bits == 0 {
             nonce.assert_eq(S::u(0));
@@ -362,7 +401,7 @@ fn verify_opening(layout: &Layout, root: [S; 2], claims: &[(Vec<S>, S)], proof: 
         seed.extend(point.iter().chain([value]).map(|&x| (x, 24)));
     }
     let public = hash(&seed);
-    let iv = digest_constant(&primitives::hash::hash(b"flock-quotient-opening"));
+    let iv = digest_constant(&primitives::protocol_hash::hash(b"flock-quotient-opening"));
     let mut t = Transcript::new(proof, iv, public);
     let lambda = t.sample();
     let lambdas = powers(lambda, claims.len());
@@ -546,7 +585,7 @@ fn record_with_identity(child: &Child, app_id: Option<&Hash>) -> Trace {
     // Statement::halves reads each 16-byte block big endian; the transcript hashes its little-endian limbs.
     let public = hash(&statement.iter().map(|&x| (x, 16)).collect::<Vec<_>>());
     let label = [b"flock-quotient-vm-1".as_slice(), &child.index_root].concat();
-    let iv = digest_constant(&primitives::hash::hash(&label));
+    let iv = digest_constant(&primitives::protocol_hash::hash(&label));
     let raw = RawProof {
         stream: child.piop.stream.clone(),
         merkle: Vec::new(),

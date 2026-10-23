@@ -1,8 +1,7 @@
 use fiat_shamir::transcript::Proof;
-use format_recursion::{
-    private_bridge::PrivateBridge,
-    row_format::{self, R1cs, spartan},
-};
+#[cfg(not(feature = "keccak-protocol"))]
+use format_recursion::private_bridge::PrivateBridge;
+use format_recursion::row_format::{self, R1cs, spartan};
 use primitives::field::F192;
 use std::time::Instant;
 #[global_allocator]
@@ -33,50 +32,55 @@ fn main() {
     let source = row_format::source(case);
     let fixture_s = fixture_start.elapsed().as_secs_f64();
     let source_program_digest: String = source.program_digest().iter().map(|b| format!("{b:02x}")).collect();
-    let context = primitives::hash::hash(b"standard-row-format-comparison-v1");
+    let context = primitives::protocol_hash::hash(b"standard-row-format-comparison-v1");
     let setup_start = Instant::now();
     if format == "A" {
-        let setup = PrivateBridge::new(source.circuit.clone(), source.connectors.clone()).unwrap();
-        let public: Vec<_> = source.circuit.public.iter().map(|&i| source.values[i]).collect();
-        let setup_s = setup_start.elapsed().as_secs_f64();
-        let shape = setup.verifier_shape();
-        if mode == "verify" {
-            let encoded = std::fs::read(path).unwrap();
+        #[cfg(feature = "keccak-protocol")]
+        panic!("format A is BLAKE2s-only; use sparse format B or C with keccak-protocol");
+        #[cfg(not(feature = "keccak-protocol"))]
+        {
+            let setup = PrivateBridge::new(source.circuit.clone(), source.connectors.clone()).unwrap();
+            let public: Vec<_> = source.circuit.public.iter().map(|&i| source.values[i]).collect();
+            let setup_s = setup_start.elapsed().as_secs_f64();
+            let shape = setup.verifier_shape();
+            if mode == "verify" {
+                let encoded = std::fs::read(path).unwrap();
+                let start = Instant::now();
+                let proof: Proof = bincode::deserialize(&encoded).unwrap();
+                assert!(setup.verify(&public, &context, &proof));
+                let verify_ms = start.elapsed().as_secs_f64() * 1000.;
+                let mut wrong = public.clone();
+                *wrong.last_mut().unwrap() += F192::ONE;
+                assert!(!setup.verify(&wrong, &context, &proof));
+                let mut bad = proof.clone();
+                bad.stream[0] += F192::ONE;
+                assert!(!setup.verify(&public, &context, &bad));
+                // Measure the current sparse-index verification as recorded inside a merge.
+                let trace = format_recursion::private_verifier::record(&setup, &public, &context, &proof);
+                assert!(trace.satisfied());
+                let lower = format_recursion::private_trace::lower(&trace, &trace).unwrap();
+                println!(
+                    "{}",
+                    serde_json::json!({"case":case,"format":format,"source_program_digest":source_program_digest,"verify_ms":verify_ms,"proof_bytes":encoded.len(),"setup_s":setup_s,"fixture_s":fixture_s,"full_verifier_rows":lower.circuit.rows.len(),"full_verifier_compressions":lower.compressions.len(),"stage_census":lower.stage_census,"shape":format!("{shape:?}"),"verified":true})
+                );
+                return;
+            }
+            std::fs::write("/proc/self/clear_refs", "5").unwrap();
+            let start_rss = memory("VmRSS:");
             let start = Instant::now();
-            let proof: Proof = bincode::deserialize(&encoded).unwrap();
+            let (values, compressions) = (source.rebuild)();
+            let witness_s = start.elapsed().as_secs_f64();
+            let proof = setup.prove(&values, &compressions, &context).unwrap();
+            let bytes = bincode::serialize(&proof).unwrap();
+            let wallet_s = start.elapsed().as_secs_f64();
+            let rss = memory("VmHWM:");
+            std::fs::write(path, &bytes).unwrap();
             assert!(setup.verify(&public, &context, &proof));
-            let verify_ms = start.elapsed().as_secs_f64() * 1000.;
-            let mut wrong = public.clone();
-            *wrong.last_mut().unwrap() += F192::ONE;
-            assert!(!setup.verify(&wrong, &context, &proof));
-            let mut bad = proof.clone();
-            bad.stream[0] += F192::ONE;
-            assert!(!setup.verify(&public, &context, &bad));
-            // Measure the current sparse-index verification as recorded inside a merge.
-            let trace = format_recursion::private_verifier::record(&setup, &public, &context, &proof);
-            assert!(trace.satisfied());
-            let lower = format_recursion::private_trace::lower(&trace, &trace).unwrap();
             println!(
                 "{}",
-                serde_json::json!({"case":case,"format":format,"source_program_digest":source_program_digest,"verify_ms":verify_ms,"proof_bytes":encoded.len(),"setup_s":setup_s,"fixture_s":fixture_s,"full_verifier_rows":lower.circuit.rows.len(),"full_verifier_compressions":lower.compressions.len(),"stage_census":lower.stage_census,"shape":format!("{shape:?}"),"verified":true})
+                serde_json::json!({"case":case,"format":format,"source_program_digest":source_program_digest,"wallet_s":wallet_s,"source_witness_s":witness_s,"peak_rss_kib":rss,"start_rss_kib":start_rss,"additional_peak_rss_kib":rss.saturating_sub(start_rss),"proof_bytes":bytes.len(),"committed_words":shape.committed_lanes()*(1usize<<(shape.stack_log-pcs::whir::INITIAL_FOLDING_FACTOR)),"constraints":setup.index.shape().1,"r1cs_shadow_nonzeros":setup.index.r1cs_shadow_nonzeros(),"witness_variables_f192":setup.index.shape().0,"source_rows":source.circuit.rows.len(),"compressions":compressions.len(),"shape":format!("{shape:?}"),"setup_s":setup_s,"fixture_s":fixture_s})
             );
-            return;
         }
-        std::fs::write("/proc/self/clear_refs", "5").unwrap();
-        let start_rss = memory("VmRSS:");
-        let start = Instant::now();
-        let (values, compressions) = (source.rebuild)();
-        let witness_s = start.elapsed().as_secs_f64();
-        let proof = setup.prove(&values, &compressions, &context).unwrap();
-        let bytes = bincode::serialize(&proof).unwrap();
-        let wallet_s = start.elapsed().as_secs_f64();
-        let rss = memory("VmHWM:");
-        std::fs::write(path, &bytes).unwrap();
-        assert!(setup.verify(&public, &context, &proof));
-        println!(
-            "{}",
-            serde_json::json!({"case":case,"format":format,"source_program_digest":source_program_digest,"wallet_s":wallet_s,"source_witness_s":witness_s,"peak_rss_kib":rss,"start_rss_kib":start_rss,"additional_peak_rss_kib":rss.saturating_sub(start_rss),"proof_bytes":bytes.len(),"committed_words":shape.committed_lanes()*(1usize<<(shape.stack_log-pcs::whir::INITIAL_FOLDING_FACTOR)),"constraints":setup.index.shape().1,"r1cs_shadow_nonzeros":setup.index.r1cs_shadow_nonzeros(),"witness_variables_f192":setup.index.shape().0,"source_rows":source.circuit.rows.len(),"compressions":compressions.len(),"shape":format!("{shape:?}"),"setup_s":setup_s,"fixture_s":fixture_s})
-        );
     } else {
         assert!(format == "B" || format == "C");
         let r = R1cs::lower_bounded(

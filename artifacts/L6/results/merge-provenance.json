@@ -1,0 +1,15 @@
+{
+  "order": "ABABABABABAB",
+  "A": "BLAKE2s protocol and original BLAKE2s sparse shielded/Merkle applications",
+  "B": "Keccak protocol and Keccak sparse shielded/Merkle applications; fixed-prefix compiler optimization",
+  "binary_sha256": {
+    "A": {
+      "deferred_merge": "356880738757b526641e773c466ef32f50ea6f748e3f34efccf87d986865e7dd",
+      "sparse_tree": "c0d1fce0c3b4aa538c7f866115bf0e018e2cf90f9fe40996f273b4de78fb98fd"
+    },
+    "B": {
+      "deferred_merge": "5636ba3ef4b5be4f3f0716a6d4e675985dcdec20e686325579d947747c11b089",
+      "sparse_tree": "a9a5e37f43fc089c0580f7c896c5c941eedf8fc3a461ea9010dc4d5e5e2bd315"
+    }
+  }
+}

@@ -128,7 +128,7 @@ impl<W: Workload> Application<W> {
             bytes.extend(half.c0.to_le_bytes());
             bytes.extend(half.c1.to_le_bytes());
         }
-        primitives::hash::hash(&bytes)
+        primitives::protocol_hash::hash(&bytes)
     }
 
     pub fn create(&self, seed: u64) -> Created {

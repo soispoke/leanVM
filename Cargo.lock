@@ -2381,10 +2381,12 @@ version = "0.1.0"
 dependencies = [
  "bench",
  "bincode",
+ "keccak",
  "parallel",
  "primitives",
  "rand 0.9.4",
  "serde",
+ "sha3",
 ]
 
 [[package]]

@@ -8,16 +8,19 @@ publish = false
 workspace = true
 
 [dependencies]
+keccak = { version = "0.2", optional = true }
 parallel.workspace = true
 rand = { workspace = true, optional = true }
 serde.workspace = true
 
 [features]
+keccak-protocol = ["dep:keccak"]
 # Test-only helpers (`test_rng`) used by this and other crates' tests.
 # Kept off the default build so `rand` stays out of the production graph.
 test-util = ["dep:rand"]
 
 [dev-dependencies]
+sha3 = "0.11"
 primitives = { path = ".", features = ["test-util"] }
 bincode.workspace = true
 bench.workspace = true

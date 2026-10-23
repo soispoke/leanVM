@@ -15,10 +15,6 @@ use primitives::{
 };
 
 /// Resource cap, with four cell-address columns still fitting in u32.
-#[cfg(not(feature = "experimental-log26"))]
-pub const MAX_LOG_ROWS: usize = 24;
-/// Opt-in research cap for the ML-DSA native-row experiments.
-#[cfg(feature = "experimental-log26")]
 pub const MAX_LOG_ROWS: usize = 26;
 
 /// A row enforces z = x*y + u. Variables zero and one are pinned public anchors.
@@ -114,21 +110,6 @@ impl Index {
             public_len: self.circuit.public.len(),
             index_log_inv_rate: self.index_log_inv_rate,
         }
-    }
-    /// First committed cell for each requested variable in the compact layout.
-    pub fn compact_variable_cells(&self, variables: &[usize]) -> Option<Vec<[usize; 3]>> {
-        let n = 1usize << self.log_rows;
-        let mut first = vec![None; self.circuit.variables];
-        for role in 0..4 {
-            for (row, entries) in self.rows.iter().enumerate() {
-                first[entries[role]].get_or_insert([
-                    3 * role * n + row,
-                    (3 * role + 1) * n + row,
-                    (3 * role + 2) * n + row,
-                ]);
-            }
-        }
-        variables.iter().map(|&v| first.get(v).copied().flatten()).collect()
     }
     pub fn public_values(&self, values: &[F192]) -> Vec<F192> {
         self.circuit.public.iter().map(|&v| values[v]).collect()
@@ -678,10 +659,6 @@ pub fn verify(index: &Index, public: &[F192], context: &Hash, proof: &Proof) -> 
 mod tests {
     use super::*;
     use rand::{RngCore, SeedableRng, rngs::StdRng};
-    #[test]
-    fn row_cap_requires_explicit_experimental_feature() {
-        assert_eq!(MAX_LOG_ROWS, if cfg!(feature = "experimental-log26") { 26 } else { 24 });
-    }
     #[test]
     fn deferred_native_evaluations_match_reference_for_dense_sparse_and_boundary_lengths() {
         parallel::init();

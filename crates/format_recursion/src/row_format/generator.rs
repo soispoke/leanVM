@@ -119,12 +119,8 @@ impl Generator {
                 map[id] = j + 1;
             }
         }
-        let padding = flock::hash::padding_block();
-        let padding = crate::private_bridge::io_words(
-            &padding,
-            &flock::hash::blake2s_compress(&padding.0, &padding.1, padding.2, padding.3, padding.4),
-        );
-        for slot in 0..18 {
+        let padding = crate::row_hash::padding();
+        for slot in 0..crate::row_hash::PORTS {
             for block in 0..blocks {
                 origins.push(
                     source
@@ -175,7 +171,7 @@ impl Generator {
         for (j, &id) in c.public[source.fixed_len..].iter().enumerate() {
             materialized.push((j + 1, Origin::Variable(id), form(id, &defs, &fixed)));
         }
-        for slot in 0..18 {
+        for slot in 0..crate::row_hash::PORTS {
             for block in 0..blocks {
                 let origin = source
                     .connectors

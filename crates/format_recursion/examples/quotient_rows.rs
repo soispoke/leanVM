@@ -5,7 +5,7 @@ use std::collections::BTreeMap;
 fn run<W: Workload>() {
     let (circuit, sources, used) = circuit_suite::build::<W>();
     circuit.check_wired().expect("quotient wiring");
-    let before = primitives::hash::hash(&circuit_suite::describe::encode(&circuit));
+    let before = primitives::protocol_hash::hash(&circuit_suite::describe::encode(&circuit));
     let mut required = vec![[false; 2]; circuit.rows().len()];
     for source in sources {
         if let Src::Row(r) = source {
@@ -50,7 +50,7 @@ fn run<W: Workload>() {
         .max(circuit_suite::MIN_LOG_ROWS as u32);
     assert_eq!(
         before,
-        primitives::hash::hash(&circuit_suite::describe::encode(&circuit))
+        primitives::protocol_hash::hash(&circuit_suite::describe::encode(&circuit))
     );
     println!(
         "{}",

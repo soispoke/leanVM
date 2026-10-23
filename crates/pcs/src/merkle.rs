@@ -27,8 +27,10 @@ use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
 pub use fiat_shamir::merkle::{Hash, hash_leaf, hash_pair};
 use parallel::SendPtr;
 use primitives::field::F64;
-use primitives::hash::{BATCH, BLOCK_LEN, OUT_LEN, hash_many, hash_many_dyn_from_state, zero_prefix_state};
 use primitives::pretty_integer;
+use primitives::protocol_hash::{
+    BATCH, BLOCK_LEN, OUT_LEN, PrefixState, hash_many, hash_many_dyn_from_state, zero_prefix_state,
+};
 
 /// Nodes one climb takes at most: 32 KiB of digests, which stay in L1.
 const UNIT: usize = 1 << 10;
@@ -278,7 +280,7 @@ enum LeafHasher {
     /// Past the shared prefix, each row is its own whole-block image.
     Direct {
         row_bytes: usize,
-        state: [u32; 8],
+        state: PrefixState,
         t_offset: u64,
     },
     /// The rest of the padding does not fill a block, so rows are zero-extended in a tile first.
@@ -287,7 +289,7 @@ enum LeafHasher {
     Staged {
         row_bytes: usize,
         image: usize,
-        state: [u32; 8],
+        state: PrefixState,
         t_offset: u64,
     },
     /// Leaves of no whole block: one at a time, zero-extended to `leaf_bytes`.

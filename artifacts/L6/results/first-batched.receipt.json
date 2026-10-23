@@ -1,0 +1,19 @@
+{
+  "command": [
+    "taskset",
+    "-c",
+    "12-23",
+    "env",
+    "RAYON_NUM_THREADS=12",
+    "LEANVM_NUM_THREADS=12",
+    "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/bin-L6-batched-transcript/deferred_merge",
+    "merkle",
+    "B",
+    "B",
+    "carried"
+  ],
+  "exit_code": 0,
+  "peak_rss_kib": 5200184,
+  "whole_process_s": 10.944989594019717,
+  "binary_sha256": "1837a97b622175466dc4635f8f71478e9ae7a4af20b9972fd8de5253fc02e64a"
+}

@@ -2,17 +2,16 @@
 //! The unchanged native hash relation shares one WHIR witness commitment.
 
 use super::{Matrix, R1cs};
+use crate::row_hash::{
+    Block as Compression, K_LOG, PORTS, R1CS_DIGEST, SLOTS, Setup as Blake2sSetup,
+    generate as generate_witness_with_ab_packed_and_lincheck, ring_open as ring_switch_open,
+    ring_verify as ring_switch_verify,
+};
 use fiat_shamir::{
     merkle::Hash,
     transcript::{Challenger, Proof, ProverState, Receiver, Transmitter, VerifierState},
 };
-use flock::{
-    hash::{
-        Blake2sSetup, Compression, K_LOG, R1CS_DIGEST, generate_witness_with_ab_packed_and_lincheck, ring_switch_open,
-        ring_switch_verify,
-    },
-    zerocheck,
-};
+use flock::zerocheck;
 use pcs::{
     pack::LOG_PACKING,
     stack_open::{StackClaim, open_batch_mixed_whir_stacked, verify_opening_batch_mixed_whir_stacked},
@@ -23,7 +22,6 @@ use primitives::{
     multilinear::{eq_table, poly_eval},
 };
 
-const SLOTS: [usize; 18] = [0, 1, 2, 3, 4, 5, 6, 7, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19];
 const RATE: usize = 2;
 
 pub(crate) fn scaled(c: F192, x: F192) -> F192 {
@@ -91,7 +89,7 @@ impl Setup {
         let q_offset = (3usize << z_log).next_multiple_of(q_words);
         let committed_words = q_offset + q_words;
         let stack_log = committed_words.next_power_of_two().trailing_zeros() as usize;
-        let mut h = primitives::hash::Hasher::new();
+        let mut h = primitives::protocol_hash::Hasher::new();
         h.update(b"standard-row-format-direct-matrices-v1");
         h.update(&[u8::from(ccs)]);
         for x in [
@@ -204,7 +202,7 @@ impl Setup {
             });
         }
     }
-    fn port_claims(&self, point: &[F192], values: &[F192; 18], claims: &mut Vec<StackClaim>) {
+    fn port_claims(&self, point: &[F192], values: &[F192; PORTS], claims: &mut Vec<StackClaim>) {
         let n = 1usize << self.z_log;
         let blocks = 1usize << self.r1cs.block_log;
         for (slot, &value) in values.iter().enumerate() {
@@ -380,7 +378,7 @@ impl Setup {
         drop((q, ha, hb, lincheck));
         let point = ps.sample_vec(self.r1cs.block_log);
         let weights = eq_table(&point);
-        let mut ports = [F192::ZERO; 18];
+        let mut ports = [F192::ZERO; PORTS];
         for (slot, v) in ports.iter_mut().enumerate() {
             let at = self.r1cs.port_start + slot * (1usize << self.r1cs.block_log);
             *v = whir::inner_product_base_ext(&stack[at..at + weights.len()], &weights);
@@ -449,7 +447,7 @@ impl Setup {
             .verify_reduction(&mut vs)
             .ok()?;
         let point = vs.sample_vec(self.r1cs.block_log);
-        let mut ports = [F192::ZERO; 18];
+        let mut ports = [F192::ZERO; PORTS];
         for v in &mut ports {
             *v = vs.next_scalar().ok()?;
         }
@@ -513,7 +511,7 @@ mod tests {
         for w in hash {
             b.expose(w);
         }
-        let (circuit, ports) = b.export_circuit();
+        let (circuit, ports) = b.export_protocol_circuit();
         let fixed_len = circuit.public.len() - 4;
         for ccs in [false, true] {
             let r = R1cs::lower_bounded(&circuit, &ports, &b.values, fixed_len, 16);
@@ -521,7 +519,7 @@ mod tests {
             let setup = Setup::new(r, ccs);
             let public = setup.public(&b.values);
             let context = [42; 32];
-            let proof = setup.prove(&b.values, &b.compressions, &context);
+            let proof = setup.prove(&b.values, &b.protocol_blocks(), &context);
             assert!(setup.verify(&public, &context, &proof).is_some());
             let mut wrong = public.clone();
             wrong[1] += F192::ONE;

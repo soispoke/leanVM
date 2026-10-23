@@ -231,7 +231,7 @@ pub fn record_with_index_root(
     record_impl(bridge, public, context, index_root, proof, true)
 }
 
-#[cfg(test)]
+#[cfg(all(test, not(feature = "keccak-protocol")))]
 mod tests {
     use super::*;
     use crate::{native_arithmetic::Circuit, private_bridge::io_words};
@@ -258,7 +258,7 @@ mod tests {
         assert!(bridge.verify(&values, &context, &proof));
         let good = record(&bridge, &values, &context, &proof);
         assert!(good.satisfied());
-        let expected = hash_to_scalars(&primitives::hash::hash(
+        let expected = hash_to_scalars(&primitives::protocol_hash::hash(
             &bridge.label(&bridge.public(&values).unwrap(), &context),
         ));
         assert_eq!(

@@ -23,8 +23,6 @@ use primitives::{
     multilinear::eq_table,
 };
 
-type WordAdvice<'a> = (&'a [Vec<F192>; 6], &'a [(usize, u64)]);
-
 const SLOTS: [usize; 50] = slots();
 const fn slots() -> [usize; 50] {
     let mut out = [0; 50];
@@ -153,13 +151,6 @@ pub struct KeccakBridge {
     io_variables: Vec<[usize; 50]>,
     padding: [u64; 50],
     blake: Option<BlakeRows>,
-    word_queries: Option<crate::word_query_binding::Schedule>,
-}
-
-#[derive(Clone, Copy)]
-pub enum WordCoordinate {
-    Constant(F192),
-    Variable(usize),
 }
 
 struct BlakeRows {
@@ -208,7 +199,8 @@ impl KeccakBridge {
         blake_io: Vec<[usize; 18]>,
         padded: bool,
     ) -> Option<Self> {
-        if io_variables.is_empty()
+        if (cfg!(feature = "keccak-protocol") && !blake_io.is_empty())
+            || io_variables.is_empty()
             || io_variables.len() > MAX_BLOCKS
             || blake_io.len() > crate::private_bridge::MAX_BLOCKS
             || circuit.public.len() < 2
@@ -316,40 +308,7 @@ impl KeccakBridge {
             io_variables,
             padding,
             blake,
-            word_queries: None,
         })
-    }
-    /// Freeze a padded query schedule over existing arithmetic variables.
-    /// Missing variables are rejected rather than silently added as advice.
-    pub fn with_word_queries(mut self, queries: &[[WordCoordinate; 6]]) -> Option<Self> {
-        use crate::word_query_binding::{Schedule, Source};
-        if queries.len() < 2 || !queries.len().is_power_of_two() || queries.len() > 1 << 22 {
-            return None;
-        }
-        let variables: Vec<_> = queries
-            .iter()
-            .flatten()
-            .filter_map(|c| match c {
-                WordCoordinate::Variable(v) => Some(*v),
-                WordCoordinate::Constant(_) => None,
-            })
-            .collect();
-        let cells = self.index.compact_variable_cells(&variables)?;
-        let mut cells = cells.into_iter();
-        let mut columns: [Vec<Source>; 6] = std::array::from_fn(|_| Vec::with_capacity(queries.len()));
-        for query in queries {
-            for (column, coordinate) in columns.iter_mut().zip(query) {
-                column.push(match coordinate {
-                    WordCoordinate::Constant(v) => Source::Constant(*v),
-                    WordCoordinate::Variable(_) => Source::Cells(cells.next()?),
-                });
-            }
-        }
-        self.word_queries = Some(Schedule {
-            stack_log: self.stack_log,
-            columns,
-        });
-        Some(self)
     }
     /// Translate only native witness claims; permutation-index claims use a
     /// different four-column layout and must never pass through this mapping.
@@ -555,16 +514,6 @@ impl KeccakBridge {
         blake_blocks: &[Compression],
         context: &Hash,
     ) -> Option<Proof> {
-        self.prove_mixed_with_word_advice(values, blocks, blake_blocks, context, None)
-    }
-    fn prove_mixed_with_word_advice(
-        &self,
-        values: &[F192],
-        blocks: &[Permutation],
-        blake_blocks: &[Compression],
-        context: &Hash,
-        word_advice: Option<WordAdvice<'_>>,
-    ) -> Option<Proof> {
         let values = self.extend_values(values);
         let public = self.index.public_values(&values);
         let lane_words = 1usize << (self.stack_log - INITIAL_FOLDING_FACTOR);
@@ -590,47 +539,6 @@ impl KeccakBridge {
             .in_scope(|| whir::commit(&stack, self.stack_log, INITIAL_FOLDING_FACTOR, JOINT_LOG_INV_RATE));
         let mut ps = ProverState::from_label(&self.label(&public, context));
         ps.add_root(&commitment.root);
-        let word_claim = if let Some(schedule) = &self.word_queries {
-            let honest_queries = schedule.query_columns(&stack)?;
-            let queries = word_advice.map_or(&honest_queries, |a| a.0);
-            let mut counts = crate::word_tables::Multiplicities::default();
-            for row in 0..if word_advice.is_none() { queries[0].len() } else { 0 } {
-                let mut tuple = [0; 6];
-                for (coordinate, column) in tuple.iter_mut().zip(queries) {
-                    let v = column[row];
-                    if v != F192::new(v.c0, 0, 0) {
-                        return None;
-                    }
-                    *coordinate = v.c0;
-                }
-                let table = crate::word_tables::TABLES.into_iter().find(|&t| t as u64 == tuple[0])?;
-                counts.add(table, &tuple)?;
-            }
-            let honest_counts: Vec<_> = counts.entries().collect();
-            let counts = word_advice.map_or(honest_counts.as_slice(), |a| a.1);
-            let evaluations = crate::word_lookup_reduction::prove(
-                queries[0].len().trailing_zeros() as usize,
-                queries,
-                counts,
-                &mut ps,
-            )?;
-            let gathered = crate::word_query_binding::prove(schedule, &stack, &evaluations, &mut ps)?;
-            let low_log = self.stack_log - INITIAL_FOLDING_FACTOR;
-            let weights = eq_table(&gathered.point[..low_log]);
-            let mut openings = Vec::with_capacity(self.committed_lanes());
-            for (lane, slice) in stack.chunks_exact(1 << low_log).enumerate() {
-                let value = whir::inner_product_base_ext(slice, &weights);
-                ps.add_scalar(value);
-                openings.push(StackClaim::Point {
-                    offset: lane << low_log,
-                    low_point: gathered.point[..low_log].to_vec(),
-                    value,
-                });
-            }
-            Some(openings)
-        } else {
-            None
-        };
         let (native_claims, index_claims) = tracing::info_span!("Arithmetic reduction")
             .in_scope(|| native_arithmetic::prove_reduction_compact(&self.index, &witness, &stack, &mut ps));
         drop(witness);
@@ -660,9 +568,6 @@ impl KeccakBridge {
                 value: c.value,
             })
             .collect();
-        if let Some(openings) = word_claim {
-            claims.extend(openings);
-        }
         claims.extend(self.claims(&point, &bridge_values));
         if let Some(b) = &self.blake {
             let point = ps.sample_vec(b.block_log);
@@ -696,37 +601,6 @@ impl KeccakBridge {
         let mut vs = VerifierState::from_label(&self.label(&public, context), proof);
         let Ok(root) = vs.next_root() else {
             return false;
-        };
-        let word_claim = if let Some(schedule) = &self.word_queries {
-            let Some(evaluations) =
-                crate::word_lookup_reduction::verify(schedule.columns[0].len().trailing_zeros() as usize, &mut vs)
-            else {
-                return false;
-            };
-            let Some(claim) = crate::word_query_binding::verify(schedule, &evaluations, &mut vs) else {
-                return false;
-            };
-            let low_log = self.stack_log - INITIAL_FOLDING_FACTOR;
-            let high_weights = eq_table(&claim.point[low_log..]);
-            let mut sum = F192::ZERO;
-            let mut openings = Vec::with_capacity(self.committed_lanes());
-            for (lane, &weight) in high_weights.iter().take(self.committed_lanes()).enumerate() {
-                let Ok(value) = vs.next_scalar() else {
-                    return false;
-                };
-                sum += weight * value;
-                openings.push(StackClaim::Point {
-                    offset: lane << low_log,
-                    low_point: claim.point[..low_log].to_vec(),
-                    value,
-                });
-            }
-            if sum != claim.value {
-                return false;
-            }
-            Some(openings)
-        } else {
-            None
         };
         let Some((native_claims, index_claims)) = native_arithmetic::verify_reduction(&self.index, &public, &mut vs)
         else {
@@ -762,9 +636,6 @@ impl KeccakBridge {
                 value: c.value,
             })
             .collect();
-        if let Some(openings) = word_claim {
-            claims.extend(openings);
-        }
         claims.extend(self.claims(&point, &bridge_values));
         if let Some(b) = &self.blake {
             let point = vs.sample_vec(b.block_log);
@@ -854,185 +725,7 @@ mod tests {
         assert!(!setup.verify(&public, &context, &tampered));
     }
     #[test]
-    #[ignore = "full Falcon adversarial proofs"]
-    fn falcon_word_verifier_rejections_without_prechecks() {
-        parallel::init();
-        let app = std::env::var("L3C_REJECTION_APP").unwrap_or_else(|_| "falcon".to_owned());
-        let c = match app.as_str() {
-            "falcon" => {
-                let (original, _, _) = circuit_suite::build::<circuit_suite::falcon::Falcon512>();
-                let identity = crate::application_lowering::identity(&original);
-                crate::falcon_word::application(&circuit_suite::falcon::fixtures()[0], identity).0
-            }
-            "sha256" => {
-                use circuit_suite::Workload;
-                let (original, _, _) = circuit_suite::build::<circuit_suite::sha256::Sha256OneKiB>();
-                let identity = crate::application_lowering::identity(&original);
-                let instance = circuit_suite::sha256::Sha256OneKiB::instance(0);
-                let message: Vec<u8> = instance
-                    .inputs
-                    .as_chunks::<8>()
-                    .0
-                    .iter()
-                    .map(|bits| bits.iter().enumerate().fold(0, |n, (i, &b)| n | (u8::from(b) << i)))
-                    .collect();
-                crate::sha256_word::application(&message, identity)
-            }
-            "shielded" => crate::shielded_word::application(&circuit_suite::shielded_blake2s::leanvm_input(0)),
-            _ => panic!("unknown rejection application"),
-        };
-        let setup = c.setup().unwrap();
-        let public = c.b.public_values();
-        let context = primitives::hash::hash(b"falcon-word-adversarial");
-        let witness = native_arithmetic::prepare_compact(&setup.index, &setup.extend_values(&c.b.values));
-        let mut columns = setup
-            .word_queries
-            .as_ref()
-            .unwrap()
-            .query_columns(&witness.stack)
-            .unwrap();
-        drop(witness);
-        let mut multiplicities = crate::word_tables::Multiplicities::default();
-        for row in 0..columns[0].len() {
-            let tuple = std::array::from_fn(|i| columns[i][row].c0);
-            let table = crate::word_tables::TABLES
-                .into_iter()
-                .find(|&t| t as u64 == tuple[0])
-                .unwrap();
-            multiplicities.add(table, &tuple).unwrap();
-        }
-        let counts: Vec<_> = multiplicities.entries().collect();
-        let add = columns[0].iter().position(|&v| v == F192::new(2, 0, 0)).unwrap();
-        let mul = columns[0].iter().position(|&v| v == F192::new(3, 0, 0));
-        for (name, row, coordinate, value) in [
-            ("wrong carry", add, 3, F192::new(2, 0, 0)),
-            ("wrong sum", add, 4, columns[4][add] + F192::ONE),
-            (
-                "wrong product",
-                mul.unwrap_or(add),
-                3,
-                columns[3][mul.unwrap_or(add)] + F192::ONE,
-            ),
-            ("wrong tag", add, 0, F192::new(9, 0, 0)),
-            ("out of range", add, 1, F192::new(256, 0, 0)),
-        ] {
-            let old_tuple: [F192; 6] = std::array::from_fn(|i| columns[i][row]);
-            let mut injected_counts = None;
-            if name == "wrong product" && mul.is_none() {
-                let old: [u64; 6] = std::array::from_fn(|i| old_tuple[i].c0);
-                let table = crate::word_tables::TABLES
-                    .into_iter()
-                    .find(|&t| t as u64 == old[0])
-                    .unwrap();
-                let old_index = table.offset() + table.index(&old).unwrap();
-                let target = crate::word_tables::Table::Mul8.offset() + 255 + 256 * 255;
-                let mut altered: std::collections::BTreeMap<usize, u64> = counts.iter().copied().collect();
-                *altered.get_mut(&old_index).unwrap() -= 1;
-                if altered[&old_index] == 0 {
-                    altered.remove(&old_index);
-                }
-                *altered.entry(target).or_default() += 1;
-                injected_counts = Some(altered.into_iter().collect::<Vec<_>>());
-                let wrong = [3, 255, 255, 0, 254, 0];
-                for i in 0..6 {
-                    columns[i][row] = F192::new(wrong[i], 0, 0);
-                }
-            } else {
-                columns[coordinate][row] = value;
-            }
-            let selected_counts = injected_counts.as_deref().unwrap_or(&counts);
-            let proof = setup
-                .prove_mixed_with_word_advice(
-                    &c.b.values,
-                    &c.b.permutations,
-                    &c.b.compressions,
-                    &context,
-                    Some((&columns, selected_counts)),
-                )
-                .unwrap();
-            assert!(!setup.verify(&public, &context, &proof), "{name}");
-            for i in 0..6 {
-                columns[i][row] = old_tuple[i];
-            }
-            println!("rejected: {name}");
-        }
-        let mut bad_counts = counts.clone();
-        let from = bad_counts.iter().position(|(_, count)| *count > 1).unwrap();
-        let to = if from == 0 { 1 } else { 0 };
-        bad_counts[from].1 -= 1;
-        bad_counts[to].1 += 1;
-        let proof = setup
-            .prove_mixed_with_word_advice(
-                &c.b.values,
-                &c.b.permutations,
-                &c.b.compressions,
-                &context,
-                Some((&columns, &bad_counts)),
-            )
-            .unwrap();
-        assert!(!setup.verify(&public, &context, &proof));
-        println!("rejected: altered multiplicity");
-        drop(columns);
-        let mut wrong_output = c.b.values.clone();
-        wrong_output[setup.io_variables[0][25]] += F192::ONE;
-        let proof = setup
-            .prove_mixed_unchecked(&wrong_output, &c.b.permutations, &c.b.compressions, &context)
-            .unwrap();
-        assert!(!setup.verify(&public, &context, &proof));
-        println!("rejected: wrong Keccak output");
-    }
-
-    #[test]
-    fn shared_word_queries_open_against_joint_keccak_commitment() {
-        use crate::{
-            native_hash::Builder,
-            word_tables::{Multiplicities, Table},
-        };
-        use WordCoordinate::{Constant as C, Variable as V};
-        let mut b = Builder::default();
-        for value in [250, 10, 1, 5, 1] {
-            let v = b.input(value);
-            b.expose(v);
-        }
-        b.keccak_f([crate::native_hash::Word::ZERO; 25]);
-        let query = [C(F192::new(2, 0, 0)), V(2), V(3), V(4), V(5), V(6)];
-        let setup = b.setup_mixed().unwrap().with_word_queries(&[query; 2]).unwrap();
-        let context = primitives::hash::hash(b"joint-word-binding");
-        let public = b.public_values();
-        let proof = setup.prove_mixed(&b.values, &b.permutations, &[], &context).unwrap();
-        assert!(setup.verify(&public, &context, &proof));
-        let original = [2, 250, 10, 1, 5, 1];
-        let columns: [Vec<F192>; 6] = std::array::from_fn(|i| vec![F192::new(original[i], 0, 0); 2]);
-        let count = |tuple: &[u64; 6]| {
-            let mut counts = Multiplicities::default();
-            counts.add(Table::Add8, tuple).unwrap();
-            counts.add(Table::Add8, tuple).unwrap();
-            counts.entries().collect::<Vec<_>>()
-        };
-        let counts = count(&original);
-        for (coordinate, value) in [(3, 2), (4, 6), (5, 0), (0, 9), (1, 256)] {
-            let mut wrong = columns.clone();
-            wrong[coordinate][0] = F192::new(value, 0, 0);
-            let proof = setup
-                .prove_mixed_with_word_advice(&b.values, &b.permutations, &[], &context, Some((&wrong, &counts)))
-                .unwrap();
-            assert!(!setup.verify(&public, &context, &proof), "coordinate {coordinate}");
-        }
-        let other = [2, 249, 10, 1, 4, 1];
-        let wrong: [Vec<F192>; 6] = std::array::from_fn(|i| vec![F192::new(other[i], 0, 0); 2]);
-        let other_counts = count(&other);
-        for (columns, counts) in [(&wrong, &other_counts), (&columns, &other_counts)] {
-            let proof = setup
-                .prove_mixed_with_word_advice(&b.values, &b.permutations, &[], &context, Some((columns, counts)))
-                .unwrap();
-            assert!(
-                !setup.verify(&public, &context, &proof),
-                "binding or multiplicity forgery"
-            );
-        }
-    }
-
-    #[test]
+    #[cfg(not(feature = "keccak-protocol"))]
     fn mixed_hash_kinds_share_opening_and_reject_bad_rows() {
         use crate::native_hash::Builder;
         parallel::init();
