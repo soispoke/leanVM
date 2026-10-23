@@ -27,6 +27,33 @@ The headline metric is witness construction plus creation and serialization of t
 
 Ranking is by absolute change in time to mempool-ready proof (most time saved first), within each matched workload pair. It does not compare unlike workload latencies as optimization wins. Rows and backend-only proof timings are supporting evidence. One run per policy, CPUs 24-35, 12 threads, seed 20261024. MPT default already trims and its complete-output proof is infeasible. All feasible matched pairs are complete; all generated wallet certificates passed native verification.
 
+## Padding census and boundary priority
+
+Bridge shape uses `blocks = next_power_of_two(max(actual hash blocks, 128))`, six connector rows per padded block, public-prefix alignment, and an arithmetic floor of 8,192 rows. For these workloads, actual hash blocks are 39, so the 128-block minimum binds every row census; the 8,192 arithmetic floor binds none. The table reports index gate rows excluding the 256-row public prefix, then padded index log rows. The lower-bound margin includes the public prefix and connector alignment.
+
+|Workload|Gate rows excluding public prefix, control → trimmed|Padded log rows, control → trimmed|Index rows above next lower boundary (including public), control → trimmed|Crosses boundary?|
+|---|---:|---:|---:|---|
+|sha256-1kib|2,114,176 → 1,762,048|22 → 21|17,280 → 713,728|yes|
+|keccak256-1KiB|3,316,608 → 1,897,984|22 → 21|1,219,712 → 849,664|yes|
+|mpt-storage-proof|26,640,128 → 15,002,624|25 → 24|9,863,168 → 6,614,272|yes|
+|blake2s-64b|120,960 → 109,696|17 → 17|55,680 → 44,416|no|
+|blake2s-1kib|1,437,312 → 1,252,352|21 → 21|388,992 → 204,032|no|
+|shielded-transfer|12,378,752 → 10,248,832|24 → 24|3,990,400 → 1,860,480|no|
+|falcon512|11,961,088 → 8,798,976|24 → 24|3,572,736 → 410,624|no|
+
+
+SHA256 is the highest-value crossing: trimming removes enough gates to move from 2²² to 2²¹ padded rows. Keccak also crosses 2²² to 2²¹. MPT crosses 2²⁵ to 2²⁴ and is already trimmed by the production large-circuit policy. BLAKE2s 64 B, BLAKE2s 1 KiB, shielded and Falcon remain in their existing padded classes. The exact per-workload margins, public prefix, alignment, minimum hash-block padding and counterfactual block-floor check are in `artifacts/laneC-padding.json`; the census receipt is `C-padding-census-t2`.
+
+The reported SHA256 17,024-gate excess is correct when counting gate rows alone. Adding the public prefix makes its exact excess 17,280 index rows; accounting for alignment means a minimum cut of 17,200 compiler rows suffices to cross. Full trimming cuts 352,116 compiler rows. After trimming, Falcon is the nearest remaining lower-boundary opportunity: another 410,591 compiler rows would be required to reach 2²³ padded rows. This is a target, not an implemented optimization.
+
+Checking the minimum hash padding without changing it: 39 useful blocks would round to 64 rather than 128 if the floor were removed. The bridge would save 384 connector rows plus at most one alignment chunk. This changes neither the padded arithmetic log nor the joint-stack log for any of these workloads. For SHA256 control it would still need 2²² arithmetic rows, so reducing the hash floor alone cannot cross the targeted boundary. The 8,192-row arithmetic floor is far below even the smallest workload and provides no opportunity here. No minimum, WHIR configuration or verifier check has been changed; validating a lower hash floor belongs with lane D's prover/PCS work.
+
+Reusing the already measured, reconciled wallet path rather than repeating completed runs: SHA256 time to mempool-ready proof was 3,362.06 → 2,064.20 ms (38.6% lower), proof bytes 347,036 → 323,836, native verification 5.86 → 5.80 ms. Keccak was 4,093.24 → 1,885.49 ms (53.9% lower), proof bytes 346,652 → 324,060, native verification 6.14 → 5.76 ms. These are the existing single-run `C-mempool-sha1k-*` and `C-mempool-keccak1k-*` receipts through the proven-identical split base path. Halving a padded dimension does not guarantee halving total wallet latency because witness construction and other proof stages remain. All candidate defaults still require the requested shape-change sign-off.
+
+The census reuses frozen lowering results and validates all 13 available actual base shapes against their measured connector position, block log and padded arithmetic log. The untrimmed MPT 2²⁵ entry is a theoretical census shape above the backend cap, not a working key or proof. `C-padding-census-t2` passed with frozen source. No Rust or Lean proof code was edited in this census update.
+
+The client-path timing table above is the decision evidence for boundary candidates. SHA256 and Keccak are the first candidates for user sign-off because their trimmed policies cross a power-of-two proof-shape boundary. This priority is independent of raw row reduction.
+
 ## Candidate 1: unused full-adder output trimming everywhere
 
 Status: experimental explicit override only. Production default still trims only relations with Boolean log rows >=23. Enabling this for smaller workloads changes circuit shapes and may change proof sizes. Integration as the default requires explicit user sign-off. The research override is selected from the fixed circuit and never from witness values.
