@@ -1,0 +1,32 @@
+diff --git a/crates/rec_aggregation/examples/closed_tree.rs b/crates/rec_aggregation/examples/closed_tree.rs
+index 108ea60a..ae3c01b9 100644
+--- a/crates/rec_aggregation/examples/closed_tree.rs
++++ b/crates/rec_aggregation/examples/closed_tree.rs
+@@ -3 +3 @@ use bench::{Jemalloc, Plan};
+-use format_recursion::closed_recursion::ClosedSetup;
++use format_recursion::closed_recursion::{Certificate, ClosedSetup};
+@@ -19,0 +20,14 @@ fn main() {
++    let certificate_dir = args
++        .windows(2)
++        .find(|pair| pair[0] == "--certificate-dir")
++        .map(|pair| std::path::Path::new(&pair[1]));
++    if let Some(dir) = certificate_dir {
++        std::fs::create_dir_all(dir).unwrap();
++    }
++    let certificate = |proof: &Certificate, level: usize, index: usize| {
++        let bytes = proof.encode().unwrap();
++        if let Some(dir) = certificate_dir {
++            std::fs::write(dir.join(format!("{level}-{index}.bin")), &bytes).unwrap();
++        }
++        (bytes.len(), primitives::hash::hash(&bytes))
++    };
+@@ -36,0 +51 @@ fn main() {
++        let (certificate_bytes, certificate_digest) = certificate(&proof, 0, i);
+@@ -41 +56 @@ fn main() {
+-            "certificate_bytes":proof.encode().unwrap().len(), "stream_scalars":proof.proof.stream.len(),
++            "certificate_bytes":certificate_bytes, "certificate_digest":certificate_digest, "stream_scalars":proof.proof.stream.len(),
+@@ -52,0 +68 @@ fn main() {
++            let (certificate_bytes, certificate_digest) = certificate(&proof, level, i);
+@@ -57 +73 @@ fn main() {
+-                "certificate_bytes":proof.encode().unwrap().len(), "stream_scalars":proof.proof.stream.len(),
++            "certificate_bytes":certificate_bytes, "certificate_digest":certificate_digest, "stream_scalars":proof.proof.stream.len(),

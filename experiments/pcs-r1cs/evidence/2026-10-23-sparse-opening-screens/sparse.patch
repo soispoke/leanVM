@@ -1,0 +1,26 @@
+diff --git a/crates/pcs/src/whir/hybrid.rs b/crates/pcs/src/whir/hybrid.rs
+index 8577092e..50dd68c4 100644
+--- a/crates/pcs/src/whir/hybrid.rs
++++ b/crates/pcs/src/whir/hybrid.rs
+@@ -30 +30,5 @@ fn partner(f: &[F64], block: usize, lane: usize, rs: &[F192]) -> Vec<F192> {
+-                *a ^= eq[l - first].mul_base_unreduced(v);
++                if v == F64::ONE {
++                    *a ^= F192Unreduced::from(eq[l - first]);
++                } else if v != F64::ZERO {
++                    *a ^= eq[l - first].mul_base_unreduced(v);
++                }
+@@ -93 +97,5 @@ pub(super) fn rounds<'a>(
+-                    acc ^= b.mul_base_unreduced(v);
++                    if v == F64::ONE {
++                        acc ^= F192Unreduced::from(b);
++                    } else if v != F64::ZERO {
++                        acc ^= b.mul_base_unreduced(v);
++                    }
+@@ -233,0 +242,7 @@ mod tests {
++                for (i, word) in witness.iter_mut().enumerate() {
++                    if i % 3 == 0 {
++                        *word = F64::ZERO;
++                    } else if i % 3 == 1 {
++                        *word = F64::ONE;
++                    }
++                }
