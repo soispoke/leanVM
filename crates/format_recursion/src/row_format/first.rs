@@ -23,7 +23,7 @@ pub fn child_digest(key: &Hash, public: &[F192]) -> Hash {
             bytes.extend(v.to_le_bytes());
         }
     }
-    primitives::hash::hash(&bytes)
+    primitives::protocol_hash::hash(&bytes)
 }
 pub fn statement_digest(setups: [&Setup; 2], public: [&[F192]; 2]) -> Hash {
     let mut bytes = b"r1cs-deferred-first-statement-v1".to_vec();
@@ -31,7 +31,7 @@ pub fn statement_digest(setups: [&Setup; 2], public: [&[F192]; 2]) -> Hash {
     for i in 0..2 {
         bytes.extend(child_digest(&setups[i].key, public[i]));
     }
-    primitives::hash::hash(&bytes)
+    primitives::protocol_hash::hash(&bytes)
 }
 pub fn output_fields(digest: &Hash, claims: &[DeferredClaim]) -> Vec<F192> {
     hash_to_scalars(digest)

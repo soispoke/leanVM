@@ -21,14 +21,14 @@ fn main() {
     let digest =
         circuit_suite::shielded_blake2s::reference::verify(&circuit_suite::shielded_blake2s::leanvm_input(bytes))
             .unwrap();
-    let digest = primitives::hash::hash(&digest);
+    let digest = primitives::protocol_hash::hash(&digest);
     let expected: Vec<_> = digest
         .chunks(8)
         .map(|b| primitives::field::F192::new(u64::from_le_bytes(b.try_into().unwrap()), 0, 0))
         .collect();
     assert_eq!(&public[public.len() - 4..], expected.as_slice());
     assert_eq!(canonical.compressions.len(), 106);
-    let context = primitives::hash::hash(b"hometurf-native-hash-application-v1");
+    let context = primitives::protocol_hash::hash(b"hometurf-native-hash-application-v1");
     if mode == "merge" {
         use format_recursion::{
             private_recursion::{self, Setup},

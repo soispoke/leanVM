@@ -18,10 +18,10 @@ fn application(seed: u64) -> Builder {
         let bit_value = (seed + level) & 1;
         let bit = b.input(bit_value);
         let sibling: [Word; 4] = std::array::from_fn(|i| b.input((seed + 3) * 0x1000001 + level * 4 + i as u64));
-        let left: [Word; 4] = std::array::from_fn(|i| b.select(bit, node[i], sibling[i]));
-        let right: [Word; 4] = std::array::from_fn(|i| b.select(bit, sibling[i], node[i]));
+        let left: [Word; 4] = std::array::from_fn(|i| b.select(bit, sibling[i], node[i]));
+        let right: [Word; 4] = std::array::from_fn(|i| b.select(bit, node[i], sibling[i]));
         let sibling_bytes: Vec<_> = sibling.iter().flat_map(|&w| b.value(w).c0.to_le_bytes()).collect();
-        let bytes = if bit_value == 0 {
+        let bytes = if bit_value == 1 {
             [expected.as_slice(), sibling_bytes.as_slice()].concat()
         } else {
             [sibling_bytes.as_slice(), expected.as_slice()].concat()
@@ -55,7 +55,7 @@ fn main() {
     let canonical = application(seed);
     let setup = canonical.setup_keccak().unwrap();
     let public = canonical.public_values();
-    let context = primitives::hash::hash(b"hometurf-keccak-merkle-depth16-v1");
+    let context = primitives::protocol_hash::hash(b"hometurf-keccak-merkle-depth16-v1");
     if mode == "prove" {
         drop(canonical);
         let start = Instant::now();

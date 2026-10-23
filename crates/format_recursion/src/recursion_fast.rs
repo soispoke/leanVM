@@ -34,7 +34,7 @@ pub fn enc64(n: u64) -> [u8; 8] {
 }
 
 pub fn chain_step(digest: &Digest) -> Digest {
-    primitives::hash::hash(&tagged_bytes(TAG_CHAIN, &[digest]))
+    primitives::protocol_hash::hash(&tagged_bytes(TAG_CHAIN, &[digest]))
 }
 
 pub fn chain_end(start: &Digest, n: u64) -> Result<Digest, Error> {
@@ -49,7 +49,7 @@ pub fn leaf_statement(end: &Digest, n: u64) -> Result<Digest, Error> {
     if n > CHAIN_CAP {
         return Err(Error::ChainTooLong);
     }
-    Ok(primitives::hash::hash(&tagged_bytes(TAG_LEAF, &[end, &enc64(n)])))
+    Ok(primitives::protocol_hash::hash(&tagged_bytes(TAG_LEAF, &[end, &enc64(n)])))
 }
 
 /// Independent native path: no circuit evaluation or prover advice is used.
@@ -58,11 +58,11 @@ pub fn expected_leaf(start: &Digest, n: u64) -> Result<Digest, Error> {
 }
 
 pub fn node_statement(left: &Digest, right: &Digest) -> Digest {
-    primitives::hash::hash(&tagged_bytes(TAG_NODE, &[left, right]))
+    primitives::protocol_hash::hash(&tagged_bytes(TAG_NODE, &[left, right]))
 }
 
 pub fn oracle(query: &[u8]) -> Digest {
-    primitives::hash::hash(&tagged_bytes(TAG_RO, &[query]))
+    primitives::protocol_hash::hash(&tagged_bytes(TAG_RO, &[query]))
 }
 
 /// Check the node relation using the caller's instantiated child verifier.

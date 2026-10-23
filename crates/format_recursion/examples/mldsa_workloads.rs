@@ -34,7 +34,7 @@ fn create<W: Workload>(
             expected.push(byte.iter().enumerate().fold(0, |a, (i, &b)| a | ((b as u8) << i)));
         }
         instance.statement = [0; 64];
-        instance.statement[..32].copy_from_slice(&primitives::hash::hash(&expected));
+        instance.statement[..32].copy_from_slice(&primitives::protocol_hash::hash(&expected));
     }
     let mut b = Builder::default();
     let inputs: Vec<_> = instance.inputs.iter().map(|&v| b.input(u64::from(v))).collect();
@@ -100,7 +100,7 @@ fn run<W: Workload>(args: &[String]) {
         "{}",
         serde_json::json!({"kind":"setup","setup_s":start.elapsed().as_secs_f64(),"core_rows":core_rows,"native_rows":canonical.rows(),"permutations":calls.len(),"shape":format!("{shape:?}")})
     );
-    let context = primitives::hash::hash(format!("keccak-rows-relation:{}", W::NAME).as_bytes());
+    let context = primitives::protocol_hash::hash(format!("keccak-rows-relation:{}", W::NAME).as_bytes());
     if args[3] == "reject" {
         drop(canonical);
         for case in ["signature", "message", "key", "z", "hint"] {

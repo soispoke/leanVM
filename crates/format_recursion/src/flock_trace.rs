@@ -503,7 +503,7 @@ mod tests {
             let expected = setup.prove_reduction_precomputed(&z, &a, &b, &lin, &mut ps);
             let proof = ps.into_proof();
             trace::start();
-            let state = trace::digest_constant(&primitives::hash::hash(label));
+            let state = trace::digest_constant(&primitives::protocol_hash::hash(label));
             let mut channel = crate::verifier::Transcript::from_state(&proof, state);
             let actual = reduce(setup.m(), &mut channel);
             channel.finish();

@@ -198,6 +198,9 @@ impl Builder {
     }
 
     pub fn setup_mixed(&self) -> Option<crate::keccak_bridge::KeccakBridge> {
+        if cfg!(feature = "keccak-protocol") && !self.compressions.is_empty() {
+            return None;
+        }
         PrivateBridge::new_mixed(
             self.circuit.clone(),
             self.connectors.clone(),
@@ -207,6 +210,12 @@ impl Builder {
 
     /// Hash an aligned byte string, with zero padding of its last block.
     /// Every supplied word is part of the message; lengths are circuit metadata.
+    #[cfg(feature = "keccak-protocol")]
+    pub fn hash_words(&mut self, words: &[Word]) -> [Word; 4] {
+        self.keccak256_words(words)
+    }
+
+    #[cfg(not(feature = "keccak-protocol"))]
     pub fn hash_words(&mut self, words: &[Word]) -> [Word; 4] {
         let iv = flock::hash::param_iv();
         let mut h = std::array::from_fn(|i| self.constant(u64::from(iv[2 * i]) | (u64::from(iv[2 * i + 1]) << 32)));

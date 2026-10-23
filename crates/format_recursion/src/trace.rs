@@ -210,7 +210,7 @@ pub fn hash(parts: &[(S, usize)]) -> [S; 2] {
         let words: Vec<u8> = [x.c0, x.c1, x.c2].iter().flat_map(|x| x.to_le_bytes()).collect();
         bytes.extend_from_slice(&words[..len]);
     }
-    let digest = primitives::hash::hash(&bytes);
+    let digest = primitives::protocol_hash::hash(&bytes);
     let halves = fiat_shamir::merkle::hash_to_scalars(&digest);
     let lo = node(Op::Hash(parts.to_vec()), halves[0]);
     let hi = node(Op::HashHigh(lo), halves[1]);
@@ -276,7 +276,7 @@ impl Trace {
         let claims = self.public.clone();
         CONSTANTS.with(|c| c.borrow_mut().clear());
         TRACE.with(|t| *t.borrow_mut() = self);
-        let domain = digest_constant(&primitives::hash::hash(b"matched-application-batch-v1"));
+        let domain = digest_constant(&primitives::protocol_hash::hash(b"matched-application-batch-v1"));
         let mut parts = vec![
             (domain[0], 16),
             (domain[1], 16),
@@ -609,7 +609,7 @@ mod tests {
                 })
                 .collect();
             let digest = hash(&parts);
-            let expected = digest_constant(&primitives::hash::hash(&bytes));
+            let expected = digest_constant(&primitives::protocol_hash::hash(&bytes));
             for i in 0..2 {
                 digest[i].assert_eq(expected[i]);
             }

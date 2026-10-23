@@ -36,7 +36,7 @@ fn main() {
     assert!(format == "B" || format == "C");
     assert!(outer == "A" || outer == "B");
     assert!(mode == "carried" || mode == "direct");
-    let context = primitives::hash::hash(b"r1cs-deferred-measurement-v1");
+    let context = primitives::protocol_hash::hash(b"r1cs-deferred-measurement-v1");
     let source0 = row_format::shielded_source(0);
     let source1 = if case == "merkle" {
         row_format::merkle_source(1)

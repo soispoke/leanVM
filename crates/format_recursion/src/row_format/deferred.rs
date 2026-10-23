@@ -263,7 +263,7 @@ mod tests {
         let leaf: Vec<_> = (0..4)
             .flat_map(|i| ((seed as u64) * 0x10001 + i + 17).to_le_bytes())
             .collect();
-        let mut node = primitives::hash::hash(&leaf);
+        let mut node = primitives::protocol_hash::hash(&leaf);
         for level in 0..16 {
             let sibling: Vec<_> = (0..4)
                 .flat_map(|i| ((seed as u64 + 3) * 0x1000001 + (level * 4 + i) as u64).to_le_bytes())
@@ -276,7 +276,7 @@ mod tests {
                 input.extend(&sibling);
                 input.extend(node);
             }
-            node = primitives::hash::hash(&input);
+            node = primitives::protocol_hash::hash(&input);
         }
         let setup = Setup::new(
             R1cs::lower_bounded(&source.circuit, &source.connectors, &source.values, source.fixed_len, 8),

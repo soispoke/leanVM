@@ -26,7 +26,7 @@ impl Setup {
     /// Preprocess a fixed program independently of subsequent witnesses.
     #[tracing::instrument(skip_all, name = "Private setup")]
     pub fn new(program: Trace) -> Option<Self> {
-        Self::new_with_context(program, primitives::hash::hash(b"format-private-recursion-v1"))
+        Self::new_with_context(program, primitives::protocol_hash::hash(b"format-private-recursion-v1"))
     }
 
     pub(crate) fn new_with_context(program: Trace, context: Hash) -> Option<Self> {

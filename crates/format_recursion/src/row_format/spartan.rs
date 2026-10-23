@@ -91,7 +91,7 @@ impl Setup {
         let q_offset = (3usize << z_log).next_multiple_of(q_words);
         let committed_words = q_offset + q_words;
         let stack_log = committed_words.next_power_of_two().trailing_zeros() as usize;
-        let mut h = primitives::hash::Hasher::new();
+        let mut h = primitives::protocol_hash::Hasher::new();
         h.update(b"standard-row-format-direct-matrices-v1");
         h.update(&[u8::from(ccs)]);
         for x in [

@@ -423,7 +423,7 @@ pub struct Source {
 impl Source {
     /// Digest only the fixed graph, public layout/constants and native hash routing.
     pub fn program_digest(&self) -> [u8; 32] {
-        let mut h = primitives::hash::Hasher::new();
+        let mut h = primitives::protocol_hash::Hasher::new();
         h.update(b"standard-row-format-source-v1");
         for n in [
             self.circuit.variables,
@@ -533,7 +533,7 @@ pub fn source(case: &str) -> Source {
     }
     let bridge = b.setup().unwrap();
     let public = b.public_values();
-    let context = primitives::hash::hash(b"hometurf-native-hash-application-v1");
+    let context = primitives::protocol_hash::hash(b"hometurf-native-hash-application-v1");
     let proof = bridge.prove(&b.values, &b.compressions, &context).unwrap();
     assert!(bridge.verify(&public, &context, &proof));
     let statement: [u8; 32] = public[public.len() - 4..]

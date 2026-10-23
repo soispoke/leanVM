@@ -10,11 +10,11 @@ fn main() {
     let mode = &args[1];
     let path = &args[2];
     let payload = leanvm_input(0);
-    let digest = primitives::hash::hash(&reference::verify(&payload).unwrap());
+    let digest = primitives::protocol_hash::hash(&reference::verify(&payload).unwrap());
     let start = Instant::now();
     let setup = LookupBridge::new(&payload).unwrap();
     eprintln!("setup_s={}", start.elapsed().as_secs_f64());
-    let context = primitives::hash::hash(b"shielded-lookup-benchmark-v1");
+    let context = primitives::protocol_hash::hash(b"shielded-lookup-benchmark-v1");
     if mode == "prove" {
         std::fs::write("/proc/self/clear_refs", "5").unwrap();
         let start = Instant::now();

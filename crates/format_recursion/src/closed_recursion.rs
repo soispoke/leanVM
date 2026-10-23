@@ -70,7 +70,7 @@ pub struct SplitClosedSetup {
 }
 
 fn context() -> Hash {
-    primitives::hash::hash(b"format-closed-recursion-v1")
+    primitives::protocol_hash::hash(b"format-closed-recursion-v1")
 }
 
 fn padding() -> [F192; 18] {
@@ -856,7 +856,7 @@ impl FirstMergeSetup {
             .count();
         drop(lower);
         // Distinct domain plus the base root pinned as constants in the circuit.
-        let first = Setup::new_with_context(trace, primitives::hash::hash(b"format-first-merge-v1"))?;
+        let first = Setup::new_with_context(trace, primitives::protocol_hash::hash(b"format-first-merge-v1"))?;
         Some(Self {
             base,
             first,

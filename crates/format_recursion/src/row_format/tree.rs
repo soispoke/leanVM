@@ -116,7 +116,7 @@ fn node_digest(schema: Schema, children: [&Certificate; 2]) -> Hash {
         public.extend(schema.fields(&child.statement));
         bytes.extend(super::first::child_digest(&child.key, &public));
     }
-    primitives::hash::hash(&bytes)
+    primitives::protocol_hash::hash(&bytes)
 }
 // The ordered digest already commits shape, child kind, identities, every
 // carried slot and its active bit. Only the fresh proof-derived claims need

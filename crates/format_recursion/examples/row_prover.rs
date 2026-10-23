@@ -33,7 +33,7 @@ fn main() {
     let source = row_format::source(case);
     let fixture_s = fixture_start.elapsed().as_secs_f64();
     let source_program_digest: String = source.program_digest().iter().map(|b| format!("{b:02x}")).collect();
-    let context = primitives::hash::hash(b"standard-row-format-comparison-v1");
+    let context = primitives::protocol_hash::hash(b"standard-row-format-comparison-v1");
     let setup_start = Instant::now();
     if format == "A" {
         let setup = PrivateBridge::new(source.circuit.clone(), source.connectors.clone()).unwrap();

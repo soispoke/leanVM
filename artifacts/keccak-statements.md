@@ -8,7 +8,7 @@ Use the existing `circuit_suite::shielded_blake2s` two-input/two-output, depth-2
 
 ## Merkle membership
 
-Use the existing `row_format::merkle_source(seed)` depth-16 statement. Hash the private 32-byte leaf once, then hash left32 || right32 at each of 16 levels. Each private path bit is Boolean; bit zero places the current node left, bit one places it right. No domain tags are added. Words serialize as u64 little-endian. The root is four little-endian u64 public words. Fixture leaf word i = seed*0x10001+i+17 (i=0..3); sibling word i at level l = (seed+3)*0x1000001+4*l+i; path bit l=(seed+l)&1. Replace both leaf and node BLAKE2s by Keccak-256.
+Use the existing `row_format::merkle_source(seed)` depth-16 statement. Hash the private 32-byte leaf once, then hash left32 || right32 at each of 16 levels. Each private path bit is Boolean; bit zero places the sibling left and current node right; bit one places the current node left. This matches the existing L2r `select(bit, sibling, node)` call and Builder selector semantics. No domain tags are added. Words serialize as u64 little-endian. The root is four little-endian u64 public words. Fixture leaf word i = seed*0x10001+i+17 (i=0..3); sibling word i at level l = (seed+3)*0x1000001+4*l+i; path bit l=(seed+l)&1. Replace both leaf and node BLAKE2s by Keccak-256.
 
 ## Unchanged statements
 
@@ -22,4 +22,4 @@ Application fixture digests will be appended after independent reference evaluat
 
 Shielded fixture seed `20261024`: statement digest `599943d4ea06d97bbd20b602add63200e167a17a72d9775d91d33fa3eb72e4d3`, validity 1. Independent RustCrypto reference agrees with the Boolean circuit and native-row lowering.
 
-Depth-16 Merkle seed 1 root: `8d1c538daaf507f9783e9cd7a2875ae611664056ac8d05b30bad55d0359dc2a9`. Native sponge agrees at every level with RustCrypto reference; 17 permutations including the leaf.
+Withdrawn exploratory Merkle vector (opposite path convention, do not use as the shared fixture), seed 1 root: `8d1c538daaf507f9783e9cd7a2875ae611664056ac8d05b30bad55d0359dc2a9`. Native sponge agrees at every level with RustCrypto reference; 17 permutations including the leaf.

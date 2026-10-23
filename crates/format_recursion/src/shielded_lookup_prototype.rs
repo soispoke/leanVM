@@ -411,7 +411,7 @@ mod tests {
             assert!(result.arithmetic_valid && result.lookup_valid);
             assert_eq!(
                 result.digest,
-                primitives::hash::hash(&reference::verify(&payload).unwrap())
+                primitives::protocol_hash::hash(&reference::verify(&payload).unwrap())
             );
             assert_eq!(result.compressions, 106);
             println!("{result:?}");

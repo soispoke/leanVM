@@ -258,7 +258,7 @@ mod tests {
         assert!(bridge.verify(&values, &context, &proof));
         let good = record(&bridge, &values, &context, &proof);
         assert!(good.satisfied());
-        let expected = hash_to_scalars(&primitives::hash::hash(
+        let expected = hash_to_scalars(&primitives::protocol_hash::hash(
             &bridge.label(&bridge.public(&values).unwrap(), &context),
         ));
         assert_eq!(

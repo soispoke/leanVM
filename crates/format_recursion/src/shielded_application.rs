@@ -389,7 +389,7 @@ mod tests {
             let (matched, rows) = application_vm(&payload);
             assert!(matched.satisfied());
             assert_eq!(matched.compressions.len(), 106);
-            let final_digest = primitives::hash::hash(&digest);
+            let final_digest = primitives::protocol_hash::hash(&digest);
             let expected: Vec<_> = final_digest
                 .chunks(8)
                 .map(|b| primitives::field::F192::new(u64::from_le_bytes(b.try_into().unwrap()), 0, 0))

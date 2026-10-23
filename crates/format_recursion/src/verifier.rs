@@ -362,7 +362,7 @@ fn verify_opening(layout: &Layout, root: [S; 2], claims: &[(Vec<S>, S)], proof: 
         seed.extend(point.iter().chain([value]).map(|&x| (x, 24)));
     }
     let public = hash(&seed);
-    let iv = digest_constant(&primitives::hash::hash(b"flock-quotient-opening"));
+    let iv = digest_constant(&primitives::protocol_hash::hash(b"flock-quotient-opening"));
     let mut t = Transcript::new(proof, iv, public);
     let lambda = t.sample();
     let lambdas = powers(lambda, claims.len());
@@ -546,7 +546,7 @@ fn record_with_identity(child: &Child, app_id: Option<&Hash>) -> Trace {
     // Statement::halves reads each 16-byte block big endian; the transcript hashes its little-endian limbs.
     let public = hash(&statement.iter().map(|&x| (x, 16)).collect::<Vec<_>>());
     let label = [b"flock-quotient-vm-1".as_slice(), &child.index_root].concat();
-    let iv = digest_constant(&primitives::hash::hash(&label));
+    let iv = digest_constant(&primitives::protocol_hash::hash(&label));
     let raw = RawProof {
         stream: child.piop.stream.clone(),
         merkle: Vec::new(),

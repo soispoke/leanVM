@@ -15,8 +15,10 @@ use std::collections::HashMap;
 pub struct Lowered {
     pub circuit: Circuit,
     pub connectors: Vec<[usize; 18]>,
+    pub keccak_connectors: Vec<[usize; 50]>,
     pub values: Vec<F192>,
     pub compressions: Vec<Compression>,
+    pub permutations: Vec<flock::keccak::reduction::Permutation>,
     /// The verifier fixes these anchors and constants before the original outputs.
     pub fixed_public: Vec<F192>,
     pub original_public_len: usize,
@@ -48,6 +50,7 @@ enum ValueStep {
     Limb(usize, usize),
     Bit(usize, usize),
     CompressionOutput(usize),
+    PermutationOutput(usize),
 }
 struct CompressionStep {
     cv: [usize; 4],
@@ -59,6 +62,7 @@ enum WitnessStep {
     Value(ValueStep),
     // Boxing keeps the much more common scalar steps small.
     Compression(Box<CompressionStep>),
+    Permutation(Box<[usize; 25]>),
 }
 struct WitnessSchedule {
     steps: Vec<WitnessStep>,
@@ -68,6 +72,7 @@ struct WitnessSchedule {
 pub(crate) struct PreparedWitness {
     pub values: Vec<F192>,
     pub compressions: Vec<Compression>,
+    pub permutations: Vec<flock::keccak::reduction::Permutation>,
     pub public: Vec<F192>,
 }
 impl WitnessSchedule {
@@ -76,6 +81,8 @@ impl WitnessSchedule {
         values.extend([F192::ZERO, F192::ONE]);
         values.extend(witness.nodes.iter().map(|node| node.value));
         let mut compressions = Vec::new();
+        let mut permutations = Vec::new();
+        let mut permuted = [0; 25];
         let mut output = [0u32; 8];
         for step in &self.steps {
             match step {
@@ -92,11 +99,17 @@ impl WitnessSchedule {
                             let x = values[at];
                             F192::new(([x.c0, x.c1, x.c2][bit / 64] >> (bit % 64)) & 1, 0, 0)
                         }
+                        ValueStep::PermutationOutput(word) => F192::new(permuted[word], 0, 0),
                         ValueStep::CompressionOutput(word) => {
                             F192::new(pack32(output[2 * word], output[2 * word + 1]), 0, 0)
                         }
                     };
                     values.push(value);
+                }
+                WitnessStep::Permutation(input) => {
+                    let input = input.map(|at| values[at].c0);
+                    permuted = flock::keccak::reduction::permute(&input);
+                    permutations.push(input);
                 }
                 WitnessStep::Compression(compression) => {
                     let CompressionStep {
@@ -119,6 +132,7 @@ impl WitnessSchedule {
         PreparedWitness {
             values,
             compressions,
+            permutations,
             public,
         }
     }
@@ -357,7 +371,8 @@ fn preflight(program: &Trace, limits: Limits) -> Option<Limits> {
                         e.project(program, source, at, 0, 8 * len)?;
                     }
                 }
-                let count = bytes.div_ceil(64).max(1);
+                let count = if cfg!(feature = "keccak-protocol") { bytes / 136 + 1 } else { bytes.div_ceil(64).max(1) };
+                if cfg!(feature = "keccak-protocol") { e.charge(count.checked_mul(80)?, count.checked_mul(80)?)?; }
                 e.bound.compressions = e.bound.compressions.checked_add(count)?;
                 if aligned {
                     e.charge(2, count.checked_mul(6)?.checked_add(5)?)?;
@@ -468,6 +483,8 @@ struct Compiler {
     differences: HashMap<(usize, usize), usize>,
     connectors: Vec<[usize; 18]>,
     compressions: Vec<Compression>,
+    permutations: Vec<flock::keccak::reduction::Permutation>,
+    keccak_connectors: Vec<[usize; 50]>,
 }
 
 fn key(value: F192) -> (u64, u64, u64) {
@@ -623,6 +640,25 @@ impl Compiler {
     /// inputs, so one compression types fourteen F64 words. This is not a
     /// standard hash invocation: no fixed-IV or final-flag claim is made.
     /// Outputs remain private and otherwise unused.
+    #[cfg(feature = "keccak-protocol")]
+    fn constrain_unused_limbs(&mut self) {
+        let mut pending: Vec<_> = self.pending_limbs.iter().copied().filter(|v| !self.typed.contains(v)).collect();
+        pending.sort_unstable();
+        pending.dedup();
+        for chunk in pending.chunks(25) {
+            let input_vars = std::array::from_fn(|i| *chunk.get(i).unwrap_or(&0));
+            let input = input_vars.map(|v| self.values[v].c0);
+            let output = flock::keccak::reduction::permute(&input);
+            self.schedule.push(WitnessStep::Permutation(Box::new(input_vars)));
+            let outputs: [usize; 25] = std::array::from_fn(|i| self.variable(F192::new(output[i], 0, 0), ValueStep::PermutationOutput(i)));
+            self.keccak_connectors.push(std::array::from_fn(|i| if i < 25 { input_vars[i] } else { outputs[i - 25] }));
+            self.permutations.push(input);
+            self.typed.extend(input_vars);
+            self.typed.extend(outputs);
+        }
+    }
+
+    #[cfg(not(feature = "keccak-protocol"))]
     fn constrain_unused_limbs(&mut self) {
         let mut pending: Vec<_> = self
             .pending_limbs
@@ -743,6 +779,54 @@ impl Compiler {
             .collect()
     }
 
+    #[cfg(feature = "keccak-protocol")]
+    fn hash(&mut self, program: &Trace, at: usize, parts: &[(S, usize)]) -> Option<()> {
+        if program.nodes.get(at + 1)?.op != Op::HashHigh(S(at)) { return None; }
+        let aligned = parts.iter().all(|&(_, bytes)| bytes % 8 == 0);
+        let mut words = Vec::new();
+        let mut bits = Vec::new();
+        let mut bytes = 0usize;
+        for &(source, len) in parts {
+            if source.0 >= at || len > 24 { return None; }
+            bytes = bytes.checked_add(len)?;
+            if aligned {
+                words.extend_from_slice(&self.source_limbs(source.0)[..len / 8]);
+            } else {
+                bits.extend(self.range_bits(source.0, 0, 8 * len));
+            }
+        }
+        if aligned {
+            words.push(self.constant(F192::ONE));
+        } else {
+            bits.push(1);
+            bits.resize(bits.len().next_multiple_of(64), 0);
+            for chunk in bits.chunks(64) { words.push(self.reconstruct(chunk)); }
+        }
+        let blocks = bytes / 136 + 1;
+        words.resize(blocks * 17, 0);
+        let last_pad = self.constant(F192::new(1u64 << 63, 0, 0));
+        let last = words.len() - 1;
+        words[last] = self.add(words[last], last_pad);
+        let mut state = [0; 25];
+        for block in 0..blocks {
+            for lane in 0..17 { state[lane] = self.add(state[lane], words[block * 17 + lane]); }
+            self.typed.extend(state);
+            let input = state.map(|v| self.values[v].c0);
+            let output = flock::keccak::reduction::permute(&input);
+            self.schedule.push(WitnessStep::Permutation(Box::new(state)));
+            let outputs = std::array::from_fn(|i| self.variable(F192::new(output[i], 0, 0), ValueStep::PermutationOutput(i)));
+            self.keccak_connectors.push(std::array::from_fn(|i| if i < 25 { state[i] } else { outputs[i - 25] }));
+            self.permutations.push(input);
+            self.typed.extend(outputs);
+            state = outputs;
+        }
+        let y = self.constant(F192::new(0, 1, 0));
+        self.rows.push([state[1], y, state[0], at + 2]);
+        self.rows.push([state[3], y, state[2], at + 3]);
+        Some(())
+    }
+
+    #[cfg(not(feature = "keccak-protocol"))]
     fn hash(&mut self, program: &Trace, at: usize, parts: &[(S, usize)]) -> Option<()> {
         if program.nodes.get(at + 1)?.op != Op::HashHigh(S(at)) {
             return None;
@@ -984,6 +1068,8 @@ fn lower_analyzed(program: &Trace, witness: &Trace, analysis: &Analysis) -> Opti
         differences: HashMap::new(),
         connectors: Vec::new(),
         compressions: Vec::new(),
+        permutations: Vec::new(),
+        keccak_connectors: Vec::new(),
     };
     c.values.extend(witness.nodes.iter().map(|n| n.value));
     let mut stage_census = Vec::new();
@@ -1143,6 +1229,8 @@ fn lower_analyzed(program: &Trace, witness: &Trace, analysis: &Analysis) -> Opti
         connectors: c.connectors,
         values: c.values,
         compressions: c.compressions,
+        permutations: c.permutations,
+        keccak_connectors: c.keccak_connectors,
         fixed_public,
         original_public_len: program.public.len(),
         stage_census,
@@ -1539,7 +1627,7 @@ mod tests {
             assert_eq!(
                 fiat_shamir::merkle::scalars_to_hash(&[t.nodes[outputs[0].0].value, t.nodes[outputs[1].0].value])
                     .unwrap(),
-                primitives::hash::hash(&message)
+                primitives::protocol_hash::hash(&message)
             );
             for pair in lowered.connectors[..hash_count].windows(2) {
                 assert_eq!(pair[0][4..8], pair[1][..4]);
@@ -1659,7 +1747,7 @@ mod tests {
             assert_eq!(
                 fiat_shamir::merkle::scalars_to_hash(&[t.nodes[outputs[0].0].value, t.nodes[outputs[1].0].value])
                     .unwrap(),
-                primitives::hash::hash(&vec![0; bytes])
+                primitives::protocol_hash::hash(&vec![0; bytes])
             );
         }
     }
@@ -1996,5 +2084,52 @@ mod tests {
         lowered.values[output] += F192::ONE;
         assert!(rows_hold(&lowered));
         assert!(!connectors_hold(&lowered));
+    }
+}
+
+#[cfg(all(test, feature = "keccak-protocol"))]
+mod keccak_protocol_tests {
+    use super::*;
+    use crate::keccak_bridge::KeccakBridge;
+
+    fn program(bytes: usize, seed: u64) -> Trace {
+        crate::trace::start();
+        let parts: Vec<_> = (0..bytes).collect::<Vec<_>>().chunks(24).map(|chunk| {
+            let mut encoded = [0; 24];
+            for (j, &i) in chunk.iter().enumerate() { encoded[j] = (i as u64 + seed) as u8; }
+            let limb = |j| u64::from_le_bytes(encoded[j..j+8].try_into().unwrap());
+            (S::input(F192::new(limb(0), limb(8), limb(16))), chunk.len())
+        }).collect();
+        let digest = crate::trace::hash(&parts);
+        let mut out = crate::trace::take();
+        out.public = digest.to_vec();
+        out
+    }
+
+    #[test]
+    fn native_keccak_lowering_padding_schedule_and_verifier_rejections() {
+        for bytes in [0, 1, 64, 135, 136, 137, 272] {
+            let original = program(bytes, 7);
+            let mut prepared = PreparedProgram::new(original.clone()).unwrap();
+            let lowered = prepared.lower_setup().unwrap();
+            assert!(lowered.compressions.is_empty());
+            assert!(lowered.connectors.is_empty());
+            assert!(lowered.permutations.len() >= bytes / 136 + 1);
+            assert!(lowered.circuit.rows.iter().all(|&[a,b,u,d]| lowered.values[a] * lowered.values[b] + lowered.values[u] == lowered.values[d]));
+            let bridge = KeccakBridge::new(lowered.circuit.clone(), lowered.keccak_connectors.clone()).unwrap();
+            let fresh = program(bytes, 19);
+            let witness = prepared.prepare_witness(&fresh).unwrap();
+            let context = primitives::protocol_hash::hash(b"native-keccak-compiler-test");
+            let proof = bridge.prove(&witness.values, &witness.permutations, &context).unwrap();
+            assert!(bridge.verify(&witness.public, &context, &proof));
+            assert!(!bridge.verify(&witness.public, &[99; 32], &proof));
+            let mut tampered = proof.clone();
+            tampered.stream[0] += F192::ONE;
+            assert!(!bridge.verify(&witness.public, &context, &tampered));
+            let mut false_permutations = witness.permutations.clone();
+            false_permutations[0][0] ^= 1;
+            let forged = bridge.prove_mixed_without_prechecks_for_tests(&witness.values, &false_permutations, &[], &context).unwrap();
+            assert!(!bridge.verify(&witness.public, &context, &forged));
+        }
     }
 }

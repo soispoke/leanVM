@@ -91,7 +91,7 @@ impl Setup {
                 bytes.extend_from_slice(&limb.to_le_bytes());
             }
         }
-        primitives::hash::hash(&bytes)
+        primitives::protocol_hash::hash(&bytes)
     }
     fn public_values(&self, requests: &[Request], expected_public: &[F192]) -> Option<Vec<F192>> {
         if expected_public.len() != self.program.public.len() {

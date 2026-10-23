@@ -21,7 +21,7 @@ pub fn identity(circuit: &Circuit) -> [u8; 32] {
     for source in &circuit.sigma {
         bytes.extend(source.to_le_bytes());
     }
-    primitives::hash::hash(&bytes)
+    primitives::protocol_hash::hash(&bytes)
 }
 
 /// Choose solely from fixed circuit wiring, public output positions and identity.

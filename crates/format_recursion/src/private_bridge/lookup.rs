@@ -33,7 +33,7 @@ impl LookupBridge {
                 bytes.extend_from_slice(&word.0.to_le_bytes());
             }
         }
-        let table_digest = primitives::hash::hash(&bytes);
+        let table_digest = primitives::protocol_hash::hash(&bytes);
         let shape = lookup_reduction::Shape {
             table_log: shielded_lookup::table_log(),
             query_log: prepared.layout.log_queries,
@@ -346,15 +346,15 @@ mod tests {
     fn joint_lookup_binds_statement_context_and_proof() {
         parallel::init();
         let payload = circuit_suite::shielded_blake2s::leanvm_input(0);
-        let digest = primitives::hash::hash(&circuit_suite::shielded_blake2s::reference::verify(&payload).unwrap());
+        let digest = primitives::protocol_hash::hash(&circuit_suite::shielded_blake2s::reference::verify(&payload).unwrap());
         let bridge = LookupBridge::new(&payload).unwrap();
-        let context = primitives::hash::hash(b"lookup-binding-test");
+        let context = primitives::protocol_hash::hash(b"lookup-binding-test");
         let proof = bridge.prove(&payload, &context).unwrap();
         assert!(bridge.verify(&digest, &context, &proof));
         let mut wrong = digest;
         wrong[0] ^= 1;
         assert!(!bridge.verify(&wrong, &context, &proof));
-        assert!(!bridge.verify(&digest, &primitives::hash::hash(b"wrong-context"), &proof));
+        assert!(!bridge.verify(&digest, &primitives::protocol_hash::hash(b"wrong-context"), &proof));
         let mut tampered = proof.clone();
         tampered.stream[0] += F192::ONE;
         assert!(!bridge.verify(&digest, &context, &tampered));
