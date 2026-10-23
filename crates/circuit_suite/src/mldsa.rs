@@ -54,6 +54,17 @@ fn mul(c: &mut Ckt, a: &[Wire], b: &[Wire]) -> Word {
     if a.iter().all(|w| w.as_const().is_some()) && !b.iter().all(|w| w.as_const().is_some()) {
         return mul(c, b, a);
     }
+    if let Some(coefficient) = b
+        .iter()
+        .enumerate()
+        .try_fold(0u64, |v, (i, w)| w.as_const().map(|bit| v | ((bit as u64) << i)))
+    {
+        let modulus = crate::falcon::Modq::new(Q);
+        let mut linear = crate::falcon::Lin::new(&modulus);
+        linear.add(&crate::falcon::MV::word(a), coefficient, 0);
+        let output = linear.finish(c, true);
+        return reduce(c, output.bits());
+    }
     let mut accumulator = crate::falcon::Acc::default();
     for (i, &x) in a.iter().enumerate() {
         for (j, &y) in b.iter().enumerate() {
@@ -131,7 +142,7 @@ fn expand_a(c: &mut Ckt, rho: &[Wire], checks: &mut Word) -> Vec<Vec<Vec<Word>>>
                     input.extend(konst(col, 8));
                     input.extend(konst(row, 8));
                     let stream = crate::falcon::shake(c, &input, 840, 168);
-                    let candidates = stream.chunks_exact(24).map(|w| w[..23].to_vec()).collect();
+                    let candidates = stream.as_chunks::<24>().0.iter().map(|w| w[..23].to_vec()).collect();
                     let (a, ok) = compact(c, candidates);
                     checks.push(ok);
                     a
@@ -145,7 +156,7 @@ fn ball(c: &mut Ckt, seed: &[Wire], checks: &mut Word) -> Vec<Word> {
     // Store each coefficient as (nonzero,negative). No field multiplications here.
     let mut p = vec![vec![Wire::ZERO; 2]; 256];
     let mut step = konst(0, 6);
-    for byte in stream[64..].chunks_exact(8) {
+    for byte in stream[64..].as_chunks::<8>().0.iter() {
         let active = lt(c, &step, &konst(39, 6));
         let i = c.add(&wide(&step, 8), &konst(217, 8));
         let below = lt(c, &i, byte).not();
@@ -185,8 +196,8 @@ fn ball(c: &mut Ckt, seed: &[Wire], checks: &mut Word) -> Vec<Word> {
         .collect()
 }
 fn hints(c: &mut Ckt, bytes: &[Wire], checks: &mut Word) -> Vec<Vec<Wire>> {
-    let indices: Vec<_> = bytes[..640].chunks_exact(8).collect();
-    let ends: Vec<_> = bytes[640..].chunks_exact(8).collect();
+    let indices: Vec<_> = bytes[..640].as_chunks::<8>().0.iter().collect();
+    let ends: Vec<_> = bytes[640..].as_chunks::<8>().0.iter().collect();
     let mut begin = konst(0, 8);
     let mut out = Vec::new();
     for end in ends {
@@ -219,7 +230,7 @@ fn hints(c: &mut Ckt, bytes: &[Wire], checks: &mut Word) -> Vec<Vec<Wire>> {
     }
     for (s, index) in indices.iter().enumerate() {
         let unused = lt(c, &konst(s as u64, 8), &begin).not();
-        let zero = c.is_zero(index);
+        let zero = c.is_zero(*index);
         checks.push(c.or(unused.not(), zero));
     }
     out
@@ -260,9 +271,11 @@ pub fn build(c: &mut Ckt) -> Word {
     let sig = c.inputs(2420 * 8);
     let mut checks = Vec::new();
     let mut z = Vec::new();
-    for poly in sig[256..(32 + 2304) * 8].chunks_exact(256 * 18) {
+    for poly in sig[256..(32 + 2304) * 8].as_chunks::<{ 256 * 18 }>().0.iter() {
         z.push(
-            poly.chunks_exact(18)
+            poly.as_chunks::<18>()
+                .0
+                .iter()
                 .map(|raw| {
                     checks.push(lt(c, &konst(78, 18), raw));
                     checks.push(lt(c, raw, &konst(262066, 18)));
@@ -285,9 +298,13 @@ pub fn build(c: &mut Ckt) -> Word {
     let chat = ntt(c, challenge, false);
     let zhat: Vec<_> = z.into_iter().map(|p| ntt(c, p, false)).collect();
     let t1: Vec<Vec<Word>> = pk[256..]
-        .chunks_exact(256 * 10)
+        .as_chunks::<{ 256 * 10 }>()
+        .0
+        .iter()
         .map(|p| {
-            p.chunks_exact(10)
+            p.as_chunks::<10>()
+                .0
+                .iter()
                 .map(|v| {
                     let mut w = vec![Wire::ZERO; 13];
                     w.extend(v);

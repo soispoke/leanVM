@@ -11,8 +11,31 @@ fn create<W: Workload>(
     calls: &[circuit_suite::KeccakCall],
     seed: u64,
     _identity: [u8; 32],
+    mutation: Option<&str>,
 ) -> Builder {
-    let instance = W::instance(seed);
+    let mut instance = W::instance(seed);
+    if let Some(case) = mutation {
+        let signature = 1344 * 8;
+        match case {
+            "signature" => instance.inputs[signature] ^= true,
+            "message" => instance.inputs[1312 * 8] ^= true,
+            "key" => instance.inputs[0] ^= true,
+            "z" => instance.inputs[signature + 256..signature + 256 + 18].fill(false),
+            "hint" => {
+                let offset = signature + (2420 - 1) * 8;
+                for i in 0..8 {
+                    instance.inputs[offset + i] = 81 >> i & 1 != 0;
+                }
+            }
+            _ => panic!("unknown mutation"),
+        }
+        let mut expected = 0u64.to_le_bytes().to_vec();
+        for byte in instance.inputs[..1344 * 8].as_chunks::<8>().0 {
+            expected.push(byte.iter().enumerate().fold(0, |a, (i, &b)| a | ((b as u8) << i)));
+        }
+        instance.statement = [0; 64];
+        instance.statement[..32].copy_from_slice(&primitives::hash::hash(&expected));
+    }
     let mut b = Builder::default();
     let inputs: Vec<_> = instance.inputs.iter().map(|&v| b.input(u64::from(v))).collect();
     let bits = boolean_application::lower_with_keccak(&mut b, circuit, sources, &inputs, calls);
@@ -55,7 +78,7 @@ fn run<W: Workload>(args: &[String]) {
         return;
     }
     let identity = [0; 32];
-    let canonical = create::<W>(&circuit, &sources, &calls, seed, identity);
+    let canonical = create::<W>(&circuit, &sources, &calls, seed, identity, None);
     let public = canonical.public_values();
     if args[3] == "evaluate" {
         let shape = format_recursion::keccak_bridge::KeccakShape::plan(
@@ -78,10 +101,33 @@ fn run<W: Workload>(args: &[String]) {
         serde_json::json!({"kind":"setup","setup_s":start.elapsed().as_secs_f64(),"core_rows":core_rows,"native_rows":canonical.rows(),"permutations":calls.len(),"shape":format!("{shape:?}")})
     );
     let context = primitives::hash::hash(format!("keccak-rows-relation:{}", W::NAME).as_bytes());
-    if args[3] == "prove" {
+    if args[3] == "reject" {
+        drop(canonical);
+        for case in ["signature", "message", "key", "z", "hint"] {
+            let mut witness = create::<W>(&circuit, &sources, &calls, seed, identity, Some(case));
+            let exposed = witness.public_variables().to_vec();
+            for (variable, &claim) in exposed.into_iter().zip(&public) {
+                witness.values[variable] = claim;
+            }
+            let start = Instant::now();
+            let proof = setup
+                .prove_mixed_without_prechecks_for_tests(
+                    &witness.values,
+                    &witness.permutations,
+                    &witness.compressions,
+                    &context,
+                )
+                .unwrap();
+            assert!(!setup.verify(&public, &context, &proof), "verifier accepted {case}");
+            println!(
+                "{}",
+                serde_json::json!({"kind":"verifier-rejection","case":case,"prechecks":false,"seconds":start.elapsed().as_secs_f64()})
+            );
+        }
+    } else if args[3] == "prove" {
         drop(canonical);
         let start = Instant::now();
-        let witness = create::<W>(&circuit, &sources, &calls, seed, identity);
+        let witness = create::<W>(&circuit, &sources, &calls, seed, identity, None);
         let proof = setup
             .prove_mixed(&witness.values, &witness.permutations, &witness.compressions, &context)
             .unwrap();

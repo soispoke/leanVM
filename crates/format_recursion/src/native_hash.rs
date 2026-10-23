@@ -227,6 +227,11 @@ impl Builder {
         self.gate(bit, difference, a)
     }
 
+    /// Variable indices exposed by this fixed application statement.
+    pub fn public_variables(&self) -> &[usize] {
+        &self.circuit.public
+    }
+
     pub fn public_values(&self) -> Vec<F192> {
         self.circuit.public.iter().map(|&i| self.values[i]).collect()
     }
