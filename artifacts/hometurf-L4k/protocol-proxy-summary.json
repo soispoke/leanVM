@@ -1,0 +1,69 @@
+{
+  "metadata": {
+    "binary_sha256": "d6d4b02f8757a3a48d377a2cd6cfb3e1ec7b770feaa6070fbe4a728962f52869",
+    "source_commit": "4613ff77",
+    "cpus": "36-47",
+    "threads": 12,
+    "rounds": 3,
+    "order": "ABAB",
+    "scope": "hash-row batch proxy; not a native Keccak protocol wallet/merge"
+  },
+  "results": {
+    "16384": {
+      "blake": {
+        "median_s": 0.6050784505,
+        "committed_words": 8388608,
+        "proof_bytes": 277656,
+        "samples_s": [
+          0.611202838,
+          0.613724078,
+          0.512583259,
+          0.510441893,
+          0.643516333,
+          0.598954063
+        ]
+      },
+      "keccak": {
+        "median_s": 2.6730294480000003,
+        "committed_words": 33554432,
+        "proof_bytes": 325760,
+        "samples_s": [
+          2.763525136,
+          2.705670796,
+          2.453852532,
+          2.5568593010000003,
+          2.724314566,
+          2.6403881
+        ]
+      }
+    },
+    "32768": {
+      "blake": {
+        "median_s": 0.9563485395,
+        "committed_words": 16777216,
+        "proof_bytes": 311888,
+        "samples_s": [
+          0.938550334,
+          0.99052167,
+          0.987701848,
+          0.944973542,
+          0.940505005,
+          0.967723537
+        ]
+      },
+      "keccak": {
+        "median_s": 4.619456331,
+        "committed_words": 67108864,
+        "proof_bytes": 341016,
+        "samples_s": [
+          4.892988197,
+          4.458256813,
+          4.630957871,
+          4.558059462,
+          4.649079401,
+          4.607954791
+        ]
+      }
+    }
+  }
+}
