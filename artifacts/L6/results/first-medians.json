@@ -1,0 +1,24 @@
+{
+  "A": {
+    "merge_s": 0.7436937155,
+    "peak_rss_kib": 1534932.0,
+    "proof_bytes": 180160.0,
+    "core_verify_ms": 4.2880255,
+    "complete_root_ms": 13.0055975,
+    "rows": 516284.0,
+    "words": 8388608.0,
+    "permutations": 0.0,
+    "compressions": 9620.0
+  },
+  "B": {
+    "merge_s": 3.5901864519999998,
+    "peak_rss_kib": 5194844.0,
+    "proof_bytes": 206192.0,
+    "core_verify_ms": 10.0041255,
+    "complete_root_ms": 27.219244500000002,
+    "rows": 999496.0,
+    "words": 33554432.0,
+    "permutations": 9808.0,
+    "compressions": 0.0
+  }
+}

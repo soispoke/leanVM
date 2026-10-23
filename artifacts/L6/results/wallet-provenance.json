@@ -1,0 +1,10 @@
+{
+  "order": "ABABABABABAB",
+  "A": "native Keccak application, BLAKE2s protocol",
+  "B": "native Keccak application, Keccak protocol with grinding",
+  "binary_sha256": {
+    "A": "1410d51a9688ff83aec8076a17e599a4d7a4e169fe6a81317d8b8773b8c5f67b",
+    "B": "2b3225ab37f7547033e7d898fbf52a9017825fb6f0380f000cfcaed841256c73"
+  },
+  "commands": []
+}

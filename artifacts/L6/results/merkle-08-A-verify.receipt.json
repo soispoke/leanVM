@@ -1,0 +1,18 @@
+{
+  "command": [
+    "taskset",
+    "-c",
+    "12-23",
+    "env",
+    "RAYON_NUM_THREADS=12",
+    "LEANVM_NUM_THREADS=12",
+    "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/bin-L6-current-blake/keccak_merkle_application",
+    "verify",
+    "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/L6-followup/merkle-08-A.proof",
+    "1"
+  ],
+  "exit_code": 0,
+  "peak_rss_kib": 70788,
+  "whole_process_s": 0.04082922000088729,
+  "binary_sha256": "3ac3529594c39e870170958cc7acdbd11cd1a8eca0a4435a09f127e4dc524fe2"
+}

@@ -1,0 +1,144 @@
+[
+  {
+    "lever": "Merkle arity",
+    "arity": 2,
+    "leaves": 65536,
+    "depth": 16,
+    "path_permutations": 16,
+    "sibling_bytes": 512,
+    "node_bytes": 64,
+    "permutations_per_node": 1
+  },
+  {
+    "lever": "Merkle arity",
+    "arity": 4,
+    "leaves": 65536,
+    "depth": 8,
+    "path_permutations": 8,
+    "sibling_bytes": 768,
+    "node_bytes": 128,
+    "permutations_per_node": 1
+  },
+  {
+    "lever": "Merkle arity",
+    "arity": 16,
+    "leaves": 65536,
+    "depth": 4,
+    "path_permutations": 16,
+    "sibling_bytes": 1920,
+    "node_bytes": 512,
+    "permutations_per_node": 4
+  },
+  {
+    "lever": "leaf packing",
+    "leaf_bytes": 32,
+    "permutations": 1,
+    "rate_utilization": 0.23529411764705882
+  },
+  {
+    "lever": "leaf packing",
+    "leaf_bytes": 64,
+    "permutations": 1,
+    "rate_utilization": 0.47058823529411764
+  },
+  {
+    "lever": "leaf packing",
+    "leaf_bytes": 128,
+    "permutations": 1,
+    "rate_utilization": 0.9411764705882353
+  },
+  {
+    "lever": "leaf packing",
+    "leaf_bytes": 256,
+    "permutations": 2,
+    "rate_utilization": 0.9411764705882353
+  },
+  {
+    "lever": "leaf packing",
+    "leaf_bytes": 512,
+    "permutations": 4,
+    "rate_utilization": 0.9411764705882353
+  },
+  {
+    "lever": "leaf packing",
+    "leaf_bytes": 1024,
+    "permutations": 8,
+    "rate_utilization": 0.9411764705882353
+  },
+  {
+    "lever": "transcript absorb packing",
+    "scalars": 1,
+    "current_observe_plus_squeeze_calls": 2,
+    "candidate_calls": 1,
+    "candidate_preimage_bytes": 64,
+    "requires": "new domain-separated absorb-block encoding mirrored in host and recorder; original grinding retained"
+  },
+  {
+    "lever": "transcript absorb packing",
+    "scalars": 2,
+    "current_observe_plus_squeeze_calls": 3,
+    "candidate_calls": 1,
+    "candidate_preimage_bytes": 88,
+    "requires": "new domain-separated absorb-block encoding mirrored in host and recorder; original grinding retained"
+  },
+  {
+    "lever": "transcript absorb packing",
+    "scalars": 3,
+    "current_observe_plus_squeeze_calls": 4,
+    "candidate_calls": 1,
+    "candidate_preimage_bytes": 112,
+    "requires": "new domain-separated absorb-block encoding mirrored in host and recorder; original grinding retained"
+  },
+  {
+    "lever": "transcript absorb packing",
+    "scalars": 4,
+    "current_observe_plus_squeeze_calls": 5,
+    "candidate_calls": 2,
+    "candidate_preimage_bytes": 136,
+    "requires": "new domain-separated absorb-block encoding mirrored in host and recorder; original grinding retained"
+  },
+  {
+    "lever": "transcript absorb packing",
+    "scalars": 8,
+    "current_observe_plus_squeeze_calls": 9,
+    "candidate_calls": 2,
+    "candidate_preimage_bytes": 232,
+    "requires": "new domain-separated absorb-block encoding mirrored in host and recorder; original grinding retained"
+  },
+  {
+    "lever": "transcript absorb packing",
+    "scalars": 16,
+    "current_observe_plus_squeeze_calls": 17,
+    "candidate_calls": 4,
+    "candidate_preimage_bytes": 424,
+    "requires": "new domain-separated absorb-block encoding mirrored in host and recorder; original grinding retained"
+  },
+  {
+    "lever": "transcript absorb packing",
+    "scalars": 32,
+    "current_observe_plus_squeeze_calls": 33,
+    "candidate_calls": 6,
+    "candidate_preimage_bytes": 808,
+    "requires": "new domain-separated absorb-block encoding mirrored in host and recorder; original grinding retained"
+  },
+  {
+    "lever": "dense connector optimistic layout bound",
+    "blocks": 16384,
+    "compiler_padded_rows": 2097152,
+    "connector_rows_17": 278528,
+    "connector_rows_6": 98304,
+    "rows_saved": 180224,
+    "q_words": 16777216,
+    "note": "Metadata-only: six rows cannot directly hold 50 independent 64-bit lanes in three scalar columns; requires packed-limb binding. Sparse backend already uses explicit lane columns and explicit wrapper dimensions; this dense row subtraction is not a sparse implementation."
+  },
+  {
+    "lever": "dense connector optimistic layout bound",
+    "blocks": 32768,
+    "compiler_padded_rows": 4194304,
+    "connector_rows_17": 557056,
+    "connector_rows_6": 196608,
+    "rows_saved": 360448,
+    "q_words": 33554432,
+    "note": "Metadata-only: six rows cannot directly hold 50 independent 64-bit lanes in three scalar columns; requires packed-limb binding. Sparse backend already uses explicit lane columns and explicit wrapper dimensions; this dense row subtraction is not a sparse implementation."
+  }
+]
