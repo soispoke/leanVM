@@ -34,7 +34,7 @@ fn dot(a: &[F192], b: &[F192]) -> F192 {
 }
 
 impl Matrix {
-    fn fold_rows(&self, weights: &[F192], n: usize) -> Vec<F192> {
+    pub(crate) fn fold_rows(&self, weights: &[F192], n: usize) -> Vec<F192> {
         let mut out = vec![F192::ZERO; n];
         for (r, &w) in weights.iter().enumerate().take(self.rows()) {
             for &(col, c) in self.row(r) {
@@ -59,6 +59,17 @@ pub struct Setup {
 pub struct Verified {
     pub row_point: Vec<F192>,
     pub col_point: Vec<F192>,
+    pub matrix_values: [F192; 3],
+}
+
+/// A matrix evaluation left by a child verifier for a later merge or root.
+/// The key is the fixed circuit identity, not a prover supplied label.
+#[derive(Clone, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+pub struct DeferredClaim {
+    pub app_key: Hash,
+    pub row_point: Vec<F192>,
+    pub col_point: Vec<F192>,
+    pub matrix_values: [F192; 3],
 }
 
 impl Setup {
@@ -115,7 +126,7 @@ impl Setup {
         }
     }
     fn label(&self, public: &[F192], context: &Hash) -> Vec<u8> {
-        let mut out = b"standard-spartan-direct-native-hash-v1".to_vec();
+        let mut out = b"standard-spartan-deferred-native-hash-v2".to_vec();
         out.extend(self.key);
         out.extend(context);
         out.extend(R1CS_DIGEST);
@@ -222,6 +233,23 @@ impl Setup {
             },
             |a, b| std::array::from_fn(|i| a[i] + b[i]),
         )
+    }
+
+    pub fn claim(&self, verified: &Verified) -> DeferredClaim {
+        DeferredClaim {
+            app_key: self.key,
+            row_point: verified.row_point.clone(),
+            col_point: verified.col_point.clone(),
+            matrix_values: verified.matrix_values,
+        }
+    }
+
+    /// Settle one deferred claim by walking this fixed circuit once per matrix.
+    pub fn settle(&self, claim: &DeferredClaim) -> bool {
+        claim.app_key == self.key
+            && claim.row_point.len() == self.row_log
+            && claim.col_point.len() == self.z_log
+            && self.matrix_evals(&claim.row_point, &claim.col_point) == claim.matrix_values
     }
     /// Count this generic direct evaluator in the existing four-cell row format.
     /// Constants and first accumulator terms alias instead of allocating add rows.
@@ -342,6 +370,8 @@ impl Setup {
             tracing::info_span!("Inner matrix sumcheck").in_scope(|| product_sumcheck(g, z, claim, &mut ps));
         let opened = self.send_field(&stack, 0, &col_point, &mut ps, &mut claims);
         assert_eq!(opened, z_value);
+        let matrix_values = self.matrix_evals(&row_point, &col_point);
+        ps.add_scalars(&matrix_values);
         let public_point = ps.sample_vec(self.r1cs.public_log);
         self.public_claims(&public, &public_point, &mut claims);
         let reduced = tracing::info_span!("Hash reduction").in_scope(|| {
@@ -367,6 +397,18 @@ impl Setup {
     }
     #[tracing::instrument(skip_all, name = "Spartan direct verify")]
     pub fn verify(&self, public: &[F192], context: &Hash, proof: &Proof) -> Option<Verified> {
+        self.verify_deferred(public, context, proof, true)
+    }
+
+    /// Verify all child transcript, sumcheck, native-hash, and opening checks.
+    /// When `settle_matrix` is false, leave the three matrix values as a carried claim.
+    pub fn verify_deferred(
+        &self,
+        public: &[F192],
+        context: &Hash,
+        proof: &Proof,
+        settle_matrix: bool,
+    ) -> Option<Verified> {
         if public.len() != self.r1cs.public_len || public[0] != F192::ONE {
             return None;
         }
@@ -392,7 +434,13 @@ impl Setup {
         }
         let mut claims = Vec::new();
         let zv = self.read_field(0, &col_point, &mut vs, &mut claims)?;
-        let [ma, mb, mc] = self.matrix_evals(&row_point, &col_point);
+        let ma = vs.next_scalar().ok()?;
+        let mb = vs.next_scalar().ok()?;
+        let mc = vs.next_scalar().ok()?;
+        let matrix_values = [ma, mb, mc];
+        if settle_matrix && self.matrix_evals(&row_point, &col_point) != matrix_values {
+            return None;
+        }
         if running != (ma + alpha * mb + alpha2 * mc) * zv {
             return None;
         }
@@ -412,7 +460,11 @@ impl Setup {
         let lanes = self.committed_words / (1usize << (self.stack_log - INITIAL_FOLDING_FACTOR));
         verify_opening_batch_mixed_whir_stacked(&mut vs, &config, self.stack_log, lanes, &root, &claims, &ring).ok()?;
         vs.finish().ok()?;
-        Some(Verified { row_point, col_point })
+        Some(Verified {
+            row_point,
+            col_point,
+            matrix_values,
+        })
     }
 }
 
