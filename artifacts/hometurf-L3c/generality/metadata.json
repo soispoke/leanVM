@@ -1,0 +1,7 @@
+{
+  "sha256_word_application": "eac3335e8619003ba89046fd434a2a09d337a0e3a0b3542648d3e61e9a4ef190",
+  "keccak_row_workloads": "039306cb4a261df3cb0ac825dd54cd5a29f6aa91ba160e03d728c799d8f4e974",
+  "shielded_word_application": "759258dfe634507a69fcbd5b86607f30fa78e8349ea196a47bf6da575b036634",
+  "shielded_native": "e8307cb1b0fdd97391aa515324d4a3a419f72a70ab670d108ef934a3dd668a40",
+  "shielded_lookup_native": "9c93942ac3547a744e7d388cd6d61822a84412ad3fb0eba242358533d3df4079"
+}

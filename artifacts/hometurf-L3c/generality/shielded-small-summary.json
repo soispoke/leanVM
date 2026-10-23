@@ -1,0 +1,18 @@
+{
+  "shielded-small": {
+    "wallet_prove_s": 0.078016361,
+    "peak_rss_kib": 217496.0,
+    "proof_bytes": 250280.0,
+    "verify_ms": 5.6065915,
+    "rows": 65536.0,
+    "committed_words": 884736.0
+  },
+  "shielded-word": {
+    "wallet_prove_s": 0.09914422,
+    "peak_rss_kib": 154744.0,
+    "proof_bytes": 247808.0,
+    "verify_ms": 16.1479335,
+    "rows": 16930.0,
+    "committed_words": 458752.0
+  }
+}

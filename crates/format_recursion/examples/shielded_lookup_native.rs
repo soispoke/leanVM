@@ -16,7 +16,6 @@ fn main() {
     eprintln!("setup_s={}", start.elapsed().as_secs_f64());
     let context = primitives::hash::hash(b"shielded-lookup-benchmark-v1");
     if mode == "prove" {
-        std::fs::write("/proc/self/clear_refs", "5").unwrap();
         let start = Instant::now();
         let proof = setup.prove(&payload, &context).unwrap();
         let encoded = bincode::serialize(&proof).unwrap();

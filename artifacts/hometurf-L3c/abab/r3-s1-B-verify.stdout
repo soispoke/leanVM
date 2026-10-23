@@ -1,0 +1,2 @@
+{"kind":"setup","setup_s":4.288230098,"shape":"KeccakShape { index: ArithmeticShape { log_rows: 22, public_log: 10, public_len: 626, index_log_inv_rate: 4 }, n_blocks: 16, block_log: 4, connector_start: 3582448, q_log: 16, q_offset: 50331648, stack_log: 26 }"}
+{"kind":"verify","verify_ms":3241.92987}

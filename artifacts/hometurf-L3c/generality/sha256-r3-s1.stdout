@@ -1,0 +1,2 @@
+{"kind":"setup","setup_s":0.823426094,"shape":"KeccakShape { index: ArithmeticShape { log_rows: 21, public_log: 9, public_len: 283, index_log_inv_rate: 4 }, n_blocks: 1, block_log: 3, connector_start: 1376288, q_log: 16, q_offset: 25165824, stack_log: 25 }"}
+{"committed_words":25690112,"kind":"wallet","permutations":1,"proof_bytes":3672552,"queries":111456,"rows":1375776,"wallet_prove_s":4.529619648}

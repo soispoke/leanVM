@@ -44,3 +44,5 @@ pub mod word_lowering;
 pub mod falcon_word;
 
 pub mod shielded_word;
+
+pub mod sha256_word;

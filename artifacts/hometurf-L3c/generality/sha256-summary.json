@@ -1,0 +1,18 @@
+{
+  "sha256-bit": {
+    "wallet_prove_s": 1.5323314849999998,
+    "peak_rss_kib": 3611066.0,
+    "proof_bytes": 328480.0,
+    "verify_ms": 10.5228005,
+    "rows": 2006683.0,
+    "committed_words": 25690112.0
+  },
+  "sha256-word": {
+    "wallet_prove_s": 4.538263633,
+    "peak_rss_kib": 5013296.0,
+    "proof_bytes": 3672552.0,
+    "verify_ms": 233.29443500000002,
+    "rows": 1375776.0,
+    "committed_words": 25690112.0
+  }
+}

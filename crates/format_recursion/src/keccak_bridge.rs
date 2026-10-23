@@ -852,6 +852,133 @@ mod tests {
         assert!(!setup.verify(&public, &context, &tampered));
     }
     #[test]
+    #[ignore = "full Falcon adversarial proofs"]
+    fn falcon_word_verifier_rejections_without_prechecks() {
+        parallel::init();
+        let app = std::env::var("L3C_REJECTION_APP").unwrap_or_else(|_| "falcon".to_owned());
+        let c = match app.as_str() {
+            "falcon" => {
+                let (original, _, _) = circuit_suite::build::<circuit_suite::falcon::Falcon512>();
+                let identity = crate::application_lowering::identity(&original);
+                crate::falcon_word::application(&circuit_suite::falcon::fixtures()[0], identity).0
+            }
+            "sha256" => {
+                use circuit_suite::Workload;
+                let (original, _, _) = circuit_suite::build::<circuit_suite::sha256::Sha256OneKiB>();
+                let identity = crate::application_lowering::identity(&original);
+                let instance = circuit_suite::sha256::Sha256OneKiB::instance(0);
+                let message: Vec<u8> = instance
+                    .inputs
+                    .chunks_exact(8)
+                    .map(|bits| bits.iter().enumerate().fold(0, |n, (i, &b)| n | (u8::from(b) << i)))
+                    .collect();
+                crate::sha256_word::application(&message, identity)
+            }
+            "shielded" => crate::shielded_word::application(&circuit_suite::shielded_blake2s::leanvm_input(0)),
+            _ => panic!("unknown rejection application"),
+        };
+        let setup = c.setup().unwrap();
+        let public = c.b.public_values();
+        let context = primitives::hash::hash(b"falcon-word-adversarial");
+        let witness = native_arithmetic::prepare_compact(&setup.index, &setup.extend_values(&c.b.values));
+        let mut columns = setup
+            .word_queries
+            .as_ref()
+            .unwrap()
+            .query_columns(&witness.stack)
+            .unwrap();
+        drop(witness);
+        let mut multiplicities = crate::word_tables::Multiplicities::default();
+        for row in 0..columns[0].len() {
+            let tuple = std::array::from_fn(|i| columns[i][row].c0);
+            let table = crate::word_tables::TABLES
+                .into_iter()
+                .find(|&t| t as u64 == tuple[0])
+                .unwrap();
+            multiplicities.add(table, &tuple).unwrap();
+        }
+        let counts: Vec<_> = multiplicities.entries().collect();
+        let add = columns[0].iter().position(|&v| v == F192::new(2, 0, 0)).unwrap();
+        let mul = columns[0].iter().position(|&v| v == F192::new(3, 0, 0));
+        for (name, row, coordinate, value) in [
+            ("wrong carry", add, 3, F192::new(2, 0, 0)),
+            ("wrong sum", add, 4, columns[4][add] + F192::ONE),
+            (
+                "wrong product",
+                mul.unwrap_or(add),
+                3,
+                columns[3][mul.unwrap_or(add)] + F192::ONE,
+            ),
+            ("wrong tag", add, 0, F192::new(9, 0, 0)),
+            ("out of range", add, 1, F192::new(256, 0, 0)),
+        ] {
+            let old_tuple: [F192; 6] = std::array::from_fn(|i| columns[i][row]);
+            let mut injected_counts = None;
+            if name == "wrong product" && mul.is_none() {
+                let old: [u64; 6] = std::array::from_fn(|i| old_tuple[i].c0);
+                let table = crate::word_tables::TABLES
+                    .into_iter()
+                    .find(|&t| t as u64 == old[0])
+                    .unwrap();
+                let old_index = table.offset() + table.index(&old).unwrap();
+                let target = crate::word_tables::Table::Mul8.offset() + 255 + 256 * 255;
+                let mut altered: std::collections::BTreeMap<usize, u64> = counts.iter().copied().collect();
+                *altered.get_mut(&old_index).unwrap() -= 1;
+                if altered[&old_index] == 0 {
+                    altered.remove(&old_index);
+                }
+                *altered.entry(target).or_default() += 1;
+                injected_counts = Some(altered.into_iter().collect::<Vec<_>>());
+                let wrong = [3, 255, 255, 0, 254, 0];
+                for i in 0..6 {
+                    columns[i][row] = F192::new(wrong[i], 0, 0);
+                }
+            } else {
+                columns[coordinate][row] = value;
+            }
+            let selected_counts = injected_counts.as_deref().unwrap_or(&counts);
+            let proof = setup
+                .prove_mixed_with_word_advice(
+                    &c.b.values,
+                    &c.b.permutations,
+                    &c.b.compressions,
+                    &context,
+                    Some((&columns, selected_counts)),
+                )
+                .unwrap();
+            assert!(!setup.verify(&public, &context, &proof), "{name}");
+            for i in 0..6 {
+                columns[i][row] = old_tuple[i];
+            }
+            println!("rejected: {name}");
+        }
+        let mut bad_counts = counts.clone();
+        let from = bad_counts.iter().position(|(_, count)| *count > 1).unwrap();
+        let to = if from == 0 { 1 } else { 0 };
+        bad_counts[from].1 -= 1;
+        bad_counts[to].1 += 1;
+        let proof = setup
+            .prove_mixed_with_word_advice(
+                &c.b.values,
+                &c.b.permutations,
+                &c.b.compressions,
+                &context,
+                Some((&columns, &bad_counts)),
+            )
+            .unwrap();
+        assert!(!setup.verify(&public, &context, &proof));
+        println!("rejected: altered multiplicity");
+        drop(columns);
+        let mut wrong_output = c.b.values.clone();
+        wrong_output[setup.io_variables[0][25]] += F192::ONE;
+        let proof = setup
+            .prove_mixed_unchecked(&wrong_output, &c.b.permutations, &c.b.compressions, &context)
+            .unwrap();
+        assert!(!setup.verify(&public, &context, &proof));
+        println!("rejected: wrong Keccak output");
+    }
+
+    #[test]
     fn shared_word_queries_open_against_joint_keccak_commitment() {
         use crate::{
             native_hash::Builder,

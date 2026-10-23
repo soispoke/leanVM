@@ -1,0 +1,18 @@
+{
+  "shielded-native": {
+    "wallet_prove_s": 0.2014236605,
+    "peak_rss_kib": 541864.0,
+    "proof_bytes": 274272.0,
+    "verify_ms": 5.179024999999999,
+    "rows": 148272.0,
+    "committed_words": 3211264.0
+  },
+  "shielded-word": {
+    "wallet_prove_s": 0.0974641805,
+    "peak_rss_kib": 154742.0,
+    "proof_bytes": 247808.0,
+    "verify_ms": 16.1646485,
+    "rows": 16930.0,
+    "committed_words": 458752.0
+  }
+}

@@ -1,0 +1,1 @@
+{"wall_s": 7.889889690995915, "peak_rss_kib": 6374940, "pid": 286572, "command": ["/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/hometurf-L4k/falcon-abab/keccak_row_workloads", "falcon", "rows", "verify", "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/hometurf-L3c/abab/r1-s0-A.cert", "0"]}
