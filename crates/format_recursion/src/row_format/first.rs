@@ -128,9 +128,15 @@ impl SparseSetup {
         let source = super::Source {
             fixed_len: lower.fixed_public.len(),
             circuit: lower.circuit,
+            #[cfg(not(feature = "keccak-protocol"))]
             connectors: lower.connectors,
+            #[cfg(feature = "keccak-protocol")]
+            connectors: lower.keccak_connectors,
             values: lower.values,
+            #[cfg(not(feature = "keccak-protocol"))]
             compressions: lower.compressions,
+            #[cfg(feature = "keccak-protocol")]
+            compressions: lower.permutations,
             rebuild: Box::new(|| unreachable!()),
         };
         let r = super::R1cs::lower_bounded(&source.circuit, &source.connectors, &source.values, source.fixed_len, 8);
@@ -144,7 +150,11 @@ impl SparseSetup {
     }
     pub fn prove(&self, witness: &Trace, context: &Hash) -> Option<Proof> {
         let values = self.program.prepare_witness(witness)?;
-        Some(self.setup.prove(&values.values, &values.compressions, context))
+        #[cfg(not(feature = "keccak-protocol"))]
+        let blocks = &values.compressions;
+        #[cfg(feature = "keccak-protocol")]
+        let blocks = &values.permutations;
+        Some(self.setup.prove(&values.values, blocks, context))
     }
     pub fn verify(&self, outputs: &[F192], context: &Hash, proof: &Proof) -> Option<DeferredClaim> {
         let mut public = vec![F192::ONE];
