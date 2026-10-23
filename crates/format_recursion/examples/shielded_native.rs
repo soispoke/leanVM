@@ -10,6 +10,7 @@ fn application(seed: usize) -> Builder {
 
 fn main() {
     parallel::init();
+    assert_eq!(parallel::num_threads(), 12);
     let args: Vec<_> = std::env::args().collect();
     let mode = &args[1];
     let bytes: usize = args[2].parse().unwrap();
@@ -50,7 +51,7 @@ fn main() {
         .unwrap();
         assert!(canonical.satisfied());
         let merge_setup = Setup::new(canonical).unwrap();
-        std::fs::write("/proc/self/clear_refs", "5").unwrap();
+        drop(canonical);
         let start = Instant::now();
         let trace = private_verifier::record_application_pair(
             &setup,
@@ -78,7 +79,7 @@ fn main() {
         return;
     }
     if mode == "prove" {
-        std::fs::write("/proc/self/clear_refs", "5").unwrap();
+        drop(canonical);
         let start = Instant::now();
         let witness = application(bytes);
         let proof = setup.prove(&witness.values, &witness.compressions, &context).unwrap();
@@ -98,7 +99,7 @@ fn main() {
         let shape = setup.verifier_shape();
         println!(
             "{}",
-            serde_json::json!({"wallet_prove_s":elapsed,"wallet_peak_rss_kib":rss,"proof_bytes":encoded.len(),"compressions":witness.compressions.len(),"gate_rows":witness.rows(),"native_log_rows":shape.index.log_rows,"hash_block_log":shape.block_log,"committed_words":shape.committed_lanes()*(1usize << (shape.stack_log-pcs::whir::INITIAL_FOLDING_FACTOR))})
+            serde_json::json!({"wallet_prove_s":elapsed,"output":expected.iter().map(|w|w.c0).collect::<Vec<_>>(),"wallet_peak_rss_kib":rss,"proof_bytes":encoded.len(),"compressions":witness.compressions.len(),"gate_rows":witness.rows(),"native_log_rows":shape.index.log_rows,"hash_block_log":shape.block_log,"committed_words":shape.committed_lanes()*(1usize << (shape.stack_log-pcs::whir::INITIAL_FOLDING_FACTOR))})
         );
     } else {
         let bytes = std::fs::read(path).unwrap();
@@ -107,7 +108,7 @@ fn main() {
         assert!(setup.verify(&public, &context, &proof));
         println!(
             "{}",
-            serde_json::json!({"verify_ms":start.elapsed().as_secs_f64()*1000.0})
+            serde_json::json!({"verify_ms":start.elapsed().as_secs_f64()*1000.0,"output":expected.iter().map(|w|w.c0).collect::<Vec<_>>()})
         );
         let mut wrong = public;
         let last = wrong.len() - 1;
