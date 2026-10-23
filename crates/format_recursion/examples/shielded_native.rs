@@ -51,7 +51,6 @@ fn main() {
         .unwrap();
         assert!(canonical.satisfied());
         let merge_setup = Setup::new(canonical).unwrap();
-        drop(canonical);
         let start = Instant::now();
         let trace = private_verifier::record_application_pair(
             &setup,
