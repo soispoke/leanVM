@@ -660,6 +660,24 @@ fn theta_d(c: &mut Ckt, cpar: &[Word]) -> Vec<Word> {
 /// Chi's outputs are never materialised: the next theta's lane xor is one row `fa(bt, D, k)`, its column
 /// parities five rows a bit from the terms. 5120 rows a round (plus 3200 in the first and last).
 pub(crate) fn keccak_f(c: &mut Ckt, a: Vec<Word>, need: &[bool; 25], xin: Option<&[Word]>) -> Vec<Word> {
+    if c.native_keccak_enabled() {
+        let input: Vec<_> = a.iter().flatten().copied().collect();
+        let output = c.keccak_permutation(&input);
+        return (0..25)
+            .map(|l| {
+                if !need[l] {
+                    return Vec::new();
+                }
+                (0..64)
+                    .map(|z| match xin {
+                        Some(v) => c.xor(output[64 * l + z], v[l][z]),
+                        None => output[64 * l + z],
+                    })
+                    .collect()
+            })
+            .collect();
+    }
+
     // Theta of the first round from the materialised state.
     let cpar: Vec<Word> = (0..5)
         .map(|x| {

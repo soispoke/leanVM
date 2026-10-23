@@ -652,6 +652,9 @@ pub fn settle(c: &mut Ckt, st: &mut State, stats: &mut Stats) {
 
 /// Keccak-f[1600] on 1,600 wires, every output bit reduced to one wire.
 pub fn keccak_f(c: &mut Ckt, state: &[Wire]) -> Vec<Wire> {
+    if c.native_keccak_enabled() {
+        return c.keccak_permutation(state);
+    }
     let mut stats = Stats::default();
     let mut st = permute(c, State::from_wires(state), None, false, &mut stats);
     (0..STATE).map(|i| st.bit(c, i)).collect()
@@ -682,6 +685,24 @@ const DIGEST_LANES: [bool; 25] = {
 /// The sponge over padded `blocks`; for each `i` in `digests` (block counts, increasing), the 256-bit digest
 /// after `i` blocks. Blocks past the last digest are not absorbed.
 pub fn sponge(c: &mut Ckt, blocks: &[Vec<Wire>], digests: &[usize], stats: &mut Stats) -> Vec<Vec<Wire>> {
+    if c.native_keccak_enabled() {
+        let last = *digests.last().expect("a digest");
+        assert!(last >= 1 && last <= blocks.len());
+        let mut state = vec![Wire::ZERO; STATE];
+        let mut outputs = Vec::new();
+        for (i, block) in blocks[..last].iter().enumerate() {
+            assert_eq!(block.len(), RATE * 8);
+            for (bit, &input) in block.iter().enumerate() {
+                state[bit] = c.xor(state[bit], input);
+            }
+            state = c.keccak_permutation(&state);
+            if digests.contains(&(i + 1)) {
+                outputs.push(state[..256].to_vec());
+            }
+        }
+        return outputs;
+    }
+
     let last = *digests.last().expect("a digest");
     assert!(last >= 1 && last <= blocks.len());
     let mut st = State::zero();
@@ -713,6 +734,13 @@ pub fn sponge_diff(
     against: &[Wire],
     stats: &mut Stats,
 ) -> Vec<Vec<Wire>> {
+    if c.native_keccak_enabled() {
+        assert_eq!(against.len(), 256);
+        return sponge(c, blocks, digests, stats)
+            .into_iter()
+            .map(|digest| digest.into_iter().zip(against).map(|(a, &b)| c.xor(a, b)).collect())
+            .collect();
+    }
     let last = *digests.last().expect("a digest");
     assert!(last >= 1 && last <= blocks.len() && against.len() == 256);
     let mut st = State::zero();
