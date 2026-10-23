@@ -391,5 +391,10 @@
       "ok": true,
       "files_unchanged": true
     }
+  },
+  "resources": {
+    "historical_quick_matrix": "unpinned across all 64 available logical CPUs",
+    "prover_threads": 32,
+    "rerun_for_resource_policy": false
   }
 }

@@ -1,5 +1,7 @@
 # Split native application closure: quick matrix
 
+Resource label: the earlier quick matrix ran unpinned across all 64 available logical CPUs, with the prior 32-thread prover environment. These historical measurements were not rerun for the resource-policy change. New lane A timed runs use CPUs 0 through 15 with 16 prover threads; builds and gates use CPUs 32 through 47. The later application-role screens used their separately documented 12-thread CPU slice.
+
 Single-run development observations, sample 0 leaf 0; not matched trials or medians; no new security or Ethereum acceptance claim. Native client total adds trace construction and proof creation. Each independent verifier reconstructs setup and checks two base plus three successive mixed-height node certificates. Later heights reuse one leaf. Historical and native base proof systems and identity namespaces differ.
 
 All receipt directories below are relative to `/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/`. Their result JSON and gzip-compressed stdout/stderr are archived under `receipts/` (decompressed log bytes retain their original receipt hashes); `matrix.json` records original paths and SHA256 values. Each row selects sample 0, leaf 0, and its first (height-1) merge. The second leaf and later mixed-height merges are functional exercises, not repeats used for a median.

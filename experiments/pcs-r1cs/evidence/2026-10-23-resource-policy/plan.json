@@ -1,0 +1,82 @@
+{
+  "objective": "Direct native R1CS application base proofs merged under a pinned recursive node key; preserve the legacy quotient adaptation measurements.",
+  "base": "ab39e040",
+  "stage": "split closure and native application integration; quick single-run observations, final release gates pending",
+  "gates": [
+    "Canonical valid fixed program with two canonical hash limbs",
+    "Reject foreign program constants, invalid base equations, noncanonical output, altered statement, height and recursive proof",
+    "Repeated and mixed height composition using one key",
+    "Existing chain closure regression",
+    "Actual independently referenced application fixtures; separate-process verification of two base certificates and three mixed-height node certificates",
+    "Yukon source and executable identity checks, release tests, Clippy"
+  ],
+  "measurement": "Report native trace construction, native application proof creation, zero extra base adaptation, node merges, certificate sizes and verification independently; compare with saved legacy quotient plus adaptation measurements.",
+  "security": "Experimental native/Flock/PCS composition, no new formal proof claimed. Fixed application relation per common key; no universal application acceptance claim.",
+  "resource_policy": {
+    "lane_A_timed_cpus": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12,
+      13,
+      14,
+      15
+    ],
+    "lane_A_build_test_gate_cpus": [
+      32,
+      33,
+      34,
+      35,
+      36,
+      37,
+      38,
+      39,
+      40,
+      41,
+      42,
+      43,
+      44,
+      45,
+      46,
+      47
+    ],
+    "prover_threads": 16,
+    "RAYON_NUM_THREADS": 16,
+    "LEANVM_NUM_THREADS": 16,
+    "optional_client4_cpus": [
+      0,
+      1,
+      2,
+      3
+    ],
+    "lane_B_cpus": [
+      16,
+      17,
+      18,
+      19,
+      20,
+      21,
+      22,
+      23,
+      24,
+      25,
+      26,
+      27,
+      28,
+      29,
+      30,
+      31
+    ],
+    "concurrency": "Independent lane A builds and gates may run concurrently with timed executables; use separate candidate sources and target directories. Do not wait for lane B.",
+    "historical_matrix": "unpinned all 64 CPUs, prior 32-thread environment; do not rerun"
+  }
+}
