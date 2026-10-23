@@ -164,6 +164,55 @@ fn record_impl(
     trace.public = output.to_vec();
     trace
 }
+/// First-level two-proof aggregation under a fixed bridge key and context.
+/// Constants/public anchors are fixed by setup; each child's last four public
+/// values are its 64-bit application digest words. Both full verifiers run.
+pub fn record_application_pair(
+    bridge: &PrivateBridge,
+    public: [&[F192]; 2],
+    context: &Hash,
+    proofs: [&Proof; 2],
+) -> Option<Trace> {
+    if public[0].len() < 6 || public[0].len() != public[1].len() {
+        return None;
+    }
+    let fixed = public[0].len() - 4;
+    if public[0][..fixed] != public[1][..fixed] {
+        return None;
+    }
+    trace::start();
+    let root = digest_constant(&bridge.index.root);
+    let ctx = digest_constant(context);
+    let mut outputs = Vec::new();
+    for child in 0..2 {
+        let full = bridge.public(public[child])?;
+        let values: Vec<_> = full
+            .iter()
+            .enumerate()
+            .map(|(i, &v)| {
+                if (fixed..public[child].len()).contains(&i) {
+                    let x = S::input(v);
+                    x.assert_eq(x.slice(0, 64));
+                    outputs.push((x, 8));
+                    x
+                } else {
+                    S::c(v)
+                }
+            })
+            .collect();
+        let seed = hash(&label(bridge, root, ctx, &values));
+        let mut t = Transcript::from_state(proofs[child], seed);
+        verify(bridge, root, &values, &mut t);
+        t.finish();
+    }
+    let mut parts = vec![(S::u(0x4e), 1)];
+    parts.extend(outputs);
+    let out = hash(&parts);
+    let mut result = trace::take();
+    result.public = out.to_vec();
+    Some(result)
+}
+
 /// Record against a fixed trusted child index, binding full public data/context.
 pub fn record(bridge: &PrivateBridge, public: &[F192], context: &Hash, proof: &Proof) -> Trace {
     record_impl(bridge, public, context, &bridge.index.root, proof, false)

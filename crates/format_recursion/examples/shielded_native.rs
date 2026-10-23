@@ -22,14 +22,61 @@ fn main() {
             .unwrap();
     let digest = primitives::hash::hash(&digest);
     let expected: Vec<_> = digest
-        .as_chunks::<8>()
-        .0
-        .iter()
-        .map(|b| primitives::field::F192::new(u64::from_le_bytes(*b), 0, 0))
+        .chunks(8)
+        .map(|b| primitives::field::F192::new(u64::from_le_bytes(b.try_into().unwrap()), 0, 0))
         .collect();
     assert_eq!(&public[public.len() - 4..], expected.as_slice());
     assert_eq!(canonical.compressions.len(), 106);
     let context = primitives::hash::hash(b"hometurf-native-hash-application-v1");
+    if mode == "merge" {
+        use format_recursion::{
+            private_recursion::{self, Setup},
+            private_verifier,
+        };
+        let left = application(0);
+        let right = application(1);
+        let left_public = left.public_values();
+        let right_public = right.public_values();
+        let left_proof = setup.prove(&left.values, &left.compressions, &context).unwrap();
+        let right_proof = setup.prove(&right.values, &right.compressions, &context).unwrap();
+        assert!(setup.verify(&left_public, &context, &left_proof));
+        assert!(setup.verify(&right_public, &context, &right_proof));
+        let canonical = private_verifier::record_application_pair(
+            &setup,
+            [&left_public, &right_public],
+            &context,
+            [&left_proof, &right_proof],
+        )
+        .unwrap();
+        assert!(canonical.satisfied());
+        let merge_setup = Setup::new(canonical).unwrap();
+        std::fs::write("/proc/self/clear_refs", "5").unwrap();
+        let start = Instant::now();
+        let trace = private_verifier::record_application_pair(
+            &setup,
+            [&left_public, &right_public],
+            &context,
+            [&left_proof, &right_proof],
+        )
+        .unwrap();
+        let output = private_recursion::outputs(&trace);
+        let proof = merge_setup.prove(&trace, &output).unwrap();
+        let encoded = private_recursion::encode(&proof).unwrap();
+        let elapsed = start.elapsed().as_secs_f64();
+        assert!(merge_setup.verify(&output, &proof));
+        let mut bad = proof.clone();
+        bad.stream[0] += primitives::field::F192::ONE;
+        assert!(!merge_setup.verify(&output, &bad));
+        let mut wrong = output.clone();
+        wrong[0] += primitives::field::F192::ONE;
+        assert!(!merge_setup.verify(&wrong, &proof));
+        let shape = merge_setup.bridge.verifier_shape();
+        println!(
+            "{}",
+            serde_json::json!({"merge2to1_s":elapsed,"proof_bytes":encoded.len(),"shape":format!("{shape:?}"),"distinct_children":true})
+        );
+        return;
+    }
     if mode == "prove" {
         std::fs::write("/proc/self/clear_refs", "5").unwrap();
         let start = Instant::now();
