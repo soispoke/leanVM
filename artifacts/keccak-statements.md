@@ -23,3 +23,7 @@ Application fixture digests will be appended after independent reference evaluat
 Shielded fixture seed `20261024`: statement digest `599943d4ea06d97bbd20b602add63200e167a17a72d9775d91d33fa3eb72e4d3`, validity 1. Independent RustCrypto reference agrees with the Boolean circuit and native-row lowering.
 
 Withdrawn exploratory Merkle vector (opposite path convention, do not use as the shared fixture), seed 1 root: `8d1c538daaf507f9783e9cd7a2875ae611664056ac8d05b30bad55d0359dc2a9`. Native sponge agrees at every level with RustCrypto reference; 17 permutations including the leaf.
+
+Corrected L2r-compatible depth-16 Merkle fixture, seed 1: `1357b0fe3e7707641fdc297b6e3b8810a9d98be16f1474446ce61974bb7d4327`.
+
+Shielded STATEMENT preimage is exactly 265 bytes: `0x08 || nullifier0[32] || nullifier1[32] || output_commitment0[32] || output_commitment1[32] || input[0:136]`. Input prefix is root[32], domain[32], public_amount[16], fee[16], recipient[20], authorizer[20]. Each note at 136+k*724 is spend_key[32], rho[32], value[16], index[4], and 20 siblings[32] in leaf-first order. Outputs at 1584+k*48 are inner[32], value[16]. All application integers are big-endian.
