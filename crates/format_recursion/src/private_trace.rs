@@ -1077,8 +1077,8 @@ fn lower_analyzed(program: &Trace, witness: &Trace, analysis: &Analysis) -> Opti
     let mut section = 0;
     for (i, node) in program.nodes.iter().enumerate() {
         while section < program.sections.len() && program.sections[section].1 == i {
-            stage_census.push((stage.0, c.rows.len() - stage.1, c.compressions.len() - stage.2));
-            stage = (program.sections[section].0.clone(), c.rows.len(), c.compressions.len());
+            stage_census.push((stage.0, c.rows.len() - stage.1, (c.compressions.len() + c.permutations.len()) - stage.2));
+            stage = (program.sections[section].0.clone(), c.rows.len(), (c.compressions.len() + c.permutations.len()));
             section += 1;
         }
         let source = |s: S| (s.0 < i).then_some(s.0 + 2);
@@ -1198,7 +1198,7 @@ fn lower_analyzed(program: &Trace, witness: &Trace, analysis: &Analysis) -> Opti
             }
         }
     }
-    stage_census.push((stage.0, c.rows.len() - stage.1, c.compressions.len() - stage.2));
+    stage_census.push((stage.0, c.rows.len() - stage.1, (c.compressions.len() + c.permutations.len()) - stage.2));
     let check_start = c.rows.len();
     for &(a, b) in &program.checks {
         if a.0 >= program.nodes.len() || b.0 >= program.nodes.len() {
@@ -1206,11 +1206,12 @@ fn lower_analyzed(program: &Trace, witness: &Trace, analysis: &Analysis) -> Opti
         }
         c.equal(a.0 + 2, b.0 + 2);
     }
+    let check_blocks = c.compressions.len() + c.permutations.len();
     c.constrain_unused_limbs();
     stage_census.push((
         String::from("final-equalities-and-unused-limbs"),
         c.rows.len() - check_start,
-        0,
+        c.compressions.len() + c.permutations.len() - check_blocks,
     ));
     let fixed_public = c.public.iter().map(|&i| c.values[i]).collect();
     for s in &program.public {

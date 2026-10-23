@@ -278,6 +278,19 @@ impl Builder {
         PrivateBridge::new(self.circuit.clone(), self.connectors.clone())
     }
 
+    pub fn export_protocol_circuit(&self) -> (Circuit, Vec<crate::row_hash::Connectors>) {
+        #[cfg(feature = "keccak-protocol")]
+        { self.export_keccak_circuit() }
+        #[cfg(not(feature = "keccak-protocol"))]
+        { self.export_circuit() }
+    }
+    pub fn protocol_blocks(&self) -> Vec<crate::row_hash::Block> {
+        #[cfg(feature = "keccak-protocol")]
+        { assert!(self.compressions.is_empty()); self.permutations.clone() }
+        #[cfg(not(feature = "keccak-protocol"))]
+        { assert!(self.permutations.is_empty()); self.compressions.clone() }
+    }
+
     /// Export every native Keccak I/O obligation with the arithmetic graph.
     pub fn export_keccak_circuit(&self) -> (Circuit, Vec<[usize; 50]>) {
         assert!(self.compressions.is_empty(), "Keccak source export cannot discard BLAKE obligations");

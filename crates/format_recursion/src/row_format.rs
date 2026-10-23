@@ -2,7 +2,7 @@
 //! Native BLAKE2s remains a separate, unchanged Flock relation.
 
 use crate::native_arithmetic::Circuit;
-use flock::hash::{Compression, blake2s_compress, padding_block};
+use crate::row_hash::{Block as Compression, Connectors, PORTS};
 use primitives::field::F192;
 use std::{
     collections::{BTreeMap, HashMap},
@@ -170,7 +170,7 @@ impl R1cs {
     /// The remaining public inputs are the instance's outputs.
     pub fn lower(
         circuit: &Circuit,
-        connectors: &[[usize; 18]],
+        connectors: &[Connectors],
         values: &[F192],
         fixed_len: usize,
         affine: bool,
@@ -185,7 +185,7 @@ impl R1cs {
     }
     pub fn lower_bounded(
         circuit: &Circuit,
-        connectors: &[[usize; 18]],
+        connectors: &[Connectors],
         values: &[F192],
         fixed_len: usize,
         max_terms: usize,
@@ -250,12 +250,8 @@ impl R1cs {
                 map[id] = j + 1;
             }
         }
-        let padding = padding_block();
-        let padding = crate::private_bridge::io_words(
-            &padding,
-            &blake2s_compress(&padding.0, &padding.1, padding.2, padding.3, padding.4),
-        );
-        for slot in 0..18 {
+        let padding = crate::row_hash::padding();
+        for slot in 0..PORTS {
             for block in 0..blocks {
                 origins.push(
                     connectors
@@ -309,7 +305,7 @@ impl R1cs {
         for (j, &id) in circuit.public[fixed_len..].iter().enumerate() {
             materialized.push((j + 1, expand.at(id)));
         }
-        for slot in 0..18 {
+        for slot in 0..PORTS {
             for block in 0..blocks {
                 let form = connectors.get(block).map_or_else(
                     || {
@@ -413,7 +409,7 @@ impl R1cs {
 /// The shared source fixtures are exported once and used by every row backend.
 pub struct Source {
     pub circuit: Circuit,
-    pub connectors: Vec<[usize; 18]>,
+    pub connectors: Vec<Connectors>,
     pub values: Vec<F192>,
     pub compressions: Vec<Compression>,
     pub fixed_len: usize,
@@ -456,20 +452,21 @@ impl Source {
     }
 }
 
+#[cfg(not(feature = "keccak-protocol"))]
 pub fn shielded_source(seed: usize) -> Source {
     let payload = circuit_suite::shielded_blake2s::leanvm_input(seed);
     let b = crate::shielded_application::application_vm(&payload).0;
-    let (circuit, connectors) = b.export_circuit();
+    let (circuit, connectors) = b.export_protocol_circuit();
     let fixed_len = circuit.public.len() - 4;
     let rebuild = Box::new(move || {
         let b = crate::shielded_application::application_vm(&payload).0;
-        (b.values, b.compressions)
+        (b.values.clone(), b.protocol_blocks())
     });
     Source {
         circuit,
         connectors,
-        values: b.values,
-        compressions: b.compressions,
+        values: b.values.clone(),
+        compressions: b.protocol_blocks(),
         fixed_len,
         rebuild,
     }
@@ -499,21 +496,22 @@ pub fn merkle_source(seed: usize) -> Source {
         b
     }
     let b = build(seed);
-    let (circuit, connectors) = b.export_circuit();
+    let (circuit, connectors) = b.export_protocol_circuit();
     let fixed_len = circuit.public.len() - 4;
     Source {
         circuit,
         connectors,
-        values: b.values,
-        compressions: b.compressions,
+        values: b.values.clone(),
+        compressions: b.protocol_blocks(),
         fixed_len,
         rebuild: Box::new(move || {
             let b = build(seed);
-            (b.values, b.compressions)
+            (b.values.clone(), b.protocol_blocks())
         }),
     }
 }
 
+#[cfg(not(feature = "keccak-protocol"))]
 pub fn source(case: &str) -> Source {
     if case == "shielded" {
         return shielded_source(0);
@@ -596,11 +594,52 @@ mod tests {
         v[5] = v[4] + v[2];
         v[6] = v[5] * v[3];
         v[7] = v[6] + v[4];
-        let r = R1cs::lower(&c, &[[0; 18]], &v, 2, true);
+        let r = R1cs::lower(&c, &[[0; PORTS]], &v, 2, true);
         let mut z = r.witness(&v);
         assert!(r.satisfied(&z));
         z[1] += F192::ONE;
         assert!(!r.satisfied(&z));
         assert!(r.eliminated_definitions >= 2);
     }
+}
+
+#[cfg(feature = "keccak-protocol")]
+pub fn shielded_source(seed: usize) -> Source {
+    use circuit_suite::Workload;
+    use circuit_suite::shielded_keccak::ShieldedTransfer;
+    let mut c = circuit_suite::Ckt::new();
+    c.enable_native_keccak();
+    let public = ShieldedTransfer::build(&mut c);
+    let (circuit, outputs, calls) = c.finish_native_keccak(&public);
+    let circuit = Arc::new(circuit);
+    let outputs = Arc::new(outputs);
+    let calls = Arc::new(calls);
+    let make = move || {
+        let instance = ShieldedTransfer::instance(seed as u64);
+        let mut b = crate::native_hash::Builder::default();
+        let inputs: Vec<_> = instance.inputs.iter().map(|&x| b.input(u64::from(x))).collect();
+        let bits = crate::boolean_application::lower_with_keccak(&mut b, &circuit, &outputs, &inputs, &calls);
+        let one = b.one();
+        b.assert_eq(bits[256], one);
+        let mut words = Vec::new();
+        for chunk in bits[..256].chunks(64) { words.push(b.pack(chunk)); }
+        let digest = b.hash_words(&words);
+        let expected = primitives::protocol_hash::hash(&instance.statement[..32]);
+        let actual: Vec<_> = digest.iter().flat_map(|&w| b.value(w).c0.to_le_bytes()).collect();
+        assert_eq!(actual, expected);
+        for word in digest { b.expose(word); }
+        b
+    };
+    let b = make();
+    let (circuit, connectors) = b.export_protocol_circuit();
+    let fixed_len = circuit.public.len() - 4;
+    Source { circuit, connectors, compressions: b.protocol_blocks(), values:b.values,
+        fixed_len, rebuild:Box::new(move || { let b=make(); (b.values.clone(),b.protocol_blocks()) }) }
+}
+
+#[cfg(feature = "keccak-protocol")]
+pub fn source(case: &str) -> Source {
+    if case == "shielded" { return shielded_source(0); }
+    assert_eq!(case, "merkle", "legacy fixed BLAKE merge fixture is unavailable in the Keccak configuration");
+    merkle_source(0)
 }

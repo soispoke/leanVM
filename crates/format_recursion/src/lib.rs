@@ -35,3 +35,5 @@ pub mod application_lowering;
 
 pub mod boolean_application;
 pub mod keccak_bridge;
+
+pub mod row_hash;
