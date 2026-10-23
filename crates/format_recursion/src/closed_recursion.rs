@@ -638,18 +638,20 @@ impl SplitClosedSetup {
 
     pub fn prove_node(&self, left: &Certificate, right: &Certificate) -> Option<Certificate> {
         let _span = tracing::info_span!("split_node").entered();
-        if !self.verify(left) || !self.verify(right) {
+        if !tracing::info_span!("Admit children").in_scope(|| self.verify(left) && self.verify(right)) {
             return None;
         }
         let height = left.height.max(right.height).checked_add(1)?;
         let statement = crate::recursion_fast::node_statement(&left.statement, &right.statement);
-        let program = record_split_node(
-            &self.base,
-            self.shape,
-            &self.fixed_public,
-            &self.node_key(),
-            Some([left, right]),
-        );
+        let program = tracing::info_span!("Record node witness").in_scope(|| {
+            record_split_node(
+                &self.base,
+                self.shape,
+                &self.fixed_public,
+                &self.node_key(),
+                Some([left, right]),
+            )
+        });
         let proof = self.node.prove(&program, &self.node_outputs(height, &statement))?;
         Some(Certificate {
             height,

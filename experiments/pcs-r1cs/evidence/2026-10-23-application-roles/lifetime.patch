@@ -1,0 +1,24 @@
+diff --git a/crates/format_recursion/src/private_bridge.rs b/crates/format_recursion/src/private_bridge.rs
+index 1060ebf8..e466fd8d 100644
+--- a/crates/format_recursion/src/private_bridge.rs
++++ b/crates/format_recursion/src/private_bridge.rs
+@@ -358,6 +358,7 @@ impl PrivateBridge {
+         let joint_words = self.committed_lanes() * lane_words;
+         let mut witness = tracing::info_span!("Arithmetic witness")
+             .in_scope(|| native_arithmetic::prepare_compact_with_capacity(&self.index, &values, joint_words));
++        drop(values);
+         let (z, a, b, lincheck) = tracing::info_span!("Hash witness")
+             .in_scope(|| generate_witness_with_ab_packed_and_lincheck(blocks, self.block_log));
+         let mut stack = std::mem::take(&mut witness.stack);
+@@ -371,9 +372,11 @@ impl PrivateBridge {
+         ps.add_root(&commitment.root);
+         let (native_claims, index_claims) = tracing::info_span!("Arithmetic reduction")
+             .in_scope(|| native_arithmetic::prove_reduction_compact(&self.index, &witness, &stack, &mut ps));
++        drop(witness);
+         let reduced = tracing::info_span!("Hash reduction").in_scope(|| {
+             Blake2sSetup::new(self.n_blocks.max(MIN_BLOCKS)).prove_reduction_precomputed(&z, &a, &b, &lincheck, &mut ps)
+         });
++        drop((z, a, b, lincheck));
+         let point = ps.sample_vec(self.block_log);
+         let weights = eq_table(&point);
+         let mut bridge_values = [F192::ZERO; 18];
