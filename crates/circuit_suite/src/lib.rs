@@ -26,6 +26,7 @@ pub mod poseidon;
 pub mod secp256k1;
 pub mod sha256;
 pub mod shielded;
+pub mod shielded_blake2s;
 
 /// The public bits of a statement.
 pub const PUBLIC_BITS: usize = 512;
