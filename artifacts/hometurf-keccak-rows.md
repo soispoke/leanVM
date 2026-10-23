@@ -1,26 +1,52 @@
-# L4k: Keccak-f[1600] native-row investigation
+# L4k native Keccak rows — measured progress, goal incomplete
 
-This lane was started from `020448f2` on `hometurf/L4k` (no push). The source already contains `crates/flock/src/keccak.rs`, a complete Keccak-f[1600] Flock circuit and reduction unit tests. That circuit is an application-level bit circuit; it is not wired into `format_recursion::private_bridge::PrivateBridge`, whose production bridge remains BLAKE2s-specific (`Blake2sSetup`, `Compression`, `blake2s_compress`). Consequently this lane did not claim a native Keccak production proof or change protocol hashing.
+Branch `hometurf/L4k`, based on `020448f2`. No push. Timings use CPUs 36–47, RAYON_NUM_THREADS=12 and LEANVM_NUM_THREADS=12; builds/tests use CPUs 48–63 and CARGO_BUILD_JOBS=4.
 
-## Evidence available on this branch
+## Implemented bridge and soundness test scope
 
-The checked-in Keccak application circuit documents 1,003,539 Boolean rows for Keccak-256 of 1 KiB (eight permutations plus input/public rows), with a 2^20 padded shape. The Flock Keccak reduction uses one degree-two product per chi state bit per round: 38,400 nonlinear products per permutation; theta, rho, pi and iota are linear wiring. Its reduction tests cover honest permutation output and a changed output claim.
+`flock::keccak::reduction` supplies packed witnesses and a batched zerocheck/lincheck reduction for Keccak-f[1600]. Each permutation has 38,400 chi product bits; theta, rho, pi and iota are linear. The padded circuit uses 2^16 Boolean slots and 1,024 packed F64 witness words per permutation, versus BLAKE2s's 2^14 slots and 256 packed words per compression. This is witness-only cost, before native connectors, minimum batch padding and PCS alignment.
 
-The existing automatic-trimming run for the Keccak 1 KiB application (commit `89401e868d330e177e807aa4c900e5c8fa263831`, 12 threads, recorded CPUs 0-11) is the only end-to-end measurement available in this checkout: wallet prove 1.496485141 s, peak RSS 4,266,580 KiB, proof 324,060 bytes, verify 9.269212 ms. The witness reports 2,050,353 trace nodes and 8,192 Boolean input rows; the selected shape is `log_rows=21` (2^21 padded arithmetic rows), `n_blocks=39`, `block_log=7`, `q_offset=25,165,824`, `stack_log=25`. This is a bit-level application circuit, not a native-row replacement, and therefore is not an ABAB native-vs-BLAKE comparison.
+`PrivateBridge::new_mixed` and `native_hash::Builder::setup_mixed` bind both BLAKE2s and Keccak I/O to one arithmetic reduction, one joint witness commitment and one joint WHIR opening. Their ring-switch claims are lifted into disjoint aligned portions of the common packed witness. Keccak binds all 25 input and 25 output lanes. Transcript, WHIR Merkle and claim hashes remain BLAKE2s.
 
-For comparison, the L4 BLAKE2s native bridge screen reports 14,598 compression rows, 578,847 pre-bridge arithmetic rows, 16,777,216 committed F64 words, 323,976-byte proof, and 0.655029074 s in its faster alternating candidate slot (the report explicitly says that screen was not a valid ABAB application measurement). The universal recursive node remains 63,426 BLAKE2s calls, 2,034,321 pre-bridge rows and 67,108,864 joint witness words.
+Release evidence: six Flock Keccak tests pass; two Keccak bridge tests pass, including mixed BLAKE2s+Keccak proof and verifier rejection of changed Keccak/BLAKE wiring, wrong intermediate output, wrong digest and tampered proof. Malformed row tests bypass prover prechecks. Two native-placeholder compiler tests pass, including a guard that prevents ordinary Boolean finish from discarding native obligations. This is implementation test evidence, not a formal soundness or security claim.
 
-## Cost model
+## Falcon-512: measured three-round ABAB
 
-At the circuit level, Keccak costs 38,400 chi products per permutation and eight permutations for 1 KiB. BLAKE2s compression rows in the existing bridge are one native Flock block each, with 256 packed F64 words per scheduled BLAKE2s block (2^14 Boolean slots / 64-bit packing). These units are not directly interchangeable: Keccak's product slots are 1-bit GF(2) relations, while the bridge's committed-word count includes padding, connectors and opening layout. No valid per-row prover-time ratio was measured here.
+Frozen source `3bf7091f937e25d55f171c4bc86be5c3b5f634e9`; executable SHA256 `cbadb0411155d194299afd8e843af29ae5d514d6a28557f82919626403dba8da`. Raw receipts: `P/artifacts/hometurf-L4k/falcon-abab/`; summary.json contains all six timing samples per variant. Keccak rows replace only the two SHAKE calls (seven statement-digest permutations and nine HashToPoint permutations); all modular relations, sampling/compaction, bounds, norm and encoding-budget checks retain the existing Falcon frontend. Inputs remain decoded coefficients, as in the baseline; this does not add a compressed Falcon byte parser.
 
-## Phase 2 and soundness status
+Both variants use the same new direct Boolean/native compiler, trim solely by fixed output dependencies, and check the full 64-byte application statement against the independent fixture. Both also compute the original canonical claim: BLAKE2s(application identity || the existing reversed-16-byte statement-half serialization). The identity is derived from the original Boolean circuit even for the native-row variant. The bit-level control includes one fixed unused permutation anchor because this bridge requires a nonempty Keccak schedule. This compiler's bit-level row census differs from the historical trace compiler's 8,798,175 rows; the historical 13.4 s timing is context, not the paired denominator below.
 
-Transcript, WHIR Merkle and claim hashing were left as BLAKE2s. MPT and Falcon/SHAKE native-row workloads were not implemented or measured in this lane. No merge timing under protocol Keccak is available; therefore the requested <1 s viability gate is unanswered. Existing Keccak Flock tests reject a wrong output claim, while the production bridge's existing verifier checks were untouched. There is no soundness claim for a native Keccak reduction.
+| Metric | Bit-level SHAKE | Native Keccak rows |
+|---|---:|---:|
+| Wallet s (median) | 11.900435 | 5.877517 |
+| Whole-process peak RSS KiB (median) | 27,653,008 | 14,054,560 |
+| Proof bytes | 390,176 | 364,760 |
+| Standalone verify ms (one process) | 10.862502 | 10.492314 |
+| Arithmetic rows | 10,115,187 | 6,077,055 |
+| Padded arithmetic rows | 16,777,216 | 8,388,608 |
+| Committed F64 words | 205,520,896 | 102,760,448 |
 
-## Verdict
+Wallet includes fresh fixture/witness construction, proof and bincode encoding; setup is excluded. RSS is the complete child process high-water mark from wait4, including setup/fixture allocation. Proof verification runs in a separate process against independently reconstructed preprocessing. The shared JSONL contains these measured medians. Candidate permutations: 16; the baseline performs the same 16 permutations in Boolean gates.
 
-Keccak as a native application hash has a plausible algebraic advantage (only chi is nonlinear), and the repository already has the circuit/reduction needed for a focused integration. This lane does not establish that it beats the BLAKE2s bridge: the required bridge adapter, MPT/Falcon measurements, protocol-hash phase, ABAB runs on CPUs 36-47, and adversarial verifier tests remain outstanding. The only defensible result is that the current Keccak bit-level circuit is expensive (1,003,539 rows for 1 KiB) and must not be presented as native-row evidence.
+## Keccak-256 1 KiB
+
+Matched canonical-claim three-round ABAB, six fresh processes per variant, source/binary as above. Raw receipts: `P/artifacts/hometurf-L4k/keccak-abab/`. Eight application permutations in both variants.
+
+| Metric | Bit-level Keccak | Native Keccak rows |
+|---|---:|---:|
+| Wallet s (median) | 1.556004 | 0.076184 |
+| Whole-process peak RSS KiB (median) | 3,644,346 | 213,664 |
+| Proof bytes | 329,576 | 245,136 |
+| Standalone verify ms (one process) | 10.654344 | 11.090992 |
+| Arithmetic rows | 2,042,663 | 54,410 |
+| Padded arithmetic rows | 2,097,152 | 65,536 |
+| Committed F64 words | 25,690,112 | 851,968 |
+
+This is a 20.4x wallet improvement; the historical bit-level reference was 1.496 s. The earlier 26–30 ms raw-digest screen omitted the application-identity claim envelope and is not this matched comparison. Whole-application time divided by eight is an amortized cost, not an isolated permutation-reduction timing. The controlled BLAKE2s per-compression comparison remains pending.
+
+## Remaining work and current verdict
+
+Keccak replaces Falcon SHAKE work successfully and halves its padded commitment in the measured matched compiler. It remains slower than the supplied leanVM Falcon reference (~1.02 s). Matched canonical-claim Keccak-1KiB is complete; MPT runs are underway. A full encoded-input ML-DSA-44 circuit matched to L5 remains unimplemented. Phase 2 protocol hash/merge measurement and per-byte BLAKE2s cost comparison remain pending. No under-1-second Keccak protocol-merge claim is established.
 
 ## ML-DSA-44 projection correction and operation census
 
@@ -30,10 +56,10 @@ Pinned reference: RustCrypto/signatures `cf99f5ebe36954026fdc86d2a2b372e6c97d04f
 
 | Operation | Permutations | Basis |
 |---|---:|---|
-| ExpandA (SHAKE128) | expected approximately 80 | 16 polynomials, 5 rate-168 output blocks each. Candidate acceptance q/2^23 = 0.9990235567; expected 256.250216 candidate triples (0.250216 rejected) per polynomial. More than 280 candidates can be needed; the five-block count is overwhelmingly likely, not a hard maximum. |
+| ExpandA (SHAKE128) | expected approximately 80 | 16 polynomials, 5 rate-168 output blocks each. Candidate acceptance q/2^23 = 0.9990235567; expected 256.250214 candidate triples (0.250214 rejected) per polynomial. More than 280 candidates can be needed; the five-block count is overwhelmingly likely, not a hard maximum. |
 | tr = SHAKE256(pk,64) | 10 exact | floor(1312/136)+1 absorption permutations. |
 | mu = SHAKE256(tr || Mprime,64) | 1 exact for this message/context | Mprime = 0x00 || len(ctx) || ctx || M; input 64+2+32 = 98 bytes. General count floor((66+len(ctx)+len(M))/136)+1. |
-| SampleInBall(c_tilde,39) | expected approximately 1 | 8 sign bytes plus sum(i=217..255) 256/(i+1) = 42.221078 expected index bytes. Rare rejection tails may require further rate-136 blocks; expected-byte count is not an exact permutation bound. |
+| SampleInBall(c_tilde,39) | expected approximately 1 | 8 sign bytes plus sum(i=217..255) 256/(i+1) = 42.221969 expected index bytes. Rare rejection tails may require further rate-136 blocks; expected-byte count is not an exact permutation bound. |
 | challenge SHAKE256(mu || w1Encode,32) | 7 exact | gamma2=(q-1)/88, hence 44 high-bit values and 6 bits/coefficient; 4*256*6/8 = 768 encoded bytes. Input length 64+768=832; floor(832/136)+1=7. |
 | Total | expected approximately 99 | 80+10+1+1+7; unbounded rejection tails must be handled in a real circuit. |
 
@@ -43,8 +69,3 @@ L3b Boolean calibration (distinct from nibble-native rows): mean Falcon 512-poin
 
 A real ML-DSA circuit and matched L5 fixture measurement now supersede the projection-only request. Projected wallet totals remain pending a complete, dimensionally consistent census.
 
-## Native bridge integration update
-
-Commit `bbdb8e6a` adds `flock::keccak::reduction::KeccakSetup` and a Keccak-specific private bridge. Commit `1ec50125` adds the whole-process measurement helper. The bridge binds all 25 input and 25 output lanes per permutation, places chi products in the packed witness, and reuses the existing zerocheck/lincheck/ring-switch and arithmetic opening machinery. Release tests pass for the six Flock Keccak tests and the malformed-proof bridge test (wrong output, wrong wiring, wrong digest, and tampered proof, all with prover prechecks bypassed).
-
-The follow-up mixed opening adapter is present in the working tree and type-checks through the existing Keccak bridge test, but it has not yet received a production mixed BLAKE2s+Keccak application test or a valid Falcon/ML-DSA end-to-end certificate. The 1 KiB numbers above are therefore the verified Keccak-only application bridge measurement; they should not be interpreted as completed Falcon or ML-DSA measurements.

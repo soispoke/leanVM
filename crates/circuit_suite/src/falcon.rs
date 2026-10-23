@@ -763,9 +763,15 @@ pub(crate) fn keccak_f(c: &mut Ckt, a: Vec<Word>, need: &[bool; 25], xin: Option
 
 /// SHAKE256 of a whole number of bytes (literals, byte `i` bit `j` at `8 i + j`), `out_len` output bytes.
 pub(crate) fn shake256(c: &mut Ckt, msg: &[Wire], out_len: usize) -> Vec<Wire> {
+    shake(c, msg, out_len, RATE)
+}
+
+/// SHAKE with a fixed FIPS 202 rate, sharing the Boolean/native permutation hook.
+pub(crate) fn shake(c: &mut Ckt, msg: &[Wire], out_len: usize, rate: usize) -> Vec<Wire> {
+    assert!(rate == 136 || rate == 168);
     assert_eq!(msg.len() % 8, 0);
     let mlen = msg.len() / 8;
-    let total = (mlen / RATE + 1) * RATE;
+    let total = (mlen / rate + 1) * rate;
     let mut pad = vec![0u8; total - mlen];
     pad[0] ^= 0x1F;
     *pad.last_mut().unwrap() ^= 0x80;
@@ -774,8 +780,8 @@ pub(crate) fn shake256(c: &mut Ckt, msg: &[Wire], out_len: usize) -> Vec<Wire> {
         pad.iter()
             .flat_map(|&b| (0..8).map(move |j| Wire::constant((b >> j) & 1 == 1))),
     );
-    let blocks = total / RATE;
-    let squeezes = out_len.div_ceil(RATE);
+    let blocks = total / rate;
+    let squeezes = out_len.div_ceil(rate);
     let perms = blocks + squeezes - 1;
     let block = |p: usize| -> Vec<Word> {
         (0..25)
@@ -783,8 +789,8 @@ pub(crate) fn shake256(c: &mut Ckt, msg: &[Wire], out_len: usize) -> Vec<Wire> {
                 (0..64)
                     .map(|z| {
                         let i = l * 64 + z;
-                        if p < blocks && i < RATE * 8 {
-                            bits[p * RATE * 8 + i]
+                        if p < blocks && i < rate * 8 {
+                            bits[p * rate * 8 + i]
                         } else {
                             Wire::ZERO
                         }
@@ -798,14 +804,14 @@ pub(crate) fn shake256(c: &mut Ckt, msg: &[Wire], out_len: usize) -> Vec<Wire> {
     for p in 0..perms {
         let mut need = [true; 25];
         if p + 1 == perms {
-            let remaining = out_len - (squeezes - 1) * RATE;
+            let remaining = out_len - (squeezes - 1) * rate;
             need = std::array::from_fn(|l| l < remaining.div_ceil(8));
         }
         // The next block is xored into the last round's output for free.
         let next = (p + 1 < blocks).then(|| block(p + 1));
         state = keccak_f(c, state, &need, next.as_deref());
         if p + 1 >= blocks {
-            let take = (out_len * 8 - out.len()).min(RATE * 8);
+            let take = (out_len * 8 - out.len()).min(rate * 8);
             out.extend((0..take).map(|i| state[i / 64][i % 64]));
         }
     }
