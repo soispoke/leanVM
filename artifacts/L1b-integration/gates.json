@@ -1,0 +1,24 @@
+{
+  "base": "020448f21eb876965db0240be1969675cc1cc8bc",
+  "tested_code": "35d27552",
+  "source_lane_tip": "bc1f691a",
+  "cpus": "48-63",
+  "CARGO_BUILD_JOBS": 4,
+  "LEANVM_NUM_THREADS": 12,
+  "RAYON_NUM_THREADS": 12,
+  "fmt": "passed",
+  "clippy_release_all_targets_D_warnings": "passed",
+  "format_recursion": {
+    "passed": 97,
+    "ignored": 0
+  },
+  "rec_aggregation": {
+    "passed": 43,
+    "ignored": 5
+  },
+  "doc_tests": "passed",
+  "archived_key_claim_program_checks": 7,
+  "measurements_snapshot_sha256": "19d407f1dca62889c7e624962321f12c05ffa767c4b940df43d7dadfdc0445f9",
+  "integer_lookup_jsonl_source": "P/ht-L3/artifacts/hometurf-integer-lookups.jsonl (requested P/artifacts path absent)",
+  "scope": "Opt-in row_format module; existing defaults and verifier preserved. Mechanical Clippy cleanup only beyond lane code."
+}
