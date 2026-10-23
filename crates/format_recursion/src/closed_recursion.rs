@@ -661,6 +661,87 @@ impl SplitClosedSetup {
     }
 }
 
+/// Shape-only screen of a tree verifier with first/tree keys and kind bound as
+/// public outputs. Placeholder proofs are deliberately not satisfying witnesses.
+/// This is not a proving API or a closed tree setup.
+pub fn tree_only_census() -> Option<(PrivateShape, usize, usize, usize)> {
+    const OUT: usize = 8;
+    let capacity = 1024 - OUT - 18;
+    let mut fixed = vec![F192::ZERO, F192::ONE];
+    fixed.resize(capacity, F192::ZERO);
+    let mut shape = PrivateShape::for_circuit(0, capacity + OUT, 128)?;
+    for _ in 0..24 {
+        trace::start();
+        let keys: [S; 4] = std::array::from_fn(|_| S::input(F192::ZERO));
+        for k in keys {
+            range(k, 128);
+        }
+        let height = S::input(F192::new(2, 0, 0));
+        range(height, HEIGHT_BITS);
+        let mut digests = Vec::new();
+        for _ in 0..2 {
+            let kind = S::input(F192::ZERO);
+            (kind * (kind + S::u(1))).assert_eq(S::u(0));
+            let child_height = S::input(F192::ONE);
+            range(child_height, HEIGHT_BITS);
+            let (next, overflow) = successor(child_height);
+            height.assert_eq(next);
+            overflow.assert_eq(S::u(0));
+            let root = [S::select(kind, keys[0], keys[2]), S::select(kind, keys[1], keys[3])];
+            let words = [S::input(F192::ZERO), S::input(F192::ZERO)];
+            for w in words {
+                range(w, 128);
+            }
+            let mut public: Vec<_> = fixed.iter().copied().map(S::c).collect();
+            public.extend(keys);
+            public.extend([kind, child_height, words[0], words[1]]);
+            public.extend(padding().map(S::c));
+            let seed = hash(&private_verifier::label_shape(
+                shape,
+                root,
+                digest_constant(&context()),
+                &public,
+            ));
+            let mut t = Transcript::placeholder(seed);
+            private_verifier::verify_shape(shape, root, &public, &mut t);
+            t.finish();
+            digests.push(words);
+        }
+        let digest = hash(&[
+            (S::u(0x4e), 1),
+            (digests[0][0], 16),
+            (digests[0][1], 16),
+            (digests[1][0], 16),
+            (digests[1][1], 16),
+        ]);
+        let kind = S::u(1);
+        let mut program = trace::take();
+        program.public = keys.into_iter().chain([kind, height, digest[0], digest[1]]).collect();
+        let lower = private_trace::lower(&program, &program)?;
+        if lower.fixed_public.len() > capacity {
+            return None;
+        }
+        let mut next_fixed = lower.fixed_public.clone();
+        next_fixed.resize(capacity, F192::ZERO);
+        let next = PrivateShape::for_circuit(
+            lower.circuit.rows.len(),
+            capacity + OUT,
+            lower.compressions.len().max(128).next_power_of_two(),
+        )?;
+        if next == shape && next_fixed == fixed {
+            let products = program
+                .nodes
+                .iter()
+                .filter(|n| matches!(n.op, crate::trace::Op::Mul(..)))
+                .count();
+            return Some((shape, lower.circuit.rows.len(), lower.compressions.len(), products));
+        }
+        shape = next;
+        fixed = next_fixed;
+    }
+    None
+}
+
 /// Experimental first-level aggregation with a pinned base key only.
 /// It accepts exactly two height-zero certificates and cannot verify tree proofs.
 pub struct FirstMergeSetup {
@@ -773,6 +854,37 @@ mod tests {
         let mut program = trace::take();
         program.public = digest.to_vec();
         program
+    }
+
+    #[test]
+    fn first_merge_rejects_malformed_child_without_host_admission() {
+        parallel::init();
+        let program = base_relation(2, 4, 17);
+        let setup = FirstMergeSetup::new(program.clone()).unwrap();
+        let words = std::array::from_fn(|i| program.nodes[program.public[i].0].value);
+        let good = Certificate {
+            height: 0,
+            statement: fiat_shamir::merkle::scalars_to_hash(&words).unwrap(),
+            proof: setup.base.prove(&program, &words).unwrap(),
+        };
+        let merged = setup.prove(&good, &good).unwrap();
+        assert!(setup.verify(&merged));
+        assert!(!setup.verify(&good));
+        assert!(setup.prove(&merged, &good).is_none());
+        let mut wrong = good.clone();
+        wrong.statement[0] ^= 1;
+        assert!(setup.prove(&wrong, &good).is_none());
+        // Bypass host child admission and prove the recorded verifier equations.
+        let trace = record_first(&setup.base, [&wrong, &good]);
+        assert!(!trace.satisfied());
+        let statement = crate::recursion_fast::node_statement(&wrong.statement, &good.statement);
+        if let Some(proof) = setup.first.prove(&trace, &hash_to_scalars(&statement)) {
+            assert!(!setup.verify(&Certificate {
+                height: 1,
+                statement,
+                proof
+            }));
+        }
     }
 
     #[test]
