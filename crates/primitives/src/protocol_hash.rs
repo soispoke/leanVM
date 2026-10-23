@@ -12,6 +12,10 @@ pub type PrefixState = [u32; 8];
 pub use keccak_protocol::*;
 
 #[cfg(feature = "keccak-protocol")]
+#[cfg(all(target_arch = "x86_64", target_feature = "avx512f"))]
+mod keccak_batch;
+
+#[cfg(feature = "keccak-protocol")]
 mod keccak_protocol {
     pub const BLOCK_LEN: usize = 136;
     pub const OUT_LEN: usize = 32;
@@ -93,6 +97,18 @@ mod keccak_protocol {
         assert!(len > 0);
         assert!(out.len().is_multiple_of(OUT_LEN));
         assert_eq!(bytes.len(), out.len() / OUT_LEN * len);
+        assert!(offset.is_multiple_of(BLOCK_LEN as u64));
+        #[cfg(all(target_arch = "x86_64", target_feature = "avx512f"))]
+        let (bytes, out) = {
+            let batches = out.len() / (8 * OUT_LEN);
+            for (inputs, digests) in bytes[..batches * 8 * len]
+                .chunks_exact(8 * len)
+                .zip(out[..batches * 8 * OUT_LEN].chunks_exact_mut(8 * OUT_LEN))
+            {
+                super::keccak_batch::hash_eight(inputs, len, state, digests);
+            }
+            (&bytes[batches * 8 * len..], &mut out[batches * 8 * OUT_LEN..])
+        };
         for (input, digest) in bytes.chunks_exact(len).zip(out.as_chunks_mut::<OUT_LEN>().0.iter_mut()) {
             digest.copy_from_slice(&hash_from_state(input, state, offset));
         }
@@ -105,6 +121,36 @@ mod keccak_protocol {
     mod tests {
         use super::*;
         use sha3::Digest;
+        #[test]
+        fn batched_keccak_matches_independent_sponge_across_batch_and_rate_boundaries() {
+            for count in [1, 7, 8, 9, 16, 17] {
+                for len in [1, 32, 64, 135, 136, 137, 271, 272, 1024] {
+                    let bytes: Vec<u8> = (0..count * len)
+                        .map(|i| ((i * 37 + i / len * 13) % 251) as u8)
+                        .collect();
+                    for blocks in [0, 1, 3] {
+                        let mut out = vec![0; count * OUT_LEN];
+                        hash_many_dyn_from_state(
+                            &bytes,
+                            len,
+                            &zero_prefix_state(blocks),
+                            (blocks * BLOCK_LEN) as u64,
+                            &mut out,
+                        );
+                        for (input, got) in bytes.chunks_exact(len).zip(out.chunks_exact(OUT_LEN)) {
+                            let mut reference = sha3::Keccak256::new();
+                            reference.update(vec![0; blocks * BLOCK_LEN]);
+                            reference.update(input);
+                            assert_eq!(
+                                got,
+                                reference.finalize().as_slice(),
+                                "count={count}, len={len}, prefix={blocks}"
+                            );
+                        }
+                    }
+                }
+            }
+        }
         #[test]
         fn ethereum_padding_streaming_batch_and_prefix() {
             for len in [0, 1, 32, 64, 135, 136, 137, 271, 272, 1024] {
