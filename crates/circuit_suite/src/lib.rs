@@ -21,6 +21,7 @@ pub mod describe;
 pub mod falcon;
 pub mod keccak;
 pub mod mpt;
+pub mod mldsa;
 pub mod nonnative;
 pub mod poseidon;
 pub mod secp256k1;
