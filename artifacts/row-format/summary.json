@@ -1,0 +1,500 @@
+{
+  "shielded-A": {
+    "wallet_s": {
+      "median": 0.209480652,
+      "min": 0.200889714,
+      "max": 0.234205731
+    },
+    "source_witness_s": {
+      "median": 0.014475647,
+      "min": 0.012125168,
+      "max": 0.017245142
+    },
+    "peak_rss_kib": {
+      "median": 545972,
+      "min": 545412,
+      "max": 546268
+    },
+    "additional_peak_rss_kib": {
+      "median": 279488,
+      "min": 279088,
+      "max": 281088
+    },
+    "proof_bytes": {
+      "median": 274048,
+      "min": 274048,
+      "max": 274048
+    },
+    "committed_words": {
+      "median": 3211264,
+      "min": 3211264,
+      "max": 3211264
+    },
+    "setup_s": {
+      "median": 0.070398125,
+      "min": 0.06495739,
+      "max": 0.071008978
+    },
+    "fixture_s": {
+      "median": 0.018883833,
+      "min": 0.016703943,
+      "max": 0.019631115
+    },
+    "verify_ms": {
+      "median": 5.201054,
+      "min": 5.138828,
+      "max": 5.22022
+    },
+    "census": {
+      "constraints": 149120,
+      "witness_variables_f192": 149333,
+      "r1cs_shadow_nonzeros": [
+        122889,
+        149150,
+        254576
+      ]
+    },
+    "stage_census": [
+      [
+        "unsectioned",
+        176,
+        42
+      ],
+      [
+        "native-zerocheck",
+        464,
+        86
+      ],
+      [
+        "native-copy-product",
+        3568,
+        619
+      ],
+      [
+        "native-public",
+        347,
+        10
+      ],
+      [
+        "private-flock-reduction",
+        128023,
+        234
+      ],
+      [
+        "private-joint-opening",
+        131293,
+        5078
+      ],
+      [
+        "private-index-opening",
+        71025,
+        3202
+      ],
+      [
+        "final-equalities-and-unused-limbs",
+        32573,
+        0
+      ]
+    ],
+    "source_program_digest": "0cf9660eabe7c6dcc47db321f4600909e0ec1470ae05e6e6c93fb8513db08dc8"
+  },
+  "shielded-B": {
+    "wallet_s": {
+      "median": 0.041929704,
+      "min": 0.041875401,
+      "max": 0.044119002
+    },
+    "source_witness_s": {
+      "median": 0.010811336,
+      "min": 0.01057929,
+      "max": 0.011651942
+    },
+    "peak_rss_kib": {
+      "median": 150336,
+      "min": 150332,
+      "max": 150360
+    },
+    "additional_peak_rss_kib": {
+      "median": 14148,
+      "min": 14084,
+      "max": 14212
+    },
+    "proof_bytes": {
+      "median": 124216,
+      "min": 124216,
+      "max": 124216
+    },
+    "committed_words": {
+      "median": 229376,
+      "min": 229376,
+      "max": 229376
+    },
+    "setup_s": {
+      "median": 0.146612513,
+      "min": 0.146455996,
+      "max": 0.147291668
+    },
+    "fixture_s": {
+      "median": 0.016928584,
+      "min": 0.01679147,
+      "max": 0.025225134
+    },
+    "verify_ms": {
+      "median": 5.337589,
+      "min": 5.259122,
+      "max": 5.773676
+    },
+    "matrix_eval_ms": {
+      "median": 1.726099,
+      "min": 1.649356,
+      "max": 1.765892
+    },
+    "census": {
+      "constraints": 52024,
+      "eliminated_definitions": 98556,
+      "hash_port_start": 128,
+      "hash_slots": 128,
+      "linear_constraints": 10072,
+      "max_row_nonzeros": 11,
+      "native_compressions": 106,
+      "nonzeros": [
+        132837,
+        62806,
+        41952
+      ],
+      "public_length": 5,
+      "pure_add_rows": 36612,
+      "pure_add_share": 0.24692457105859503,
+      "source_rows": 148272,
+      "source_variables": 148547,
+      "witness_length_f192": 52347,
+      "witness_padded_f192": 65536
+    },
+    "stage_census": null,
+    "source_program_digest": "0cf9660eabe7c6dcc47db321f4600909e0ec1470ae05e6e6c93fb8513db08dc8"
+  },
+  "shielded-C": {
+    "wallet_s": {
+      "median": 0.043451836,
+      "min": 0.042537169,
+      "max": 0.045555412
+    },
+    "source_witness_s": {
+      "median": 0.011923384,
+      "min": 0.010508992,
+      "max": 0.012076024
+    },
+    "peak_rss_kib": {
+      "median": 150328,
+      "min": 150324,
+      "max": 150992
+    },
+    "additional_peak_rss_kib": {
+      "median": 14144,
+      "min": 14084,
+      "max": 14644
+    },
+    "proof_bytes": {
+      "median": 125952,
+      "min": 125952,
+      "max": 125952
+    },
+    "committed_words": {
+      "median": 229376,
+      "min": 229376,
+      "max": 229376
+    },
+    "setup_s": {
+      "median": 0.14816018,
+      "min": 0.146351703,
+      "max": 0.18043618
+    },
+    "fixture_s": {
+      "median": 0.01846861,
+      "min": 0.018075441,
+      "max": 0.032505531
+    },
+    "verify_ms": {
+      "median": 5.855575,
+      "min": 5.621271,
+      "max": 6.098447
+    },
+    "matrix_eval_ms": {
+      "median": 1.792809,
+      "min": 1.7232079999999999,
+      "max": 1.905155
+    },
+    "census": {
+      "constraints": 52024,
+      "eliminated_definitions": 98556,
+      "hash_port_start": 128,
+      "hash_slots": 128,
+      "linear_constraints": 10072,
+      "max_row_nonzeros": 11,
+      "native_compressions": 106,
+      "nonzeros": [
+        132837,
+        62806,
+        41952
+      ],
+      "public_length": 5,
+      "pure_add_rows": 36612,
+      "pure_add_share": 0.24692457105859503,
+      "source_rows": 148272,
+      "source_variables": 148547,
+      "witness_length_f192": 52347,
+      "witness_padded_f192": 65536
+    },
+    "stage_census": null,
+    "source_program_digest": "0cf9660eabe7c6dcc47db321f4600909e0ec1470ae05e6e6c93fb8513db08dc8"
+  },
+  "merge-A": {
+    "wallet_s": {
+      "median": 1.354772383,
+      "min": 1.308390134,
+      "max": 1.362397801
+    },
+    "source_witness_s": {
+      "median": 0.354576569,
+      "min": 0.342091734,
+      "max": 0.373486303
+    },
+    "peak_rss_kib": {
+      "median": 2180092,
+      "min": 2172244,
+      "max": 2194684
+    },
+    "additional_peak_rss_kib": {
+      "median": 1330776,
+      "min": 1315880,
+      "max": 1340336
+    },
+    "proof_bytes": {
+      "median": 324968,
+      "min": 324968,
+      "max": 324968
+    },
+    "committed_words": {
+      "median": 16777216,
+      "min": 16777216,
+      "max": 16777216
+    },
+    "setup_s": {
+      "median": 0.324508614,
+      "min": 0.315157232,
+      "max": 0.374973436
+    },
+    "fixture_s": {
+      "median": 0.359156869,
+      "min": 0.351918063,
+      "max": 0.397096301
+    },
+    "verify_ms": {
+      "median": 6.380713,
+      "min": 6.002583,
+      "max": 6.805259
+    },
+    "census": {
+      "constraints": 687616,
+      "witness_variables_f192": 906701,
+      "r1cs_shadow_nonzeros": [
+        677485,
+        677604,
+        1177179
+      ]
+    },
+    "stage_census": [
+      [
+        "unsectioned",
+        652,
+        132
+      ],
+      [
+        "native-zerocheck",
+        508,
+        94
+      ],
+      [
+        "native-copy-product",
+        4223,
+        734
+      ],
+      [
+        "native-public",
+        1215,
+        12
+      ],
+      [
+        "private-flock-reduction",
+        128191,
+        269
+      ],
+      [
+        "private-joint-opening",
+        152962,
+        5974
+      ],
+      [
+        "private-index-opening",
+        78581,
+        3508
+      ],
+      [
+        "final-equalities-and-unused-limbs",
+        33631,
+        0
+      ]
+    ],
+    "source_program_digest": "03e5b298f22c5f10e96e594defe819d7703bf0f1f6559d06e42f0bea49b33f4b"
+  },
+  "merge-B": {
+    "wallet_s": {
+      "median": 0.963160999,
+      "min": 0.935191914,
+      "max": 0.993770386
+    },
+    "source_witness_s": {
+      "median": 0.314750413,
+      "min": 0.312439085,
+      "max": 0.331723253
+    },
+    "peak_rss_kib": {
+      "median": 1398748,
+      "min": 1345088,
+      "max": 1401500
+    },
+    "additional_peak_rss_kib": {
+      "median": 953852,
+      "min": 910960,
+      "max": 970568
+    },
+    "proof_bytes": {
+      "median": 179896,
+      "min": 179896,
+      "max": 179896
+    },
+    "committed_words": {
+      "median": 8388608,
+      "min": 8388608,
+      "max": 8388608
+    },
+    "setup_s": {
+      "median": 1.34282609,
+      "min": 1.1971369,
+      "max": 1.378903787
+    },
+    "fixture_s": {
+      "median": 0.366246721,
+      "min": 0.362180418,
+      "max": 0.426363163
+    },
+    "verify_ms": {
+      "median": 26.274702,
+      "min": 21.05328,
+      "max": 27.845142
+    },
+    "matrix_eval_ms": {
+      "median": 11.873923,
+      "min": 11.654675,
+      "max": 12.640607
+    },
+    "census": {
+      "constraints": 581040,
+      "eliminated_definitions": 247449,
+      "hash_port_start": 16384,
+      "hash_slots": 16384,
+      "linear_constraints": 348720,
+      "max_row_nonzeros": 17,
+      "native_compressions": 14598,
+      "nonzeros": [
+        1262716,
+        945244,
+        420368
+      ],
+      "public_length": 3,
+      "pure_add_rows": 146472,
+      "pure_add_share": 0.2530409590098938,
+      "source_rows": 578847,
+      "source_variables": 808379,
+      "witness_length_f192": 738002,
+      "witness_padded_f192": 1048576
+    },
+    "stage_census": null,
+    "source_program_digest": "03e5b298f22c5f10e96e594defe819d7703bf0f1f6559d06e42f0bea49b33f4b"
+  },
+  "merge-C": {
+    "wallet_s": {
+      "median": 0.946136835,
+      "min": 0.912427058,
+      "max": 0.954650603
+    },
+    "source_witness_s": {
+      "median": 0.308715705,
+      "min": 0.308109149,
+      "max": 0.315081055
+    },
+    "peak_rss_kib": {
+      "median": 1362656,
+      "min": 1350504,
+      "max": 1376708
+    },
+    "additional_peak_rss_kib": {
+      "median": 923552,
+      "min": 909512,
+      "max": 950644
+    },
+    "proof_bytes": {
+      "median": 178872,
+      "min": 178872,
+      "max": 178872
+    },
+    "committed_words": {
+      "median": 8388608,
+      "min": 8388608,
+      "max": 8388608
+    },
+    "setup_s": {
+      "median": 1.2440812270000001,
+      "min": 1.150955414,
+      "max": 1.25321647
+    },
+    "fixture_s": {
+      "median": 0.360575841,
+      "min": 0.354064511,
+      "max": 0.363784596
+    },
+    "verify_ms": {
+      "median": 22.138205000000003,
+      "min": 21.471818,
+      "max": 22.621191999999997
+    },
+    "matrix_eval_ms": {
+      "median": 11.916366,
+      "min": 10.880112,
+      "max": 12.07085
+    },
+    "census": {
+      "constraints": 581040,
+      "eliminated_definitions": 247449,
+      "hash_port_start": 16384,
+      "hash_slots": 16384,
+      "linear_constraints": 348720,
+      "max_row_nonzeros": 17,
+      "native_compressions": 14598,
+      "nonzeros": [
+        1262716,
+        945244,
+        420368
+      ],
+      "public_length": 3,
+      "pure_add_rows": 146472,
+      "pure_add_share": 0.2530409590098938,
+      "source_rows": 578847,
+      "source_variables": 808379,
+      "witness_length_f192": 738002,
+      "witness_padded_f192": 1048576
+    },
+    "stage_census": null,
+    "source_program_digest": "03e5b298f22c5f10e96e594defe819d7703bf0f1f6559d06e42f0bea49b33f4b"
+  }
+}
