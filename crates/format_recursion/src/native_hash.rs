@@ -7,11 +7,15 @@ use primitives::field::F192;
 /// A packed pair of little-endian u32 words in a native circuit.
 #[derive(Clone, Copy, Debug)]
 pub struct Word(usize);
+impl Word {
+    pub const ZERO: Self = Self(0);
+}
 
 /// Circuit and witness builder. Constants are public anchors, private inputs
 /// remain witness variables, and compression outputs can feed later rows.
 pub struct Builder {
     circuit: Circuit,
+    constants: std::collections::HashMap<u64, Word>,
     pub values: Vec<F192>,
     pub compressions: Vec<Compression>,
     connectors: Vec<[usize; 18]>,
@@ -25,6 +29,7 @@ impl Default for Builder {
                 rows: Vec::new(),
                 public: vec![0, 1],
             },
+            constants: [(0, Word(0)), (1, Word(1))].into_iter().collect(),
             values: vec![F192::ZERO, F192::ONE],
             compressions: Vec::new(),
             connectors: Vec::new(),
@@ -33,6 +38,61 @@ impl Default for Builder {
 }
 
 impl Builder {
+    pub fn scalar(&mut self, value: F192) -> Word {
+        let word = Word(self.values.len());
+        self.values.push(value);
+        self.circuit.variables += 1;
+        word
+    }
+    pub fn value(&self, word: Word) -> F192 {
+        self.values[word.0]
+    }
+    pub fn zero(&self) -> Word {
+        Word(0)
+    }
+    pub fn one(&self) -> Word {
+        Word(1)
+    }
+    pub fn gate(&mut self, a: Word, b: Word, c: Word) -> Word {
+        let result = self.scalar(self.value(a) * self.value(b) + self.value(c));
+        self.circuit.rows.push([a.0, b.0, c.0, result.0]);
+        result
+    }
+    pub fn satisfied(&self) -> bool {
+        self.circuit
+            .rows
+            .iter()
+            .all(|&[a, b, c, d]| self.values[a] * self.values[b] + self.values[c] == self.values[d])
+    }
+    pub fn rows(&self) -> usize {
+        self.circuit.rows.len()
+    }
+    pub fn boolean(&mut self, a: Word) {
+        self.circuit.rows.push([a.0, a.0, 0, a.0]);
+    }
+    pub fn bits(&mut self, word: Word, n: usize) -> Vec<Word> {
+        assert!(n <= 64);
+        let v = self.value(word).c0;
+        let bits: Vec<_> = (0..n)
+            .map(|i| {
+                let w = self.input((v >> i) & 1);
+                self.boolean(w);
+                w
+            })
+            .collect();
+        let packed = self.pack(&bits);
+        self.assert_eq(word, packed);
+        bits
+    }
+    pub fn pack(&mut self, bits: &[Word]) -> Word {
+        assert!(bits.len() <= 64);
+        let mut acc = self.zero();
+        for (i, &bit) in bits.iter().enumerate() {
+            let weight = self.constant(1u64 << i);
+            acc = self.gate(bit, weight, acc);
+        }
+        acc
+    }
     pub fn input(&mut self, value: u64) -> Word {
         let word = Word(self.values.len());
         self.values.push(F192::new(value, 0, 0));
@@ -41,8 +101,12 @@ impl Builder {
     }
 
     pub fn constant(&mut self, value: u64) -> Word {
+        if let Some(&word) = self.constants.get(&value) {
+            return word;
+        }
         let word = self.input(value);
         self.expose(word);
+        self.constants.insert(value, word);
         word
     }
 
@@ -92,6 +156,28 @@ impl Builder {
             (flag_value >> 32) as u32,
         ));
         result
+    }
+
+    /// Hash an aligned byte string, with zero padding of its last block.
+    /// Every supplied word is part of the message; lengths are circuit metadata.
+    pub fn hash_words(&mut self, words: &[Word]) -> [Word; 4] {
+        let iv = flock::hash::param_iv();
+        let mut h = std::array::from_fn(|i| self.constant(u64::from(iv[2 * i]) | (u64::from(iv[2 * i + 1]) << 32)));
+        let blocks = words.len().div_ceil(8).max(1);
+        for block in 0..blocks {
+            let m = std::array::from_fn(|i| words.get(block * 8 + i).copied().unwrap_or(Word::ZERO));
+            let counter = self.constant(((block + 1) * 64).min(words.len() * 8) as u64);
+            let flags = self.constant(if block + 1 == blocks { u64::from(u32::MAX) } else { 0 });
+            h = self.compress(h, m, counter, flags);
+        }
+        h
+    }
+
+    /// Select b when bit is one, a otherwise. The selector is constrained Boolean.
+    pub fn select(&mut self, bit: Word, a: Word, b: Word) -> Word {
+        self.boolean(bit);
+        let difference = self.gate(a, self.one(), b);
+        self.gate(bit, difference, a)
     }
 
     pub fn public_values(&self) -> Vec<F192> {

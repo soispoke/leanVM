@@ -5,6 +5,7 @@ mod boolean_field;
 pub mod closed_recursion;
 pub mod flock_trace;
 pub mod hash_batch;
+pub mod hometurf_application;
 pub mod native_arithmetic;
 pub mod native_hash;
 pub mod native_recursion;
@@ -15,6 +16,7 @@ pub mod public_plan;
 pub mod recursion_fast;
 pub mod replay;
 pub mod trace;
+pub mod xmss_application;
 mod verifier;
 
 pub use verifier::{Child, record, record_bound};
