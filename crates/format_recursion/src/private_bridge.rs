@@ -732,3 +732,5 @@ mod tests {
         assert!(PrivateBridge::new(bad, io).is_none());
     }
 }
+
+pub mod lookup;

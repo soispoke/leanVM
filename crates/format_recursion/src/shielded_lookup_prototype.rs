@@ -146,10 +146,27 @@ pub struct Census {
     pub arithmetic_valid: bool,
     pub digest: [u8; 32],
     pub committed_words_without_lookup: usize,
+    pub query_copy_rows: usize,
+    pub arithmetic_rows_with_query_binding: usize,
+    pub committed_words_with_query_binding: usize,
+    pub padded_queries: usize,
+    pub multiplicity_total: u64,
 }
 /// Build exactly the original statement with three fixed-table lookup domains.
 /// Returned `lookup_valid` is a host oracle only, not cryptographic verification.
 pub fn census(payload: &[u8]) -> Census {
+    prepare(payload).census
+}
+
+pub(crate) struct Prepared {
+    pub census: Census,
+    pub builder: Builder,
+    pub queries: [Vec<F192>; 6],
+    pub multiplicities: Vec<u64>,
+    pub layout: crate::shielded_lookup::QueryLayout,
+}
+
+pub(crate) fn prepare(payload: &[u8]) -> Prepared {
     assert_eq!(payload.len(), INPUT_BYTES);
     let mut c = C {
         b: Builder::default(),
@@ -283,14 +300,76 @@ pub fn census(payload: &[u8]) -> Census {
         crate::private_bridge::PrivateShape::for_circuit(c.b.rows(), c.b.public_values().len(), c.b.compressions.len())
             .unwrap();
     let words = shape.committed_lanes() * (1usize << (shape.stack_log - pcs::whir::INITIAL_FOLDING_FACTOR));
-    Census {
-        arithmetic_rows: c.b.rows(),
+    let arithmetic_rows = c.b.rows();
+    let arithmetic_valid = c.b.satisfied();
+    let mut query_columns: [Vec<Word>; 6] = std::array::from_fn(|_| Vec::new());
+    let mut multiplicities = vec![0u64; 1 << 18];
+    for read in &c.reads {
+        let (tag, base) = match read.table {
+            Table::Range16 => (0, 0),
+            Table::ByteLogic => (1, 1 << 16),
+            Table::ByteAdd => (2, 1 << 17),
+        };
+        let tag = c.b.constant(tag);
+        query_columns[0].push(tag);
+        for (coordinate, column) in query_columns[1..].iter_mut().enumerate() {
+            column.push(read.words.get(coordinate).copied().unwrap_or(c.b.zero()));
+        }
+        let values: Vec<_> = read.words.iter().map(|&w| c.b.value(w).c0).collect();
+        if let Some(index) = read.table.index(&values) {
+            multiplicities[base + index] += 1;
+        }
+    }
+    let log_queries = c.reads.len().next_power_of_two().trailing_zeros() as usize;
+    let padded_queries = 1usize << log_queries;
+    multiplicities[0] += (padded_queries - c.reads.len()) as u64;
+    for column in &mut query_columns {
+        column.resize(padded_queries, c.b.zero());
+    }
+    let start = c.b.align_lookup_rows(log_queries);
+    for column in &query_columns {
+        for &word in column {
+            c.b.copy_lookup_word(word);
+        }
+    }
+    let query_layout = crate::shielded_lookup::QueryLayout {
+        start,
+        log_queries,
+        actual_queries: c.reads.len(),
+    };
+    let bound_shape =
+        crate::private_bridge::PrivateShape::for_circuit(c.b.rows(), c.b.public_values().len(), c.b.compressions.len())
+            .unwrap();
+    for coordinate in 0..6 {
+        for limb in 0..3 {
+            query_layout
+                .coordinate_offset(bound_shape.index.log_rows, coordinate, limb)
+                .expect("query region in native witness");
+        }
+    }
+    let bound_words =
+        bound_shape.committed_lanes() * (1usize << (bound_shape.stack_log - pcs::whir::INITIAL_FOLDING_FACTOR));
+    let census = Census {
+        arithmetic_rows,
         compressions: c.b.compressions.len(),
         lookup_reads: counts,
         lookup_valid: valid,
-        arithmetic_valid: c.b.satisfied(),
+        arithmetic_valid,
         digest: output,
         committed_words_without_lookup: words,
+        query_copy_rows: 6 * padded_queries,
+        arithmetic_rows_with_query_binding: c.b.rows(),
+        committed_words_with_query_binding: bound_words,
+        padded_queries,
+        multiplicity_total: multiplicities.iter().sum(),
+    };
+    let queries = query_columns.map(|column| column.iter().map(|&word| c.b.value(word)).collect());
+    Prepared {
+        census,
+        builder: c.b,
+        queries,
+        multiplicities,
+        layout: query_layout,
     }
 }
 #[cfg(test)]

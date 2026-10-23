@@ -93,6 +93,20 @@ impl Builder {
         }
         acc
     }
+    /// Materialize a lookup query coordinate in the arithmetic witness itself.
+    /// Copy/permutation wiring binds this row to the original variable.
+    pub(crate) fn copy_lookup_word(&mut self, word: Word) {
+        self.circuit.rows.push([word.0, 1, 0, word.0]);
+    }
+
+    /// Align an upcoming table of query coordinates in the final bridge index.
+    pub(crate) fn align_lookup_rows(&mut self, log_queries: usize) -> usize {
+        let public_rows = (self.circuit.public.len() + 18).next_power_of_two();
+        let start = (public_rows + self.circuit.rows.len()).next_multiple_of(1usize << log_queries);
+        self.circuit.rows.resize(start - public_rows, [0, 0, 0, 0]);
+        start
+    }
+
     pub fn input(&mut self, value: u64) -> Word {
         let word = Word(self.values.len());
         self.values.push(F192::new(value, 0, 0));

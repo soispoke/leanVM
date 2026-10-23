@@ -74,6 +74,48 @@ impl Table {
     }
 }
 
+/// Canonical lookup-table columns, concatenated in this exact index order.
+/// Every tuple includes a table tag and is zero-extended to six coordinates.
+/// This public relation is never populated from witness values.
+pub fn fixed_columns() -> [Vec<primitives::field::F64>; 6] {
+    use primitives::field::F64;
+    let mut columns: [Vec<F64>; 6] = std::array::from_fn(|_| Vec::with_capacity(1 << 18));
+    for (tag, table) in [Table::Range16, Table::ByteLogic, Table::ByteAdd]
+        .into_iter()
+        .enumerate()
+    {
+        for index in 0..table.rows() {
+            let tuple = table.tuple(index).expect("fixed table index");
+            columns[0].push(F64(tag as u64));
+            for (coordinate, column) in columns[1..].iter_mut().enumerate() {
+                column.push(F64(tuple.get(coordinate).copied().unwrap_or(0)));
+            }
+        }
+    }
+    columns
+}
+
+/// Placement of the query table inside the *same* native arithmetic commitment.
+/// There is no independently chosen query witness or query root.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct QueryLayout {
+    /// Absolute row index, including public rows, of coordinate zero.
+    pub start: usize,
+    pub log_queries: usize,
+    pub actual_queries: usize,
+}
+impl QueryLayout {
+    pub fn coordinate_offset(&self, native_log_rows: usize, coordinate: usize, limb: usize) -> Option<usize> {
+        let width = 1usize.checked_shl(self.log_queries as u32)?;
+        let rows = 1usize.checked_shl(native_log_rows as u32)?;
+        if coordinate >= 6 || limb >= 3 || self.start + 6 * width > rows {
+            return None;
+        }
+        // Every copy row stores the original variable in the x column.
+        Some(limb * rows + self.start + coordinate * width)
+    }
+}
+
 /// The 148,272-row native shielded circuit's non-hash census.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct Census {
