@@ -472,6 +472,45 @@ pub fn shielded_source(seed: usize) -> Source {
     }
 }
 
+/// BLAKE2s membership of a private 32-byte leaf in a depth-16 binary tree.
+/// Sibling order is selected by sixteen Boolean private path bits.
+pub fn merkle_source(seed: usize) -> Source {
+    fn build(seed: usize) -> crate::native_hash::Builder {
+        let mut b = crate::native_hash::Builder::default();
+        let leaf: Vec<_> = (0..4)
+            .map(|i| b.input((seed as u64).wrapping_mul(0x10001) + i + 17))
+            .collect();
+        let mut node = b.hash_words(&leaf);
+        for level in 0..16 {
+            let bit = b.input(((seed + level) & 1) as u64);
+            b.boolean(bit);
+            let sibling: [crate::native_hash::Word; 4] =
+                std::array::from_fn(|i| b.input((seed as u64 + 3) * 0x1000001 + (level * 4 + i) as u64));
+            let left: [crate::native_hash::Word; 4] = std::array::from_fn(|i| b.select(bit, sibling[i], node[i]));
+            let right: [crate::native_hash::Word; 4] = std::array::from_fn(|i| b.select(bit, node[i], sibling[i]));
+            node = b.hash_words(&left.into_iter().chain(right).collect::<Vec<_>>());
+        }
+        for word in node {
+            b.expose(word);
+        }
+        b
+    }
+    let b = build(seed);
+    let (circuit, connectors) = b.export_circuit();
+    let fixed_len = circuit.public.len() - 4;
+    Source {
+        circuit,
+        connectors,
+        values: b.values,
+        compressions: b.compressions,
+        fixed_len,
+        rebuild: Box::new(move || {
+            let b = build(seed);
+            (b.values, b.compressions)
+        }),
+    }
+}
+
 pub fn source(case: &str) -> Source {
     if case == "shielded" {
         return shielded_source(0);

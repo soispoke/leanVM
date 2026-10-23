@@ -1,0 +1,206 @@
+{
+  "generator-same": {
+    "merge_s": 0.898190475,
+    "fold_prover_s": 0.028008972,
+    "outer_prover_s": 0.800081367,
+    "rows": 533813,
+    "committed_words": 8388608,
+    "proof_bytes": 179520,
+    "carried_claim_bytes": 888,
+    "own_merge_matrix_settle_ms": 24.343946000000003,
+    "core_verify_ms": 4.2763469999999995,
+    "root_ms": 30.573628,
+    "raw": [
+      "generator-same-1.json",
+      "generator-same-2.json",
+      "generator-same-3.json"
+    ]
+  },
+  "generator-mixed": {
+    "merge_s": 1.175408604,
+    "fold_prover_s": 0.272188094,
+    "outer_prover_s": 0.812066048,
+    "rows": 580280,
+    "committed_words": 8388608,
+    "proof_bytes": 179296,
+    "carried_claim_bytes": 1968,
+    "own_merge_matrix_settle_ms": 21.923461000000003,
+    "core_verify_ms": 4.2792200000000005,
+    "root_ms": 50.728425,
+    "raw": [
+      "generator-mixed-1.json",
+      "generator-mixed-2.json",
+      "generator-mixed-3.json"
+    ]
+  },
+  "paired-fixed-baseline-same": {
+    "merge_s": 0.759728863,
+    "fold_prover_s": 0.022698914,
+    "outer_prover_s": 0.6676172,
+    "rows": 533813,
+    "committed_words": 8388608,
+    "proof_bytes": 179520,
+    "carried_claim_bytes": 888,
+    "own_merge_matrix_settle_ms": 19.22256,
+    "core_verify_ms": 4.209275,
+    "root_ms": 25.564542000000003,
+    "raw": [
+      "paired-fixed-baseline-same-1.json",
+      "paired-fixed-baseline-same-2.json",
+      "paired-fixed-baseline-same-3.json"
+    ]
+  },
+  "paired-fixed-baseline-mixed": {
+    "merge_s": 1.237553856,
+    "fold_prover_s": 0.458610517,
+    "outer_prover_s": 0.697341721,
+    "rows": 580280,
+    "committed_words": 8388608,
+    "proof_bytes": 179296,
+    "carried_claim_bytes": 1968,
+    "own_merge_matrix_settle_ms": 18.877477,
+    "core_verify_ms": 4.097862,
+    "root_ms": 44.792795999999996,
+    "raw": [
+      "paired-fixed-baseline-mixed-1.json",
+      "paired-fixed-baseline-mixed-2.json",
+      "paired-fixed-baseline-mixed-3.json"
+    ]
+  },
+  "paired-fixed-fixed-same": {
+    "merge_s": 0.769681422,
+    "fold_prover_s": 0.024687805,
+    "outer_prover_s": 0.661529198,
+    "rows": 533813,
+    "committed_words": 8388608,
+    "proof_bytes": 179520,
+    "carried_claim_bytes": 888,
+    "own_merge_matrix_settle_ms": 15.264278,
+    "core_verify_ms": 4.109235999999999,
+    "root_ms": 21.214725,
+    "raw": [
+      "paired-fixed-fixed-same-1.json",
+      "paired-fixed-fixed-same-2.json",
+      "paired-fixed-fixed-same-3.json"
+    ]
+  },
+  "paired-fixed-fixed-mixed": {
+    "merge_s": 1.068195973,
+    "fold_prover_s": 0.254425035,
+    "outer_prover_s": 0.701037261,
+    "rows": 580280,
+    "committed_words": 8388608,
+    "proof_bytes": 179296,
+    "carried_claim_bytes": 1968,
+    "own_merge_matrix_settle_ms": 19.748393999999998,
+    "core_verify_ms": 4.118764,
+    "root_ms": 44.459402000000004,
+    "raw": [
+      "paired-fixed-fixed-mixed-1.json",
+      "paired-fixed-fixed-mixed-2.json",
+      "paired-fixed-fixed-mixed-3.json"
+    ]
+  },
+  "combined-same": {
+    "merge_s": 0.79058006,
+    "fold_prover_s": 0.021899923,
+    "outer_prover_s": 0.690226776,
+    "rows": 533813,
+    "committed_words": 8388608,
+    "proof_bytes": 179520,
+    "carried_claim_bytes": 888,
+    "own_merge_matrix_settle_ms": 15.561694,
+    "core_verify_ms": 3.9865619999999997,
+    "root_ms": 21.383667000000003,
+    "raw": [
+      "combined-same-1.json",
+      "combined-same-2.json",
+      "combined-same-3.json"
+    ]
+  },
+  "combined-mixed": {
+    "merge_s": 1.053812525,
+    "fold_prover_s": 0.206093669,
+    "outer_prover_s": 0.746694684,
+    "rows": 580280,
+    "committed_words": 8388608,
+    "proof_bytes": 179296,
+    "carried_claim_bytes": 1968,
+    "own_merge_matrix_settle_ms": 21.03998,
+    "core_verify_ms": 4.400929,
+    "root_ms": 48.174842,
+    "raw": [
+      "combined-mixed-1.json",
+      "combined-mixed-2.json",
+      "combined-mixed-3.json"
+    ]
+  },
+  "simd-same": {
+    "merge_s": 0.715575809,
+    "fold_prover_s": 0.025518188,
+    "outer_prover_s": 0.628585467,
+    "rows": 533813,
+    "committed_words": 8388608,
+    "proof_bytes": 179520,
+    "carried_claim_bytes": 888,
+    "own_merge_matrix_settle_ms": 16.745795,
+    "core_verify_ms": 3.9330670000000003,
+    "root_ms": 22.793896000000004,
+    "raw": [
+      "simd-same-1.json",
+      "simd-same-2.json",
+      "simd-same-3.json"
+    ]
+  },
+  "simd-mixed": {
+    "merge_s": 0.974543227,
+    "fold_prover_s": 0.223291362,
+    "outer_prover_s": 0.653056287,
+    "rows": 580280,
+    "committed_words": 8388608,
+    "proof_bytes": 179296,
+    "carried_claim_bytes": 1968,
+    "own_merge_matrix_settle_ms": 18.535145999999997,
+    "core_verify_ms": 3.8486000000000002,
+    "root_ms": 43.337173,
+    "raw": [
+      "simd-mixed-1.json",
+      "simd-mixed-2.json",
+      "simd-mixed-3.json"
+    ]
+  },
+  "merkle-control-same": {
+    "merge_s": 0.732285411,
+    "fold_prover_s": 0.022450292,
+    "outer_prover_s": 0.640143781,
+    "rows": 533813,
+    "committed_words": 8388608,
+    "proof_bytes": 179520,
+    "carried_claim_bytes": 888,
+    "own_merge_matrix_settle_ms": 17.312271,
+    "core_verify_ms": 4.245129,
+    "root_ms": 23.577585,
+    "raw": [
+      "merkle-control-same-1.json",
+      "merkle-control-same-2.json",
+      "merkle-control-same-3.json"
+    ]
+  },
+  "merkle-control-merkle": {
+    "merge_s": 0.751891484,
+    "fold_prover_s": 0.019385589,
+    "outer_prover_s": 0.649975237,
+    "rows": 516284,
+    "committed_words": 8388608,
+    "proof_bytes": 180160,
+    "carried_claim_bytes": 1584,
+    "own_merge_matrix_settle_ms": 16.441668,
+    "core_verify_ms": 4.048936,
+    "root_ms": 22.543044,
+    "raw": [
+      "merkle-control-merkle-1.json",
+      "merkle-control-merkle-2.json",
+      "merkle-control-merkle-3.json"
+    ]
+  }
+}

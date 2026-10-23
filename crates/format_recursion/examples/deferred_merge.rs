@@ -31,14 +31,16 @@ fn main() {
     let format = &args[2];
     let outer = &args[3];
     let mode = &args[4];
-    let mixed = case == "mixed";
+    let mixed = case == "mixed" || case == "merkle";
     assert!(mixed || case == "same");
     assert!(format == "B" || format == "C");
     assert!(outer == "A" || outer == "B");
     assert!(mode == "carried" || mode == "direct");
     let context = primitives::hash::hash(b"r1cs-deferred-measurement-v1");
     let source0 = row_format::shielded_source(0);
-    let source1 = if mixed {
+    let source1 = if case == "merkle" {
+        row_format::merkle_source(1)
+    } else if mixed {
         row_format::source("merge")
     } else {
         row_format::shielded_source(1)
@@ -177,7 +179,7 @@ fn main() {
             let mut wrong = reduction.carried[i].clone();
             wrong.app_key[0] ^= 1;
             assert!(!g.settle(&wrong));
-            settlements.push(serde_json::json!({"app":if i==0{"shielded"}else{"merge"},"ms":ms,"rows":g.rows()}));
+            settlements.push(serde_json::json!({"app":if i==0{"shielded"}else{case.as_str()},"ms":ms,"rows":g.rows()}));
         }
     }
     let mut wrong = outputs.clone();
