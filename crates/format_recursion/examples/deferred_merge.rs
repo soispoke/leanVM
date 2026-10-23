@@ -24,6 +24,7 @@ enum Backend {
     Sparse(first::SparseSetup),
 }
 fn main() {
+    bench::init_tracing_from_env();
     parallel::init();
     assert_eq!(parallel::num_threads(), 12);
     let args: Vec<_> = std::env::args().collect();

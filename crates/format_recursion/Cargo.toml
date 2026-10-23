@@ -26,3 +26,6 @@ tracing.workspace = true
 [features]
 keccak-protocol = ["primitives/keccak-protocol"]
 keccak-batched-transcript = ["keccak-protocol", "fiat_shamir/keccak-batched-transcript"]
+
+[dev-dependencies]
+bench.workspace = true

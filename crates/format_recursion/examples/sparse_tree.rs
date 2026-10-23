@@ -24,6 +24,7 @@ fn layout(s: &Setup) -> Vec<usize> {
     ]
 }
 fn main() {
+    bench::init_tracing_from_env();
     parallel::init();
     assert_eq!(parallel::num_threads(), 12);
     let mixed = std::env::args().nth(1).as_deref() != Some("same");
