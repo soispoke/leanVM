@@ -304,6 +304,7 @@ mod tests {
     }
 }
 
+#[allow(clippy::items_after_test_module)]
 pub fn verify_sparse_root(
     setup: &SparseSetup,
     context: &Hash,
