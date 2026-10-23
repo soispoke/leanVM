@@ -303,3 +303,24 @@ mod tests {
         }
     }
 }
+
+pub fn verify_sparse_root(
+    setup: &SparseSetup,
+    context: &Hash,
+    digest: &Hash,
+    carried: &[DeferredClaim],
+    proof: &Proof,
+    generators: &[&super::generator::Generator],
+) -> bool {
+    if carried.len() != generators.len() {
+        return false;
+    }
+    let Some(own) = setup.verify(&output_fields(digest, carried), context, proof) else {
+        return false;
+    };
+    setup.generator.settle(&own)
+        && carried
+            .iter()
+            .zip(generators)
+            .all(|(claim, generator)| generator.settle(claim))
+}
