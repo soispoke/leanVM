@@ -2,6 +2,14 @@
 
 Snapshot: `8db3aaa7`, from lane A's dirty tree based on `ab39e040`. No pushes. All builds and measurements use CPUs 24-35, CARGO_BUILD_JOBS=12, RAYON_NUM_THREADS=12, LEANVM_NUM_THREADS=12. Timings are single development screens, not medians. Receipts are `C-*` under the parent workspace, using Yukon `2e90b37`.
 
+## Proof-path reconciliation
+
+The quoted 1.431 s BLAKE2s 1 KiB value is the historical `C-rows-blake1k-control-t1` backend-only screen, not the headline wallet metric. It used direct `private_recursion::Setup::prove`, so it was removed from the headline ranking. The current split-closure screen uses `SplitClosedSetup::from_program` and `SplitClosedSetup::prove_base`; the same-tree control measured 1.634 s certificate creation plus 0.207 s witness, 1.841 s time to mempool-ready proof.
+
+The real `application_tree` path on the same lane-C tree and same seed emitted the same base shape, base key, node key, statement and exact 323,356-byte certificate. The compiler certificate and application_tree certificate are byte-for-byte identical, SHA-256 `cc53c0753eac137d2c18f05dad97836a64e8e15016c3edbdd6920106eb9188e4`. An archived lane-A certificate is identical too. Both paths therefore include the same split base proof: private arithmetic witness, joint WHIR commitment, arithmetic and hash reductions, joint opening and index opening, with the same minimum padding (`n_blocks=39`, `block_log=7`, base shape log rows 21). The independent application_tree verification receipt passed.
+
+Lane D's 2.549 s and lane A's 1.520 s are different wall-time samples on different CPU slices and process workloads. The reconciled same-tree calls are 1.634 s (`compiler_rows`) and 1.650 s (`application_tree` leaf 0), with the identical output; this comparison establishes proof-path identity, not the cause of the cross-lane timing spread. Timer boundaries differ slightly: application_tree includes an additional preflight `trace.satisfied()` before prove_base, which also checks satisfaction internally; compiler_rows includes certificate serialization in its proof timer, whereas application_tree reports serialization separately from that timer. Both execute the full same proof path. No cause is assigned to the cross-lane wall-time spread from these single samples. The proof-path identity and output-byte identity are established in `artifacts/laneC-reconciliation.json`. Do not use the historical 1.431 s value for time to mempool-ready proof.
+
 ## Headline: time to mempool-ready proof
 
 The headline metric is witness construction plus creation and serialization of the one base certificate the wallet sends. Mempool nodes verify it natively, and aggregators merge that certificate as-is. Per-relation setup is preprocessing and is excluded. Witness time includes instance construction and independent reference/Boolean evaluation, not just trace recording. Report certificate bytes and native verification ms alongside this metric. Rank candidate policies by the change in time to mempool-ready proof; arithmetic rows are supporting diagnostics.
@@ -75,3 +83,6 @@ Using time to mempool-ready proof, the strongest absolute savings were Keccak (2
 
 
 The reporting-only harness update passed `C-mempool-tests-t1` (release compiler_rows example tests), `C-mempool-clippy-t1` (both packages, all targets, `-D warnings`), and `C-mempool-fmt-check-t1`. The previous full library/example release gate remains preserved; library and compiler-policy implementations were not changed by the reporting update. No pushes.
+
+
+Reconciliation receipts: `C-reconcile-build-t1`, `C-reconcile-compiler-t1`, `C-reconcile-application-t1`, `C-reconcile-independent-verify-t1` (five saved certificates), `C-reconcile-clippy-t1` and `C-reconcile-fmt-check-t1` all passed with frozen sources. The only source update adds optional certificate export and key/hash reporting to the research tool. No proving implementation, parameter, verifier check or policy default changed.

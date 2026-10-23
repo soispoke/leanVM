@@ -140,5 +140,113 @@
       "--",
       "--check"
     ]
+  },
+  {
+    "receipt": "C-reconcile-build-t1",
+    "ok": true,
+    "sha256": "b0b9b954538380972794ed87874248c3a0e3efff8be3cdd6d3bb1db8f45b16a0",
+    "command": [
+      "/usr/bin/taskset",
+      "-c",
+      "24-35",
+      "cargo",
+      "build",
+      "--release",
+      "-p",
+      "format_recursion",
+      "--example",
+      "compiler_rows",
+      "--example",
+      "application_tree"
+    ]
+  },
+  {
+    "receipt": "C-reconcile-compiler-t1",
+    "ok": true,
+    "sha256": "b842b717a66fc0abdc270e476a907a1f990f354d640d322a08b74a9e7746ec9b",
+    "command": [
+      "/usr/bin/taskset",
+      "-c",
+      "24-35",
+      "target/release/examples/compiler_rows",
+      "blake1k",
+      "--prove",
+      "--out-certificate",
+      "../artifacts/C-reconcile-compiler-blake1k.cert"
+    ]
+  },
+  {
+    "receipt": "C-reconcile-application-t1",
+    "ok": true,
+    "sha256": "453df765a26a219c665391472654b12bc0c48340baf8e091e8a0b8dbcc30fbb2",
+    "command": [
+      "/usr/bin/taskset",
+      "-c",
+      "24-35",
+      "target/release/examples/application_tree",
+      "--workload",
+      "blake2s-1kib",
+      "--samples",
+      "1",
+      "--seed",
+      "20261023",
+      "--out",
+      "../artifacts/C-reconcile-application-blake1k"
+    ]
+  },
+  {
+    "receipt": "C-reconcile-independent-verify-t1",
+    "ok": true,
+    "sha256": "0e2e378f8f830e9d739dd110f2435cd02b462e3ecedf8917cd3cb4aec09535db",
+    "command": [
+      "/usr/bin/taskset",
+      "-c",
+      "24-35",
+      "target/release/examples/application_tree",
+      "--workload",
+      "blake2s-1kib",
+      "--samples",
+      "1",
+      "--seed",
+      "20261023",
+      "--verify",
+      "../artifacts/C-reconcile-application-blake1k"
+    ]
+  },
+  {
+    "receipt": "C-reconcile-clippy-t1",
+    "ok": true,
+    "sha256": "bf7ee4c8583d7de7777a42d0ea7bf7c22ce76ee61f4feb2393f44b19bacc54d2",
+    "command": [
+      "/usr/bin/taskset",
+      "-c",
+      "24-35",
+      "cargo",
+      "clippy",
+      "--release",
+      "-p",
+      "format_recursion",
+      "-p",
+      "rec_aggregation",
+      "--all-targets",
+      "--",
+      "-D",
+      "warnings"
+    ]
+  },
+  {
+    "receipt": "C-reconcile-fmt-check-t1",
+    "ok": true,
+    "sha256": "d6d534504309e9c36ad5915da415c4ec2576e084a521741cebdd01c0c8fd53d4",
+    "command": [
+      "/usr/bin/taskset",
+      "-c",
+      "24-35",
+      "cargo",
+      "fmt",
+      "--all",
+      "--",
+      "--check"
+    ]
   }
 ]

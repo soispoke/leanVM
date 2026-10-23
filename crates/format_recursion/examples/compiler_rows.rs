@@ -49,12 +49,22 @@ fn run<W: Workload>(trim: bool, prove: bool) {
         let verify_start = Instant::now();
         assert!(setup.verify(&proof));
         let native_verify_ms = verify_start.elapsed().as_secs_f64() * 1000.;
+        if let Some(path) = std::env::args()
+            .collect::<Vec<_>>()
+            .windows(2)
+            .find(|pair| pair[0] == "--out-certificate")
+            .map(|pair| pair[1].clone())
+        {
+            std::fs::write(path, &bytes).expect("save wallet certificate");
+        }
         println!(
             "{}",
             serde_json::json!({"kind":"mempool_ready_proof","workload":W::NAME,"trim":trim,
             "witness_ms":witness_ms,"proof_ms":ms,"time_to_mempool_ready_proof_ms":witness_ms+ms,
             "proof_bytes":bytes.len(),"native_verify_ms":native_verify_ms,
-            "base_shape":format!("{:?}", setup.base_shape()),"cpus":"24-35","threads":12,"verified":true})
+            "base_shape":format!("{:?}", setup.base_shape()),
+            "base_key":setup.base_key(),"node_key":setup.node_key(),
+            "certificate_hash":primitives::hash::hash(&bytes),"cpus":"24-35","threads":12,"verified":true})
         );
     }
 }
