@@ -711,4 +711,34 @@ mod tests {
         tampered.stream[0] += F192::ONE;
         assert!(!setup.verify(&public, &context, &tampered));
     }
+    #[test]
+    fn mixed_hash_kinds_share_opening_and_reject_bad_rows() {
+        use crate::native_hash::Builder;
+        parallel::init();
+        let mut b = Builder::default();
+        let input = std::array::from_fn(|i| b.constant((i+1) as u64));
+        let permuted = b.keccak_f(input);
+        let digest = b.hash_words(&permuted[..4]);
+        for word in digest { b.expose(word); }
+        let public = b.public_values();
+        let setup = b.setup_mixed().unwrap();
+        let context = [91;32];
+        let proof = setup.prove_mixed(&b.values,&b.permutations,&b.compressions,&context).unwrap();
+        assert!(setup.verify(&public,&context,&proof), "honest mixed hash proof");
+        let mut bad_keccak = b.permutations.clone();
+        bad_keccak[0][0] ^= 1;
+        let forged = setup.prove_mixed_unchecked(&b.values,&bad_keccak,&b.compressions,&context).unwrap();
+        assert!(!setup.verify(&public,&context,&forged), "Keccak input wiring changed");
+        let mut bad_blake = b.compressions.clone();
+        bad_blake[0].1[0] ^= 1;
+        let forged = setup.prove_mixed_unchecked(&b.values,&b.permutations,&bad_blake,&context).unwrap();
+        assert!(!setup.verify(&public,&context,&forged), "BLAKE input wiring changed");
+        let mut bad_public = public.clone();
+        *bad_public.last_mut().unwrap() += F192::ONE;
+        assert!(!setup.verify(&bad_public,&context,&proof));
+        let mut bad_proof = proof;
+        bad_proof.stream[0] += F192::ONE;
+        assert!(!setup.verify(&public,&context,&bad_proof));
+    }
+
 }
