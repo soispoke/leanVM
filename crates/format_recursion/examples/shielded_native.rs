@@ -26,12 +26,6 @@ fn main() {
         .collect();
     assert_eq!(&public[public.len() - 4..], expected.as_slice());
     assert_eq!(canonical.compressions.len(), 105);
-    let reference = primitives::hash::hash(&(0..bytes).map(|i| (i % 251) as u8).collect::<Vec<_>>());
-    let expected: Vec<_> = reference
-        .chunks_exact(8)
-        .map(|word| primitives::field::F192::new(u64::from_le_bytes(word.try_into().unwrap()), 0, 0))
-        .collect();
-    assert_eq!(&public[public.len() - 4..], expected);
     let context = primitives::hash::hash(b"hometurf-native-hash-application-v1");
     if mode == "prove" {
         std::fs::write("/proc/self/clear_refs", "5").unwrap();
