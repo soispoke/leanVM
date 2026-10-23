@@ -1,6 +1,26 @@
-# Lane C: time to mempool-ready proof
+# Lane C: WALLET time to mempool-ready proof
 
 Snapshot: `8db3aaa7`, from lane A's dirty tree based on `ab39e040`. No pushes. All builds and measurements use CPUs 24-35, CARGO_BUILD_JOBS=12, RAYON_NUM_THREADS=12, LEANVM_NUM_THREADS=12. Timings are single development screens, not medians. Receipts are `C-*` under the parent workspace, using Yukon `2e90b37`.
+
+## Metric roles and BLAKE2s 64 B ABAB confirmation
+
+Every metric uses these role labels: WALLET is per transaction (witness plus the one proof sent, serialized bytes, transaction RAM); MEMPOOL NODE is native verification ms; AGGREGATOR is node merging; ONE-TIME setup is per-application key construction and static circuit metadata. ONE-TIME setup is never added to WALLET transaction latency. Historical values below retain this same role mapping. This lane does not report AGGREGATOR timing in the ABAB screen.
+
+The earlier WALLET 363 ms control versus 157 ms trimmed pair is noisy single-run evidence and is superseded for decisions by the ABAB confirmation below. Three ABAB blocks, six fresh-process samples per policy, are running on CPUs 24-35 with 12 threads. A is complete-output control and B is trimmed. Each WALLET transaction uses the same input seed. The WALLET timing path is the reconciled split base proof. ONE-TIME setup wallet key construction and WALLET RAM use a separate base-key-only process that never constructs a node key; its certificate must match the timed WALLET certificate byte-for-byte. Linux RSS high-water is reset immediately before witness creation, so the prior ONE-TIME setup memory peak is excluded from the WALLET transaction peak. The retained wallet key and allocator-resident pages at transaction start are reported as the WALLET RAM baseline.
+
+ABAB result (three ABAB blocks, six fresh-process samples per policy):
+
+|Policy|WALLET time to mempool-ready proof, median [min, max] ms|WALLET witness ms|WALLET proof ms|WALLET proof bytes|WALLET transaction RAM additional peak KiB|MEMPOOL NODE native verify ms|ONE-TIME setup wallet key ms|ONE-TIME setup peak RSS KiB|
+|---|---:|---:|---:|---:|---:|---:|---:|---:|
+|A control|143.80 [127.58, 161.17]|7.90|135.27|247,956|134,710|4.99|99.63|190,844|
+|B trimmed|141.75 [128.62, 169.29]|6.00|136.09|250,500|149,432|6.16|84.07|180,826|
+
+**Decision:** BLAKE2s 64 B trimming is not an accepted optimization from this ABAB screen. WALLET median time improves only 2.04 ms (1.4%), ranges overlap, WALLET proof bytes increase 2,544 B, WALLET transaction RAM increases 14,722 KiB, and MEMPOOL NODE median verification increases 1.16 ms. ONE-TIME wallet key setup is separate and falls by 15.56 ms in this sample; it is never added to WALLET transaction time. The full per-sample records and receipt names are in `artifacts/laneC-abab.json`; summaries are in `artifacts/laneC-abab-summary.json`.
+
+
+## Role labels for the padding census
+
+The padding census is ONE-TIME shape evidence. Its rows, padded log rows and boundary margins predict proof-shape classes; they are not WALLET transaction timings. The timing table reports WALLET, MEMPOOL NODE and ONE-TIME setup roles explicitly. AGGREGATOR timings are outside this compiler lane and remain owned by lane E.
 
 ## Proof-path reconciliation
 
@@ -10,12 +30,12 @@ The real `application_tree` path on the same lane-C tree and same seed emitted t
 
 Lane D's 2.549 s and lane A's 1.520 s are different wall-time samples on different CPU slices and process workloads. The reconciled same-tree calls are 1.634 s (`compiler_rows`) and 1.650 s (`application_tree` leaf 0), with the identical output; this comparison establishes proof-path identity, not the cause of the cross-lane timing spread. Timer boundaries differ slightly: application_tree includes an additional preflight `trace.satisfied()` before prove_base, which also checks satisfaction internally; compiler_rows includes certificate serialization in its proof timer, whereas application_tree reports serialization separately from that timer. Both execute the full same proof path. No cause is assigned to the cross-lane wall-time spread from these single samples. The proof-path identity and output-byte identity are established in `artifacts/laneC-reconciliation.json`. Do not use the historical 1.431 s value for time to mempool-ready proof.
 
-## Headline: time to mempool-ready proof
+## Headline: WALLET time to mempool-ready proof
 
 The headline metric is witness construction plus creation and serialization of the one base certificate the wallet sends. Mempool nodes verify it natively, and aggregators merge that certificate as-is. Per-relation setup is preprocessing and is excluded. Witness time includes instance construction and independent reference/Boolean evaluation, not just trace recording. Report certificate bytes and native verification ms alongside this metric. Rank candidate policies by the change in time to mempool-ready proof; arithmetic rows are supporting diagnostics.
 
 <!-- mempool-table-start -->
-|Rank|Workload|Control time to mempool-ready proof ms|Trimmed time to mempool-ready proof ms|Change|Control / trimmed proof bytes|Control / trimmed native verification ms|
+|Rank|Workload|WALLET control time to mempool-ready proof ms|WALLET trimmed time to mempool-ready proof ms|WALLET change|WALLET control / trimmed proof bytes|MEMPOOL NODE control / trimmed native verification ms|
 |---:|---|---:|---:|---:|---:|---:|
 |1|keccak256-1KiB|4093.24|1885.49|-2207.75 ms (-53.9%)|346,652 / 324,060|6.14 / 5.76|
 |2|sha256-1kib|3362.06|2064.20|-1297.87 ms (-38.6%)|347,036 / 323,836|5.86 / 5.80|
@@ -70,7 +90,7 @@ The native application path packs only the 512 public statement bits and hashes 
 
 Matched native Setup proofs, seed 20261023. Control uses complete outputs; candidate trims all outputs outside the public dependency closure. These policy overrides are explicit; default MPT already trims. MPT complete-output control is census only because it exceeds the backend cap.
 
-|Workload|Control rows|Trimmed rows|Reduction|Control proof ms|Trim proof ms|
+|Workload|ONE-TIME setup control rows|ONE-TIME setup trimmed rows|ONE-TIME setup row reduction|WALLET historical control proof ms|WALLET historical trimmed proof ms|
 |---|---:|---:|---:|---:|---:|
 |blake64|120,080|108,891|9.3%|126.619113|124.613715|
 |blake1k|1,436,512|1,251,578|12.9%|1431.319984|1551.5967320000002|

@@ -1,0 +1,126 @@
+{
+  "A": {
+    "WALLET_time_to_mempool_ready_proof_ms": {
+      "median": 143.79808450000002,
+      "min": 127.58340099999998,
+      "max": 161.168004,
+      "n": 6
+    },
+    "WALLET_witness_ms": {
+      "median": 7.89595,
+      "min": 6.867832,
+      "max": 9.911472,
+      "n": 6
+    },
+    "WALLET_proof_ms": {
+      "median": 135.27014300000002,
+      "min": 120.71556899999999,
+      "max": 151.256532,
+      "n": 6
+    },
+    "WALLET_proof_bytes": {
+      "median": 247956.0,
+      "min": 247956,
+      "max": 247956,
+      "n": 6
+    },
+    "WALLET_transaction_peak_rss_kib": {
+      "median": 325346.0,
+      "min": 325168,
+      "max": 327884,
+      "n": 6
+    },
+    "WALLET_transaction_start_rss_kib": {
+      "median": 190844.0,
+      "min": 188724,
+      "max": 192992,
+      "n": 6
+    },
+    "WALLET_transaction_additional_peak_rss_kib": {
+      "median": 134710.0,
+      "min": 134316,
+      "max": 136472,
+      "n": 6
+    },
+    "MEMPOOL_NODE_native_verify_ms": {
+      "median": 4.9926585,
+      "min": 4.6095820000000005,
+      "max": 7.79644,
+      "n": 6
+    },
+    "ONE_TIME_setup_wallet_key_setup_ms": {
+      "median": 99.625149,
+      "min": 79.924389,
+      "max": 116.03345700000001,
+      "n": 6
+    },
+    "ONE_TIME_setup_wallet_key_peak_rss_kib": {
+      "median": 190844.0,
+      "min": 188724,
+      "max": 192992,
+      "n": 6
+    }
+  },
+  "B": {
+    "WALLET_time_to_mempool_ready_proof_ms": {
+      "median": 141.754451,
+      "min": 128.615321,
+      "max": 169.29114299999998,
+      "n": 6
+    },
+    "WALLET_witness_ms": {
+      "median": 6.004984,
+      "min": 5.144907,
+      "max": 7.4059729999999995,
+      "n": 6
+    },
+    "WALLET_proof_ms": {
+      "median": 136.087192,
+      "min": 122.405242,
+      "max": 164.146236,
+      "n": 6
+    },
+    "WALLET_proof_bytes": {
+      "median": 250500.0,
+      "min": 250500,
+      "max": 250500,
+      "n": 6
+    },
+    "WALLET_transaction_peak_rss_kib": {
+      "median": 330108.0,
+      "min": 329860,
+      "max": 330616,
+      "n": 6
+    },
+    "WALLET_transaction_start_rss_kib": {
+      "median": 180826.0,
+      "min": 178644,
+      "max": 180936,
+      "n": 6
+    },
+    "WALLET_transaction_additional_peak_rss_kib": {
+      "median": 149432.0,
+      "min": 149008,
+      "max": 151556,
+      "n": 6
+    },
+    "MEMPOOL_NODE_native_verify_ms": {
+      "median": 6.1565205,
+      "min": 4.978877,
+      "max": 7.260268,
+      "n": 6
+    },
+    "ONE_TIME_setup_wallet_key_setup_ms": {
+      "median": 84.069751,
+      "min": 78.991722,
+      "max": 113.420362,
+      "n": 6
+    },
+    "ONE_TIME_setup_wallet_key_peak_rss_kib": {
+      "median": 180826.0,
+      "min": 178644,
+      "max": 180872,
+      "n": 6
+    }
+  }
+}
