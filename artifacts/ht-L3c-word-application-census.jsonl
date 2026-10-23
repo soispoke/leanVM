@@ -1,0 +1,13 @@
+{"part":"inputs","queries":3144,"rows":4608}
+{"part":"SHAKE and input serialization","queries":1256,"rows":25679}
+{"part":"sampling and compaction","queries":1836,"rows":91218}
+{"part":"bounds","queries":3072,"rows":7680}
+{"part":"modular conversion","queries":96768,"rows":233984}
+{"part":"NTT(s2)","queries":445694,"rows":1012989}
+{"part":"NTT(h)","queries":445694,"rows":1012989}
+{"part":"NTT(c-s1)","queries":445694,"rows":1012989}
+{"part":"pointwise products","queries":46080,"rows":105472}
+{"part":"norm","queries":25605,"rows":56331}
+{"part":"encoding budget","queries":1026,"rows":17413}
+{"part":"canonical application claim","queries":0,"rows":64}
+{"arithmetic_satisfied":true,"permutations":16,"queries":1515869,"rows":3581416}
