@@ -180,6 +180,16 @@ impl PrivateBridge {
         self.verifier_shape().committed_lanes()
     }
 
+    /// A second native hash-row kind under the same arithmetic/index proof and
+    /// joint WHIR commitment. Existing BLAKE2s-only keys are unchanged.
+    pub fn new_mixed(
+        circuit: Circuit,
+        blake_io: Vec<[usize; 18]>,
+        keccak_io: Vec<[usize; 50]>,
+    ) -> Option<crate::keccak_bridge::KeccakBridge> {
+        crate::keccak_bridge::KeccakBridge::new_mixed(circuit, keccak_io, blake_io)
+    }
+
     pub fn new(circuit: Circuit, io_variables: Vec<[usize; 18]>) -> Option<Self> {
         Self::new_inner(circuit, io_variables, false)
     }

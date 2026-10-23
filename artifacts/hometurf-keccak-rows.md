@@ -51,3 +51,9 @@ For the **Keccak-row ML-DSA-44 projection**, I replace the 97-permutation hash w
 ### Falcon with Keccak rows
 
 L3b reports SHAKE as 4,892,898 rows, **56.88%** of the 8,798,175-row bit-level core. The measured native Keccak permutation cost ratio is `(0.0281/8)/(1.4965/8) = 0.0188` against the existing bit-level Keccak application. Replacing only SHAKE rows therefore projects **8,798,175 × (0.4312 + 0.5688×0.0188) = 3,892,000 rows**, **13.4127 × (0.4312 + 0.5688×0.0188) = 5.93 s**, **27.5 × (same factor) = 12.1 GiB RSS**, and **~3.9 million projected committed words**. The modular NTT/product relation, norm checks, decoding and all verifier checks remain unchanged. These are projected wallet numbers; no Falcon Keccak-row proof was implemented.
+
+## Native bridge integration update
+
+Commit `bbdb8e6a` adds `flock::keccak::reduction::KeccakSetup` and a Keccak-specific private bridge. Commit `1ec50125` adds the whole-process measurement helper. The bridge binds all 25 input and 25 output lanes per permutation, places chi products in the packed witness, and reuses the existing zerocheck/lincheck/ring-switch and arithmetic opening machinery. Release tests pass for the six Flock Keccak tests and the malformed-proof bridge test (wrong output, wrong wiring, wrong digest, and tampered proof, all with prover prechecks bypassed).
+
+The follow-up mixed opening adapter is present in the working tree and type-checks through the existing Keccak bridge test, but it has not yet received a production mixed BLAKE2s+Keccak application test or a valid Falcon/ML-DSA end-to-end certificate. The 1 KiB numbers above are therefore the verified Keccak-only application bridge measurement; they should not be interpreted as completed Falcon or ML-DSA measurements.
