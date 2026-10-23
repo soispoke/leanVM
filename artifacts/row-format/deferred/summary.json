@@ -1,0 +1,429 @@
+{
+  "mixed-B-B-carried": {
+    "merge_s": 1.23168118,
+    "native_child_checks_s": 0.007697123,
+    "fold_prover_s": 0.459114725,
+    "record_s": 0.059694988,
+    "outer_prover_s": 0.692217136,
+    "core_verify_ms": 4.099467,
+    "own_merge_matrix_settle_ms": 18.02834,
+    "peak_rss_kib": 1765240,
+    "additional_peak_rss_kib": 977280,
+    "setup_s": 1.9570317849999999,
+    "proof_bytes": 179296,
+    "rows": 580280,
+    "compressions": 12075,
+    "committed_words": 8388608,
+    "carried_claim_bytes": 1968,
+    "fold_proof_bytes": 2080,
+    "merge_range_s": [
+      1.221296019,
+      1.234329378
+    ],
+    "wallets": [
+      {
+        "wallet_s": 0.042286987,
+        "source_witness_s": 0.012649977,
+        "proof_bytes": 126376,
+        "words": 229376,
+        "peak_rss_kib": 461444,
+        "additional_peak_rss_kib": 0
+      },
+      {
+        "wallet_s": 1.003492132,
+        "source_witness_s": 0.3298369,
+        "proof_bytes": 179008,
+        "words": 8388608,
+        "peak_rss_kib": 1371844,
+        "additional_peak_rss_kib": 974124
+      }
+    ],
+    "settlements": [
+      {
+        "app": "shielded",
+        "ms": 2.1103419999999997
+      },
+      {
+        "app": "merge",
+        "ms": 18.982413
+      }
+    ],
+    "root_total_ms": 43.287687000000005,
+    "sparse_shape": {
+      "col_log": 20,
+      "constraints": 585972,
+      "row_log": 20,
+      "witness_f192": 717048
+    },
+    "carried_shapes": [
+      {
+        "col_log": 16,
+        "packed_bytes": 872,
+        "row_log": 16,
+        "statement_bytes": 888
+      },
+      {
+        "col_log": 20,
+        "packed_bytes": 1064,
+        "row_log": 20,
+        "statement_bytes": 1080
+      }
+    ]
+  },
+  "mixed-C-B-carried": {
+    "merge_s": 1.245085782,
+    "native_child_checks_s": 0.007441626,
+    "fold_prover_s": 0.442075845,
+    "record_s": 0.059694735,
+    "outer_prover_s": 0.723743944,
+    "core_verify_ms": 4.141647,
+    "own_merge_matrix_settle_ms": 20.203941999999998,
+    "peak_rss_kib": 1803612,
+    "additional_peak_rss_kib": 964868,
+    "setup_s": 1.875542615,
+    "proof_bytes": 179552,
+    "rows": 580280,
+    "compressions": 12075,
+    "committed_words": 8388608,
+    "carried_claim_bytes": 1968,
+    "fold_proof_bytes": 2080,
+    "merge_range_s": [
+      1.1762358960000001,
+      1.29726095
+    ],
+    "wallets": [
+      {
+        "wallet_s": 0.040765681,
+        "source_witness_s": 0.009064042,
+        "proof_bytes": 125952,
+        "words": 229376,
+        "peak_rss_kib": 467304,
+        "additional_peak_rss_kib": 0
+      },
+      {
+        "wallet_s": 0.954371268,
+        "source_witness_s": 0.31598086,
+        "proof_bytes": 179968,
+        "words": 8388608,
+        "peak_rss_kib": 1386916,
+        "additional_peak_rss_kib": 961704
+      }
+    ],
+    "settlements": [
+      {
+        "app": "shielded",
+        "ms": 2.056984
+      },
+      {
+        "app": "merge",
+        "ms": 19.157796
+      }
+    ],
+    "root_total_ms": 45.511761,
+    "sparse_shape": {
+      "col_log": 20,
+      "constraints": 585972,
+      "row_log": 20,
+      "witness_f192": 717048
+    },
+    "carried_shapes": [
+      {
+        "col_log": 16,
+        "packed_bytes": 872,
+        "row_log": 16,
+        "statement_bytes": 888
+      },
+      {
+        "col_log": 20,
+        "packed_bytes": 1064,
+        "row_log": 20,
+        "statement_bytes": 1080
+      }
+    ]
+  },
+  "same-B-A-carried": {
+    "merge_s": 1.103474001,
+    "native_child_checks_s": 0.006159046,
+    "fold_prover_s": 0.018777423,
+    "record_s": 0.07441284,
+    "outer_prover_s": 0.992731173,
+    "core_verify_ms": 5.938238999999999,
+    "own_merge_matrix_settle_ms": null,
+    "peak_rss_kib": 2305180,
+    "additional_peak_rss_kib": 1345396,
+    "setup_s": 0.521424619,
+    "proof_bytes": 324648,
+    "rows": 533813,
+    "compressions": 10120,
+    "committed_words": 16777216,
+    "carried_claim_bytes": 888,
+    "fold_proof_bytes": 1624,
+    "merge_range_s": [
+      1.100814881,
+      1.170297218
+    ],
+    "wallets": [
+      {
+        "wallet_s": 0.043250279,
+        "source_witness_s": 0.011561694,
+        "proof_bytes": 126376,
+        "words": 229376,
+        "peak_rss_kib": 163160,
+        "additional_peak_rss_kib": 18688
+      },
+      {
+        "wallet_s": 0.037057356,
+        "source_witness_s": 0.009665889,
+        "proof_bytes": 125960,
+        "words": 229376,
+        "peak_rss_kib": 159148,
+        "additional_peak_rss_kib": 13836
+      }
+    ],
+    "settlements": [
+      {
+        "app": "shielded",
+        "ms": 2.420725
+      }
+    ],
+    "root_total_ms": 8.41418,
+    "sparse_shape": null,
+    "carried_shapes": [
+      {
+        "col_log": 16,
+        "packed_bytes": 872,
+        "row_log": 16,
+        "statement_bytes": 888
+      }
+    ]
+  },
+  "same-B-A-direct": {
+    "merge_s": 1.944883219,
+    "native_child_checks_s": 0.00639062,
+    "fold_prover_s": 1.51e-07,
+    "record_s": 0.20858243,
+    "outer_prover_s": 1.689161066,
+    "core_verify_ms": 5.825474,
+    "own_merge_matrix_settle_ms": null,
+    "peak_rss_kib": 4263656,
+    "additional_peak_rss_kib": 2400936,
+    "setup_s": 1.3393758949999999,
+    "proof_bytes": 330440,
+    "rows": 1450017,
+    "compressions": 9991,
+    "committed_words": 29360128,
+    "carried_claim_bytes": 0,
+    "fold_proof_bytes": 1624,
+    "merge_range_s": [
+      1.919530132,
+      2.181591584
+    ],
+    "wallets": [
+      {
+        "wallet_s": 0.043323055,
+        "source_witness_s": 0.01235994,
+        "proof_bytes": 126376,
+        "words": 229376,
+        "peak_rss_kib": 164652,
+        "additional_peak_rss_kib": 18944
+      },
+      {
+        "wallet_s": 0.0364079,
+        "source_witness_s": 0.009285989,
+        "proof_bytes": 125960,
+        "words": 229376,
+        "peak_rss_kib": 160620,
+        "additional_peak_rss_kib": 13864
+      }
+    ],
+    "settlements": [],
+    "root_total_ms": 5.825474,
+    "sparse_shape": null,
+    "carried_shapes": [
+      {
+        "col_log": 16,
+        "packed_bytes": 872,
+        "row_log": 16,
+        "statement_bytes": 888
+      }
+    ]
+  },
+  "same-B-B-carried": {
+    "merge_s": 0.752131691,
+    "native_child_checks_s": 0.006168194,
+    "fold_prover_s": 0.023417832,
+    "record_s": 0.049117507,
+    "outer_prover_s": 0.656841956,
+    "core_verify_ms": 4.126614,
+    "own_merge_matrix_settle_ms": 18.315656,
+    "peak_rss_kib": 1555336,
+    "additional_peak_rss_kib": 984780,
+    "setup_s": 1.712653311,
+    "proof_bytes": 179520,
+    "rows": 533813,
+    "compressions": 10120,
+    "committed_words": 8388608,
+    "carried_claim_bytes": 888,
+    "fold_proof_bytes": 1624,
+    "merge_range_s": [
+      0.745999232,
+      0.774310396
+    ],
+    "wallets": [
+      {
+        "wallet_s": 0.042685975,
+        "source_witness_s": 0.012081095,
+        "proof_bytes": 126376,
+        "words": 229376,
+        "peak_rss_kib": 163232,
+        "additional_peak_rss_kib": 18688
+      },
+      {
+        "wallet_s": 0.042072058,
+        "source_witness_s": 0.01143714,
+        "proof_bytes": 125960,
+        "words": 229376,
+        "peak_rss_kib": 163212,
+        "additional_peak_rss_kib": 17872
+      }
+    ],
+    "settlements": [
+      {
+        "app": "shielded",
+        "ms": 2.155289
+      }
+    ],
+    "root_total_ms": 24.562258,
+    "sparse_shape": {
+      "col_log": 20,
+      "constraints": 566915,
+      "row_log": 20,
+      "witness_f192": 679332
+    },
+    "carried_shapes": [
+      {
+        "col_log": 16,
+        "packed_bytes": 872,
+        "row_log": 16,
+        "statement_bytes": 888
+      }
+    ]
+  },
+  "same-B-B-direct": {
+    "merge_s": 1.245480077,
+    "native_child_checks_s": 0.006283036,
+    "fold_prover_s": 1.47e-07,
+    "record_s": 0.151222464,
+    "outer_prover_s": 1.059001783,
+    "core_verify_ms": 4.439176000000001,
+    "own_merge_matrix_settle_ms": 35.20855400000001,
+    "peak_rss_kib": 2535472,
+    "additional_peak_rss_kib": 1293672,
+    "setup_s": 4.3196152,
+    "proof_bytes": 184512,
+    "rows": 1450017,
+    "compressions": 9991,
+    "committed_words": 12582912,
+    "carried_claim_bytes": 0,
+    "fold_proof_bytes": 1624,
+    "merge_range_s": [
+      1.239847952,
+      1.338568484
+    ],
+    "wallets": [
+      {
+        "wallet_s": 0.043766505,
+        "source_witness_s": 0.012394897,
+        "proof_bytes": 126376,
+        "words": 229376,
+        "peak_rss_kib": 163164,
+        "additional_peak_rss_kib": 18684
+      },
+      {
+        "wallet_s": 0.037261355,
+        "source_witness_s": 0.009758196,
+        "proof_bytes": 125960,
+        "words": 229376,
+        "peak_rss_kib": 159132,
+        "additional_peak_rss_kib": 13892
+      }
+    ],
+    "settlements": [],
+    "root_total_ms": 39.513940000000005,
+    "sparse_shape": {
+      "col_log": 21,
+      "constraints": 1138232,
+      "row_log": 21,
+      "witness_f192": 1250190
+    },
+    "carried_shapes": [
+      {
+        "col_log": 16,
+        "packed_bytes": 872,
+        "row_log": 16,
+        "statement_bytes": 888
+      }
+    ]
+  },
+  "same-C-B-carried": {
+    "merge_s": 0.755066044,
+    "native_child_checks_s": 0.006379454,
+    "fold_prover_s": 0.020652712,
+    "record_s": 0.049560219,
+    "outer_prover_s": 0.670620741,
+    "core_verify_ms": 4.2353950000000005,
+    "own_merge_matrix_settle_ms": 17.910207,
+    "peak_rss_kib": 1541640,
+    "additional_peak_rss_kib": 998836,
+    "setup_s": 1.7338998559999999,
+    "proof_bytes": 178944,
+    "rows": 533813,
+    "compressions": 10120,
+    "committed_words": 8388608,
+    "carried_claim_bytes": 888,
+    "fold_proof_bytes": 1624,
+    "merge_range_s": [
+      0.741292591,
+      0.79844457
+    ],
+    "wallets": [
+      {
+        "wallet_s": 0.041463022,
+        "source_witness_s": 0.011801514,
+        "proof_bytes": 125952,
+        "words": 229376,
+        "peak_rss_kib": 162992,
+        "additional_peak_rss_kib": 18752
+      },
+      {
+        "wallet_s": 0.037797468,
+        "source_witness_s": 0.011003293,
+        "proof_bytes": 125960,
+        "words": 229376,
+        "peak_rss_kib": 162808,
+        "additional_peak_rss_kib": 18016
+      }
+    ],
+    "settlements": [
+      {
+        "app": "shielded",
+        "ms": 2.07244
+      }
+    ],
+    "root_total_ms": 24.079230000000003,
+    "sparse_shape": {
+      "col_log": 20,
+      "constraints": 566915,
+      "row_log": 20,
+      "witness_f192": 679332
+    },
+    "carried_shapes": [
+      {
+        "col_log": 16,
+        "packed_bytes": 872,
+        "row_log": 16,
+        "statement_bytes": 888
+      }
+    ]
+  }
+}

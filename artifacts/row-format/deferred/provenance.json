@@ -1,0 +1,32 @@
+{
+  "binary_sha256": "01203d67880abad27a335325367f8d7ff697c9f0f023178f891416ec1901d8dd",
+  "parent_commit": "23333d62f8d418876b91dad22ff624b331739e8b",
+  "order": [
+    "final-same-B-A-direct-1.json",
+    "final-same-B-B-carried-1.json",
+    "final-same-B-A-carried-1.json",
+    "final-same-B-B-direct-1.json",
+    "final-same-C-B-carried-1.json",
+    "final-mixed-B-B-carried-1.json",
+    "final-mixed-C-B-carried-1.json",
+    "final-mixed-C-B-carried-2.json",
+    "final-mixed-B-B-carried-2.json",
+    "final-same-C-B-carried-2.json",
+    "final-same-B-B-direct-2.json",
+    "final-same-B-A-carried-2.json",
+    "final-same-B-B-carried-2.json",
+    "final-same-B-A-direct-2.json",
+    "final-same-B-A-direct-3.json",
+    "final-same-B-B-carried-3.json",
+    "final-same-B-A-carried-3.json",
+    "final-same-B-B-direct-3.json",
+    "final-same-C-B-carried-3.json",
+    "final-mixed-B-B-carried-3.json",
+    "final-mixed-C-B-carried-3.json"
+  ],
+  "cores": "12-23",
+  "threads": 12,
+  "matrix_prover": "CSR",
+  "root_settlement": "source instruction generator, no CSR evaluation",
+  "fixed_baseline_binary_sha256": "d2b212314a4f17342d6f651a81b69cd16d5f0940f17fa121dc8d5e0110e69763"
+}
