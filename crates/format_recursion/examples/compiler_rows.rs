@@ -1,7 +1,7 @@
-//! Matched compiler-row census and native proving screen, without recursive setup.
+//! Compiler-row census and time to mempool-ready proof for split-closure base certificates.
 mod native_application_support;
 use circuit_suite::Workload;
-use format_recursion::{private_recursion::Setup, private_trace, trace::Op};
+use format_recursion::{closed_recursion::SplitClosedSetup, private_trace, trace::Op};
 use native_application_support::Application;
 use std::{collections::BTreeMap, time::Instant};
 #[global_allocator]
@@ -35,15 +35,26 @@ fn run<W: Workload>(trim: bool, prove: bool) {
     );
     drop(lower);
     if prove {
-        let setup = Setup::new(created.trace.clone()).expect("setup");
-        let words = fiat_shamir::merkle::hash_to_scalars(&created.claim);
+        let setup = SplitClosedSetup::from_program(created.trace.clone()).expect("split setup");
+        // Canonical setup is preprocessing. Include all per-proof witness work,
+        // including instance construction and reference evaluation, in the wallet timer.
+        let witness_start = Instant::now();
+        let witness = app.create(20261024);
+        let witness_ms = witness_start.elapsed().as_secs_f64() * 1000.;
         let start = Instant::now();
-        let proof = setup.prove(&created.trace, &words).expect("proof");
+        let proof = setup.prove_base(&witness.trace).expect("base proof");
+        let bytes = proof.encode().expect("wallet certificate");
         let ms = start.elapsed().as_secs_f64() * 1000.;
-        assert!(setup.verify(&words, &proof));
+        assert_eq!(proof.statement, witness.claim);
+        let verify_start = Instant::now();
+        assert!(setup.verify(&proof));
+        let native_verify_ms = verify_start.elapsed().as_secs_f64() * 1000.;
         println!(
             "{}",
-            serde_json::json!({"workload":W::NAME,"trim":trim,"proof_ms":ms,"verified":true})
+            serde_json::json!({"kind":"mempool_ready_proof","workload":W::NAME,"trim":trim,
+            "witness_ms":witness_ms,"proof_ms":ms,"time_to_mempool_ready_proof_ms":witness_ms+ms,
+            "proof_bytes":bytes.len(),"native_verify_ms":native_verify_ms,
+            "base_shape":format!("{:?}", setup.base_shape()),"cpus":"24-35","threads":12,"verified":true})
         );
     }
 }

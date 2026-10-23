@@ -70,5 +70,75 @@
       "--",
       "--check"
     ]
+  },
+  {
+    "receipt": "C-mempool-build-t1",
+    "ok": true,
+    "sha256": "6e567e26c4c67becb533910851a0357968aef64f81df985a5c4c86e11a662234",
+    "command": [
+      "/usr/bin/taskset",
+      "-c",
+      "24-35",
+      "cargo",
+      "build",
+      "--release",
+      "-p",
+      "format_recursion",
+      "--example",
+      "compiler_rows"
+    ]
+  },
+  {
+    "receipt": "C-mempool-tests-t1",
+    "ok": true,
+    "sha256": "ce866f78a9a201216dc7e529b9655347dade854221b0d53d91763faa94f0a62c",
+    "command": [
+      "/usr/bin/taskset",
+      "-c",
+      "24-35",
+      "cargo",
+      "test",
+      "--release",
+      "-p",
+      "format_recursion",
+      "--example",
+      "compiler_rows"
+    ]
+  },
+  {
+    "receipt": "C-mempool-clippy-t1",
+    "ok": true,
+    "sha256": "ccb11c533023837c3a23aa22015ff0e469d43319a46299d6f01b3a3ae0e7a463",
+    "command": [
+      "/usr/bin/taskset",
+      "-c",
+      "24-35",
+      "cargo",
+      "clippy",
+      "--release",
+      "-p",
+      "format_recursion",
+      "-p",
+      "rec_aggregation",
+      "--all-targets",
+      "--",
+      "-D",
+      "warnings"
+    ]
+  },
+  {
+    "receipt": "C-mempool-fmt-check-t1",
+    "ok": true,
+    "sha256": "63e72e02b67e0a13d172de68598f78288f96359d3e93cb0f4d4485a4dd47cd92",
+    "command": [
+      "/usr/bin/taskset",
+      "-c",
+      "24-35",
+      "cargo",
+      "fmt",
+      "--all",
+      "--",
+      "--check"
+    ]
   }
 ]

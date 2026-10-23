@@ -1,6 +1,23 @@
-# Lane C compiler row screens
+# Lane C: time to mempool-ready proof
 
 Snapshot: `8db3aaa7`, from lane A's dirty tree based on `ab39e040`. No pushes. All builds and measurements use CPUs 24-35, CARGO_BUILD_JOBS=12, RAYON_NUM_THREADS=12, LEANVM_NUM_THREADS=12. Timings are single development screens, not medians. Receipts are `C-*` under the parent workspace, using Yukon `2e90b37`.
+
+## Headline: time to mempool-ready proof
+
+The headline metric is witness construction plus creation and serialization of the one base certificate the wallet sends. Mempool nodes verify it natively, and aggregators merge that certificate as-is. Per-relation setup is preprocessing and is excluded. Witness time includes instance construction and independent reference/Boolean evaluation, not just trace recording. Report certificate bytes and native verification ms alongside this metric. Rank candidate policies by the change in time to mempool-ready proof; arithmetic rows are supporting diagnostics.
+
+<!-- mempool-table-start -->
+|Rank|Workload|Control time to mempool-ready proof ms|Trimmed time to mempool-ready proof ms|Change|Control / trimmed proof bytes|Control / trimmed native verification ms|
+|---:|---|---:|---:|---:|---:|---:|
+|1|keccak256-1KiB|4093.24|1885.49|-2207.75 ms (-53.9%)|346,652 / 324,060|6.14 / 5.76|
+|2|sha256-1kib|3362.06|2064.20|-1297.87 ms (-38.6%)|347,036 / 323,836|5.86 / 5.80|
+|3|falcon512|13713.04|13153.26|-559.77 ms (-4.1%)|384,756 / 384,596|8.65 / 6.27|
+|4|blake2s-64b|363.51|157.42|-206.08 ms (-56.7%)|247,956 / 250,500|7.44 / 7.24|
+|5|blake2s-1kib|1936.10|1834.82|-101.28 ms (-5.2%)|323,356 / 324,124|9.90 / 6.64|
+|6|shielded-transfer|13243.01|13476.35|+233.34 ms (+1.8%)|385,204 / 384,660|6.76 / 6.61|
+| |mpt-storage-proof|unavailable|13704.73|unranked|unavailable / 386,356|unavailable / 6.06|
+
+Ranking is by absolute change in time to mempool-ready proof (most time saved first), within each matched workload pair. It does not compare unlike workload latencies as optimization wins. Rows and backend-only proof timings are supporting evidence. One run per policy, CPUs 24-35, 12 threads, seed 20261024. MPT default already trims and its complete-output proof is infeasible. All feasible matched pairs are complete; all generated wallet certificates passed native verification.
 
 ## Candidate 1: unused full-adder output trimming everywhere
 
@@ -14,7 +31,7 @@ The regression test exhausts all eight assignments of a two-adder circuit, compa
 
 The native application path packs only the 512 public statement bits and hashes a 96-byte relation/statement claim; application hash computations themselves are full-adder circuits. Therefore hash-input packing in this adapter is bounded overhead, not proportional to application hash count. Broad Boolean/range-check removal is not sound without a typing argument; retain free input constraints. Existing private lowering already fuses multiply/add pairs. No adder-chain rewrite is accepted without a separate soundness and equivalence screen.
 
-## Measurements
+## Historical backend-only screen
 
 Matched native Setup proofs, seed 20261023. Control uses complete outputs; candidate trims all outputs outside the public dependency closure. These policy overrides are explicit; default MPT already trims. MPT complete-output control is census only because it exceeds the backend cap.
 
@@ -32,9 +49,9 @@ Full machine-readable gate census, omitted sums/carries (including padded/dead r
 
 ## Decision and integration guidance
 
-Do not enable trimming globally from this screen. BLAKE2s 1 KiB and SHA256 1 KiB lost proving time despite lower arithmetic row counts. Keccak and shielded showed the strongest matched wins; Falcon showed a smaller win; BLAKE2s 64 B was nearly flat. Any timing conclusion remains limited to one development run. MPT already uses lane A's trimmed policy and has no feasible complete-output proof control.
+Rank rollout candidates using the headline time to mempool-ready proof table. The historical backend-only screen is not the decision metric: its BLAKE2s 1 KiB and SHA256 1 KiB regressions did not carry over to the actual wallet-certificate runs. Do not enable trimming globally from one development screen. Account for proof-byte changes alongside latency wins, and obtain the requested sign-off for shape changes. MPT already uses lane A's trimmed policy and has no feasible complete-output proof control.
 
-The candidate is exposed only through the research example's `--trim` flag. The existing `Application::new()` policy is unchanged, so existing default trace shapes and certificate formats are unchanged by this lane. A default policy change for Keccak/shielded, or for all relations, explicitly changes those relations' circuit shapes and requires the requested user sign-off. No new certificate byte-size claim is made for the research override.
+The candidate is exposed only through the research example's `--trim` flag. The existing `Application::new()` policy is unchanged, so existing default trace shapes and certificate formats are unchanged by this lane. A default policy change for Keccak/shielded, or for all relations, explicitly changes those relations' circuit shapes and requires the requested user sign-off. Actual encoded wallet-certificate bytes for both policies are reported in the headline table. Native verification measures the decoded certificate check; transport decoding is excluded.
 
 Reproduce a matched pair with the pinned runner and the same CPU/thread environment: build `cargo build --release -p format_recursion --example compiler_rows`, then run `target/release/examples/compiler_rows keccak1k --prove` and `target/release/examples/compiler_rows keccak1k --trim --prove`. Workload names are blake64, blake1k, sha1k, keccak1k, shielded, falcon and mpt. For MPT omit `--prove` from the complete-output control. `artifacts/laneC-census.json` preserves every measured gate count and proof timing with its receipt name.
 
@@ -48,3 +65,13 @@ All frozen release receipts passed on CPUs 24-35 with 12 threads: `C-release-gat
 The enhanced compiler regression checks that a trimmed proof is rejected by a complete-output setup and that the trimmed setup rejects a complete-output trace, even though both policies produce the same application claim. It also verifies fixed program identity across all eight input assignments for both policies. Exact receipt hashes and gate commands are preserved in `artifacts/laneC-gates.json`.
 
 Lane A: cherry-pick only the compiler screen commit on top of your current tree, not snapshot `8db3aaa7`. This lane changes only native application support, adds compiler_rows, and records artifacts. It does not touch prover/PCS code, recursive merge code, or production policy defaults. No push was made.
+
+
+## Wallet metric reporting update
+
+`compiler_rows --prove` now measures the split-closure base certificate, with per-relation setup excluded. It measures the full `Application::create` call for the wallet witness, then `prove_base` plus certificate serialization, and reports their sum as time to mempool-ready proof. Mempool nodes verify this certificate natively, and aggregators merge it as-is. Verification timing is recorded separately. `artifacts/laneC-mempool.json` contains all witness/proof components, certificate bytes, native verification times and base shapes from the passing `C-mempool-*` receipts. The earlier backend-only screen remains preserved as historical compiler evidence, without using it to rank rollout candidates.
+
+Using time to mempool-ready proof, the strongest absolute savings were Keccak (2,207.75 ms) and SHA256 (1,297.87 ms), followed by Falcon (559.77 ms), BLAKE2s 64 B (206.08 ms), and BLAKE2s 1 KiB (101.28 ms). Shielded regressed by 233.34 ms. These are single-run development screens, not robust estimates. Both BLAKE2s candidates increased certificate bytes. Production defaults remain unchanged; default BLAKE2s 64 B measured 247,956 B, matching the required baseline. MPT already uses the trimmed policy, so it has no candidate-versus-default improvement claim.
+
+
+The reporting-only harness update passed `C-mempool-tests-t1` (release compiler_rows example tests), `C-mempool-clippy-t1` (both packages, all targets, `-D warnings`), and `C-mempool-fmt-check-t1`. The previous full library/example release gate remains preserved; library and compiler-policy implementations were not changed by the reporting update. No pushes.
