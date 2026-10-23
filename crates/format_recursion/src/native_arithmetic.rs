@@ -121,6 +121,19 @@ impl Index {
             self.circuit.public.len(),
         )
     }
+    /// Nonzeros if these padded native rows are written literally as x*y=(z+u).
+    /// The zero anchor contributes no coefficient and repeated C entries cancel.
+    pub fn r1cs_shadow_nonzeros(&self) -> [usize; 3] {
+        let mut counts = [0; 3];
+        for &[x, y, u, z] in &self.rows {
+            counts[0] += usize::from(x != 0);
+            counts[1] += usize::from(y != 0);
+            if u != z {
+                counts[2] += usize::from(u != 0) + usize::from(z != 0);
+            }
+        }
+        counts
+    }
     fn columns(&self, values: &[F192]) -> [Vec<F192>; 4] {
         assert_eq!(values.len(), self.circuit.variables);
         std::array::from_fn(|role| parallel::map_collect(self.rows.len(), |row| values[self.rows[row][role]]))

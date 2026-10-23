@@ -201,6 +201,11 @@ impl Builder {
     pub fn setup(&self) -> Option<PrivateBridge> {
         PrivateBridge::new(self.circuit.clone(), self.connectors.clone())
     }
+
+    /// Export the identical arithmetic graph and hash-port identities for format experiments.
+    pub fn export_circuit(&self) -> (Circuit, Vec<[usize; 18]>) {
+        (self.circuit.clone(), self.connectors.clone())
+    }
 }
 
 #[cfg(test)]

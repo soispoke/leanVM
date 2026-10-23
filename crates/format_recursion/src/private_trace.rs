@@ -20,6 +20,8 @@ pub struct Lowered {
     /// The verifier fixes these anchors and constants before the original outputs.
     pub fixed_public: Vec<F192>,
     pub original_public_len: usize,
+    /// Operation rows and compression calls attributed to the recorder's sections.
+    pub stage_census: Vec<(String, usize, usize)>,
     schedule: Vec<WitnessStep>,
 }
 
@@ -984,7 +986,15 @@ fn lower_analyzed(program: &Trace, witness: &Trace, analysis: &Analysis) -> Opti
         compressions: Vec::new(),
     };
     c.values.extend(witness.nodes.iter().map(|n| n.value));
+    let mut stage_census = Vec::new();
+    let mut stage = (String::from("unsectioned"), 0usize, 0usize);
+    let mut section = 0;
     for (i, node) in program.nodes.iter().enumerate() {
+        while section < program.sections.len() && program.sections[section].1 == i {
+            stage_census.push((stage.0, c.rows.len() - stage.1, c.compressions.len() - stage.2));
+            stage = (program.sections[section].0.clone(), c.rows.len(), c.compressions.len());
+            section += 1;
+        }
         let source = |s: S| (s.0 < i).then_some(s.0 + 2);
         let z = i + 2;
         match &node.op {
@@ -1102,6 +1112,8 @@ fn lower_analyzed(program: &Trace, witness: &Trace, analysis: &Analysis) -> Opti
             }
         }
     }
+    stage_census.push((stage.0, c.rows.len() - stage.1, c.compressions.len() - stage.2));
+    let check_start = c.rows.len();
     for &(a, b) in &program.checks {
         if a.0 >= program.nodes.len() || b.0 >= program.nodes.len() {
             return None;
@@ -1109,6 +1121,11 @@ fn lower_analyzed(program: &Trace, witness: &Trace, analysis: &Analysis) -> Opti
         c.equal(a.0 + 2, b.0 + 2);
     }
     c.constrain_unused_limbs();
+    stage_census.push((
+        String::from("final-equalities-and-unused-limbs"),
+        c.rows.len() - check_start,
+        0,
+    ));
     let fixed_public = c.public.iter().map(|&i| c.values[i]).collect();
     for s in &program.public {
         if s.0 >= program.nodes.len() {
@@ -1128,6 +1145,7 @@ fn lower_analyzed(program: &Trace, witness: &Trace, analysis: &Analysis) -> Opti
         compressions: c.compressions,
         fixed_public,
         original_public_len: program.public.len(),
+        stage_census,
     })
 }
 
