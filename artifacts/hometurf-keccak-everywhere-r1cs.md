@@ -1,39 +1,78 @@
-# L6 Keccak everywhere, work in progress
+# Keccak everywhere in leanR1CS — L6
 
-No Keccak-everywhere result or sub-second merge verdict is established yet. No push performed.
+Status: paired measurements complete. Local branch only; no push performed. See the final validation results below.
 
-Worktree `P/ht-L6`, branch `hometurf/L6`, based on L4k `796cf1b0`. Published ref was `1f50df0a`; L2r prerequisite range from the common ancestor through `bc1f691a` was required because L4k lacked row_format, then requested `bc1f691a..6fe04622` was cherry-picked. Current imported tip `0321bfe2`.
+**Verdict: Keccak everywhere does not fit the one-second merge interval in this implementation.** Final ABAB medians are **3.590 s** for the first mixed merge and **4.494 s** for the depth-2 mixed node, versus **0.744 s** and **1.002 s** for the current BLAKE2s controls (4.83× and 4.49×). Both Keccak levels commit four times as many words. First/node RSS rises from 1,534,932/1,907,404 KiB to 5,194,844/6,028,958 KiB. Proofs grow about 14%; complete root settlement rises from 13.01/22.38 ms to 27.22/43.61 ms. Wallet slowdowns range from 1.59× to 2.78× while Keccak wallet proofs are slightly smaller. The original unoptimized Keccak screens were 3.251/6.789 s, but those single runs are not paired timing denominators.
 
-Shared statement definition: `P/artifacts/keccak-statements.md`. Shielded Keccak implementation matches its independent RustCrypto reference. Native application requires 56 permutations. Boolean circuit census: 6,744,762 rows. Native lowering: 348,049 arithmetic rows, 524,288 padded rows, 6,422,528 committed F64 words, 293,824 proof bytes.
+## Configuration and statements
 
-Initial BLAKE2s-protocol control observations for shielded-Keccak: 0.429114669 s then 0.476379927 s. Second fresh process peak RSS 982,864 KiB; whole process 30.539849096 s, mostly fixed circuit construction/identity setup excluded from wallet timer. These are exploratory samples, not ABAB medians. Timing uses cores 12-23 and both thread knobs set to 12. Builds/tests use cores 48-63 with CARGO_BUILD_JOBS=4. Raw stdout/receipt are `P/artifacts/L6-shielded-control.*`.
+`format_recursion/keccak-protocol` selects Ethereum Keccak-256 (rate 136 bytes, suffix 0x01/final 0x80), native Keccak-f[1600] rows, Keccak Fiat–Shamir hashing, PCS Merkle hashing, application identities and claims, matrix/source keys and recursive hashes. Grinding is retained, including nonce search, predicate and absorption. This does not select the existing EVM no-grinding transcript. Production security targets remain 128 bits, joint inverse rate 4, separate index inverse rate 16, and production query-count derivation. No security parameters were reduced.
 
-Remaining: finish shared application vectors, native Merkle edition, protocol transcript/Merkle/identity/claim/recursive-verifier switch with grinding retained, zero BLAKE2s rows, security parameter audit, five wallets and both mixed merges/root settlement in three ABAB rounds, lever screens if needed, verifier-level adversarial probes, final release checks and local commits. Current protocol remains BLAKE2s, and native Keccak application results must not be described as Keccak everywhere.
+BLAKE-only bridge constructors and mixed BLAKE schedules are rejected in this configuration. The sparse adapter has 50 input/output lane ports, Klog16, native Keccak reduction and zero-input native padding. There are no dummy BLAKE rows for typing. Default builds retain the BLAKE backend as the comparison control. Legacy BLAKE application/bridge fixtures run under that default configuration; their Keccak counterparts have separate native proof, compiler and sparse regression tests.
 
-Standalone control proof verification succeeds in 11.369144 ms; verifier whole-process RSS 598,972 KiB. Native sponge passes RustCrypto reference checks at word lengths 0,1,4,8,16,17,18,33,34,128; exact-rate and multi-rate padding are covered.
+The shared statement specification is `artifacts/keccak-statements.md`. Shielded uses the same 2-in/2-out, depth-20 layouts with all application hashes (including fixture derivation) replaced. Its seed-20261024 digest is `599943d4ea06d97bbd20b602add63200e167a17a72d9775d91d33fa3eb72e4d3`, validity 1, and 56 application permutations. Merkle retains the original direction convention: bit 0 places the sibling left, bit 1 places the current node left. Its corrected seed-1 depth-16 root is `1357b0fe3e7707641fdc297b6e3b8810a9d98be16f1474446ce61974bb7d4327`; it uses 17 permutations including the leaf hash. The earlier opposite-direction exploratory Merkle result is withdrawn. Falcon-512, Keccak-1KiB and MPT statements are unchanged.
 
-Initial Merkle-Keccak application-only bridge control: 0.03449795 s wallet, 75,152 KiB wait4 RSS (in-process VmHWM 76,660 KiB, differing accounting), 194,584 proof bytes, 9.55529 ms separate verification, 690 arithmetic rows, 131,072 committed words and 17 permutations. Root seed 1 `8d1c538daaf507f9783e9cd7a2875ae611664056ac8d05b30bad55d0359dc2a9`. This raw-root bridge omits the canonical application-identity claim envelope used by shielded; it is a lower-bound exploratory control and must be upgraded before the requested paired wallet comparison.
+## Measurement method
 
-## Keccak protocol and compiler continuation
+All timed runs use `taskset -c 12-23 env RAYON_NUM_THREADS=12 LEANVM_NUM_THREADS=12`. Builds/tests use cores 48–63 and four build jobs. ABAB repeated three times means six samples per variant. Proofs are independently verified in a separate process for each wallet sample. RSS is whole-process `wait4` peak RSS, including setup, whereas wallet time excludes key setup and includes fresh witness generation and proving. Merge time includes child admission, claim folding, recording and outer proof generation; wrapper setup and existing child proofs are excluded. Complete root time includes native verification and settlement of every active carried claim plus the fresh wrapper claim, without setup. Binary hashes and exact commands are saved in provenance/receipts. JSON lines are appended to `artifacts/hometurf-12t.jsonl` with system r1cs, lane L6.
 
-The `format_recursion/keccak-protocol` feature now selects Keccak-256 for host Fiat-Shamir chain steps, including the existing grinding predicate and deterministic nonce search; it does not use the EVM no-grinding mode. Domain tags, scalar layouts, nonce absorption and query counts are unchanged. WHIR committer and verifier use the same Keccak byte hash, including exact zero-prefix continuation. Application identities, source and matrix keys, claim digests and native Builder claim envelopes use the selected protocol hash. The production rate remains inverse rate 4 (log inverse rate 2) for the joint witness; the separate fixed index retains its existing rate profile. Tests: Fiat-Shamir 9 passed, PCS 44 passed / 1 ignored, primitives 30 passed.
+For wallet A/B, both variants prove the same native Keccak application. A uses BLAKE2s protocol/claim hashing; B uses Keccak protocol/claim hashing. Canonical envelopes therefore change intentionally. The Merkle raw-root wallet uses its original application root envelope, separate from the canonical identity envelope used for the other four workloads. Merge A uses the original BLAKE shielded/Merkle apps and BLAKE protocol; merge B uses their specified Keccak editions and Keccak protocol. Merge ratios consequently include the requested application hash substitution as well as protocol hashing.
 
-Initial shielded-Keccak with Keccak protocol: wallet 0.774857777 s, whole-process RSS 980,996 KiB, proof 286,896 bytes, standalone verification 11.537853 ms, 348,067 arithmetic rows, 6,422,528 committed words, 57 total native permutations (56 application + 1 canonical claim envelope), no BLAKE family in this wallet bridge. This is one screen, not a paired or median cost claim. Raw files are `L6-shielded-keccak-protocol-screen.*` and `L6-shielded-keccak-protocol-verify.*` in the shared artifacts directory.
+## Wallet ABAB medians
 
-The trace compiler now lowers Keccak hash operations and unused-limb range checks to native Keccak permutation I/O, with a setup-owned fresh-witness schedule. A targeted release regression proves inputs of lengths 0,1,64,135,136,137,272 bytes, verifies honest proofs and rejects wrong context, modified proof streams and forged permutation witnesses submitted using the prover entry point without prechecks. Lowered compression arrays are asserted empty. This is compiler and bridge evidence, not a completed sparse-tree proof.
+Values in paired cells are A / B (BLAKE protocol / Keccak protocol). Application permutations exclude the envelope: B adds one native Keccak claim permutation for the four canonical-envelope workloads; A instead uses BLAKE claim compressions. Merkle has 17 total permutations and no extra canonical claim hash.
 
-Remaining sparse backend work: replace the 18-slot BLAKE ports by 50 Keccak I/O lanes in R1cs/Generator/Source, adapt the sparse Spartan hash reduction and symbolic recursive reduction, and connect native Keccak app sources. Existing sparse merge code is still the BLAKE relation and is not a valid Keccak candidate. No merge or complete-root Keccak number is claimed yet. Correct the exploratory Merkle probe before paired runs: the existing L2r path selector puts sibling left at bit zero; the draft spec and probe initially used the opposite convention. The original Merkle datapoint/vector is excluded from final paired comparisons.
+| Wallet | Prove s A / B | B/A | RSS KiB A / B | Proof bytes A / B | Verify ms A / B |
+|---|---:|---:|---:|---:|---:|
+| Shielded-Keccak | 0.507994 / 0.809183 | 1.593 | 982922 / 980804 | 293824 / 286896 | 11.271 / 11.019 |
+| Merkle-Keccak | 0.032589 / 0.090470 | 2.776 | 76720 / 76674 | 194424 / 193824 | 10.560 / 10.334 |
+| Falcon-512 | 6.067141 / 10.527342 | 1.735 | 14051056 / 14051744 | 364760 / 361720 | 11.326 / 12.087 |
+| Keccak-1KiB | 0.078477 / 0.156304 | 1.992 | 213024 / 210792 | 245136 / 238992 | 11.507 / 11.099 |
+| MPT | 1.541334 / 2.577743 | 1.672 | 3573670 / 3572454 | 328504 / 324072 | 10.674 / 10.789 |
 
-Corrected Merkle-Keccak seed-1 screen under Keccak protocol: 0.079635426 s, wait4 RSS 72,708 KiB (in-process VmHWM 74,400 KiB), 193,824 proof bytes, 11.608305 ms verify, 690 rows, 131,072 words, 17 permutations. Root `1357b0fe3e7707641fdc297b6e3b8810a9d98be16f1474446ce61974bb7d4327`. This uses a raw-root envelope and is excluded from final paired wallet comparisons.
+| Wallet | Arithmetic rows A / B | Committed F64 words A / B | Application permutations |
+|---|---:|---:|---:|
+| shielded | 348049 / 348067 | 6422528 / 6422528 | 56 |
+| merkle | 690 / 690 | 131072 / 131072 | 17 |
+| falcon | 6077055 / 6077073 | 102760448 / 102760448 | 16 |
+| keccak | 54410 / 54428 | 851968 / 802816 | 8 |
+| mpt | 1223960 / 1223978 | 25690112 / 25690112 | 62 |
 
-## Sparse mixed merge screens
+## Mixed merge ABAB medians
 
-The first-level mixed shielded + Merkle Keccak-everywhere screen measured 3.251377043 s merge, 3.06471009 s outer proving, 5,184,220 KiB whole-process RSS, 205,808 proof bytes, 1,130,188 compiler rows, 33,554,432 committed words, 12,115 permutations, 13.588371 ms core verification and 16.578863 ms own matrix settlement. The sparse matrix has 1,401,205 constraints. This is one screen, not an ABAB median.
+B includes the safe compiler optimization: algebraic zero/identical-add folding and permutation-prefix folding only when every input is pinned by the fixed key. Private zero-valued inputs are never treated as constants. Fresh-witness proof and wrong-output regressions cover this distinction. The preserved initial candidate remains available for the before/after screen.
 
-The depth-2 mixed node with 22/22 zero-padded wrapper dimensions measured 6.789128085 s merge, 5.905322239 s outer proving, 10,052,544 KiB whole-process RSS, 213,616 proof bytes, 1,336,155 compiler rows, 67,108,864 committed words, 17,777 permutations, 9.314651 ms core verification, and 43.50459 ms complete root settlement. First-level complete root settlement was 23.008608 ms. Individual carried settlements were 1.599338 ms shielded, 0.270558 ms Merkle and 15.742245 ms first wrapper. The node executable passes its direct verifier rejection probes for false carried evaluation, substituted key, omitted/duplicated claims, wrong child kind, swapped children, tampered child proof and tampered root proof.
+| Level / variant | Merge s | RSS KiB | Proof bytes | Core verify ms | Complete root ms | Rows | Words | Native calls |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|
+| first A | 0.743694 | 1534932 | 180160 | 4.288 | 13.006 | 516284 | 8388608 | 0 Keccak / 9620 BLAKE |
+| first B | 3.590186 | 5194844 | 206192 | 10.004 | 27.219 | 999496 | 33554432 | 9808 Keccak / 0 BLAKE |
+| node A | 1.001830 | 1907404 | 180064 | 4.169 | 22.380 | 634272 | 8388608 | 0 Keccak / 14263 BLAKE |
+| node B | 4.494221 | 6028958 | 205552 | 9.107 | 43.607 | 1139668 | 33554432 | 14289 Keccak / 0 BLAKE |
 
-The symbolic Keccak matrix walk matches native forward evaluation. Sparse Spartan R1CS/CCS proofs and rejection checks pass. The carried-first-level regression passes with the Keccak sparse wrapper and complete trusted-generator settlement. The zero-padding test matches generated and direct sparse matrix evaluations and verifies/settles its padded proof. Timed screens use cores 12-23 and both 12-thread knobs; builds/tests use cores 48-63 and four build jobs. Raw screens are L6-first-mixed-keccak-screen.* and L6-node-keccak-padded-screen.* in shared artifacts.
+## Optimization screens
 
-The initial verdict is above 1 s for both tested merge levels. The historical BLAKE2s depth-2 reference is 0.942-0.973 s with 8,388,608 words; it is context, not a paired timing denominator. Current Keccak depth-2 uses eight times those words. Paired comparisons and the requested ABAB medians remain outstanding. The 136-byte Keccak rate is already active. Arity/leaf packing, reduced transcript calls, and the cheaper connector layout still require actual screens; no security parameters have changed.
+- **Rate 136:** active in all Keccak results. For 64-byte Merkle pairs it still takes one call. Four 32-byte children fit in a 128-byte preimage and one call. This preserves Keccak-256 capacity; rate 168 was not substituted.
+- **Arity and leaf packing:** the exact layout screen is `L6-lever-layout-screen.json`. For 65,536 leaves, arity 2 needs 16 path calls and 512 sibling bytes; arity 4 needs 8 calls and 768 sibling bytes; arity 16 returns to 16 calls and needs 1,920 sibling bytes. Leaves of 32/128/256/512/1024 bytes take 1/1/2/4/8 calls. These counts alone do not change PCS query semantics or prove a merge speedup. The isolated native relation screen tests arities 2/4 and 32/128-byte leaves, independent Keccak node digests, honest proofs and wrong-root rejection; receipts are under `L6-layout-screen/`.
+- **Reduced transcript calls:** optional `keccak-batched-transcript` buffers full 24-byte scalars before a challenge and hashes state, scalar count, scalars and terminal role. Grinding flushes pending absorbs and uses the original nonce predicate/search and absorption. It is a separate protocol encoding, not enabled in the main ABAB B variant. Independent RustCrypto encoding/order checks and sparse host/recorder tests cover it. Timing screens are under `L6-followup/{first,node}-batched.*`.
+- **Connector layout:** current dense bridge needs 17 rows per slot for 50 lanes; the BLAKE bridge needs 6 for 18 lanes. A direct six-row substitution would omit lanes and is not valid. Packed-limb binding would need a new connector reduction. The sparse path instead materializes 50 lane columns. The optimistic dense subtraction saves 180,224 rows at 16,384 slots or 360,448 at 32,768 slots, but does not reduce Keccak's packed q table (16,777,216 or 33,554,432 words). This is a metadata screen, not an implemented six-row Keccak prover. Explicit 22/22 wrapper padding also remains in the primary depth-2 run. It is not evidence of reusable node-on-node key closure.
 
-The Keccak sparse schema uses common 22/22 wrapper dimensions because unequal inactive wrapper dimensions failed the existing structural equality checks. Explicit zero padding keeps all constraints. First wrapper commitment is 33,554,432 words; node commitment is 67,108,864 words, so identical first/node layouts are not claimed. Reusable node-on-node key closure remains unverified. The legacy BLAKE fixed-gate wrapper is still unavailable in the Keccak configuration and rejects unsupported Keccak obligations instead of dropping them.
+### Measured lever results
+
+| Screen | Merge/prove s | RSS KiB | Proof bytes | Verify/root ms | Rows | Words | Keccak permutations |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| first batched transcript | 4.029661 | 5200184 | 206192 | 28.454 root | 997307 | 33554432 | 9103 |
+| node batched transcript | 4.895078 | 5956116 | 205360 | 57.644 root | 1136904 | 33554432 | 13447 |
+| isolated arity 2, leaf 32 B | 0.106608 | 74444 | 195752 | 8.174 verify | 786 | 131072 | 17 |
+| isolated arity 4, leaf 32 B | 0.090160 | 76280 | 187224 | 8.086 verify | 682 | 114688 | 9 |
+| isolated arity 2, leaf 128 B | 0.092947 | 79140 | 195808 | 8.006 verify | 786 | 131072 | 17 |
+| isolated arity 4, leaf 128 B | 0.081318 | 74664 | 186056 | 7.812 verify | 682 | 114688 | 9 |
+
+These lever timings are single screens, not ABAB medians. Batching reduced calls by 7.2%/5.9% at first/node but crossed no commitment-size boundary and demonstrated no timing improvement. Arity/packing prototypes are isolated relations; they are not a claim that changing the production PCS preserves its proof format, query semantics or security analysis. The six-row connector result is a layout/feasibility screen only; a packed-limb connector implementation and a reworked PCS arity remain future work. No screened variant demonstrated a merge below one second.
+
+## Verification and limits
+
+The native compiler covers lengths 0,1,64,135,136,137,272, fresh witnesses, exact-rate padding, wrong context, changed proof stream and changed Merkle path. A false permutation is proved through the no-precheck prover entry and rejected by the verifier. Sparse tests bind products, hash ports, public outputs, generator/matrix equality, carried values, application identities and zero padding. Complete tree root verification rejects false carried evaluations, substituted keys, omitted/duplicated claims, wrong child kind, swapped children and tampered child/root proofs. Claims are settled against trusted generators; rejecting only a prover admission API is not counted as verifier evidence.
+
+The first and node wrappers share dimension bounds but can have different port/block layouts. This report establishes the measured depth-2 mixed composition, not arbitrary repeated node-key closure. It does not claim a new formal security proof, zero knowledge or EVM equivalence. The optional batching and arity/packing screens are distinct from the measured production-profile comparison.
+
+Evidence: `L6-wallet-abab/`, `L6-merge-abab/`, `L6-followup/`, `L6-layout-screen/`, `L6-protocol-components.log`, `L6-final-{keccak,baseline,batched}-tests.log`, `L6-final-batched-fs-tests.log`, `L6-final-{baseline,keccak}-clippy.log`, `L6-final-batched-clippy.log`, `L6-fmt-check.log`. Earlier failed logs are retained as development history and are superseded only by successful final gates.
