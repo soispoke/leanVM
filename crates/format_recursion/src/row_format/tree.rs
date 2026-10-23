@@ -176,10 +176,7 @@ pub fn prove(
             let (setup, g) = registry[slot].expect("active application generator");
             assert_eq!(setup.key, input.claim.app_key);
             assert_eq!(schema.shapes[slot], (g.row_log, g.col_log));
-            let u = eq_table(&input.claim.row_point)
-                .into_iter()
-                .map(|v| v * power)
-                .collect();
+            let u = fold::weighted_eq(&input.claim.row_point, power);
             let poly = g.row_product(&eq_table(&input.claim.col_point), theta);
             pairs.push((u, poly));
             let v = input.claim.matrix_values;
@@ -205,11 +202,10 @@ pub fn prove(
                 .enumerate()
                 .filter(|(i, c)| routes[*i] == slot && c.active)
             {
-                let w = eq_table(&input.claim.col_point);
-                let scale = pairs[i].0[0];
+                let w = fold::weighted_eq(&input.claim.col_point, pairs[i].0[0]);
                 parallel::chunks_mut(&mut weight, 4096, |chunk, out| {
                     for (k, v) in out.iter_mut().enumerate() {
-                        *v += scale * w[chunk * 4096 + k];
+                        *v += w[chunk * 4096 + k];
                     }
                 });
             }

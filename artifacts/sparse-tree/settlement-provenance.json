@@ -1,0 +1,38 @@
+{
+  "parent": "b19c88bf37f745d1af501b12dbbe656cbac185d3",
+  "cpus": "12-23",
+  "threads": 12,
+  "binaries": {
+    "/tmp/L2r-weightedcols-tree": "96518a57e54909858b0b515038e8f2aac611a1fb4bfece3e8ba22ddb2edb55d6",
+    "/tmp/L2r-weightedcols-merge": "7ddd4e75cbe58719925d7c8a6e452993fc4e780e68bd2a58a147eae3eb364e63",
+    "/tmp/L2r-bc1f691a-merge": "b7d2a81243591e8ee482f268066e17828298a6362f09ecd2905496f3a0853313"
+  },
+  "node_order": [
+    "same-1",
+    "mixed-1",
+    "mixed-2",
+    "same-2",
+    "same-3",
+    "mixed-3"
+  ],
+  "paired_order": [
+    "baseline-same-1",
+    "candidate-same-1",
+    "baseline-mixed-1",
+    "candidate-mixed-1",
+    "baseline-mixed-2",
+    "candidate-mixed-2",
+    "baseline-same-2",
+    "candidate-same-2",
+    "baseline-same-3",
+    "candidate-same-3",
+    "baseline-mixed-3",
+    "candidate-mixed-3"
+  ],
+  "notes": [
+    "Earlier final-paired-weighted files used /tmp/L2r-weighted-merge, not the fastcoeff binary.",
+    "constantb was exploratory and reverted; weightedcols is selected.",
+    "Node schema supports shielded and Merkle plus two wrapper shapes.",
+    "Host latency variation is substantial; separate groups are not paired comparisons."
+  ]
+}

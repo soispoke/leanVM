@@ -71,3 +71,40 @@ Identity count alone does not determine cost: the two three-identity rows contai
 The later node-key reuse regression proves another composition with the same node setup and an active node-wrapper slot; it uses two different node proofs built from reordered first-level children, and shares leaves between those nodes. It is a reuse test, not an independent eight-leaf benchmark. The reported depth-2 timings use four independent fresh leaves and two different first-level child proofs.
 
 Direct rejection probes include replacing an omitted slot with canonical inactive zero data, removing a slot structurally, and duplicating an entire same-shape wrapper claim. These go to row replay or native root verification, bypassing the node prover's admission code. They do not establish a general soundness theorem. Changes are committed locally on `hometurf/L2r`; no push was performed. The full goal remains active: obtain a repeatable sub-second node median and bring the large wrapper settlements to 10 ms or less. The fixed-shape, two-real-application scope should be reviewed before claiming general mixed-workload recursion.
+
+## Settlement continuation: generated weights and shared bindings
+
+The selected candidate factors row equality weights into low/high tables, accumulates unreduced field products across row blocks, and computes column equality weights on demand during source evaluation. It no longer materializes a padded column equality table for native root settlement. Trusted generator compilation shares identical canonical source bindings (mixed first wrapper 476,118 bindings, node 596,044). Native coefficient multiplication uses exact base-field paths where applicable. Fold row and column weights are built with their scalar seed, avoiding a second full scaling pass; sumcheck accumulates unreduced products before reducing. These changes preserve the node key, rows, words and protocol.
+
+All numbers below are medians of three fresh processes on cores 12-23, 12 threads, alternating same/mixed then mixed/same then same/mixed. The selected binary hashes and exact order are in `artifacts/sparse-tree/settlement-provenance.json`. Raw receipts and intermediate exploratory groups are preserved; independent groups are not paired comparisons.
+
+| Selected weighted-column candidate | Same | Mixed shielded + Merkle |
+|---|---:|---:|
+| Node merge s | 1.0922 | 1.0269 |
+| Matrix fold ms | 255.19 | 221.07 |
+| Outer prover s | 0.7347 | 0.7198 |
+| Rows | 634,272 | 634,272 |
+| Committed F64 words | 8,388,608 | 8,388,608 |
+| Proof bytes | 179,488 | 180,064 |
+| Active carried bytes | 1,968 | 2,664 |
+| Own node settlement ms | 7.42 | 8.07 |
+| First-wrapper settlement ms | 7.61 | 8.17 |
+| Shielded settlement ms | 0.69 | 0.77 |
+| Merkle settlement ms | — | 0.17 |
+| Complete depth-2 root ms | 19.81 | 23.23 |
+
+| Root workload | Distinct matrix identities, including wrappers | Complete acceptance ms |
+|---|---:|---:|
+| Shielded wallet | 1 | 3.97 |
+| First-level shielded + shielded | 2 | 10.94 |
+| First-level shielded + Merkle | 3 | 11.31 |
+| Depth-2 shielded | 3 | 19.81 |
+| Depth-2 mixed | 4 | 23.23 |
+
+Root acceptance includes the native outer verifier, fresh own matrix claim and every active carried claim. Individual per-identity settlement medians are now below 10 ms, including both wrapper identities. This is a median result, not a worst-case guarantee: noisy individual samples exceeded 10 ms. The fixed schema still supports two real applications plus two wrapper shapes; no third real application or unrestricted-depth identity deduplication is claimed.
+
+A fresh paired ABABAB check against the detached `bc1f691a` baseline binary measured same-app **1.2461 s baseline versus 1.1655 s candidate**, outer **1.1285 versus 1.0515 s**. There is no same-app regression in this paired group. Mixed shielded + merge-app measured **1.8361 versus 1.8309 s**, with matrix folding **485.67 versus 248.02 ms**. Outer proving was **1.2319 versus 1.4762 s** in this mixed group; high host variation prevents attributing the full-merge difference to the fold optimization. Earlier paired 0.760/0.770 s evidence and the shared-outer fix remain documented above. These slower absolute readings must not replace or be compared unpaired with historical 0.752 s.
+
+The intermediate on-demand group measured node same/mixed **1.0451/1.0101 s**, own settlement **9.72/7.89 ms**. The preceding fast-coefficient group measured **1.0137/1.0423 s**, own **11.94/11.13 ms**. The attempted constant-B branch specialization did not demonstrate improvement and was reverted. The final selected candidate retains seeded column weights and unreduced sumcheck accumulation; the sub-second node target remains **unproven**, rather than selecting a favorable isolated sample (one on-demand mixed process was 0.991 s).
+
+All 94 release library tests passed after the final arithmetic changes. Targeted clippy passed before the final formatting pass; the final clippy receipt and node reuse check are retained with the measurements. Measurements were appended to shared `P/artifacts/hometurf-12t.jsonl`. No push is authorized or performed.

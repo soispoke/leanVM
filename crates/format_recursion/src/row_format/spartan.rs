@@ -26,8 +26,14 @@ use primitives::{
 const SLOTS: [usize; 18] = [0, 1, 2, 3, 4, 5, 6, 7, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19];
 const RATE: usize = 2;
 
-fn scaled(c: F192, x: F192) -> F192 {
-    if c == F192::ONE { x } else { c * x }
+pub(crate) fn scaled(c: F192, x: F192) -> F192 {
+    if c == F192::ONE {
+        x
+    } else if c.c1 == 0 && c.c2 == 0 {
+        x.mul_base(F64(c.c0))
+    } else {
+        c * x
+    }
 }
 fn dot(a: &[F192], b: &[F192]) -> F192 {
     parallel::map_reduce(a.len(), || F192::ZERO, |i| a[i] * b[i], |x, y| x + y)

@@ -1,0 +1,11 @@
+   Compiling format_recursion v0.1.0 (/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/ht-L2r/crates/format_recursion)
+warning: unused import: `mul4`
+ --> crates/format_recursion/src/row_format/generator.rs:5:55
+  |
+5 |     field::{F64, F192, F192Unreduced, mul_unreduced4, mul4},
+  |                                                       ^^^^
+  |
+  = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: `format_recursion` (lib) generated 1 warning (run `cargo fix --lib -p format_recursion` to apply 1 suggestion)
+    Finished `release` profile [optimized] target(s) in 35.51s
