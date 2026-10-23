@@ -752,7 +752,7 @@ pub struct FirstMergeSetup {
     pub products: usize,
 }
 
-fn record_first(base: &Setup, children: [&Certificate; 2]) -> Trace {
+fn record_first<const N: usize>(base: &Setup, children: [&Certificate; N]) -> Trace {
     trace::start();
     let root = digest_constant(&base.bridge.index.root);
     let ctx = digest_constant(&base.context);
@@ -771,13 +771,17 @@ fn record_first(base: &Setup, children: [&Certificate; 2]) -> Trace {
         t.finish();
         words.push(digest);
     }
-    let output = hash(&[
-        (S::u(0x4e), 1),
-        (words[0][0], 16),
-        (words[0][1], 16),
-        (words[1][0], 16),
-        (words[1][1], 16),
-    ]);
+    let output = if N == 1 {
+        words[0]
+    } else {
+        hash(&[
+            (S::u(0x4e), 1),
+            (words[0][0], 16),
+            (words[0][1], 16),
+            (words[1][0], 16),
+            (words[1][1], 16),
+        ])
+    };
     let mut result = trace::take();
     result.public = output.to_vec();
     result
