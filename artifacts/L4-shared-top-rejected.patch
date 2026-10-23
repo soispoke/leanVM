@@ -1,0 +1,63 @@
+diff --git a/crates/format_recursion/src/verifier.rs b/crates/format_recursion/src/verifier.rs
+index d710bd90..6fc8128e 100644
+--- a/crates/format_recursion/src/verifier.rs
++++ b/crates/format_recursion/src/verifier.rs
+@@ -201,6 +201,8 @@ impl<'a> Transcript<'a> {
+                 }
+             }
+         };
++        let shared_top = std::env::var_os("R1CS_SHARE_TOP_PARENT").is_some() && depth > 0;
++        let mut top_pair: Option<[[S; 2]; 2]> = None;
+         let mut rows = Vec::new();
+         for (&query, path) in queries.iter().zip(paths) {
+             assert_eq!(path.path.len(), depth);
+@@ -244,7 +246,20 @@ impl<'a> Transcript<'a> {
+                 let bit = query.slice(level, 1);
+                 let left = [S::select(bit, node[0], sibling[0]), S::select(bit, node[1], sibling[1])];
+                 let right = [S::select(bit, sibling[0], node[0]), S::select(bit, sibling[1], node[1])];
+-                node = hash(&[(left[0], 16), (left[1], 16), (right[0], 16), (right[1], 16)]);
++                if shared_top && level + 1 == depth {
++                    if let Some(pair) = top_pair {
++                        for i in 0..2 {
++                            left[i].assert_eq(pair[0][i]);
++                            right[i].assert_eq(pair[1][i]);
++                        }
++                        node = root;
++                    } else {
++                        top_pair = Some([left, right]);
++                        node = hash(&[(left[0], 16), (left[1], 16), (right[0], 16), (right[1], 16)]);
++                    }
++                } else {
++                    node = hash(&[(left[0], 16), (left[1], 16), (right[0], 16), (right[1], 16)]);
++                }
+             }
+             for i in 0..2 {
+                 node[i].assert_eq(root[i]);
+@@ -597,6 +612,27 @@ mod tests {
+     use super::*;
+     use fiat_shamir::merkle::RawMerklePath;
+ 
++    #[test]
++    fn repeated_merkle_query_rejects_wrong_top_sibling() {
++        let path = RawMerklePath {
++            leaf_index: 0,
++            leaf_data: vec![primitives::field::F64(37)],
++            path: vec![[17;32],[19;32]],
++        };
++        let root = path.root(0);
++        for tamper in [false,true] {
++            trace::start();
++            let mut second = path.clone();
++            if tamper { second.path[1][0] ^= 1; }
++            let proof = RawProof { stream: Vec::new(),merkle:vec![path.clone(),second] };
++            let mut t = Transcript::new(&proof,digest_constant(&[0;32]),digest_constant(&[1;32]));
++            let queries = [S::input(F192::ZERO).slice(0,2),S::input(F192::ZERO).slice(0,2)];
++            t.merkle(digest_constant(&root),2,&queries,1,true,1);
++            t.finish();
++            assert_eq!(trace::take().satisfied(),!tamper);
++        }
++    }
++
+     #[test]
+     fn merkle_sources_enforce_serialized_word_and_digest_ranges() {
+         trace::start();
