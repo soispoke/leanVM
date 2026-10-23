@@ -8,6 +8,7 @@ use fiat_shamir::{
     merkle::Hash,
     transcript::{Challenger, Proof, ProverState, Receiver, Transmitter, VerifierState},
 };
+use flock::hash::{self as blake, Compression, SliceClaim};
 use flock::keccak::{
     INPUT, K_LOG, OUTPUT,
     reduction::{KeccakSetup, Permutation, generate, permute, ring_open, ring_verify},
@@ -65,6 +66,7 @@ pub struct KeccakShape {
     pub n_blocks: usize,
     pub block_log: usize,
     pub connector_start: usize,
+    pub q_log: usize,
     pub q_offset: usize,
     pub stack_log: usize,
 }
@@ -100,13 +102,14 @@ impl KeccakShape {
             n_blocks,
             block_log,
             connector_start,
+            q_log,
             q_offset,
             stack_log,
         })
     }
 
     pub fn committed_lanes(&self) -> usize {
-        let q_log = K_LOG - LOG_PACKING + self.block_log;
+        let q_log = self.q_log;
         let lane_words = 1usize << (self.stack_log - INITIAL_FOLDING_FACTOR);
         (self.q_offset + (1usize << q_log)).div_ceil(lane_words)
     }
@@ -140,12 +143,21 @@ pub struct KeccakBridge {
     pub n_blocks: usize,
     pub block_log: usize,
     pub connector_start: usize,
+    pub q_log: usize,
     pub q_offset: usize,
     pub stack_log: usize,
     variables: usize,
     public_len: usize,
     io_variables: Vec<[usize; 50]>,
     padding: [u64; 50],
+    blake: Option<BlakeRows>,
+}
+
+struct BlakeRows {
+    io: Vec<[usize; 18]>,
+    padding: [u64; 18],
+    block_log: usize,
+    connector_start: usize,
 }
 
 impl KeccakBridge {
@@ -158,6 +170,7 @@ impl KeccakBridge {
             n_blocks: self.n_blocks,
             block_log: self.block_log,
             connector_start: self.connector_start,
+            q_log: self.q_log,
             q_offset: self.q_offset,
             stack_log: self.stack_log,
         }
@@ -168,16 +181,27 @@ impl KeccakBridge {
     }
 
     pub fn new(circuit: Circuit, io_variables: Vec<[usize; 50]>) -> Option<Self> {
-        Self::new_inner(circuit, io_variables, false)
+        Self::new_inner(circuit, io_variables, Vec::new(), false)
     }
 
     pub fn new_padded(circuit: Circuit, io_variables: Vec<[usize; 50]>) -> Option<Self> {
-        Self::new_inner(circuit, io_variables, true)
+        Self::new_inner(circuit, io_variables, Vec::new(), true)
     }
 
-    fn new_inner(mut circuit: Circuit, io_variables: Vec<[usize; 50]>, padded: bool) -> Option<Self> {
+    /// Both hash families share one arithmetic reduction and one joint WHIR opening.
+    pub fn new_mixed(circuit: Circuit, io_variables: Vec<[usize; 50]>, blake_io: Vec<[usize; 18]>) -> Option<Self> {
+        Self::new_inner(circuit, io_variables, blake_io, false)
+    }
+
+    fn new_inner(
+        mut circuit: Circuit,
+        io_variables: Vec<[usize; 50]>,
+        blake_io: Vec<[usize; 18]>,
+        padded: bool,
+    ) -> Option<Self> {
         if io_variables.is_empty()
             || io_variables.len() > MAX_BLOCKS
+            || blake_io.len() > crate::private_bridge::MAX_BLOCKS
             || circuit.public.len() < 2
             || circuit.public[..2] != [0, 1]
             || circuit.variables < 2
@@ -186,6 +210,7 @@ impl KeccakBridge {
                 .iter()
                 .chain(circuit.rows.iter().flatten())
                 .chain(io_variables.iter().flatten())
+                .chain(blake_io.iter().flatten())
                 .any(|&v| v >= circuit.variables)
         {
             return None;
@@ -200,6 +225,17 @@ impl KeccakBridge {
         let padding_variables: [usize; 50] = std::array::from_fn(|i| variables + i);
         circuit.variables += 50;
         circuit.public.extend(padding_variables);
+        let blake_padding = if blake_io.is_empty() {
+            None
+        } else {
+            let block = blake::padding_block();
+            let output = blake::blake2s_compress(&block.0, &block.1, block.2, block.3, block.4);
+            let words = crate::private_bridge::io_words(&block, &output);
+            let start = circuit.variables;
+            circuit.public.extend(start..start + 18);
+            circuit.variables += 18;
+            Some(words)
+        };
         let public_rows = circuit.public.len().next_power_of_two();
         let alignment = count;
         let connector_start = (public_rows + circuit.rows.len()).next_multiple_of(alignment);
@@ -221,24 +257,56 @@ impl KeccakBridge {
                     .push([inputs[0], inputs[1], inputs[2], helper_start + group * count + block]);
             }
         }
+        let blake = if let Some(padding) = blake_padding {
+            let bcount = blake_io.len().max(128).next_power_of_two();
+            let block_log = bcount.trailing_zeros() as usize;
+            let connector_start = (public_rows + circuit.rows.len()).next_multiple_of(bcount);
+            circuit.rows.resize(connector_start - public_rows, [0; 4]);
+            let helper = circuit.variables;
+            circuit.variables += 6 * bcount;
+            for group in 0..6 {
+                for block in 0..bcount {
+                    let input: [usize; 3] = std::array::from_fn(|col| {
+                        let slot = 6 * col + group;
+                        blake_io.get(block).map_or(variables + 50 + slot, |row| row[slot])
+                    });
+                    circuit
+                        .rows
+                        .push([input[0], input[1], input[2], helper + group * bcount + block]);
+                }
+            }
+            Some(BlakeRows {
+                io: blake_io,
+                padding,
+                block_log,
+                connector_start,
+            })
+        } else {
+            None
+        };
         let required_rows = public_rows.checked_add(circuit.rows.len())?;
         if required_rows.next_power_of_two().trailing_zeros() as usize > native_arithmetic::MAX_LOG_ROWS {
             return None;
         }
         let index = Index::new_with_rate(circuit, INDEX_LOG_INV_RATE);
         let q_log = K_LOG - LOG_PACKING + block_log;
+        let q_log = blake
+            .as_ref()
+            .map_or(q_log, |b| q_log.max(blake::K_LOG - LOG_PACKING + b.block_log) + 1);
         let (q_offset, stack_log) = joint_layout(index.log_rows, q_log)?;
         Some(Self {
             index,
             n_blocks,
             block_log,
             connector_start,
+            q_log,
             q_offset,
             stack_log,
             variables,
             public_len,
             io_variables,
             padding,
+            blake,
         })
     }
     /// Translate only native witness claims; permutation-index claims use a
@@ -257,6 +325,9 @@ impl KeccakBridge {
         }
         let mut full = public.to_vec();
         full.extend(self.padding.map(|x| F192::new(x, 0, 0)));
+        if let Some(b) = &self.blake {
+            full.extend(b.padding.map(|v| F192::new(v, 0, 0)));
+        }
         Some(full)
     }
     pub(crate) fn label(&self, public: &[F192], context: &Hash) -> Vec<u8> {
@@ -277,6 +348,13 @@ impl KeccakBridge {
             public.len(),
         ] {
             out.extend_from_slice(&(x as u64).to_le_bytes());
+        }
+        out.extend_from_slice(&self.q_log.to_le_bytes());
+        if let Some(b) = &self.blake {
+            out.extend_from_slice(&blake::R1CS_DIGEST);
+            for v in [b.io.len(), b.block_log, b.connector_start] {
+                out.extend_from_slice(&(v as u64).to_le_bytes());
+            }
         }
         for x in public {
             for limb in [x.c0, x.c1, x.c2] {
@@ -305,7 +383,49 @@ impl KeccakBridge {
         }
         claims
     }
+    fn lift(&self, mut claim: SliceClaim, offset: usize) -> SliceClaim {
+        let start = claim.suffix_point.len();
+        assert!(offset.is_multiple_of(1usize << start));
+        claim
+            .suffix_point
+            .extend((start..self.q_log).map(|i| if offset >> i & 1 == 0 { F192::ZERO } else { F192::ONE }));
+        claim
+    }
+    fn blake_connector_offset(&self, slot: usize, limb: usize) -> usize {
+        let b = self.blake.as_ref().unwrap();
+        (3 * (slot / 6) + limb) * (1usize << self.index.log_rows) + b.connector_start + ((slot % 6) << b.block_log)
+    }
+    fn blake_claims(&self, point: &[F192], values: &[F192; 18]) -> Vec<StackClaim> {
+        const SLOTS: [usize; 18] = [0, 1, 2, 3, 4, 5, 6, 7, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19];
+        let mut claims = Vec::new();
+        for (slot, &value) in values.iter().enumerate() {
+            for limb in 0..3 {
+                claims.push(StackClaim::Point {
+                    offset: self.blake_connector_offset(slot, limb),
+                    low_point: point.to_vec(),
+                    value: if limb == 0 { value } else { F192::ZERO },
+                });
+            }
+            claims.push(StackClaim::Strided {
+                offset: self.q_offset + (1usize << (self.q_log - 1)),
+                slot: SLOTS[slot],
+                stride_log: blake::K_LOG - LOG_PACKING,
+                point: point.to_vec(),
+                value,
+            });
+        }
+        claims
+    }
     pub fn prove(&self, values: &[F192], blocks: &[Permutation], context: &Hash) -> Option<Proof> {
+        self.prove_mixed(values, blocks, &[], context)
+    }
+    pub fn prove_mixed(
+        &self,
+        values: &[F192],
+        blocks: &[Permutation],
+        blake_blocks: &[Compression],
+        context: &Hash,
+    ) -> Option<Proof> {
         if values.len() != self.variables || blocks.len() != self.io_variables.len() {
             return None;
         }
@@ -317,13 +437,29 @@ impl KeccakBridge {
                 }
             }
         }
-        self.prove_unchecked(values, blocks, context)
+        if blake_blocks.len() != self.blake.as_ref().map_or(0, |b| b.io.len()) {
+            return None;
+        }
+        if let Some(b) = &self.blake {
+            for (block, vars) in blake_blocks.iter().zip(&b.io) {
+                let output = blake::blake2s_compress(&block.0, &block.1, block.2, block.3, block.4);
+                for (&var, word) in vars.iter().zip(crate::private_bridge::io_words(block, &output)) {
+                    if values[var] != F192::new(word, 0, 0) {
+                        return None;
+                    }
+                }
+            }
+        }
+        self.prove_mixed_unchecked(values, blocks, blake_blocks, context)
     }
     // Deliberately separate from the precheck so tests can prove malformed
     // witness bindings and exercise rejection by the argument verifier itself.
     fn extend_values(&self, values: &[F192]) -> Vec<F192> {
         let mut values = values.to_vec();
         values.extend(self.padding.map(|x| F192::new(x, 0, 0)));
+        if let Some(b) = &self.blake {
+            values.extend(b.padding.map(|v| F192::new(v, 0, 0)));
+        }
         for group in 0..17 {
             for block in 0..1usize << self.block_log {
                 let inputs: [F192; 3] = std::array::from_fn(|col| {
@@ -341,9 +477,30 @@ impl KeccakBridge {
                 values.push(inputs[0] * inputs[1] + inputs[2]);
             }
         }
+        if let Some(b) = &self.blake {
+            for group in 0..6 {
+                for block in 0..1usize << b.block_log {
+                    let input: [F192; 3] = std::array::from_fn(|col| {
+                        let slot = 6 * col + group;
+                        values[b.io.get(block).map_or(self.variables + 50 + slot, |row| row[slot])]
+                    });
+                    values.push(input[0] * input[1] + input[2]);
+                }
+            }
+        }
         values
     }
+    #[cfg(test)]
     fn prove_unchecked(&self, values: &[F192], blocks: &[Permutation], context: &Hash) -> Option<Proof> {
+        self.prove_mixed_unchecked(values, blocks, &[], context)
+    }
+    fn prove_mixed_unchecked(
+        &self,
+        values: &[F192],
+        blocks: &[Permutation],
+        blake_blocks: &[Compression],
+        context: &Hash,
+    ) -> Option<Proof> {
         let values = self.extend_values(values);
         let public = self.index.public_values(&values);
         let lane_words = 1usize << (self.stack_log - INITIAL_FOLDING_FACTOR);
@@ -357,6 +514,14 @@ impl KeccakBridge {
         for (dest, &word) in stack[self.q_offset..].iter_mut().zip(&z) {
             *dest = F64(word);
         }
+        let blake_witness = self.blake.as_ref().map(|b| {
+            let w = blake::generate_witness_with_ab_packed_and_lincheck(blake_blocks, b.block_log);
+            let offset = self.q_offset + (1usize << (self.q_log - 1));
+            for (dest, &word) in stack[offset..].iter_mut().zip(&w.0) {
+                *dest = F64(word);
+            }
+            w
+        });
         let (commitment, data) = tracing::info_span!("Joint commitment")
             .in_scope(|| whir::commit(&stack, self.stack_log, INITIAL_FOLDING_FACTOR, JOINT_LOG_INV_RATE));
         let mut ps = ProverState::from_label(&self.label(&public, context));
@@ -371,6 +536,9 @@ impl KeccakBridge {
             .prove(&z, &a, &b, &lincheck, &mut ps)
         });
         drop((z, a, b, lincheck));
+        let blake_reduced = self.blake.as_ref().zip(blake_witness).map(|(b, (z, a, bb, stripes))| {
+            blake::Blake2sSetup::new(b.io.len().max(128)).prove_reduction_precomputed(&z, &a, &bb, &stripes, &mut ps)
+        });
         let point = ps.sample_vec(self.block_log);
         let weights = eq_table(&point);
         let mut bridge_values = [F192::ZERO; 50];
@@ -388,7 +556,23 @@ impl KeccakBridge {
             })
             .collect();
         claims.extend(self.claims(&point, &bridge_values));
-        let ring = ring_open(self.q_offset, &reduced);
+        if let Some(b) = &self.blake {
+            let point = ps.sample_vec(b.block_log);
+            let weights = eq_table(&point);
+            let values: [F192; 18] = std::array::from_fn(|slot| {
+                let offset = self.blake_connector_offset(slot, 0);
+                let v = whir::inner_product_base_ext(&stack[offset..offset + weights.len()], &weights);
+                ps.add_scalar(v);
+                v
+            });
+            claims.extend(self.blake_claims(&point, &values));
+        }
+        let reduced = self.lift(reduced, 0);
+        let blake_reduced = blake_reduced.map(|c| self.lift(c, 1usize << (self.q_log - 1)));
+        let mut ring = ring_open(self.q_offset, &reduced);
+        if let Some(c) = &blake_reduced {
+            ring.claims.extend(ring_open(self.q_offset, c).claims);
+        }
         let config = whir::config_for_rate(self.stack_log, JOINT_LOG_INV_RATE).ok()?;
         tracing::info_span!("Joint opening").in_scope(|| {
             open_batch_mixed_whir_stacked(&mut ps, self.stack_log, &stack, &data, &config, &claims, &ring);
@@ -415,6 +599,14 @@ impl KeccakBridge {
         .verify(&mut vs) else {
             return false;
         };
+        let blake_reduced = if let Some(b) = &self.blake {
+            let Ok(c) = blake::Blake2sSetup::new(b.io.len().max(128)).verify_reduction(&mut vs) else {
+                return false;
+            };
+            Some(c.claim)
+        } else {
+            None
+        };
         let point = vs.sample_vec(self.block_log);
         let mut bridge_values = [F192::ZERO; 50];
         for value in &mut bridge_values {
@@ -432,7 +624,23 @@ impl KeccakBridge {
             })
             .collect();
         claims.extend(self.claims(&point, &bridge_values));
-        let ring = ring_verify(self.q_offset, &reduced);
+        if let Some(b) = &self.blake {
+            let point = vs.sample_vec(b.block_log);
+            let mut values = [F192::ZERO; 18];
+            for v in &mut values {
+                let Ok(x) = vs.next_scalar() else {
+                    return false;
+                };
+                *v = x;
+            }
+            claims.extend(self.blake_claims(&point, &values));
+        }
+        let reduced = self.lift(reduced, 0);
+        let blake_reduced = blake_reduced.map(|c| self.lift(c, 1usize << (self.q_log - 1)));
+        let mut ring = ring_verify(self.q_offset, &reduced);
+        if let Some(c) = &blake_reduced {
+            ring.claims.extend(ring_verify(self.q_offset, c).claims);
+        }
         let Ok(config) = whir::config_for_rate(self.stack_log, JOINT_LOG_INV_RATE) else {
             return false;
         };

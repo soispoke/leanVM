@@ -197,6 +197,14 @@ impl Builder {
         crate::keccak_bridge::KeccakBridge::new(self.circuit.clone(), self.keccak_connectors.clone())
     }
 
+    pub fn setup_mixed(&self) -> Option<crate::keccak_bridge::KeccakBridge> {
+        PrivateBridge::new_mixed(
+            self.circuit.clone(),
+            self.connectors.clone(),
+            self.keccak_connectors.clone(),
+        )
+    }
+
     /// Hash an aligned byte string, with zero padding of its last block.
     /// Every supplied word is part of the message; lengths are circuit metadata.
     pub fn hash_words(&mut self, words: &[Word]) -> [Word; 4] {
