@@ -82,7 +82,13 @@ fn main() {
         .map(|i| children[i].claim(&children[i].verify_deferred(publics[i], &context, ps[i], false).unwrap()))
         .collect();
     let digest = first::statement_digest(children, publics);
-    let reduction = fold::prove(&apps, &fresh, &digest);
+    let generators: Vec<_> = apps
+        .iter()
+        .enumerate()
+        .map(|(i, s)| Generator::new(sources[if i == 0 { 0 } else { 1 }], 8, s.key))
+        .collect();
+    let gs: Vec<_> = generators.iter().collect();
+    let reduction = fold::prove_generated(&apps, &gs, &fresh, &digest);
     let record = |r: &fold::Reduction| -> Trace {
         if mode == "carried" {
             first::record(&apps, indices, [&setup0.key, &second.key], publics, &context, ps, r)
@@ -100,11 +106,6 @@ fn main() {
     drop(lower.values);
     drop(lower.connectors);
     drop(lower.compressions);
-    let generators: Vec<_> = apps
-        .iter()
-        .enumerate()
-        .map(|(i, s)| Generator::new(sources[if i == 0 { 0 } else { 1 }], 8, s.key))
-        .collect();
     let start = Instant::now();
     let backend = if outer == "A" {
         Backend::Fixed(private_recursion::Setup::new(canonical.clone()).unwrap())
@@ -128,7 +129,7 @@ fn main() {
     let admission_s = start.elapsed().as_secs_f64();
     let fold_start = Instant::now();
     let reduction = if mode == "carried" {
-        fold::prove(&apps, &fresh, &digest)
+        fold::prove_generated(&apps, &gs, &fresh, &digest)
     } else {
         reduction
     };

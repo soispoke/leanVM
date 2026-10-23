@@ -124,6 +124,27 @@ fn sumcheck(
 
 #[tracing::instrument(skip_all, name = "Deferred matrix fold prove")]
 pub fn prove(setups: &[&Setup], claims: &[DeferredClaim], digest: &Hash) -> Reduction {
+    prove_inner(setups, None, claims, digest)
+}
+
+pub fn prove_generated(
+    setups: &[&Setup],
+    generators: &[&super::generator::Generator],
+    claims: &[DeferredClaim],
+    digest: &Hash,
+) -> Reduction {
+    assert_eq!(setups.len(), generators.len());
+    for (s, g) in setups.iter().zip(generators) {
+        assert_eq!((s.key, s.row_log, s.z_log), (g.app_key, g.row_log, g.col_log));
+    }
+    prove_inner(setups, Some(generators), claims, digest)
+}
+fn prove_inner(
+    setups: &[&Setup],
+    generators: Option<&[&super::generator::Generator]>,
+    claims: &[DeferredClaim],
+    digest: &Hash,
+) -> Reduction {
     assert!(!claims.is_empty());
     let indices = app_indices(setups, claims);
     let rlog = setups.iter().map(|s| s.row_log).max().unwrap();
@@ -139,15 +160,18 @@ pub fn prove(setups: &[&Setup], claims: &[DeferredClaim], digest: &Hash) -> Redu
         let setup = setups[f];
         let u: Vec<_> = eq_table(&c.row_point).into_iter().map(|v| v * power).collect();
         let cw = eq_table(&c.col_point);
-        let product = setup
-            .r1cs
-            .matrices
-            .each_ref()
-            .map(|m| m.product(&cw, 1usize << setup.row_log));
-        let short: Vec<_> = (0..1usize << setup.row_log)
-            .map(|r| product[0][r] + theta * product[1][r] + theta2 * product[2][r])
-            .collect();
-        let g = short;
+        let g = if let Some(gs) = generators {
+            gs[f].row_product(&cw, theta)
+        } else {
+            let product = setup
+                .r1cs
+                .matrices
+                .each_ref()
+                .map(|m| m.product(&cw, 1 << setup.row_log));
+            parallel::map_collect(1 << setup.row_log, |r| {
+                product[0][r] + theta * product[1][r] + theta2 * product[2][r]
+            })
+        };
         target += power * (c.matrix_values[0] + theta * c.matrix_values[1] + theta2 * c.matrix_values[2]);
         pairs.push((u, g));
         power *= theta3;
@@ -156,11 +180,29 @@ pub fn prove(setups: &[&Setup], claims: &[DeferredClaim], digest: &Hash) -> Redu
     let mut columns = Vec::new();
     for (f, setup) in setups.iter().enumerate() {
         let rw = eq_table(&rp[..setup.row_log]);
-        for (j, m) in setup.r1cs.matrices.iter().enumerate() {
-            let short = m.fold_rows(&rw, 1usize << setup.z_log);
-            let poly = short;
+        let products = if let Some(gs) = generators {
+            gs[f].column_products(&rw)
+        } else {
+            setup
+                .r1cs
+                .matrices
+                .each_ref()
+                .map(|m| m.fold_rows(&rw, 1 << setup.z_log))
+        };
+        let products: Vec<_> = if generators.is_some() {
+            vec![parallel::map_collect(1 << setup.z_log, |i| {
+                products[0][i] + theta * products[1][i] + theta2 * products[2][i]
+            })]
+        } else {
+            products.into_iter().collect()
+        };
+        for (j, poly) in products.into_iter().enumerate() {
             let mut weights = vec![F192::ZERO; 1usize << setup.z_log];
-            let coefficient = [F192::ONE, theta, theta2][j];
+            let coefficient = if generators.is_some() {
+                F192::ONE
+            } else {
+                [F192::ONE, theta, theta2][j]
+            };
             for (i, c) in claims.iter().enumerate().filter(|(i, _)| indices[*i] == f) {
                 let scale = pairs[i].0[0] * coefficient;
                 let w = eq_table(&c.col_point);
@@ -178,7 +220,11 @@ pub fn prove(setups: &[&Setup], claims: &[DeferredClaim], digest: &Hash) -> Redu
         .iter()
         .enumerate()
         .map(|(f, setup)| {
-            let matrix_values = std::array::from_fn(|j| columns[3 * f + j].0[0]);
+            let matrix_values = if let Some(gs) = generators {
+                gs[f].evaluate(&rp[..setup.row_log], &cp[..setup.z_log])
+            } else {
+                std::array::from_fn(|j| columns[3 * f + j].0[0])
+            };
             ps.add_scalars(&matrix_values);
             DeferredClaim {
                 app_key: setup.key,
