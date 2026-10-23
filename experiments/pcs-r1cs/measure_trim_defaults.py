@@ -6,6 +6,7 @@ import hashlib
 import json
 from pathlib import Path
 import subprocess
+import shutil
 
 from measure_hometurf import run
 
@@ -19,7 +20,8 @@ def main():
     raw = args.output.resolve()
     raw.mkdir(parents=True, exist_ok=False)
     commit = subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=repo, text=True).strip()
-    binary = args.target.resolve() / "release/examples/application_role_profile"
+    binary = raw / "application_role_profile.executable"
+    shutil.copy2(args.target.resolve() / "release/examples/application_role_profile", binary)
     binary_hash = hashlib.sha256(binary.read_bytes()).hexdigest()
     prefix = ["taskset", "-c", "0-11", "env", "LEANVM_NUM_THREADS=12", "RAYON_NUM_THREADS=12"]
     for name in ["sha256-1kib", "keccak256-1KiB", "mpt-storage-proof"]:
