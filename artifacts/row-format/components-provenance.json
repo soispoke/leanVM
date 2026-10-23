@@ -1,0 +1,7 @@
+{
+  "commit": "2a214f5eba883b6037ec03c86b28225bfb9beb00",
+  "binary_sha256": "061e51889d4716667f634689ba0f26ab835899c08040ad34d058e178bdd3ad47",
+  "cores": "12-23",
+  "threads": 12,
+  "build_cores": "48-63"
+}

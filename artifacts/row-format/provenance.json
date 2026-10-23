@@ -1,0 +1,19 @@
+{
+  "commit": "55ef6a877d73e9314bee9233075a617f0b266b63",
+  "binary_sha256": "e24dcdcdf7e0387fa1e5f8ce0459ee76ebc3072d992e22fb664da3c302542bc3",
+  "cores": "12-23",
+  "threads": 12,
+  "build_cores": "48-63",
+  "order": [
+    "A",
+    "B",
+    "C",
+    "C",
+    "B",
+    "A",
+    "A",
+    "B",
+    "C"
+  ],
+  "affine_cap": 8
+}

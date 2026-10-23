@@ -1,0 +1,70 @@
+{
+  "shielded": {
+    "components": {
+      "fixed": {
+        "commit_s": 0.066484623,
+        "opening_s": 0.188492435,
+        "verify_ms": 1.718995,
+        "proof_bytes": 152728,
+        "words": 5636096,
+        "recursive_census": {
+          "compressions": 6450,
+          "kind": "synthetic PCS verifier component; excludes SPARK memory/product checks",
+          "native_rows": 146758
+        }
+      },
+      "derefs": {
+        "commit_s": 0.060953742,
+        "opening_s": 0.186476096,
+        "verify_ms": 1.7134850000000001,
+        "proof_bytes": 147936,
+        "words": 4718592,
+        "recursive_census": {
+          "compressions": 6394,
+          "kind": "synthetic PCS verifier component; excludes SPARK memory/product checks",
+          "native_rows": 147235
+        }
+      }
+    },
+    "wallet_subtotal_s": 0.47785197700000004,
+    "additional_private_words": 4718592,
+    "fixed_index_words": 5636096,
+    "two_pcs_native_rows": 293993,
+    "two_pcs_compressions": 12844,
+    "kind": "conditional separate-stack SPARK model; omits dereference construction, memory/product checks and their openings"
+  },
+  "merge": {
+    "components": {
+      "fixed": {
+        "commit_s": 0.518320435,
+        "opening_s": 1.253484645,
+        "verify_ms": 2.136289,
+        "proof_bytes": 186848,
+        "words": 46137344,
+        "recursive_census": {
+          "compressions": 7733,
+          "kind": "synthetic PCS verifier component; excludes SPARK memory/product checks",
+          "native_rows": 175119
+        }
+      },
+      "derefs": {
+        "commit_s": 0.428695646,
+        "opening_s": 1.139366956,
+        "verify_ms": 2.094209,
+        "proof_bytes": 180416,
+        "words": 37748736,
+        "recursive_census": {
+          "compressions": 7685,
+          "kind": "synthetic PCS verifier component; excludes SPARK memory/product checks",
+          "native_rows": 175661
+        }
+      }
+    },
+    "wallet_subtotal_s": 3.7847082459999997,
+    "additional_private_words": 37748736,
+    "fixed_index_words": 46137344,
+    "two_pcs_native_rows": 350780,
+    "two_pcs_compressions": 15418,
+    "kind": "conditional separate-stack SPARK model; omits dereference construction, memory/product checks and their openings"
+  }
+}
