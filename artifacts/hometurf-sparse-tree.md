@@ -108,3 +108,27 @@ A fresh paired ABABAB check against the detached `bc1f691a` baseline binary meas
 The intermediate on-demand group measured node same/mixed **1.0451/1.0101 s**, own settlement **9.72/7.89 ms**. The preceding fast-coefficient group measured **1.0137/1.0423 s**, own **11.94/11.13 ms**. The attempted constant-B branch specialization did not demonstrate improvement and was reverted. The final selected candidate retains seeded column weights and unreduced sumcheck accumulation; the sub-second node target remains **unproven**, rather than selecting a favorable isolated sample (one on-demand mixed process was 0.991 s).
 
 All 94 release library tests passed after the final arithmetic changes. Targeted clippy passed before the final formatting pass; the final clippy receipt and node reuse check are retained with the measurements. Measurements were appended to shared `P/artifacts/hometurf-12t.jsonl`. No push is authorized or performed.
+
+## Parallel outer sparse fold
+
+The remaining outer-prover bottleneck was the row fold over A, B and C. The candidate now computes the three sparse folds in parallel and performs one combined dense scan. This does not change the matrix values, transcript, claims or verifier checks. The exact binaries, process order and paired raw JSON are in `artifacts/sparse-tree/outerparallel-provenance.json`.
+
+Three fresh alternating-process medians on cores 12-23 are:
+
+| Outer-parallel node | Same | Mixed shielded + Merkle |
+|---|---:|---:|
+| Node merge s | 1.0135 | **0.9419** |
+| Matrix fold s | 0.2278 | 0.2140 |
+| Outer prover s | 0.6638 | 0.6448 |
+| Rows | 634,272 | 634,272 |
+| Committed F64 words | 8,388,608 | 8,388,608 |
+| Proof bytes | 179,488 | 180,064 |
+| Active carried bytes | 1,968 | 2,664 |
+| Own node settlement ms | 8.32 | 7.97 |
+| Complete root acceptance ms | 20.63 | 21.09 |
+
+The mixed merge is now repeatably below one second: individual fresh runs were **0.942, 0.976 and 0.933 s**. A separate paired three-process check against the committed weighted-column binary measured candidate **0.9729 s** versus baseline **1.1411 s** mixed, with outer proving **657.2 versus 792.3 ms**. Same-app measured **0.9981 versus 1.0177 s**, so the optimization did not regress the control. The pair is noisy in absolute terms, but direction and stage timing support a real improvement.
+
+Root settlement remains below 10 ms for each active identity in this group: node **8.05 ms mixed**, first wrapper **7.58 ms mixed**, shielded **0.80 ms**, and Merkle **0.16 ms**. Complete mixed root acceptance is **21.09 ms** for four distinct identities. All four leaves are independently proved in each process. The separate `outerparallel-reuse.json` run checks same-key node+node reuse but shares leaves and is not used for the fresh depth-2 timing.
+
+All **94 release library tests** pass after this change; targeted clippy, rustfmt and diff checks pass. The direct verifier rejection probes still cover false carried evaluation, substituted key, omitted and duplicated claims, wrong kind, swapped children, tampered child proof and tampered root proof. The result now satisfies the requested true-R1CS mixed-tree under-one-second interval for the measured depth-2 schema. Scope remains the fixed two-real-application plus two-wrapper schema; this does not establish arbitrary application shapes or unrestricted-depth recursion.

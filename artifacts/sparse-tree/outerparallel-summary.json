@@ -1,0 +1,107 @@
+{
+  "outerparallel-node-same": {
+    "merge_s": 1.013457329,
+    "fold_prover_s": 0.227768895,
+    "outer_prover_s": 0.663807124,
+    "rows": 634272,
+    "committed_words": 8388608,
+    "proof_bytes": 179488,
+    "carried_bytes": 1968,
+    "leaf_complete_root_ms": 4.025854,
+    "first_complete_root_ms": 12.876287999999999,
+    "complete_root_ms": 20.632652,
+    "own_settle_ms": 8.324294,
+    "settlements": {
+      "0": 0.690974,
+      "2": 7.582853
+    }
+  },
+  "outerparallel-node-mixed": {
+    "merge_s": 0.941866516,
+    "fold_prover_s": 0.213971431,
+    "outer_prover_s": 0.644818623,
+    "rows": 634272,
+    "committed_words": 8388608,
+    "proof_bytes": 180064,
+    "carried_bytes": 2664,
+    "leaf_complete_root_ms": 3.938708,
+    "first_complete_root_ms": 11.621929,
+    "complete_root_ms": 21.093754,
+    "own_settle_ms": 7.970341,
+    "settlements": {
+      "0": 0.802132,
+      "1": 0.157707,
+      "2": 8.047564999999999
+    }
+  },
+  "outerparallel-paired-baseline-same": {
+    "merge_s": 1.017659345,
+    "fold_prover_s": 0.221009123,
+    "outer_prover_s": 0.693653448,
+    "rows": 634272,
+    "committed_words": 8388608,
+    "proof_bytes": 179488,
+    "carried_bytes": 1968,
+    "leaf_complete_root_ms": 4.012773,
+    "first_complete_root_ms": 11.113973,
+    "complete_root_ms": 19.966155,
+    "own_settle_ms": 7.240708000000001,
+    "settlements": {
+      "0": 0.753036,
+      "2": 7.817387999999999
+    }
+  },
+  "outerparallel-paired-baseline-mixed": {
+    "merge_s": 1.141056637,
+    "fold_prover_s": 0.234630115,
+    "outer_prover_s": 0.792279511,
+    "rows": 634272,
+    "committed_words": 8388608,
+    "proof_bytes": 180064,
+    "carried_bytes": 2664,
+    "leaf_complete_root_ms": 4.13864,
+    "first_complete_root_ms": 12.650298000000001,
+    "complete_root_ms": 22.762977,
+    "own_settle_ms": 7.808323,
+    "settlements": {
+      "0": 0.950934,
+      "1": 0.170273,
+      "2": 9.547306
+    }
+  },
+  "outerparallel-paired-candidate-same": {
+    "merge_s": 0.998137117,
+    "fold_prover_s": 0.219790362,
+    "outer_prover_s": 0.67685358,
+    "rows": 634272,
+    "committed_words": 8388608,
+    "proof_bytes": 179488,
+    "carried_bytes": 1968,
+    "leaf_complete_root_ms": 3.9591469999999997,
+    "first_complete_root_ms": 11.389453000000001,
+    "complete_root_ms": 18.922424,
+    "own_settle_ms": 7.068197,
+    "settlements": {
+      "0": 0.75291,
+      "2": 6.643456
+    }
+  },
+  "outerparallel-paired-candidate-mixed": {
+    "merge_s": 0.972907216,
+    "fold_prover_s": 0.238592414,
+    "outer_prover_s": 0.65717879,
+    "rows": 634272,
+    "committed_words": 8388608,
+    "proof_bytes": 180064,
+    "carried_bytes": 2664,
+    "leaf_complete_root_ms": 4.03754,
+    "first_complete_root_ms": 11.739166,
+    "complete_root_ms": 21.800834000000002,
+    "own_settle_ms": 7.38396,
+    "settlements": {
+      "0": 0.626699,
+      "1": 0.16369,
+      "2": 7.773579
+    }
+  }
+}

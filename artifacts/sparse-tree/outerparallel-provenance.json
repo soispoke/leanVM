@@ -1,0 +1,32 @@
+{
+  "parent": "bf2476cab271290d0288a58f282cf0cdbdcc7185",
+  "binaries": {
+    "/tmp/L2r-outerparallel-tree": "040ef5b2f9ba0527da921448a8a67228d6efc6771e842ce9d40c9fef62e9be33",
+    "/tmp/L2r-weightedcols-tree": "96518a57e54909858b0b515038e8f2aac611a1fb4bfece3e8ba22ddb2edb55d6"
+  },
+  "cpus": "12-23",
+  "threads": 12,
+  "order": [
+    "same-1",
+    "mixed-1",
+    "mixed-2",
+    "same-2",
+    "same-3",
+    "mixed-3"
+  ],
+  "paired_order": [
+    "baseline-same-1",
+    "candidate-same-1",
+    "baseline-mixed-1",
+    "candidate-mixed-1",
+    "baseline-mixed-2",
+    "candidate-mixed-2",
+    "baseline-same-2",
+    "candidate-same-2",
+    "baseline-same-3",
+    "candidate-same-3",
+    "baseline-mixed-3",
+    "candidate-mixed-3"
+  ],
+  "note": "All four fresh leaves proved independently per process. Same node key across same/mixed. Reuse run separately shares leaves and is not a fresh eight-leaf timing."
+}
