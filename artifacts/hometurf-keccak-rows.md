@@ -99,8 +99,20 @@ Application rows above retain BLAKE2s protocol hashing. A complete protocol subs
 
 The conditional layout model in `protocol-projection.json` freezes the measured BLAKE merge trace and assumes one Keccak permutation for each BLAKE compression. It is not a re-recorded Keccak verifier census. Keccak needs 17 connector rows/slot versus six and four times packed witness words. For BLAKE64's 578,847 trace rows / 14,598 hashes, 16,384 slots: occupied rows project from 688,128 to 868,352, padded height stays 2^20, words project from 16,777,216 to 33,554,432 (2x). Scaling the supplied 0.88–0.97 s reference by words projects 1.76–1.94 s. For shielded's 736,150 rows / 21,990 hashes, 32,768 slots: occupied rows project from 950,272 to 1,310,720, padding 2^20 to 2^21, words 25,165,824 to 67,108,864 (2.667x); time projects 3.253–3.387 s from 1.22–1.27 s. All candidate numbers are projections, not measured merge costs; hash counts can change after the verifier is re-recorded.
 
-A protocol-hash batch proxy is available under `experiments/pcs-r1cs/protocol_hash_proxy.py`; it is deliberately not a protocol merge measurement. No actual Keccak-protocol wallet or first-level merge is implemented/measured, and no under-1-second merge claim is established.
+Three-round ABAB native hash-batch screen (six fresh proofs per variant; every proof verifies):
+
+| Calls | BLAKE2s s | Keccak s | BLAKE words | Keccak words |
+|---|---:|---:|---:|---:|
+| 16,384 | 0.605078 | 2.673029 | 8,388,608 | 33,554,432 |
+| 32,768 | 0.956349 | 4.619456 | 16,777,216 | 67,108,864 |
+
+These are native hash-batch proofs with BLAKE2s protocol hashing, not first-level merge proofs or a Keccak-protocol wallet. They measure the cost of the prospective hash-row payload at merge-sized slot counts. Raw receipts and binary metadata: `protocol-proxy-*`; summary: `protocol-proxy-summary.json`. They are diagnostic proxies, not formal runtime lower bounds. Nevertheless, 2.67 s at 16,384 calls and 4.62 s at 32,768 calls, together with the conditional layout model, do not support the required under-one-second merge. The feasibility decision is to retain BLAKE2s protocol hashing and the measured application-level Keccak rows. A complete protocol switch was not implemented or adopted; there is no actual Keccak-protocol wallet/merge timing. Completing that switch safely requires matching grinding, host Merkle, symbolic-verifier and claim-hash changes, not replacing the transcript with its no-grinding mode. The Phase 2 result is a negative feasibility screen, not a measured protocol regression.
+
 
 ## Reproduction
 
 Phase-1 frozen source `3bf7091f937e25d55f171c4bc86be5c3b5f634e9`, binary SHA256 `cbadb0411155d194299afd8e843af29ae5d514d6a28557f82919626403dba8da`, raw `P/artifacts/hometurf-L4k/{keccak,mpt,falcon}-abab/`. ML-DSA frozen source `08305593`, binary SHA256 `14a95283564332164d5b17ef5961d40b9100609d185482ac03c81696f6e296a6`, raw `mldsa-native-r*`, `mldsa-native-verify.*`, `mldsa-bit-evaluate.*`, `mldsa-rejections.*`; frozen executable and metadata are alongside them. New `RejectionBudget` API retains the measured default topology. Harnesses are under `experiments/pcs-r1cs/`, and circuit implementation is `crates/circuit_suite/src/mldsa.rs`.
+
+## Verdict
+
+Keccak as a native application hash makes Keccak-256 decisively faster, brings MPT near the historical leanVM reference, and halves Falcon's paired commitment and wallet time. The real encoded ML-DSA circuit is measured and matches L5, but remains much slower and larger than leanVM; the bit-level comparison is a census/projection fallback. Keccak's larger native relation costs more than BLAKE2s per call and per byte in this implementation. The protocol-hash feasibility screen does not support a viable under-one-second merge, so BLAKE2s stays the protocol hash. No security claim or full switched-protocol benchmark is made.

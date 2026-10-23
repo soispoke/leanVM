@@ -115,5 +115,26 @@ Large native-hash batch proxy measurements are pending the ML-DSA rejection run.
 
 Phase-1 frozen source `3bf7091f937e25d55f171c4bc86be5c3b5f634e9`, binary SHA256 `cbadb0411155d194299afd8e843af29ae5d514d6a28557f82919626403dba8da`, raw `P/artifacts/hometurf-L4k/{{keccak,mpt,falcon}}-abab/`. ML-DSA frozen source `08305593`, binary SHA256 `14a95283564332164d5b17ef5961d40b9100609d185482ac03c81696f6e296a6`, raw `mldsa-native-r*`, `mldsa-native-verify.*`, `mldsa-bit-evaluate.*`, `mldsa-rejections.*`; frozen executable and metadata are alongside them. New `RejectionBudget` API retains the measured default topology. Harnesses are under `experiments/pcs-r1cs/`, and circuit implementation is `crates/circuit_suite/src/mldsa.rs`.
 '''
+proxy_path=out/'protocol-proxy-summary.json'
+if proxy_path.exists():
+    proxy=json.loads(proxy_path.read_text())
+    proxy_rows=[]
+    for count,variants in proxy['results'].items():
+        b,k=variants['blake'],variants['keccak']
+        proxy_rows.append(f"| {int(count):,} | {b['median_s']:.6f} | {k['median_s']:.6f} | {b['committed_words']:,} | {k['committed_words']:,} |")
+    screen="""Three-round ABAB native hash-batch screen (six fresh proofs per variant; every proof verifies):
+
+| Calls | BLAKE2s s | Keccak s | BLAKE words | Keccak words |
+|---|---:|---:|---:|---:|
+"""+'\n'.join(proxy_rows)+"""
+
+These are native hash-batch proofs with BLAKE2s protocol hashing, not first-level merge proofs or a Keccak-protocol wallet. They measure the cost of the prospective hash-row payload at merge-sized slot counts. Raw receipts and binary metadata: `protocol-proxy-*`; summary: `protocol-proxy-summary.json`. They are diagnostic proxies, not formal runtime lower bounds. Nevertheless, 2.67 s at 16,384 calls and 4.62 s at 32,768 calls, together with the conditional layout model, do not support the required under-one-second merge. The feasibility decision is to retain BLAKE2s protocol hashing and the measured application-level Keccak rows. A complete protocol switch was not implemented or adopted; there is no actual Keccak-protocol wallet/merge timing. Completing that switch safely requires matching grinding, host Merkle, symbolic-verifier and claim-hash changes, not replacing the transcript with its no-grinding mode. The Phase 2 result is a negative feasibility screen, not a measured protocol regression.
+"""
+    text=text.replace("Large native-hash batch proxy measurements are pending the ML-DSA rejection run. No actual Keccak-protocol wallet or first-level merge is implemented/measured yet, and no under-1-second merge claim is established.",screen)
+text+="""
+## Verdict
+
+Keccak as a native application hash makes Keccak-256 decisively faster, brings MPT near the historical leanVM reference, and halves Falcon's paired commitment and wallet time. The real encoded ML-DSA circuit is measured and matches L5, but remains much slower and larger than leanVM; the bit-level comparison is a census/projection fallback. Keccak's larger native relation costs more than BLAKE2s per call and per byte in this implementation. The protocol-hash feasibility screen does not support a viable under-one-second merge, so BLAKE2s stays the protocol hash. No security claim or full switched-protocol benchmark is made.
+"""
 Path('artifacts/hometurf-keccak-rows.md').write_text(text)
 (root/'artifacts/hometurf-keccak-rows.md').write_text(text)
