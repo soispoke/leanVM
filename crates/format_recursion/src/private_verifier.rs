@@ -73,6 +73,7 @@ pub(crate) fn verify(bridge: &PrivateBridge, index_root: [S; 2], public: &[S], t
 }
 
 pub(crate) fn verify_shape(bridge: PrivateShape, index_root: [S; 2], public: &[S], t: &mut Transcript<'_>) {
+    trace::mark("private-arithmetic-reduction");
     let root = t.root();
     let (mut claims, index_claims) = native_verifier::reduce_shape(bridge.index, public, t);
     for claim in &mut claims {

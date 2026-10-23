@@ -756,6 +756,7 @@ pub fn record_native_first(
     let ctx = digest_constant(context);
     let mut digests = Vec::new();
     for child in children {
+        trace::mark("native-claim-binding");
         let digest = hash_to_scalars(&child.statement).map(S::input);
         for w in digest {
             range(w, 128);
@@ -774,6 +775,7 @@ pub fn record_native_first(
         t.finish();
         digests.push(digest);
     }
+    trace::mark("native-output-binding");
     let digest = hash(&[
         (S::u(0x4e), 1),
         (digests[0][0], 16),

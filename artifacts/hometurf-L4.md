@@ -97,3 +97,39 @@ Alternating fresh processes on CPUs 36-47 at 12 threads gave old-base 1.30614018
 The current R1CS verifier loops over each query and hashes every path independently. LeanVM's `authenticate` groups queries into strata, hashes each low path once, then hashes shared upper-subtree parents once and ties repeated nodes with copy equalities. The R1CS BLAKE64 base schedule has 112 depth-17 queries, plus opening groups of 45/28/23/20/56/32 queries at depths 16/15/15/14/17/16. A shared-subtree implementation would retain every leaf and sibling binding but replace duplicate upper path hashes with one HASH row and copy links. Exact savings depend on the sampled query prefixes and are not measurable without changing the recorder; the ceiling is the path-hash portion of the 14,598 native-hash compression schedule. No unreviewed verifier change was made.
 
 The remaining first-level arithmetic is 578,847 rows after native hash rows, so reaching 2^19 (524,288) requires removing at least 54,559 rows, about 9.4%. Shared upper-subtree hashing can plausibly remove that many hash/Select/Slice rows only if query prefixes overlap substantially; it must be measured with an ABAB circuit and rejection tests before acceptance. Lowering the leaf opening rate is report-only here because it shifts query and commitment cost to wallet proofs and changes PCS/security accounting.
+
+## Shared-top-parent ABAB screen (rejected)
+
+The current R1CS queries are independent bit slices from transcript samples (`Transcript::queries`), unlike leanVM's stratified queries. Directly substituting leanVM's strata would change the query distribution/protocol. Instead the screen hashes the root parent once, then ties every later query's top left/right pair to the first pair, including every supplied top sibling. It retains all original authentication checks through equalities and does not change query indices.
+
+ABAB plain/shared-top timings are 0.927824913, 0.945546161, 0.957316914, 0.949007953 s. Compression count falls 14,598 to 14,062 and pre-bridge rows 578,847 to 577,775; committed words stay 16,777,216. Candidate proof bytes are 324,232 versus 323,976. Seven verifier tests pass with sharing enabled, including repeated-query wrong-top-sibling rejection and the existing range, omitted-zero-lane, public/context/key binding checks. The patch is archived as `artifacts/L4-shared-top-rejected.patch` and removed from the active verifier because the timing is mixed and no padding threshold is crossed. This is a negative screen, not an accepted optimization. Sharing larger subtrees with independent queries needs more selector/advice constraints; the largest-group coverage guarantee used by leanVM does not hold here.
+
+## Leaf rate (report only)
+
+No leaf-rate change was made. If the inverse rate rises from 4 to 8, the encoded base commitment has twice as many words, increasing wallet encoding/Merkle work and memory. A larger distance can reduce verifier query count, but exact production counts must be derived from `WhirSecurityConfig` at the leaf's actual dimension, with all OOD and grinding terms retained. Merge savings affect path/transcript recording and potentially a power-of-two threshold, not the entire prover time proportionally. Thus an estimate that simply halves merge time is unjustified. Conversely a lower inverse rate reduces wallet commitment work but generally requires more queries and increases merge verification cost. The wallet/merge trade-off needs a separately authorized rate experiment; none of these reports is a soundness relaxation.
+
+
+## Native-hash row census
+
+The stage census is in `hometurf-L4/stage-census.log`. Rows/compressions for the two children combined are:
+
+- binding: 0 rows, 0 compression calls.
+- native-claim-binding: 22 rows, 18 compression calls.
+- native-copy-product: 4,365 rows, 754 compression calls.
+- native-output-binding: 1,546 rows, 2 compression calls.
+- native-public: 324 rows, 18 compression calls.
+- native-zerocheck: 706 rows, 132 compression calls.
+- private-arithmetic-reduction: 16 rows, 4 compression calls.
+- private-flock-reduction: 256,046 rows, 468 compression calls.
+- private-index-opening: 79,336 rows, 3,724 compression calls.
+- private-joint-opening: 190,048 rows, 7,526 compression calls.
+
+There are also 46,438 final equality-check rows and no unused-limb-typing rows. The total is 578,847 pre-bridge rows. Section costs include lowering of the operations emitted within each section, including transcript hashing; they are not independent protocol timings.
+
+The native shape has 14,598 actual compressions rounded to 16,384 slots, so connectors are 98,304 rows. There are 512 public-prefix rows, alignment to connector_start=589,824, and then connector rows, for 688,128 occupied/padded-to-alignment rows before the final 2^20 rounding. To reach a final 2^19 shape at unchanged hash slots, the pre-bridge program plus public prefix must fit 425,984 rows: at least 153,375 rows must be removed from the 578,847-row program (including the 512 prefix). Reducing only 54,559 rows crosses the unpadded 2^19 count but does not cross the bridge's final power-of-two boundary.
+
+## Add reuse screen (rejected)
+
+The existing four-cell relation is `z=x*y+u`; a materialized linear add costs a row `z=x*1+u`. Exact commutative add common-subexpression reuse saves 5,088 rows (578,847 to 573,759; linear-add bucket 146,472 to 141,384), but leaves 14,598 compressions and 16,777,216 committed words unchanged. ABAB plain/reuse times are 0.925761904, 0.983086308, 0.922761913, 1.021522561 s. All harness verification/rejection assertions pass. It is slower and crosses no padding threshold, so the patch is rejected and removed.
+
+General affine folding requires authenticating sparse linear forms in the row/index relation. The current multiply-add fusion can remove only a single-use product feeding one addition. An arbitrary add chain cannot be substituted into a four-cell multiplication without extra constraints or a different gate. A wide-linear-row candidate would change the fixed circuit index, copy argument and verifier arithmetic. No such soundness-relevant row-format change was made, and no completed wide-row speedup is claimed.
