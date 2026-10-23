@@ -1,0 +1,19 @@
+{
+  "parent": "bc1f691a08eeca3ce13ecbcaa300fc915fb9d6ef",
+  "binary_sha256": "f76fcde849ce2c6b5c8a7477df333550b8566ca7c94e9d782d804a47a7f2707b",
+  "order": [
+    "same",
+    "mixed",
+    "mixed",
+    "same",
+    "same",
+    "mixed"
+  ],
+  "threads": 12,
+  "cpus": "12-23",
+  "candidates": [
+    "parallel",
+    "short"
+  ],
+  "note": "Rust 1.99.1; release; short adds native-domain tables; parallel CSR remains"
+}
