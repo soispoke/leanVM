@@ -44,9 +44,27 @@ Matched canonical-claim three-round ABAB, six fresh processes per variant, sourc
 
 This is a 20.4x wallet improvement; the historical bit-level reference was 1.496 s. The earlier 26–30 ms raw-digest screen omitted the application-identity claim envelope and is not this matched comparison. Whole-application time divided by eight is an amortized cost, not an isolated permutation-reduction timing. The controlled BLAKE2s per-compression comparison remains pending.
 
+## MPT: measured three-round ABAB
+
+62 application permutations; six fresh processes per variant. Matched statement and canonical claim. Receipts: `P/artifacts/hometurf-L4k/mpt-abab/`.
+
+| Metric | Bit-level | Native Keccak rows |
+|---|---:|---:|
+| Wallet s (median) | 12.393910 | 1.500369 |
+| Whole-process peak RSS KiB (median) | 28,224,532 | 3,574,402 |
+| Proof bytes | 389,472 | 328,504 |
+| Standalone verify ms | 11.582972 | 10.661277 |
+| Arithmetic rows | 16,579,748 | 1,223,960 |
+| Padded rows | 16,777,216 | 2,097,152 |
+| Committed words | 205,520,896 | 25,690,112 |
+
+## Amortized native hash-row cost
+
+Three ABAB rounds, 512 independent calls per fresh process; verification succeeds after every proof. Same pinned 12-thread slice. Median Keccak wallet 0.1098827905 s = 214.614825 us/permutation = 1.578050 us/SHAKE256-rate byte (136 bytes). Median BLAKE2s wallet 0.0343565635 s = 67.102663 us/compression = 1.048479 us/byte (64 bytes). Total committed words are 1,048,576 versus 262,144, or 2,048 versus 512 words/call and 15.058824 versus 8 words/rate-byte. This includes connector and PCS padding. Packed witness-only words remain 1,024 versus 256/call. SHAKE128 uses rate 168, making the corresponding Keccak cost 1.277469 us/rate-byte and 12.190476 total words/rate-byte. These are batch-amortized prover costs, not host hash timings. Receipts: `P/artifacts/hometurf-L4k/rowcost-*`.
+
 ## Remaining work and current verdict
 
-Keccak replaces Falcon SHAKE work successfully and halves its padded commitment in the measured matched compiler. It remains slower than the supplied leanVM Falcon reference (~1.02 s). Matched canonical-claim Keccak-1KiB is complete; MPT runs are underway. A full encoded-input ML-DSA-44 circuit matched to L5 remains unimplemented. Phase 2 protocol hash/merge measurement and per-byte BLAKE2s cost comparison remain pending. No under-1-second Keccak protocol-merge claim is established.
+Keccak replaces Falcon SHAKE work successfully and halves its padded commitment in the measured matched compiler. It remains slower than the supplied leanVM Falcon reference (~1.02 s). Matched canonical-claim Keccak-1KiB and MPT are complete. An encoded-input ML-DSA-44 circuit has been drafted and compiles; arithmetic and full-statement validation remain pending. No ML-DSA measurement is claimed. Phase 2 protocol hash/merge measurement remain pending. No under-1-second Keccak protocol-merge claim is established.
 
 ## ML-DSA-44 projection correction and operation census
 
@@ -69,3 +87,11 @@ L3b Boolean calibration (distinct from nibble-native rows): mean Falcon 512-poin
 
 A real ML-DSA circuit and matched L5 fixture measurement now supersede the projection-only request. Projected wallet totals remain pending a complete, dimensionally consistent census.
 
+
+L5 fixture parity: `P/artifacts/hometurf-L4k/mldsa44-L5-fixture.json`, generated with pinned ml-dsa=0.1.1, seed sign(0), 32 bytes 0x42. Public digest BLAKE2s(1u64_le || pk1312 || message32) = `0fbdbdc8105b987a48e75e214bb7154fe98d3c493691b7419842c64374defcea`. This is host fixture reproduction, not yet circuit evidence. The circuit family budgets ExpandA at 840 bytes/polynomial and SampleInBall at 128 index bytes, constraining successful completion; larger rejection tails require a larger circuit family instance. It must not be described as complete for every possible FIPS input at this fixed budget.
+
+## ML-DSA-44 encoded-input circuit status and projection
+
+The L5 fixture is reproduced exactly, and the verifier frontend parses the fixed FIPS 204 encodings (pk 1312 bytes, message 32 bytes, signature 2420 bytes), checks z/hint bounds, expands A, computes tr/mu/challenge, performs NTT and inverse NTT work, UseHint/HighBits, challenge equality, and a public digest. The native-row census on the deterministic L5 fixture completed before proof layout at **57,277,716 arithmetic rows and 99 Keccak permutations** (ExpandA 80 expected, tr 10 exact, mu 1 exact, SampleInBall 1 expected, challenge 7 exact). The bit-level version was not measured: at least 38,400 Boolean rows per permutation gives a rough hash-only lower bound of 3.8M rows, while modular work dominates; a complete bit-level proof was not claimed.
+
+This census is not a proof result: the current fixed rejection budgets cover the overwhelmingly likely ExpandA/SampleInBall paths, while FIPS 204's rejection loops have unbounded tails. No wallet time, RSS, proof bytes, verification time, or committed-word result is reported for ML-DSA until the fixed circuit is validated against the L5 digest and malformed-verifier cases. The native Keccak bridge itself is measured above. The earlier projection-only request is retained as the operation census: 9 forward and 4 inverse 256-point NTTs, 5120 scalar products, 1024 UseHint coefficients, and 1024 z norm checks. Falcon Stage-0 calibration gives 393628 Boolean rows per 512-point NTT (2304 butterflies), hence 393628*(4/9) = 175,? rows for a 256-point NTT before 23-bit scaling; point products calibrate at 669.802734 Boolean rows/scalar before 23-bit scaling. These are projections, not measurements.

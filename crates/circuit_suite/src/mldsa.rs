@@ -51,16 +51,17 @@ fn sub(c: &mut Ckt, a: &[Wire], b: &[Wire]) -> Word {
     reduce(c, s)
 }
 fn mul(c: &mut Ckt, a: &[Wire], b: &[Wire]) -> Word {
-    let mut acc = vec![Wire::ZERO; 46];
-    for (i, &bit) in b.iter().enumerate() {
-        if bit.as_const() == Some(false) {
-            continue;
-        }
-        let mut term = vec![Wire::ZERO; i];
-        term.extend(a.iter().map(|&x| c.and(x, bit)));
-        term.resize(46, Wire::ZERO);
-        acc = c.add(&acc, &term);
+    if a.iter().all(|w| w.as_const().is_some()) && !b.iter().all(|w| w.as_const().is_some()) {
+        return mul(c, b, a);
     }
+    let mut accumulator = crate::falcon::Acc::default();
+    for (i, &x) in a.iter().enumerate() {
+        for (j, &y) in b.iter().enumerate() {
+            let product = c.and(x, y);
+            accumulator.lit(product, i + j, false);
+        }
+    }
+    let acc = accumulator.finish(c, 46);
     reduce(c, acc)
 }
 fn pow(mut a: u64, mut e: u64) -> u64 {
@@ -116,48 +117,10 @@ fn ntt(c: &mut Ckt, mut a: Vec<Word>, inverse: bool) -> Vec<Word> {
     }
     a
 }
-/// Stable sorting network: invalid candidates sort after accepted candidates;
-/// original positions break ties, preserving FIPS rejection-sampling order.
+/// Stable prefix-count compaction shared with the Falcon frontend.
 fn compact(c: &mut Ckt, candidates: Vec<Word>) -> (Vec<Word>, Wire) {
-    let mut xs: Vec<(Word, Word)> = candidates
-        .into_iter()
-        .enumerate()
-        .map(|(i, v)| {
-            let ok = lt(c, &v, &konst(Q, 23));
-            let mut key = konst(i as u64, 9);
-            key.push(ok.not());
-            (key, v)
-        })
-        .collect();
-    while xs.len() < 512 {
-        let i = xs.len();
-        xs.push((konst((512 + i) as u64, 10), konst(0, 23)));
-    }
-    let mut k = 2;
-    while k <= 512 {
-        let mut j = k / 2;
-        while j > 0 {
-            for i in 0..512 {
-                let other = i ^ j;
-                if other <= i {
-                    continue;
-                }
-                let swap = if i & k == 0 {
-                    lt(c, &xs[other].0, &xs[i].0)
-                } else {
-                    lt(c, &xs[i].0, &xs[other].0)
-                };
-                let (ak, av) = xs[i].clone();
-                let (bk, bv) = xs[other].clone();
-                xs[i] = (c.mux_word(swap, &bk, &ak), c.mux_word(swap, &bv, &av));
-                xs[other] = (c.mux_word(swap, &ak, &bk), c.mux_word(swap, &av, &bv));
-            }
-            j /= 2;
-        }
-        k *= 2;
-    }
-    let enough = xs[255].0[9].not();
-    (xs.into_iter().take(256).map(|x| x.1).collect(), enough)
+    let reject: Vec<_> = candidates.iter().map(|v| lt(c, v, &konst(Q, 23)).not()).collect();
+    crate::falcon::compact(c, &candidates, &reject, 256, 5)
 }
 fn expand_a(c: &mut Ckt, rho: &[Wire], checks: &mut Word) -> Vec<Vec<Vec<Word>>> {
     (0..4)
@@ -400,5 +363,60 @@ impl Workload for MlDsa44 {
     }
     fn invalid_instance(_: u64) -> Option<Instance> {
         None
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    fn eval(f: impl FnOnce(&mut Ckt, &[Wire]) -> Word, words: &[(u64, usize)]) -> u64 {
+        let mut c = Ckt::new();
+        let inputs = c.inputs(words.iter().map(|x| x.1).sum());
+        let mut output = f(&mut c, &inputs);
+        output.resize(PUBLIC_BITS, Wire::ZERO);
+        let (circuit, sources) = c.finish(&output);
+        let bits: Vec<bool> = words
+            .iter()
+            .flat_map(|&(v, n)| (0..n).map(move |i| v >> i & 1 != 0))
+            .collect();
+        let values = circuit.values(&bits);
+        let statement = crate::read_statement(&values, &sources);
+        u64::from_le_bytes(statement[..8].try_into().unwrap())
+    }
+    #[test]
+    fn modular_products_and_usehint_boundaries() {
+        for (a, b) in [
+            (0, 0),
+            (Q - 1, Q - 1),
+            (Q - 1, 1753),
+            (1234567, 7654321),
+            (8191, 1 << 22),
+        ] {
+            assert_eq!(eval(|c, x| mul(c, &x[..23], &x[23..]), &[(a, 23), (b, 23)]), a * b % Q);
+        }
+        let gamma2 = (Q - 1) / 88;
+        for r in [0, 1, gamma2, gamma2 + 1, 2 * gamma2, Q - gamma2 - 1, Q - gamma2, Q - 1] {
+            for hint in [false, true] {
+                let quotient = (r + gamma2 - 1) / (2 * gamma2);
+                let high = if quotient == 44 { 0 } else { quotient };
+                let low = if quotient == 44 {
+                    r as i64 - Q as i64
+                } else {
+                    r as i64 - (high * 2 * gamma2) as i64
+                };
+                let expected = if !hint {
+                    high
+                } else if low > 0 {
+                    (high + 1) % 44
+                } else {
+                    (high + 43) % 44
+                };
+                assert_eq!(
+                    eval(|c, x| high_bits(c, x, Wire::constant(hint)), &[(r, 23)]),
+                    expected,
+                    "r={r},hint={hint}"
+                );
+            }
+        }
     }
 }
