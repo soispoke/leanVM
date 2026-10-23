@@ -1,0 +1,9 @@
+{
+  "receipt": "C-policy-sha-root-A-verify-t1",
+  "cpus": "24-35",
+  "threads": 12,
+  "observed_affinity_exact": true,
+  "samples": 29,
+  "peak_sampled_cpu_percent": 1178.3019651326429,
+  "scope": "compiler_rows process user+system CPU / elapsed, sampled at approximately 500 ms"
+}

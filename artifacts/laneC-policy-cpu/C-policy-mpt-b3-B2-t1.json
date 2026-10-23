@@ -1,0 +1,9 @@
+{
+  "receipt": "C-policy-mpt-b3-B2-t1",
+  "cpus": "24-35",
+  "threads": 12,
+  "observed_affinity_exact": true,
+  "samples": 110,
+  "peak_sampled_cpu_percent": 1191.1365058220651,
+  "scope": "compiler_rows process user+system CPU / elapsed, sampled at approximately 500 ms"
+}

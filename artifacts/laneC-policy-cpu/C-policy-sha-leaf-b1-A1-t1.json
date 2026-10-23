@@ -1,0 +1,9 @@
+{
+  "receipt": "C-policy-sha-leaf-b1-A1-t1",
+  "cpus": "24-35",
+  "threads": 12,
+  "observed_affinity_exact": true,
+  "samples": 59,
+  "peak_sampled_cpu_percent": 1193.3956857209262,
+  "scope": "compiler_rows process user+system CPU / elapsed, sampled at approximately 500 ms"
+}

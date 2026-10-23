@@ -1,0 +1,14 @@
+{
+  "admissible": false,
+  "backend_cap_log_rows": 24,
+  "backend_cap_rows": 16777216,
+  "compiler_rows": 26639333,
+  "cpus": "24-35",
+  "kind": "capacity_check",
+  "padded_log_rows": 25,
+  "required_index_rows": 26640384,
+  "role": "ONE-TIME setup",
+  "threads": 12,
+  "trim": false,
+  "workload": "mpt-storage-proof"
+}

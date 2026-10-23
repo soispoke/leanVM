@@ -333,5 +333,77 @@
       "--",
       "--check"
     ]
+  },
+  {
+    "receipt": "C-policy-build-t2",
+    "ok": true,
+    "sha256": "9944e2daf1cc3a40f64fa0a6c44e6b4bb9f5ce23fe922ce9efc2f7d1e6a3eebf",
+    "command": [
+      "/usr/bin/taskset",
+      "-c",
+      "24-35",
+      "cargo",
+      "build",
+      "--release",
+      "-p",
+      "format_recursion",
+      "--example",
+      "compiler_rows"
+    ]
+  },
+  {
+    "receipt": "C-policy-release-gates-t1",
+    "ok": true,
+    "sha256": "37a08deefd0f114d53b3ccb80d71bc6b40505c4a1f2872f5f0fa26e98e9b32e7",
+    "command": [
+      "/usr/bin/taskset",
+      "-c",
+      "24-35",
+      "cargo",
+      "test",
+      "--release",
+      "-p",
+      "format_recursion",
+      "-p",
+      "rec_aggregation",
+      "--lib",
+      "--examples"
+    ]
+  },
+  {
+    "receipt": "C-policy-clippy-t1",
+    "ok": true,
+    "sha256": "a43522d1be7da9bee0bc963acc3dd051ffe3fdc9808fe156e10710303a0715f6",
+    "command": [
+      "/usr/bin/taskset",
+      "-c",
+      "24-35",
+      "cargo",
+      "clippy",
+      "--release",
+      "-p",
+      "format_recursion",
+      "-p",
+      "rec_aggregation",
+      "--all-targets",
+      "--",
+      "-D",
+      "warnings"
+    ]
+  },
+  {
+    "receipt": "C-policy-fmt-check-t1",
+    "ok": true,
+    "sha256": "bad06d5e2bfccdaf77883ee182a21c1ebcb17404fbef96b04412de7f760aff3f",
+    "command": [
+      "/usr/bin/taskset",
+      "-c",
+      "24-35",
+      "cargo",
+      "fmt",
+      "--all",
+      "--",
+      "--check"
+    ]
   }
 ]

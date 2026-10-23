@@ -1,0 +1,90 @@
+{
+  "A": {
+    "merge2to1_leaf_ms": {
+      "median": 7830.317507,
+      "min": 6359.208155,
+      "max": 14007.286427000001,
+      "n": 6
+    },
+    "merge_core_ms": {
+      "median": 7829.767191000001,
+      "min": 6358.768945999999,
+      "max": 14006.826117999999,
+      "n": 6
+    },
+    "merged_proof_bytes": {
+      "median": 354668.0,
+      "min": 354668,
+      "max": 354668,
+      "n": 6
+    },
+    "merge_peak_rss_kib": {
+      "median": 16079196.0,
+      "min": 16029204,
+      "max": 16102232,
+      "n": 6
+    },
+    "merge_start_rss_kib": {
+      "median": 6331374.0,
+      "min": 6317988,
+      "max": 6335744,
+      "n": 6
+    },
+    "incoming_pair_verify_ms": {
+      "median": 18.4134785,
+      "min": 15.186612,
+      "max": 29.865704,
+      "n": 6
+    },
+    "merged_native_verify_ms": {
+      "median": 7.191891,
+      "min": 6.7547049999999995,
+      "max": 9.441032,
+      "n": 6
+    }
+  },
+  "B": {
+    "merge2to1_leaf_ms": {
+      "median": 9224.933264,
+      "min": 6404.286871,
+      "max": 10368.934819,
+      "n": 6
+    },
+    "merge_core_ms": {
+      "median": 9224.065301999999,
+      "min": 6403.8061720000005,
+      "max": 10368.259789,
+      "n": 6
+    },
+    "merged_proof_bytes": {
+      "median": 354700.0,
+      "min": 354700,
+      "max": 354700,
+      "n": 6
+    },
+    "merge_peak_rss_kib": {
+      "median": 14590012.0,
+      "min": 14570848,
+      "max": 14623416,
+      "n": 6
+    },
+    "merge_start_rss_kib": {
+      "median": 4851660.0,
+      "min": 4827380,
+      "max": 4867256,
+      "n": 6
+    },
+    "incoming_pair_verify_ms": {
+      "median": 15.7843055,
+      "min": 12.477851999999999,
+      "max": 22.791192,
+      "n": 6
+    },
+    "merged_native_verify_ms": {
+      "median": 10.998053,
+      "min": 6.876682000000001,
+      "max": 11.510194,
+      "n": 6
+    }
+  }
+}

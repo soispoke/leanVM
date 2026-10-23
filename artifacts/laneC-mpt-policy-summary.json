@@ -1,0 +1,44 @@
+{
+  "control_admissible": false,
+  "trimmed_samples": 6,
+  "cpus": "24-35",
+  "threads": 12,
+  "WALLET_time_to_mempool_ready_proof_ms": {
+    "median": 14528.285605000001,
+    "min": 13879.822308,
+    "max": 23511.139793,
+    "n": 6
+  },
+  "WALLET_proof_bytes": {
+    "median": 386356.0,
+    "min": 386356,
+    "max": 386356,
+    "n": 6
+  },
+  "WALLET_peak_rss_kib": {
+    "median": 31254306.0,
+    "min": 31239804,
+    "max": 31267472,
+    "n": 6
+  },
+  "WALLET_start_rss_kib": {
+    "median": 13247750.0,
+    "min": 13242824,
+    "max": 13250824,
+    "n": 6
+  },
+  "MEMPOOL_NODE_native_verify_ms": {
+    "median": 7.0051125,
+    "min": 6.284509,
+    "max": 11.191289,
+    "n": 6
+  },
+  "ONE_TIME_setup_wallet_key_ms": {
+    "median": 43892.8979995,
+    "min": 41020.366057,
+    "max": 52946.438695,
+    "n": 6
+  },
+  "complete_split_base_reconciliation_receipt": "C-policy-mpt-split-reconcile-t1",
+  "certificate_bytes_identical_to_prove_base": true
+}

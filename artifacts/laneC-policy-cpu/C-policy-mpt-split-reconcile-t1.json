@@ -1,0 +1,9 @@
+{
+  "receipt": "C-policy-mpt-split-reconcile-t1",
+  "cpus": "24-35",
+  "threads": 12,
+  "observed_affinity_exact": true,
+  "samples": 170,
+  "peak_sampled_cpu_percent": 1193.3772173594757,
+  "scope": "compiler_rows process user+system CPU / elapsed, sampled at approximately 500 ms"
+}

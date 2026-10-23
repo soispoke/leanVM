@@ -2,6 +2,60 @@
 
 Snapshot: `8db3aaa7`, from lane A's dirty tree based on `ab39e040`. No pushes. All builds and measurements use CPUs 24-35, CARGO_BUILD_JOBS=12, RAYON_NUM_THREADS=12, LEANVM_NUM_THREADS=12. Historical timings are single development screens; BLAKE2s 64 B and the completed native boundary screens are superseded by the ABAB medians below. Receipts are `C-*` under the parent workspace, using Yukon `2e90b37`.
 
+## Per-relation trimming policy decision
+
+**Matched WALLET evidence:** CPUs 24-35, exactly 12 worker threads, three ABAB blocks and six fresh timing processes per policy for SHA256 and Keccak. Completed valid receipts are reused. All times below are medians. WALLET time to mempool-ready proof includes witness construction and serialization of the one proof sent; ONE-TIME setup is excluded. WALLET RAM comes from separate base-key-only processes with setup high-water reset. SHA256 leaf-merge ABAB and six-sample MPT trimmed-policy sampling are complete.
+
+|Relation|ONE-TIME shape: native padded log rows control → trim|WALLET time to mempool-ready proof ms control → trim|WALLET proof bytes control → trim|WALLET transaction peak RSS KiB control → trim|MEMPOOL NODE native verify ms control → trim|ONE-TIME wallet key setup ms control → trim|Per-relation policy recommendation|
+|---|---:|---:|---:|---:|---:|---:|---|
+|SHA256 1 KiB|22 → 21|3464.58 → 1805.42|347,036 → 323,836|7,613,130 → 4,070,106|8.06 → 7.07|2774.15 → 1923.83|WALLET win; AGGREGATOR timing gain unestablished; await shape-change sign-off|
+|Keccak 1 KiB|22 → 21|3265.80 → 1668.75|346,652 → 324,060|7,952,854 → 4,081,896|6.48 → 6.66|11881.13 → 10470.32|Recommend native trim after requested shape-change sign-off|
+|MPT|25 (inadmissible) → 24|N/A → 14528.29|N/A → 386,356|N/A → 31,254,306|N/A → 7.01|N/A → 43892.90|Keep existing large-circuit trim default; untrimmed key unavailable, no A/B speedup claim|
+|BLAKE2s 64 B|17 → 17|143.80 → 141.75|247,956 → 250,500|325,346 → 330,108|4.99 → 6.16|99.63 → 84.07|Reject trim rollout: no padding crossing, noise-sized WALLET change, larger proof/RAM|
+
+The MPT 2²⁵ entry is a theoretical required shape, not a functioning untrimmed key. Backend `MAX_LOG_ROWS=24` rejects it before index construction. Frozen receipt `C-policy-mpt-capacity-t1` confirms 26,639,333 compiler rows, 26,640,384 required index rows, theoretical padded log 25, and a 16,777,216-row backend cap. Six failed proofs would not supply a timing control; the repeated MPT results report only the valid trimmed policy and mark the other policy unavailable. No cap, verifier check or proof parameter is changed. SHA256 leaf merges are secondary single-application evidence: this snapshot's node key binds one exact base key, so it does not establish heterogeneous application merging under one fixed key.
+
+**Quotient census:** native trimming leaves the quotient padded log rows unchanged for all seven workloads: BLAKE64 15, BLAKE1KiB 19, SHA256 20, Keccak 20, shielded 22, Falcon512 22, MPT 23. This native-only pass gives no quotient client proving-work reduction for leanPCS or leanR1CS via leanVM. The detailed used-row counts and next-boundary margins are below.
+
+
+## MPT repeated valid-policy result
+
+Six fresh wallet-only processes, arranged at the B positions of three requested ABAB blocks, CPUs 24-35 and exactly 12 workers. Every A position is unavailable because the untrimmed shape needs 2²⁵ rows while the backend cap is 2²⁴. This is not described as an A/B experiment: no untrimmed proof exists under these parameters and no relative speedup is claimed. The existing large-circuit trim policy is the only admitted MPT policy here.
+
+|Role and metric|A untrimmed|B trimmed median [min,max]|
+|---|---|---:|
+|WALLET time to mempool-ready proof ms|unavailable|14528.29 [13879.82, 23511.14]|
+|WALLET proof bytes|unavailable|386,356 [386,356, 386,356]|
+|WALLET transaction peak RSS KiB|unavailable|31,254,306 [31,239,804, 31,267,472]|
+|WALLET transaction start RSS KiB|unavailable|13,247,750 [13,242,824, 13,250,824]|
+|MEMPOOL NODE native verification ms|unavailable|7.01 [6.28, 11.19]|
+|ONE-TIME setup wallet key ms|unavailable|43892.90 [41020.37, 52946.44]|
+|WALLET additional transaction peak RSS KiB|unavailable|18,005,564 [17,992,972, 18,017,652]|
+
+The wallet-only resource harness executes the same `Setup::prove` backend and `Certificate` envelope used by split `prove_base`, with witness construction, satisfaction check, statement words and serialization in the transaction timer. Frozen receipt `C-policy-mpt-split-reconcile-t1` constructs the complete real split setup and calls `SplitClosedSetup::prove_base`; all six wallet certificates match that certificate byte-for-byte, including the same base key and 386,356-byte transport. The separate full split run is a path-reconciliation check, not another statistical sample. All six wallet certificates pass native verification. ONE-TIME setup contains circuit construction, canonical witness and base-key construction; it is excluded from WALLET time. The resource processes construct no aggregator node key, and their RSS high-water is reset immediately before the transaction. This establishes MPT feasibility at high desktop RAM usage, not phone-class feasibility.
+
+ONE-TIME quotient padded log rows remain 23 → 23 under this native flag. The MPT quotient proof has no changed circuit rows, wiring or proving work from this optimization. Raw valid-policy samples: `artifacts/laneC-mpt-policy-samples.json`; summary: `artifacts/laneC-mpt-policy-summary.json`; rejected control shape: `artifacts/laneC-mpt-capacity.json`.
+
+## SHA256 AGGREGATOR leaf-merge results
+
+Three ABAB blocks, six fresh processes per policy on CPUs 24-35 with 12 workers. The same two distinct transactions are used under each policy. Each merged certificate passed native verification, and the last root of each policy passed separate-process verification (`C-policy-sha-root-{A,B}-verify-t1`). This is a secondary, single-application SHA+SHA merge, not a mixed-application result.
+
+|Role and metric|A untrimmed bases|B trimmed bases|
+|---|---:|---:|
+|AGGREGATOR leaf merge median [min,max] ms|7830.32 [6359.21, 14007.29]|9224.93 [6404.29, 10368.93]|
+|AGGREGATOR merged proof bytes|354,668|354,700|
+|AGGREGATOR merge peak RSS KiB|16,079,196|14,590,012|
+|AGGREGATOR merge start RSS KiB|6,331,374|4,851,660|
+|MEMPOOL NODE incoming pair verify ms|18.41|15.78|
+|MEMPOOL NODE merged proof verify ms|7.19|11.00|
+|ONE-TIME setup both merge keys ms|16901.60|12420.97|
+
+**Decision:** no AGGREGATOR latency improvement is established. The raw median grows 17.8%, but the sampled ranges overlap widely; trimmed wins only 3/6 matched pairs, and the median paired relative change is -1.0%. These shared-host samples do not establish a causal regression either. Both node keys retain padded arithmetic log 22 and padded hash-block log 17. The lower WALLET proof size therefore does not imply a node-padding reduction. Merged proof size increases just 32 bytes; merge RSS falls by 1,489,184 KiB, including the resident smaller base key. Both median leaf merges exceed the 1 s aggregation interval. Heterogeneous application merging under one fixed key remains unsupported in this snapshot; this compiler experiment does not address it.
+
+The merge timer includes `prove_node` (including both child checks) plus final serialization. The separate incoming-verification row is two incoming proofs together and is not added to the merge timer, which already contains required child checks. RSS high-water is reset after setup and incoming admission, immediately before merging; node/base keys and retained allocator pages remain resident and are reported in merge-start RSS. ONE-TIME setup constructs both keys and its canonical fixture, excluding all timed merges and input wallet-proof creation. Neither setup nor wallet generation is added to AGGREGATOR time.
+
+Raw samples: `artifacts/laneC-sha-leaf-abab.json`; summary: `artifacts/laneC-sha-leaf-summary.json`. Per-receipt process CPU/affinity spot checks are in `artifacts/laneC-policy-cpu/`.
+
 ## Repeated boundary screen: native SHA256 1 KiB
 
 Three ABAB blocks, six samples per policy, CPUs 24-35, 12 threads, seed 20261024. A is complete-output control; B trims unused outputs. The full split `prove_base` path and serialized certificates are measured. Each timing sample has a separate wallet-only resource process; its certificate must match the full split certificate byte-for-byte. The one invalid resource receipt `C-boundary-sha1k-b3-A1-resources-t1` is excluded: the shared administrative plan JSON changed while the process ran, with all lane-C code unchanged. Its replacement is `...-t2`. Subsequent receipts use frozen `artifacts/laneC-run-plan.json`. Completed valid timing samples were preserved.
@@ -54,7 +108,7 @@ The new frozen `C-quotient-census-all-t1` screen runs circuit wiring validation 
 
 Quotient SHA256 needs 90,932 shared Boolean rows removed to reach 2¹⁹, and has no wholly dead rows under this conservative backward analysis. Native trimming removes arithmetic output equations, not those full-adder rows. Falcon has 1,664 wholly dead non-input rows and MPT has 3,714; removing them alone crosses no quotient boundary. A shared optimization must rewrite the Boolean circuit (for example a separately validated adder-chain rewrite). This lane rejects whole-row DCE as the next performance candidate on the census evidence; no circuit or protocol rewrite is accepted here.
 
-Historical context below comes from `experiments/pcs-r1cs/evidence/2026-10-22-full`: medians of three, 16 threads on CPUs 0-15. These are **WALLET historical client-stage sums** (witness + quotient PIOP + all openings), not newly measured complete time to mempool-ready proof: the archived timer does not include the independent reference check or final serialization. They must not be treated as a matched comparison with current 12-thread native screens. PCS uses a Keccak proof transcript; R1CS-via-leanVM uses BLAKE2s. Application hashes are unchanged.
+**UNMATCHED 16-thread historical context:** the following comes from `experiments/pcs-r1cs/evidence/2026-10-22-full`: medians of three, 16 threads on CPUs 0-15. These are **WALLET historical client-stage sums** (witness + quotient PIOP + all openings), not newly measured complete time to mempool-ready proof: the archived timer does not include the independent reference check or final serialization. They must not be treated as a matched comparison with current 12-thread native screens. PCS uses a Keccak proof transcript; R1CS-via-leanVM uses BLAKE2s. Application hashes are unchanged.
 
 |Workload|WALLET historical quotient client stages ms, PCS / R1CS-via-leanVM|MEMPOOL NODE historical native verification ms, PCS / R1CS-via-leanVM|WALLET quotient effect of native trimming|
 |---|---:|---:|---|
@@ -118,9 +172,9 @@ The headline metric is witness construction plus creation and serialization of t
 |4|blake2s-1kib|1936.10|1834.82|-101.28 ms (-5.2%)|323,356 / 324,124|9.90 / 6.64|
 |5|blake2s-64b (ABAB medians)|143.80|141.75|-2.04 ms (-1.4%; not accepted)|247,956 / 250,500|4.99 / 6.16|
 |6|shielded-transfer|13243.01|13476.35|+233.34 ms (+1.8%)|385,204 / 384,660|6.76 / 6.61|
-| |mpt-storage-proof|unavailable|13704.73|unranked|unavailable / 386,356|unavailable / 6.06|
+| |mpt-storage-proof (six trimmed samples)|unavailable|14528.29|unranked; untrimmed key unavailable|unavailable / 386,356|unavailable / 7.01|
 
-Ranking is by absolute change in time to mempool-ready proof (most time saved first), within each matched workload pair. It does not compare unlike workload latencies as optimization wins. Rows and backend-only proof timings are supporting evidence. BLAKE2s 64 B, SHA256 and Keccak use six samples per policy from three ABAB blocks; other workload figures remain single runs. CPUs 24-35, 12 threads, seed 20261024. MPT default already trims and its complete-output proof is infeasible. All feasible matched pairs are complete; all generated wallet certificates passed native verification.
+Ranking is by absolute change in time to mempool-ready proof (most time saved first), within each matched workload pair. It does not compare unlike workload latencies as optimization wins. Rows and backend-only proof timings are supporting evidence. BLAKE2s 64 B, SHA256 and Keccak use six samples per policy from three ABAB blocks; MPT uses six trimmed-only samples because its untrimmed key is unavailable. Other workload figures remain single runs. CPUs 24-35, 12 threads, seed 20261024. MPT default already trims and its complete-output proof is infeasible. All feasible matched pairs are complete; all generated wallet certificates passed native verification.
 
 ## Padding census and boundary priority
 
@@ -224,3 +278,21 @@ SHA256 and Keccak native output trimming are ready for the requested shape-chang
 `artifacts/laneC-boundary-audit.json` records 48 valid receipts for the 24 complete WALLET samples and their separate wallet-resource processes, verifies identical Rust hashes across all runs, checks deterministic certificate identity within each policy, and confirms wallet-only certificates equal full split `prove_base` certificates. Both SHA256 and Keccak improve in all six matched A→B pairs. The censused quotient circuits all pass wiring validation. New results remain opt-in research evidence for the explicit native shape-change decision; no automatic rollout or push was performed.
 
 Integration order after the snapshot: `12d9f6d8` (research trim override, census and rejection tests), `df3d6dae` (complete WALLET metric), `b06e0de5` (path/byte reconciliation), `aa4fb157` (native padding census), `09ba5656` (BLAKE64 ABAB/resource harness), `73dc61d7` (role tags), followed by the boundary/quotient evidence commit. On lane A, preserve your newer prover changes and the existing large-circuit default when resolving helper conflicts. Enable SHA256/Keccak default trimming only after the requested user shape-change sign-off. BLAKE64 remains unchanged at 247,956 WALLET bytes by default. The row-count candidates do not alter quotient circuits or accelerate leanPCS/leanR1CS-via-leanVM.
+
+## SHA256 leaf-merge screen design
+
+The AGGREGATOR (canonical MEMPOOL NODE) measurement is the public `SplitClosedSetup::prove_node` call on two distinct wallet statements (seeds 20261024 and 20261025), followed by certificate serialization. Both incoming child-verification checks remain inside the call. Incoming verification and final native root verification are also reported separately; neither key setup nor wallet proof creation is in the merge timer. Each leaf-merge sample runs in a fresh process, CPUs 24-35 with 12 workers, in three ABAB blocks. Incoming certificates are created in separate wallet processes and loaded from files. Root certificates are verified again in independent processes, one per policy.
+
+ONE-TIME setup observations: untrimmed SHA base arithmetic log is 22; trimmed is 21. Both resulting node keys have arithmetic log 22, block log 17 (131,072 padded blocks), and joint stack log 27. Node connector starts fall from 2,359,296 to 2,228,224, so fewer recorded arithmetic rows do not cross a node padding boundary. Actual measured merge latency remains the decision metric. This is a homogeneous SHA+SHA merge; this snapshot binds one exact application base key per node key and cannot establish mixed-application merging under one fixed key. That broader feasibility limitation is unchanged.
+
+## Per-relation policy screen completion and integration
+
+All requested valid screens are complete. SHA256 and Keccak reuse their already completed three ABAB blocks (six fresh timing processes per policy, plus separate wallet resource processes). SHA256 leaf merging adds three ABAB blocks, six fresh merge processes per policy, with two distinct incoming transactions and independent root verification for each policy. MPT has six fresh trimmed-policy processes and byte identity against a separate full split-base proof. A valid untrimmed MPT key cannot be constructed: its required 26,640,384 index rows round to 2²⁵ above the 2²⁴ backend cap. No invalid proof-time control or percentage speedup is invented, and the cap is unchanged. The prior all-workload quotient row census is reused; native trimming changes none of its padded classes.
+
+`artifacts/laneC-policy-audit.json` checks 24 new immutable-source receipts, fixed keys and deterministic proof hashes within each policy, MPT exact byte identity with `SplitClosedSetup::prove_base`, and twelve-worker runtime assertions. Every sampled process affinity is exactly CPUs 24-35. The approximately 500 ms procfs CPU-counter sampler reaches 1208.62% in one short interval (0.7% apparent overshoot above the twelve-core limit); raw sampling data is retained rather than rounded away. Counter/read timing can produce small short-interval overshoots; the twelve-core OS affinity and twelve-worker assertion bound execution. No 64-thread run enters this comparison. The proving libraries, shared Boolean circuit sources and verifier code are unchanged from the prior SHA/Keccak WALLET ABAB evidence; only the research measurement harness changes.
+
+Frozen gates `C-policy-release-gates-t1`, `C-policy-clippy-t1` and `C-policy-fmt-check-t1` passed. Format-recursion: 79 library tests; recursive aggregation: 43 library tests, with five existing ignored tests unchanged; all example tests pass. Existing non-Boolean forgery, malformed-child and cross-policy rejection checks remain intact. Clippy checks both packages and all targets with `-D warnings`; formatting and `git diff --check` pass. No Lean proof source is edited.
+
+`artifacts/laneC-matched-12t.jsonl` contains individual matched measurements with explicit policy labels. They are also published to the brief's shared `../artifacts/matched-12t.jsonl`; consumers must filter the `policy` field and must not treat opt-in candidates as production defaults. WALLET times use `wallet_prove_s` and include witness plus the one encoded proof, with ONE-TIME setup separate. Leaf merges use `merge2to1_leaf_s` and the canonical MEMPOOL NODE role, plus AGGREGATOR category. The archived 16-thread quotient timings are explicitly unmatched and are excluded from this file. Each record retains the source revision/dirty bit from its original receipt; source hashes are in the audited receipt and the committed evidence reproduces the research harness.
+
+For lane A: the new policy-screen commit is based on `2d490c4f` and adds measurement controls, CPU spot checks, SHA leaf-merge results and MPT repeated valid-policy evidence. No prover, PCS, verifier, library, shared Boolean circuit or production policy is changed. Native SHA256/Keccak trimming remains an explicit shape-change proposal for user decision. SHA256 has a clear WALLET win but no established AGGREGATOR timing win; Keccak has a clear WALLET win; MPT retains its already-required large-circuit trim policy; BLAKE64 trimming remains rejected. This is single-application merge evidence and does not solve heterogeneous merging under one key or the 1 s aggregation interval. No pushes.

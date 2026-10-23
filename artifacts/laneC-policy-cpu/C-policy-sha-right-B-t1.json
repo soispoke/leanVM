@@ -1,0 +1,9 @@
+{
+  "receipt": "C-policy-sha-right-B-t1",
+  "cpus": "24-35",
+  "threads": 12,
+  "observed_affinity_exact": true,
+  "samples": 8,
+  "peak_sampled_cpu_percent": 883.880519590315,
+  "scope": "compiler_rows process user+system CPU / elapsed, sampled at approximately 500 ms"
+}
