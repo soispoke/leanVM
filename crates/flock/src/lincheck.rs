@@ -870,7 +870,6 @@ pub fn pack_z_lincheck(z_logical: &[bool], m: usize, k_log: usize) -> Vec<u8> {
 
 /// Same output as `pack_z_lincheck`, but reads bits from the bit-packed `u64`
 /// witness: logical bit `i` is bit `i % 64` of `z_packed_words[i / 64]`.
-#[cfg(test)]
 pub fn pack_z_lincheck_from_packed(z_packed_words: &[u64], m: usize, k_log: usize) -> Vec<u8> {
     let k = 1usize << k_log;
     let n_total = 1usize << m;
