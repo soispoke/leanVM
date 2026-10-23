@@ -123,6 +123,9 @@ pub struct SparseSetup {
 }
 impl SparseSetup {
     pub fn new(program: Trace, ccs: bool) -> Option<Self> {
+        Self::new_with_padding(program, ccs, None)
+    }
+    pub fn new_with_padding(program: Trace, ccs: bool, dimensions: Option<(usize, usize)>) -> Option<Self> {
         let mut program = crate::private_trace::PreparedProgram::new(program)?;
         let lower = program.lower_setup()?;
         let source = super::Source {
@@ -139,9 +142,25 @@ impl SparseSetup {
             compressions: lower.permutations,
             rebuild: Box::new(|| unreachable!()),
         };
-        let r = super::R1cs::lower_bounded(&source.circuit, &source.connectors, &source.values, source.fixed_len, 8);
+        let mut r =
+            super::R1cs::lower_bounded(&source.circuit, &source.connectors, &source.values, source.fixed_len, 8);
+        if let Some((rows, cols)) = dimensions {
+            let row_count = 1usize.checked_shl(rows.try_into().ok()?)?;
+            let col_count = 1usize.checked_shl(cols.try_into().ok()?)?;
+            if r.rows() > row_count || r.origins.len() > col_count {
+                return None;
+            }
+            for matrix in &mut r.matrices {
+                matrix.offsets.resize(row_count + 1, matrix.entries.len());
+            }
+            r.origins.resize(col_count, super::Origin::Constant(F192::ZERO));
+        }
         let setup = Setup::new(r, ccs);
-        let generator = super::generator::Generator::new(&source, 8, setup.key);
+        let mut generator = super::generator::Generator::new(&source, 8, setup.key);
+        if dimensions.is_some() {
+            generator.row_log = setup.row_log;
+            generator.col_log = setup.z_log;
+        }
         Some(Self {
             setup,
             generator,
