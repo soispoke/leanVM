@@ -1,6 +1,6 @@
 # Sparse carried-claims tree, work in progress
 
-The first-level true sparse-R1CS mixed merge has reached a three-process median of **0.975 s** for independently proved shielded plus the merge-circuit application. Shielded plus a new depth-16 BLAKE2s Merkle membership application takes **0.752 s**. A reusable wrapper and depth-2 mixed tree are now implemented and measured, but the node median remains slightly above one second and outer claim settlement remains above 10 ms. These are prototype measurements and regression checks, not a security claim.
+The latest depth-2 mixed node merge is **1.022 s** (same-app **1.041 s**), above the one-second target. The first-level true sparse-R1CS mixed merge has reached a three-process median of **0.975 s** for independently proved shielded plus the merge-circuit application. Shielded plus a new depth-16 BLAKE2s Merkle membership application takes **0.752 s**. A reusable wrapper and depth-2 mixed tree are now implemented and measured, but the node median remains slightly above one second and outer claim settlement remains above 10 ms. These are prototype measurements and regression checks, not a security claim.
 
 ## Implementation
 
@@ -52,3 +52,22 @@ A depth-2 mixed run succeeded: two first-level nodes, each built from independen
 The node verifier rejection probes bypass native prover prechecks and reject: a false carried evaluation, substituted app key, omitted claim, duplicated claim, wrong child kind, swapped children, tampered child proof, tampered node proof, malformed statement length, and a changed active claim. Full release library tests passed (94 tests before the node example probes; the row-format subset passed after node changes). These checks demonstrate those tested rejection behaviors only.
 
 The depth-2 node is near but above the requested one-second interval. The full mixed-tree verdict is therefore **not yet under 1 s**. First-level mixed shielded plus merge-app is sub-second at 0.975 s, and shielded plus the independent Merkle app is 0.752 s. The remaining gap is outer proving, about 0.67 s at depth 2, plus roughly 0.24 s node folding and child replay. Root settlement also remains above 10 ms for the first-wrapper and node matrices. The four slots currently accommodate two real application shapes plus the first-wrapper and node-wrapper identities. They do not support a third real application simultaneously. The fixed schema was tested with a shielded-only subset and shielded plus Merkle; the identical node key across those workloads is recorded in raw JSON. Root count means all distinct identities, including wrapper identities, and the complete fresh-process 1/2/3-identity timing table remains to be assembled.
+
+
+## Final group in this continuation
+
+The final group uses the compact generator, four independent fresh wallet proofs per process, and all direct verifier probes. Binary SHA256 and the exact alternating order are in `ht-L2r/artifacts/sparse-tree/node-provenance.json`. Three fresh processes per case, same/mixed then mixed/same then same/mixed, measured **1.022 s mixed** and **1.041 s same-app**, with **253 ms** and **248 ms** in the fold prover. Shape remains **634,272 native rows**, **8,388,608 committed F64 words**, **180,064 mixed proof bytes / 179,488 same-app proof bytes**, and **2,664 mixed / 1,968 same-app active carried bytes**. The fixed public statement is **3,912 bytes**, including inactive padded slots, active flags, kind and digest; active carried bytes exclude these schema fields. No claim is hidden from the node public statement when inactive; an inactive slot must be canonically zero. Root checks bind every active slot to a trusted generator and its role.
+
+| Root workload | Distinct matrix identities | Complete acceptance ms |
+|---|---:|---:|
+| Shielded wallet only | 1 | 4.83 |
+| First-level shielded + shielded | 2 (shielded, first wrapper) | 19.84 |
+| First-level shielded + Merkle | 3 (shielded, Merkle, first wrapper) | 20.41 |
+| Depth-2 shielded tree | 3 (shielded, first wrapper, node wrapper) | 33.28 |
+| Depth-2 shielded + Merkle tree | 4 (shielded, Merkle, first wrapper, node wrapper) | 34.71 |
+
+Identity count alone does not determine cost: the two three-identity rows contain different circuits. Each timer includes checking the outer proof and settling its fresh matrix claim plus all active carried claims, excluding trusted setup and generator compilation. The larger wrapper settlements remain around 14-15 ms each, so the requested per-identity target is not met even where the total divided by identity count is below 10 ms. The one-, two-, and three-identity root cases are now measured; a third real application is not supported simultaneously by this four-slot tree schema.
+
+The later node-key reuse regression proves another composition with the same node setup and an active node-wrapper slot; it uses two different node proofs built from reordered first-level children, and shares leaves between those nodes. It is a reuse test, not an independent eight-leaf benchmark. The reported depth-2 timings use four independent fresh leaves and two different first-level child proofs.
+
+Direct rejection probes include replacing an omitted slot with canonical inactive zero data, removing a slot structurally, and duplicating an entire same-shape wrapper claim. These go to row replay or native root verification, bypassing the node prover's admission code. They do not establish a general soundness theorem. Changes are committed locally on `hometurf/L2r`; no push was performed. The full goal remains active: obtain a repeatable sub-second node median and bring the large wrapper settlements to 10 ms or less. The fixed-shape, two-real-application scope should be reviewed before claiming general mixed-workload recursion.

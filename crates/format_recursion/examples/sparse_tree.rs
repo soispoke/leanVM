@@ -28,7 +28,7 @@ fn main() {
     assert_eq!(parallel::num_threads(), 12);
     let mixed = std::env::args().nth(1).as_deref() != Some("same");
     let context = primitives::hash::hash(b"sparse-carried-tree-measure-v1");
-    let sources = vec![
+    let sources = [
         row_format::shielded_source(0),
         if mixed {
             row_format::merkle_source(1)

@@ -1,0 +1,94 @@
+{
+  "node-same": {
+    "merge_s": 1.16386375,
+    "fold_prover_s": 0.305448852,
+    "outer_prover_s": 0.754931004,
+    "rows": 898928,
+    "committed_words": 8388608,
+    "proof_bytes": 179680,
+    "carried_bytes": 1968,
+    "complete_root_ms": 47.424695,
+    "own_settle_ms": 22.772545
+  },
+  "node-mixed": {
+    "merge_s": 1.116790833,
+    "fold_prover_s": 0.283264569,
+    "outer_prover_s": 0.745565193,
+    "rows": 898928,
+    "committed_words": 8388608,
+    "proof_bytes": 180352,
+    "carried_bytes": 2664,
+    "complete_root_ms": 46.455327999999994,
+    "own_settle_ms": 21.161915999999998
+  },
+  "node-digest-same": {
+    "merge_s": 1.0672785359999999,
+    "fold_prover_s": 0.264652978,
+    "outer_prover_s": 0.700269811,
+    "rows": 634272,
+    "committed_words": 8388608,
+    "proof_bytes": 179488,
+    "carried_bytes": 1968,
+    "complete_root_ms": 40.672267,
+    "own_settle_ms": 17.028063
+  },
+  "node-digest-mixed": {
+    "merge_s": 1.060698465,
+    "fold_prover_s": 0.272498888,
+    "outer_prover_s": 0.668985579,
+    "rows": 634272,
+    "committed_words": 8388608,
+    "proof_bytes": 180064,
+    "carried_bytes": 2664,
+    "complete_root_ms": 39.892378,
+    "own_settle_ms": 17.17648
+  },
+  "node-compact-same": {
+    "merge_s": 1.014169829,
+    "fold_prover_s": 0.244351825,
+    "outer_prover_s": 0.668411386,
+    "rows": 634272,
+    "committed_words": 8388608,
+    "proof_bytes": 179488,
+    "carried_bytes": 1968,
+    "complete_root_ms": 36.149187999999995,
+    "own_settle_ms": 15.971834000000001
+  },
+  "node-compact-mixed": {
+    "merge_s": 1.005749864,
+    "fold_prover_s": 0.248557717,
+    "outer_prover_s": 0.671760458,
+    "rows": 634272,
+    "committed_words": 8388608,
+    "proof_bytes": 180064,
+    "carried_bytes": 2664,
+    "complete_root_ms": 34.769112,
+    "own_settle_ms": 14.153993999999999
+  },
+  "node-final-same": {
+    "merge_s": 1.041088399,
+    "fold_prover_s": 0.247896878,
+    "outer_prover_s": 0.679674067,
+    "rows": 634272,
+    "committed_words": 8388608,
+    "proof_bytes": 179488,
+    "carried_bytes": 1968,
+    "complete_root_ms": 33.275657,
+    "own_settle_ms": 14.05384,
+    "leaf_complete_root_ms": 4.828501,
+    "first_complete_root_ms": 19.842932
+  },
+  "node-final-mixed": {
+    "merge_s": 1.022315651,
+    "fold_prover_s": 0.253349309,
+    "outer_prover_s": 0.685616876,
+    "rows": 634272,
+    "committed_words": 8388608,
+    "proof_bytes": 180064,
+    "carried_bytes": 2664,
+    "complete_root_ms": 34.714782,
+    "own_settle_ms": 14.925773999999999,
+    "leaf_complete_root_ms": 5.087207,
+    "first_complete_root_ms": 20.410391999999998
+  }
+}
