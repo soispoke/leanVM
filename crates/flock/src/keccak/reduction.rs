@@ -2,7 +2,13 @@
 //! lincheck and PCS ring-switch protocols. The embedding bridge must bind the
 //! circuit identity, shape, I/O wiring and witness commitment before challenges.
 use super::{INPUT, K_LOG, KeccakCircuit, OUTPUT, RC, ROT, USED};
-use crate::{hash::SliceClaim, lincheck, verifier::VerifyError, witness::packed_bytes, zerocheck};
+use crate::{
+    hash::SliceClaim,
+    lincheck,
+    verifier::VerifyError,
+    witness::{drive_witness_packed_and_lincheck, packed_bytes},
+    zerocheck,
+};
 use fiat_shamir::transcript::{ProverState, VerifierState};
 use pcs::{
     pack::LOG_PACKING,
@@ -16,6 +22,11 @@ pub type Permutation = [u64; 25];
 fn block(input: &Permutation) -> (Vec<u64>, Vec<u64>, Vec<u64>) {
     let words = 1 << (K_LOG - LOG_PACKING);
     let (mut z, mut a, mut b) = (vec![0; words], vec![0; words], vec![0; words]);
+    block_into(input, &mut z, &mut a, &mut b);
+    (z, a, b)
+}
+
+fn block_into(input: &Permutation, z: &mut [u64], a: &mut [u64], b: &mut [u64]) {
     z[0] = 1;
     a[0] = 1;
     b[0] = 1;
@@ -49,7 +60,6 @@ fn block(input: &Permutation) -> (Vec<u64>, Vec<u64>, Vec<u64>) {
     z[last..last + 25].copy_from_slice(&state);
     a[last..last + 25].copy_from_slice(&state);
     b[last..last + 25].fill(u64::MAX);
-    (z, a, b)
 }
 
 pub fn permute(input: &Permutation) -> Permutation {
@@ -59,18 +69,7 @@ pub fn permute(input: &Permutation) -> Permutation {
 
 /// Packed Boolean witnesses, including honest zero-input padding permutations.
 pub fn generate(inputs: &[Permutation], block_log: usize) -> (Vec<u64>, Vec<u64>, Vec<u64>, Vec<u8>) {
-    assert!(inputs.len() <= 1usize << block_log);
-    let blocks = parallel::map_collect(1 << block_log, |i| block(inputs.get(i).unwrap_or(&[0; 25])));
-    let mut z = Vec::new();
-    let mut a = Vec::new();
-    let mut b = Vec::new();
-    for (zi, ai, bi) in blocks {
-        z.extend(zi);
-        a.extend(ai);
-        b.extend(bi);
-    }
-    let stripes = lincheck::pack_z_lincheck_from_packed(&z, K_LOG + block_log, K_LOG);
-    (z, a, b, stripes)
+    drive_witness_packed_and_lincheck(inputs, Some(&[0; 25]), block_log, K_LOG, block_into)
 }
 
 fn point(zc: &zerocheck::ZerocheckClaim) -> lincheck::QuirkyPoint {
@@ -154,11 +153,12 @@ mod tests {
     #[test]
     fn packed_witness_matches_bit_circuit_and_full_reduction() {
         parallel::init();
-        let inputs: Vec<Permutation> = (0..8)
+        let inputs: Vec<Permutation> = (0..3)
             .map(|i| std::array::from_fn(|j| (i * 25 + j) as u64 * 1234567))
             .collect();
         let (z, a, b, stripes) = generate(&inputs, 3);
-        for (i, input) in inputs.iter().enumerate() {
+        for i in 0..8 {
+            let input = inputs.get(i).unwrap_or(&[0; 25]);
             let bits = std::array::from_fn(|j| input[j / 64] >> (j % 64) & 1 != 0);
             let reference = super::super::witness(&bits);
             let packed = &z[i * 1024..(i + 1) * 1024];
