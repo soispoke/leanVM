@@ -70,31 +70,52 @@ fn app_indices(setups: &[&Setup], claims: &[DeferredClaim]) -> Vec<usize> {
         })
         .collect()
 }
-fn sumcheck(pairs: &mut [(Vec<F192>, Vec<F192>)], mut claim: F192, ps: &mut ProverState) -> (Vec<F192>, F192) {
+fn sumcheck(
+    pairs: &mut [(Vec<F192>, Vec<F192>)],
+    rounds: usize,
+    zero_first: bool,
+    mut claim: F192,
+    ps: &mut ProverState,
+) -> (Vec<F192>, F192) {
     let mut point = Vec::new();
-    while pairs[0].0.len() > 1 {
-        let half = pairs[0].0.len() / 2;
-        let [c0, c2] = parallel::map_reduce(
-            half,
-            || [F192::ZERO; 2],
-            |i| {
-                pairs.iter().fold([F192::ZERO; 2], |s, (a, b)| {
-                    [
-                        s[0] + a[2 * i] * b[2 * i],
-                        s[1] + (a[2 * i] + a[2 * i + 1]) * (b[2 * i] + b[2 * i + 1]),
-                    ]
-                })
-            },
-            |a, b| [a[0] + b[0], a[1] + b[1]],
-        );
+    for _ in 0..rounds {
+        let [c0, c2] = pairs.iter().fold([F192::ZERO; 2], |total, (a, b)| {
+            let part = if a.len() == 1 {
+                [a[0] * b[0], F192::ZERO]
+            } else {
+                parallel::map_reduce(
+                    a.len() / 2,
+                    || [F192::ZERO; 2],
+                    |i| {
+                        [
+                            a[2 * i] * b[2 * i],
+                            (a[2 * i] + a[2 * i + 1]) * (b[2 * i] + b[2 * i + 1]),
+                        ]
+                    },
+                    |x, y| [x[0] + y[0], x[1] + y[1]],
+                )
+            };
+            [total[0] + part[0], total[1] + part[1]]
+        });
         let q = [c0, claim + c2, c2];
         ps.add_round_poly(&q, false);
         let r = ps.sample();
         claim = poly_eval(&q, r);
         point.push(r);
         for (a, b) in pairs.iter_mut() {
-            *a = parallel::map_collect(half, |i| a[2 * i] + r * (a[2 * i] + a[2 * i + 1]));
-            *b = parallel::map_collect(half, |i| b[2 * i] + r * (b[2 * i] + b[2 * i + 1]));
+            if a.len() == 1 {
+                // The short polynomial repeats in unused coordinates, while
+                // its matching weight is zero outside its native domain.
+                if zero_first {
+                    a[0] *= F192::ONE + r;
+                } else {
+                    b[0] *= F192::ONE + r;
+                }
+            } else {
+                let half = a.len() / 2;
+                *a = parallel::map_collect(half, |i| a[2 * i] + r * (a[2 * i] + a[2 * i + 1]));
+                *b = parallel::map_collect(half, |i| b[2 * i] + r * (b[2 * i] + b[2 * i + 1]));
+            }
         }
     }
     assert_eq!(claim, pairs.iter().fold(F192::ZERO, |s, (a, b)| s + a[0] * b[0]));
@@ -116,8 +137,7 @@ pub fn prove(setups: &[&Setup], claims: &[DeferredClaim], digest: &Hash) -> Redu
     let mut pairs = Vec::new();
     for (c, &f) in claims.iter().zip(&indices) {
         let setup = setups[f];
-        let mut u: Vec<_> = eq_table(&c.row_point).into_iter().map(|v| v * power).collect();
-        u.resize(1usize << rlog, F192::ZERO);
+        let u: Vec<_> = eq_table(&c.row_point).into_iter().map(|v| v * power).collect();
         let cw = eq_table(&c.col_point);
         let product = setup
             .r1cs
@@ -127,19 +147,19 @@ pub fn prove(setups: &[&Setup], claims: &[DeferredClaim], digest: &Hash) -> Redu
         let short: Vec<_> = (0..1usize << setup.row_log)
             .map(|r| product[0][r] + theta * product[1][r] + theta2 * product[2][r])
             .collect();
-        let g = parallel::map_collect(1usize << rlog, |r| short[r % short.len()]);
+        let g = short;
         target += power * (c.matrix_values[0] + theta * c.matrix_values[1] + theta2 * c.matrix_values[2]);
         pairs.push((u, g));
         power *= theta3;
     }
-    let (rp, row_target) = sumcheck(&mut pairs, target, &mut ps);
+    let (rp, row_target) = sumcheck(&mut pairs, rlog, true, target, &mut ps);
     let mut columns = Vec::new();
     for (f, setup) in setups.iter().enumerate() {
         let rw = eq_table(&rp[..setup.row_log]);
         for (j, m) in setup.r1cs.matrices.iter().enumerate() {
             let short = m.fold_rows(&rw, 1usize << setup.z_log);
-            let poly = parallel::map_collect(1usize << clog, |i| short[i % short.len()]);
-            let mut weights = vec![F192::ZERO; 1usize << clog];
+            let poly = short;
+            let mut weights = vec![F192::ZERO; 1usize << setup.z_log];
             let coefficient = [F192::ONE, theta, theta2][j];
             for (i, c) in claims.iter().enumerate().filter(|(i, _)| indices[*i] == f) {
                 let scale = pairs[i].0[0] * coefficient;
@@ -153,7 +173,7 @@ pub fn prove(setups: &[&Setup], claims: &[DeferredClaim], digest: &Hash) -> Redu
             columns.push((poly, weights));
         }
     }
-    let (cp, _) = sumcheck(&mut columns, row_target, &mut ps);
+    let (cp, _) = sumcheck(&mut columns, clog, false, row_target, &mut ps);
     let carried = setups
         .iter()
         .enumerate()
