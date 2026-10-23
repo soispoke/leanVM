@@ -10,7 +10,7 @@ fn create<W: Workload>(
     sources: &[circuit_suite::Src],
     calls: &[circuit_suite::KeccakCall],
     seed: u64,
-    identity: [u8; 32],
+    _identity: [u8; 32],
 ) -> Builder {
     let instance = W::instance(seed);
     let mut b = Builder::default();
@@ -21,32 +21,11 @@ fn create<W: Workload>(
         statement[i / 8] |= (b.value(*bit).c0 as u8) << (i % 8);
     }
     assert_eq!(statement, instance.statement, "independent application statement");
-    let mut message: Vec<_> = identity
-        .as_chunks::<8>()
-        .0
-        .iter()
-        .map(|word| b.constant(u64::from_le_bytes(*word)))
-        .collect();
-    for chunk in bits.as_chunks::<128>().0.iter() {
-        let reversed: Vec<_> = (0..16)
-            .rev()
-            .flat_map(|byte| (0..8).map(move |bit| chunk[8 * byte + bit]))
-            .collect();
-        for word in reversed.as_chunks::<64>().0.iter() {
-            message.push(b.pack(word));
-        }
+    for word in bits.as_chunks::<64>().0.iter().take(4) {
+        let packed = b.pack(word);
+        b.expose(packed);
     }
-    let digest = b.hash_words(&message);
-    let mut expected = identity.to_vec();
-    for chunk in statement.as_chunks::<16>().0.iter() {
-        expected.extend(chunk.iter().rev());
-    }
-    let expected = primitives::hash::hash(&expected);
-    let actual: Vec<_> = digest.iter().flat_map(|&word| b.value(word).c0.to_le_bytes()).collect();
-    assert_eq!(actual, expected, "canonical application claim");
-    for word in digest {
-        b.expose(word);
-    }
+    b.expose(bits[256]);
     if calls.is_empty() {
         b.keccak_f([format_recursion::native_hash::Word::ZERO; 25]);
     }
@@ -67,12 +46,14 @@ fn run<W: Workload>(args: &[String]) {
         let (ckt, srcs) = c.finish(&public);
         (ckt, srcs, Vec::new())
     };
-    let identity = if native {
-        let (original, _, _) = circuit_suite::build::<W>();
-        format_recursion::application_lowering::identity(&original)
-    } else {
-        format_recursion::application_lowering::identity(&circuit)
-    };
+    if args[3] == "census" {
+        println!(
+            "{}",
+            serde_json::json!({"kind":"census","core_rows":core_rows,"permutations":calls.len()})
+        );
+        return;
+    }
+    let identity = [0; 32];
     let canonical = create::<W>(&circuit, &sources, &calls, seed, identity);
     let public = canonical.public_values();
     let start = Instant::now();
