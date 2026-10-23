@@ -1,0 +1,24 @@
+diff --git a/crates/format_recursion/src/private_bridge.rs b/crates/format_recursion/src/private_bridge.rs
+index ece5579d..366e403f 100644
+--- a/crates/format_recursion/src/private_bridge.rs
++++ b/crates/format_recursion/src/private_bridge.rs
+@@ -356,9 +356,17 @@ impl PrivateBridge {
+         let public = self.index.public_values(&values);
+         let lane_words = 1usize << (self.stack_log - INITIAL_FOLDING_FACTOR);
+         let joint_words = self.committed_lanes() * lane_words;
+-        let mut witness = tracing::info_span!("Arithmetic witness")
++        let mut witness = tracing::info_span!(
++            "Arithmetic witness",
++            native_rows = 1usize << self.index.log_rows,
++            actual_gates = self.index.shape().1
++        )
+             .in_scope(|| native_arithmetic::prepare_compact_with_capacity(&self.index, &values, joint_words));
+-        let (z, a, b, lincheck) = tracing::info_span!("Hash witness")
++        let (z, a, b, lincheck) = tracing::info_span!(
++            "Hash witness",
++            actual_blocks = blocks.len(),
++            padded_slots = 1usize << self.block_log
++        )
+             .in_scope(|| generate_witness_with_ab_packed_and_lincheck(blocks, self.block_log));
+         let mut stack = std::mem::take(&mut witness.stack);
+         stack.resize(joint_words, F64::ZERO);

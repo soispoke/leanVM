@@ -1,0 +1,133 @@
+{
+  "scope": "single diagnostic process; first proof is colder than remaining proofs; no paired performance claim",
+  "rows": [
+    {
+      "level": 0,
+      "index": 0,
+      "creation_s": 1.929877472,
+      "counts": {
+        "native_rows": 2097152,
+        "actual_gates": 1506304,
+        "actual_blocks": 34979,
+        "padded_slots": 65536
+      },
+      "stage_ms": {
+        "Private prove": 1850.0,
+        "Compile witness": 55.1,
+        "Arithmetic witness": 154.0,
+        "Hash witness": 54.7,
+        "Joint commitment": 536.0,
+        "Arithmetic reduction": 280.0,
+        "Native zerocheck": 101.0,
+        "Native gate evaluations": 5.7,
+        "Native copy leaves": 36.1,
+        "Native copy product": 131.0,
+        "Native copy evaluations": 7.27,
+        "Hash reduction": 222.0,
+        "Zerocheck": 206.0,
+        "Round 1": 52.5,
+        "Bit rounds": 90.3,
+        "Table rounds": 63.4,
+        "Lincheck": 15.4,
+        "Joint opening": 308.0,
+        "Index opening": 87.3
+      }
+    },
+    {
+      "level": 0,
+      "index": 1,
+      "creation_s": 1.22828651,
+      "counts": {
+        "native_rows": 2097152,
+        "actual_gates": 1506304,
+        "actual_blocks": 34979,
+        "padded_slots": 65536
+      },
+      "stage_ms": {
+        "Private prove": 1150.0,
+        "Compile witness": 56.4,
+        "Arithmetic witness": 56.9,
+        "Hash witness": 15.6,
+        "Joint commitment": 197.0,
+        "Arithmetic reduction": 145.0,
+        "Native zerocheck": 41.7,
+        "Native gate evaluations": 5.86,
+        "Native copy leaves": 13.9,
+        "Native copy product": 76.4,
+        "Native copy evaluations": 7.14,
+        "Hash reduction": 173.0,
+        "Zerocheck": 154.0,
+        "Round 1": 52.9,
+        "Bit rounds": 40.4,
+        "Table rounds": 60.9,
+        "Lincheck": 18.4,
+        "Joint opening": 305.0,
+        "Index opening": 82.0
+      }
+    },
+    {
+      "level": 1,
+      "index": 0,
+      "creation_s": 1.2467718190000001,
+      "counts": {
+        "native_rows": 2097152,
+        "actual_gates": 1506304,
+        "actual_blocks": 34979,
+        "padded_slots": 65536
+      },
+      "stage_ms": {
+        "Private prove": 1150.0,
+        "Compile witness": 56.0,
+        "Arithmetic witness": 55.7,
+        "Hash witness": 15.3,
+        "Joint commitment": 193.0,
+        "Arithmetic reduction": 147.0,
+        "Native zerocheck": 40.4,
+        "Native gate evaluations": 6.09,
+        "Native copy leaves": 14.4,
+        "Native copy product": 77.9,
+        "Native copy evaluations": 7.6,
+        "Hash reduction": 173.0,
+        "Zerocheck": 157.0,
+        "Round 1": 55.1,
+        "Bit rounds": 41.6,
+        "Table rounds": 60.5,
+        "Lincheck": 15.8,
+        "Joint opening": 317.0,
+        "Index opening": 74.5
+      }
+    }
+  ],
+  "root": {
+    "level": 1,
+    "index": 0,
+    "creation_s": 1.2467718190000001,
+    "counts": {
+      "native_rows": 2097152,
+      "actual_gates": 1506304,
+      "actual_blocks": 34979,
+      "padded_slots": 65536
+    },
+    "stage_ms": {
+      "Private prove": 1150.0,
+      "Compile witness": 56.0,
+      "Arithmetic witness": 55.7,
+      "Hash witness": 15.3,
+      "Joint commitment": 193.0,
+      "Arithmetic reduction": 147.0,
+      "Native zerocheck": 40.4,
+      "Native gate evaluations": 6.09,
+      "Native copy leaves": 14.4,
+      "Native copy product": 77.9,
+      "Native copy evaluations": 7.6,
+      "Hash reduction": 173.0,
+      "Zerocheck": 157.0,
+      "Round 1": 55.1,
+      "Bit rounds": 41.6,
+      "Table rounds": 60.5,
+      "Lincheck": 15.8,
+      "Joint opening": 317.0,
+      "Index opening": 74.5
+    }
+  }
+}

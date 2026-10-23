@@ -1,0 +1,30 @@
+{
+  "build": [
+    "python3",
+    "run-command.py",
+    "candidate",
+    "profile-counts-build",
+    "cargo",
+    "build",
+    "--locked",
+    "--release",
+    "-p",
+    "rec_aggregation",
+    "--example",
+    "closed_tree"
+  ],
+  "trace_env": {
+    "BENCH_TRACING": "1",
+    "RUST_LOG": "info"
+  },
+  "trace": [
+    "python3",
+    "run-padding-variant.py",
+    "profile-counts",
+    "profile-counts-trace",
+    "--depth",
+    "1",
+    "--chain",
+    "16"
+  ]
+}
