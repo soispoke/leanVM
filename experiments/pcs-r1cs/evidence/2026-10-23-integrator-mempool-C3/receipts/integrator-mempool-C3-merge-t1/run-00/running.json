@@ -1,0 +1,17 @@
+{
+  "pid": 187289,
+  "command": [
+    "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/target-vm-common/release/examples/application_role_profile",
+    "--role",
+    "merge",
+    "--workload",
+    "blake2s-64b",
+    "--height",
+    "1",
+    "--input",
+    "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/split-native-blake64-quick-t1",
+    "--out",
+    "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/integrator-mempool-C3-node.cert"
+  ],
+  "started_utc": "2026-10-23T12:01:51.192410+00:00"
+}

@@ -1,0 +1,41 @@
+{
+  "integrated_source_commit": "f8425911a147dc30774022c0dab49c9e745b35a0",
+  "integration_commit": "b8a93abb7d88f27e758414108a00e2db91776619",
+  "cpus": "0-11",
+  "threads": 12,
+  "CARGO_BUILD_JOBS": 12,
+  "RAYON_NUM_THREADS": 12,
+  "LEANVM_NUM_THREADS": 12,
+  "receipts": [
+    "integrator-mempool-C3-final-fmt-t1",
+    "integrator-mempool-C3-final-clippy-t1",
+    "integrator-mempool-C3-final-release-t1",
+    "integrator-mempool-C3-final-example-t1",
+    "integrator-mempool-C3-final-build-t1",
+    "integrator-mempool-C3-wallet-t1",
+    "integrator-mempool-C3-valid-t1",
+    "integrator-mempool-C3-merge-t1"
+  ],
+  "all_passed": true,
+  "all_sources_unchanged": true,
+  "all_gate_source_hashes_equal": true,
+  "role_binary_sha256": "2e237230043179591be38c3db74263deb5db57a593469746239a5053d6364e14",
+  "role_binary_exact_prior_match": true,
+  "certificates": [
+    {
+      "kind": "mempool_proof",
+      "bytes": 247956,
+      "sha256": "58aa0c4ee29c38690876c89d8f807bf3d046cdfe28ce4dd6ea1a428afe6408a4",
+      "exact_historical_match": true
+    },
+    {
+      "kind": "merged_proof",
+      "bytes": 361196,
+      "sha256": "b67e64ff2c0140002cc9cd2f9e83b9197c4cd60eb6b0fa2cc4d616d772a22324",
+      "exact_historical_match": true
+    }
+  ],
+  "standalone_base_verification": "accepted expected externally supplied statement and pinned base key; no wrap proof or node setup",
+  "ethereum_client_format_compatibility": "not established",
+  "default_policy_changed": false
+}
