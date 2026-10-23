@@ -905,7 +905,6 @@ pub mod generate {
     }
 }
 
-
 use std::collections::BTreeMap;
 pub fn leanvm_input(i: usize) -> Vec<u8> {
     let mut draw = Draw::new(i);
@@ -971,7 +970,9 @@ pub fn leanvm_input(i: usize) -> Vec<u8> {
 /// BLAKE2s-256 of a tag byte, then the parts: every hash of the specification.
 fn tagged(tag: u8, parts: &[&[u8]]) -> [u8; 32] {
     let mut message = vec![tag];
-    for part in parts { message.extend_from_slice(part); }
+    for part in parts {
+        message.extend_from_slice(part);
+    }
     crate::blake2s::blake2s_native(&message)
 }
 
@@ -1047,4 +1048,3 @@ impl Draw {
         u64::from_le_bytes(self.bytes())
     }
 }
-

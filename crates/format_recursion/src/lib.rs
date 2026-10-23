@@ -24,3 +24,6 @@ pub use verifier::{Child, record, record_bound};
 pub mod native_verifier;
 
 pub mod private_verifier;
+
+pub mod native_hash;
+pub mod shielded_application;
