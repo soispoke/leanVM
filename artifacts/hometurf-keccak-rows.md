@@ -64,7 +64,7 @@ Three ABAB rounds, 512 independent calls per fresh process; verification succeed
 
 ## Remaining work and current verdict
 
-Keccak replaces Falcon SHAKE work successfully and halves its padded commitment in the measured matched compiler. It remains slower than the supplied leanVM Falcon reference (~1.02 s). Matched canonical-claim Keccak-1KiB and MPT are complete. An encoded-input ML-DSA-44 circuit has been drafted and compiles; arithmetic and full-statement validation remain pending. No ML-DSA measurement is claimed. Phase 2 protocol hash/merge measurement remain pending. No under-1-second Keccak protocol-merge claim is established.
+Keccak replaces Falcon SHAKE work successfully and halves its padded commitment in the measured matched compiler. It remains slower than the supplied leanVM Falcon reference (~1.02 s). Matched canonical-claim Keccak-1KiB and MPT are complete. An encoded-input ML-DSA-44 circuit now produces a verifying native-row proof matching L5; repeated timings and verifier-target mutation tests are in progress. Phase 2 protocol hash/merge measurement remain pending. No under-1-second Keccak protocol-merge claim is established.
 
 ## ML-DSA-44 projection correction and operation census
 
@@ -99,3 +99,21 @@ This census is not a proof result: the current fixed rejection budgets cover the
 Full-circuit native witness evaluation succeeds on L5 sign(0), producing validity 1 and exactly the L5 public digest above. Before constant-twiddle optimization, the 33,237,844-row Boolean frontend lowers to 76,347,795 native arithmetic rows; padding gives 134,217,728 rows and a projected layout of 1,644,167,168 committed words. Evaluation alone took 17.883135 whole-process seconds and 7,820,176 KiB RSS; these are not wallet proving metrics. The configured backend cap is currently 2^24 rows, so no proof has been attempted at that layout. Constant arithmetic is being reduced before a measured proof attempt.
 
 After reusing Falcon's signed-digit linear constant multiplication, the frontend is 29,944,283 Boolean full-adder rows. Full native evaluation still matches the L5 digest, with **63,472,024 arithmetic rows**, **67,108,864 padded rows**, **822,083,584 projected committed words**, and **99 permutations**. Evaluation process: 15.188467 s and 5,507,588 KiB; not a prover timing. The experimental arithmetic cap is raised from log24 to log26 (four address columns still fit u32) to permit this measured native proof attempt. This does not alter the verifier's constraints or public statement.
+
+## ML-DSA first native proof (single screen; repeats pending)
+
+Source `08305593`, frozen executable SHA256 `14a95283564332164d5b17ef5961d40b9100609d185482ac03c81696f6e296a6`. Standard encoded inputs are parsed inside the circuit. Public digest matches the pinned L5 sign(0) fixture; validity is also public.
+
+| Metric | Measured native Keccak rows |
+|---|---:|
+| Wallet s (one fresh process) | 72.115797074 |
+| Whole-process peak RSS KiB | 112,171,024 (106.975578 GiB) |
+| Proof bytes | 427,336 |
+| Standalone verify ms (one separate process) | 14.874831 |
+| Boolean frontend rows | 29,944,283 |
+| Native arithmetic rows | 63,472,024 |
+| Padded arithmetic rows | 67,108,864 |
+| Committed F64 words | 822,083,584 |
+| Scheduled Keccak permutations | 99 |
+
+Wallet timer covers fresh witness, proof, and serialization; excludes fixed setup. Total process duration is 113.159163 s; RSS includes the whole process. Separate verification rebuilds preprocessing before the verification timer. The bit-level circuit evaluates to **41,996,576 Boolean frontend rows**, **88,479,644 arithmetic rows**, **134,217,728 padded rows**, **1,644,167,168 committed words**, and zero native permutations. This exceeds the roughly 200 GiB projected whole-process budget (the native layout already peaks at 106.98 GiB), so no bit-level proof was attempted; its cost is a census/projection fallback rather than an ABAB measurement. A single accepted fixture does not establish complete circuit correctness; verifier-target mutation proofs remain pending.
