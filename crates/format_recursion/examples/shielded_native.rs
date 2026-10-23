@@ -5,7 +5,7 @@ use std::time::Instant;
 static ALLOC: tikv_jemallocator::Jemalloc = tikv_jemallocator::Jemalloc;
 
 fn application(seed: usize) -> Builder {
-    format_recursion::shielded_application::application(&circuit_suite::shielded_blake2s::leanvm_input(seed))
+    format_recursion::shielded_application::application_vm(&circuit_suite::shielded_blake2s::leanvm_input(seed)).0
 }
 
 fn main() {
@@ -20,18 +20,20 @@ fn main() {
     let digest =
         circuit_suite::shielded_blake2s::reference::verify(&circuit_suite::shielded_blake2s::leanvm_input(bytes))
             .unwrap();
+    let digest = primitives::hash::hash(&digest);
     let expected: Vec<_> = digest
-        .chunks(8)
+        .chunks_exact(8)
         .map(|b| primitives::field::F192::new(u64::from_le_bytes(b.try_into().unwrap()), 0, 0))
         .collect();
     assert_eq!(&public[public.len() - 4..], expected.as_slice());
-    assert_eq!(canonical.compressions.len(), 105);
+    assert_eq!(canonical.compressions.len(), 106);
     let context = primitives::hash::hash(b"hometurf-native-hash-application-v1");
     if mode == "prove" {
         std::fs::write("/proc/self/clear_refs", "5").unwrap();
         let start = Instant::now();
         let witness = application(bytes);
         let proof = setup.prove(&witness.values, &witness.compressions, &context).unwrap();
+        let encoded = bincode::serialize(&proof).unwrap();
         let elapsed = start.elapsed().as_secs_f64();
         let rss = std::fs::read_to_string("/proc/self/status")
             .unwrap()
@@ -43,7 +45,6 @@ fn main() {
             .unwrap()
             .parse::<u64>()
             .unwrap();
-        let encoded = bincode::serialize(&proof).unwrap();
         std::fs::write(path, &encoded).unwrap();
         let shape = setup.verifier_shape();
         println!(
@@ -51,8 +52,9 @@ fn main() {
             serde_json::json!({"wallet_prove_s":elapsed,"wallet_peak_rss_kib":rss,"proof_bytes":encoded.len(),"compressions":witness.compressions.len(),"gate_rows":witness.rows(),"native_log_rows":shape.index.log_rows,"hash_block_log":shape.block_log,"committed_words":shape.committed_lanes()*(1usize << (shape.stack_log-pcs::whir::INITIAL_FOLDING_FACTOR))})
         );
     } else {
-        let proof = bincode::deserialize(&std::fs::read(path).unwrap()).unwrap();
+        let bytes = std::fs::read(path).unwrap();
         let start = Instant::now();
+        let proof = bincode::deserialize(&bytes).unwrap();
         assert!(setup.verify(&public, &context, &proof));
         println!(
             "{}",

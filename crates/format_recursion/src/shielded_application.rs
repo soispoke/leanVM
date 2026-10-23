@@ -293,6 +293,10 @@ fn hash(c: &mut Ckt, _tw: &mut Twins, rows: &mut Breakdown, t: u8, parts: &[&[Wi
     for p in parts {
         message.extend_from_slice(p);
     }
+    hash_message(c, rows, &message)
+}
+
+fn hash_message(c: &mut Ckt, rows: &mut Breakdown, message: &[Wire]) -> Word {
     let len = message.len() / 8;
     let blocks = len.div_ceil(64).max(1);
     rows.compressions += blocks;
@@ -325,6 +329,15 @@ fn hash(c: &mut Ckt, _tw: &mut Twins, rows: &mut Breakdown, t: u8, parts: &[&[Wi
 }
 /// All witness bits are constrained; the validity bit is fixed to one.
 pub fn application(payload: &[u8]) -> Builder {
+    application_inner(payload, false).0
+}
+
+/// Same final public digest as the leanVM single-spend guest (106 compressions).
+pub fn application_vm(payload: &[u8]) -> (Builder, Breakdown) {
+    application_inner(payload, true)
+}
+
+fn application_inner(payload: &[u8], vm_output: bool) -> (Builder, Breakdown) {
     assert_eq!(payload.len(), INPUT_BYTES);
     let mut builder = Builder::default();
     let input = payload
@@ -337,16 +350,22 @@ pub fn application(payload: &[u8]) -> Builder {
         })
         .collect();
     let mut c = Ckt { builder, input };
-    let public = build_counted(&mut c, &mut Breakdown::default());
+    let mut rows = Breakdown::default();
+    let public = build_counted(&mut c, &mut rows);
     let valid = c.pos(public[256]);
     let one = c.builder.one();
     c.builder.assert_eq(valid, one);
-    for bits in public[..256].chunks(64) {
+    let digest = if vm_output {
+        hash_message(&mut c, &mut rows, &public[..256])
+    } else {
+        public[..256].to_vec()
+    };
+    for bits in digest.chunks(64) {
         let bits: Vec<_> = bits.iter().map(|&w| c.pos(w)).collect();
         let w = c.builder.pack(&bits);
         c.builder.expose(w);
     }
-    c.builder
+    (c.builder, rows)
 }
 
 #[cfg(test)]
@@ -367,6 +386,36 @@ mod tests {
                 .collect();
             assert_eq!(&public[public.len() - 4..], expected.as_slice());
             assert_eq!(app.compressions.len(), 105);
+            let (matched, rows) = application_vm(&payload);
+            assert!(matched.satisfied());
+            assert_eq!(matched.compressions.len(), 106);
+            let final_digest = primitives::hash::hash(&digest);
+            let expected: Vec<_> = final_digest
+                .chunks_exact(8)
+                .map(|b| primitives::field::F192::new(u64::from_le_bytes(b.try_into().unwrap()), 0, 0))
+                .collect();
+            let public = matched.public_values();
+            assert_eq!(&public[public.len() - 4..], expected.as_slice());
+            if seed == 0 {
+                // Independent receipt from leanVM's host/guest run, hometurf-L2/shielded.output.json.
+                assert_eq!(
+                    expected.iter().map(|v| v.c0).collect::<Vec<_>>(),
+                    vec![
+                        8148722794000879574,
+                        12273388761951158148,
+                        13463691297944637417,
+                        5783332347444188522
+                    ]
+                );
+                println!(
+                    "matched gate rows={} swaps={} rules={} compressions={}",
+                    matched.rows(),
+                    rows.merkle_swaps,
+                    rows.rules,
+                    rows.compressions
+                );
+            }
+
             let mut bad = payload;
             bad[0] ^= 1;
             assert!(!application(&bad).satisfied());

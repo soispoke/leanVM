@@ -1048,3 +1048,26 @@ impl Draw {
         u64::from_le_bytes(self.bytes())
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    #[test]
+    fn gate_circuit_matches_blake2s_reference() {
+        let mut c = Ckt::new();
+        let mut rows = Breakdown::default();
+        let public = build_counted(&mut c, &mut rows);
+        let used = c.rows();
+        let (circuit, srcs) = c.finish(&public);
+        circuit.check_wired().unwrap();
+        let payload = leanvm_input(0);
+        let instance = instance_of(&payload);
+        let values = circuit.values(&instance.inputs);
+        assert_eq!(crate::read_statement(&values, &srcs), instance.statement);
+        assert_eq!(rows.compressions, 105);
+        println!(
+            "gate-only rows={used} hash_gates={} swaps={} rules={} compressions={}",
+            rows.hash_gates, rows.merkle_swaps, rows.rules, rows.compressions
+        );
+    }
+}
