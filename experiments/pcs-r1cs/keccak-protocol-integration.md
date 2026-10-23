@@ -1,0 +1,9 @@
+# Opt-in Keccak protocol integration
+
+The `format_recursion/keccak-protocol` feature selects Keccak-256 with Ethereum padding for protocol byte hashing, transcript compression with grinding, Merkle commitments, application identities and claims, and native hash rows. It uses the existing Keccak-f[1600] reduction and explicitly retains its input and output connector obligations. The separate experimental `keccak-batched-transcript` feature remains opt-in and is not part of the default Keccak protocol measurements.
+
+Without the feature, `primitives::protocol_hash` re-exports the existing BLAKE2s implementation. The published word-table lowering, Falcon rejection tests, row cap and default sparse generator derivation are retained. Sparse padding is used only when explicitly requested. The default key, claim and shape reconciliation uses the existing seven-workload reference file. Correctness-only certificate comparisons additionally use seed 20261024 against a clean published control checkout. Test and comparison outcomes belong in the integration receipts, not this design note.
+
+Keccak source export refuses to discard BLAKE obligations, and BLAKE source export refuses to discard Keccak obligations. The mixed BLAKE bridge is unavailable under the opt-in Keccak-only configuration. The sparse root helper verifies the outer proof, settles its own generator claim, checks the carried-claim count, and settles every carried claim against its trusted generator. This preserves the verifier checks in the L6 chain rather than replacing them with prover prechecks.
+
+No security level is established by this integration note. Regression tests and reference vectors provide bounded implementation evidence, not a soundness theorem or a substitute for the challenge's missing security calculator, upgrade backend and coordinator rejection corpus. Existing trial workload and composition limitations remain in the referee report.
