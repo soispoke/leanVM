@@ -2,7 +2,7 @@
 use super::{Form, Origin, Source, remap, sum};
 use fiat_shamir::merkle::Hash;
 use primitives::{
-    field::{F192, mul4},
+    field::{F64, F192, F192Unreduced, mul_unreduced4},
     multilinear::eq_table,
 };
 use std::{
@@ -25,6 +25,7 @@ enum Row {
     },
 }
 
+#[derive(Clone, PartialEq, Eq, Hash)]
 enum Binding {
     Constant(F192),
     Column(usize),
@@ -46,6 +47,8 @@ fn mul(k: F192, v: F192) -> F192 {
         F192::ZERO
     } else if k == F192::ONE {
         v
+    } else if k.c1 == 0 && k.c2 == 0 {
+        v.mul_base(F64(k.c0))
     } else {
         k * v
     }
@@ -201,6 +204,7 @@ impl Generator {
         // value or transpose adjoint. Compile their affine addressing once.
         let mut ids = HashMap::new();
         let mut bindings = Vec::new();
+        let mut expressions = HashMap::new();
         let mut compact = |id: &mut usize| {
             let index = *ids.entry(*id).or_insert_with(|| {
                 let binding = if let Some(&v) = fixed.get(id) {
@@ -216,9 +220,25 @@ impl Generator {
                 } else {
                     Binding::Constant(F192::ZERO)
                 };
-                let index = bindings.len();
-                bindings.push(binding);
-                index
+                // Canonical source expressions can be shared even when the
+                // original compiler assigned them different wire identities.
+                let binding = match binding {
+                    Binding::Affine(mut f) => {
+                        f.sort_unstable_by_key(|&(j, _)| j);
+                        match f.as_slice() {
+                            [] => Binding::Constant(F192::ZERO),
+                            &[(0, k)] => Binding::Constant(k),
+                            &[(j, F192::ONE)] => Binding::Column(j),
+                            _ => Binding::Affine(f),
+                        }
+                    }
+                    other => other,
+                };
+                *expressions.entry(binding.clone()).or_insert_with(|| {
+                    let index = bindings.len();
+                    bindings.push(binding);
+                    index
+                })
             });
             *id = index;
         };
@@ -252,6 +272,9 @@ impl Generator {
     pub fn rows(&self) -> usize {
         self.rows.len()
     }
+    pub fn binding_count(&self) -> usize {
+        self.bindings.len()
+    }
     fn source_values(&self, cw: &[F192]) -> Vec<F192> {
         parallel::map_collect(self.bindings.len(), |i| match &self.bindings[i] {
             Binding::Constant(v) => mul(*v, cw[0]),
@@ -260,15 +283,18 @@ impl Generator {
         })
     }
     fn row_values(&self, r: usize, at: &[F192], cw: &[F192]) -> [F192; 3] {
+        self.row_values_at(r, at, |j| cw[j])
+    }
+    fn row_values_at(&self, r: usize, at: &[F192], cw: impl Fn(usize) -> F192) -> [F192; 3] {
         match &self.rows[r] {
             Row::Product([a, b, u, d]) => [at[*a], at[*b], at[*u] + at[*d]],
-            Row::Linear { other, scale, u, d } => [mul(*scale, at[*other]) + at[*u] + at[*d], cw[0], F192::ZERO],
+            Row::Linear { other, scale, u, d } => [mul(*scale, at[*other]) + at[*u] + at[*d], cw(0), F192::ZERO],
             Row::Port { dest, source } => {
                 let v = match *source {
                     Origin::Variable(i) => at[i],
-                    Origin::Constant(v) => mul(v, cw[0]),
+                    Origin::Constant(v) => mul(v, cw(0)),
                 };
-                [cw[*dest] + v, cw[0], F192::ZERO]
+                [cw(*dest) + v, cw(0), F192::ZERO]
             }
         }
     }
@@ -339,31 +365,48 @@ impl Generator {
     pub fn evaluate(&self, row_point: &[F192], col_point: &[F192]) -> [F192; 3] {
         assert_eq!(row_point.len(), self.row_log);
         assert_eq!(col_point.len(), self.col_log);
-        let rw = eq_table(row_point);
-        let cw = eq_table(col_point);
-        let at = self.source_values(&cw);
+        // Factor the row equality table. Each block shares its high weight,
+        // so accumulate its low-weighted instruction values before scaling.
+        let low_log = row_point.len().min(10);
+        let low = eq_table(&row_point[..low_log]);
+        let high = eq_table(&row_point[low_log..]);
+        let col_low_log = col_point.len().min(10);
+        let col_low = eq_table(&col_point[..col_low_log]);
+        let col_high = eq_table(&col_point[col_low_log..]);
+        let column = |j: usize| col_low[j & (col_low.len() - 1)] * col_high[j >> col_low_log];
+        let at = parallel::map_collect(self.bindings.len(), |i| match &self.bindings[i] {
+            Binding::Constant(v) => mul(*v, column(0)),
+            Binding::Column(j) => column(*j),
+            Binding::Affine(f) => f.iter().fold(F192::ZERO, |s, &(j, k)| s + mul(k, column(j))),
+        });
         parallel::map_reduce(
-            self.rows.len().div_ceil(4),
+            self.rows.len().div_ceil(low.len()),
             || [F192::ZERO; 3],
             |block| {
-                let values: [[F192; 3]; 4] = std::array::from_fn(|k| {
-                    let r = 4 * block + k;
-                    if r < self.rows.len() {
-                        self.row_values(r, &at, &cw)
-                    } else {
-                        [F192::ZERO; 3]
+                let start = block * low.len();
+                let count = low.len().min(self.rows.len() - start);
+                let mut sums = [F192Unreduced::ZERO; 3];
+                for base in (0..count).step_by(4) {
+                    let values: [[F192; 3]; 4] = std::array::from_fn(|k| {
+                        if base + k < count {
+                            self.row_values_at(start + base + k, &at, column)
+                        } else {
+                            [F192::ZERO; 3]
+                        }
+                    });
+                    let weights = std::array::from_fn(|k| low.get(base + k).copied().unwrap_or(F192::ZERO));
+                    for j in 0..3 {
+                        for v in mul_unreduced4(weights, std::array::from_fn(|k| values[k][j])) {
+                            sums[j] ^= v;
+                        }
                     }
-                });
-                let weights = std::array::from_fn(|k| rw.get(4 * block + k).copied().unwrap_or(F192::ZERO));
-                std::array::from_fn(|j| {
-                    mul4(weights, std::array::from_fn(|k| values[k][j]))
-                        .into_iter()
-                        .fold(F192::ZERO, |x, y| x + y)
-                })
+                }
+                sums.map(|s| s.reduce() * high[block])
             },
             |a, b| std::array::from_fn(|i| a[i] + b[i]),
         )
     }
+
     pub fn settle(&self, claim: &super::spartan::DeferredClaim) -> bool {
         claim.app_key == self.app_key
             && claim.row_point.len() == self.row_log

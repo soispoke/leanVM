@@ -13,7 +13,7 @@ use fiat_shamir::{
     transcript::{Challenger, Proof, ProverState, Transmitter},
 };
 use primitives::{
-    field::{F192, mul4},
+    field::{F192, F192Unreduced, mul_unreduced4, mul4},
     multilinear::{eq_table, poly_eval},
 };
 
@@ -70,6 +70,19 @@ fn app_indices(setups: &[&Setup], claims: &[DeferredClaim]) -> Vec<usize> {
         })
         .collect()
 }
+/// Build the scaled equality weights directly, avoiding a second full-table
+/// pass and allocation. The shared field kernel supports a non-unit seed.
+pub(crate) fn weighted_eq(point: &[F192], scale: F192) -> Vec<F192> {
+    let n = 1usize << point.len();
+    let mut out = Vec::<F192>::with_capacity(n);
+    primitives::multilinear::fill_eq_table_uninit(point, scale, &mut out.spare_capacity_mut()[..n]);
+    // SAFETY: fill_eq_table_uninit writes all n entries, as its API requires.
+    unsafe {
+        out.set_len(n);
+    }
+    out
+}
+
 pub(crate) fn sumcheck(
     pairs: &mut [(Vec<F192>, Vec<F192>)],
     rounds: usize,
@@ -85,7 +98,7 @@ pub(crate) fn sumcheck(
             } else {
                 parallel::map_reduce(
                     (a.len() / 2).div_ceil(4),
-                    || [F192::ZERO; 2],
+                    || [F192Unreduced::ZERO; 2],
                     |block| {
                         let at = |v: &[F192], lane: usize, high: bool| {
                             v.get(8 * block + 2 * lane + usize::from(high))
@@ -97,12 +110,17 @@ pub(crate) fn sumcheck(
                         let ad: [F192; 4] = std::array::from_fn(|k| al[k] + at(a, k, true));
                         let bd: [F192; 4] = std::array::from_fn(|k| bl[k] + at(b, k, true));
                         [
-                            mul4(al, bl).into_iter().fold(F192::ZERO, |x, y| x + y),
-                            mul4(ad, bd).into_iter().fold(F192::ZERO, |x, y| x + y),
+                            mul_unreduced4(al, bl)
+                                .into_iter()
+                                .fold(F192Unreduced::ZERO, |x, y| x ^ y),
+                            mul_unreduced4(ad, bd)
+                                .into_iter()
+                                .fold(F192Unreduced::ZERO, |x, y| x ^ y),
                         ]
                     },
-                    |x, y| [x[0] + y[0], x[1] + y[1]],
+                    |x, y| [x[0] ^ y[0], x[1] ^ y[1]],
                 )
+                .map(F192Unreduced::reduce)
             };
             [total[0] + part[0], total[1] + part[1]]
         });
@@ -188,7 +206,7 @@ fn prove_inner(
     let mut pairs = Vec::new();
     for (c, &f) in claims.iter().zip(&indices) {
         let setup = setups[f];
-        let u: Vec<_> = eq_table(&c.row_point).into_iter().map(|v| v * power).collect();
+        let u = weighted_eq(&c.row_point, power);
         let cw = eq_table(&c.col_point);
         let g = if let Some(gs) = generators {
             gs[f].row_product(&cw, theta)

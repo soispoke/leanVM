@@ -1,0 +1,162 @@
+{
+  "fastcoeff-node-same": {
+    "merge_s": 1.013672835,
+    "fold_prover_s": 0.222584319,
+    "outer_prover_s": 0.689771869,
+    "rows": 634272,
+    "committed_words": 8388608,
+    "proof_bytes": 179488,
+    "carried_bytes": 1968,
+    "complete_root_ms": 27.839,
+    "own_settle_ms": 11.935493000000001,
+    "leaf_complete_root_ms": 3.9267169999999996,
+    "first_complete_root_ms": 13.171573,
+    "settlements": {
+      "0": 0.709414,
+      "2": 11.249484
+    }
+  },
+  "fastcoeff-node-mixed": {
+    "merge_s": 1.0422610350000001,
+    "fold_prover_s": 0.24316231,
+    "outer_prover_s": 0.697622037,
+    "rows": 634272,
+    "committed_words": 8388608,
+    "proof_bytes": 180064,
+    "carried_bytes": 2664,
+    "complete_root_ms": 26.762078000000002,
+    "own_settle_ms": 11.132190999999999,
+    "leaf_complete_root_ms": 3.9958249999999995,
+    "first_complete_root_ms": 14.941974,
+    "settlements": {
+      "0": 0.798486,
+      "1": 0.180976,
+      "2": 11.007083000000002
+    }
+  },
+  "constantb-node-same": {
+    "merge_s": 1.468636595,
+    "fold_prover_s": 0.335742637,
+    "outer_prover_s": 0.998332006,
+    "rows": 634272,
+    "committed_words": 8388608,
+    "proof_bytes": 179488,
+    "carried_bytes": 1968,
+    "complete_root_ms": 31.843946999999996,
+    "own_settle_ms": 13.827344,
+    "leaf_complete_root_ms": 4.92576,
+    "first_complete_root_ms": 19.533756999999998,
+    "settlements": {
+      "0": 0.971724,
+      "2": 12.815981
+    }
+  },
+  "constantb-node-mixed": {
+    "merge_s": 1.256281995,
+    "fold_prover_s": 0.248376287,
+    "outer_prover_s": 0.895961894,
+    "rows": 634272,
+    "committed_words": 8388608,
+    "proof_bytes": 180064,
+    "carried_bytes": 2664,
+    "complete_root_ms": 35.718292999999996,
+    "own_settle_ms": 13.219977,
+    "leaf_complete_root_ms": 4.0169369999999995,
+    "first_complete_root_ms": 16.527837,
+    "settlements": {
+      "0": 0.823731,
+      "1": 0.184995,
+      "2": 14.762808
+    }
+  },
+  "ondemand-node-same": {
+    "merge_s": 1.045108879,
+    "fold_prover_s": 0.227447052,
+    "outer_prover_s": 0.719910248,
+    "rows": 634272,
+    "committed_words": 8388608,
+    "proof_bytes": 179488,
+    "carried_bytes": 1968,
+    "complete_root_ms": 25.471175,
+    "own_settle_ms": 9.724941000000001,
+    "leaf_complete_root_ms": 3.9548170000000002,
+    "first_complete_root_ms": 15.0442,
+    "settlements": {
+      "0": 0.813204,
+      "2": 8.763150000000001
+    }
+  },
+  "ondemand-node-mixed": {
+    "merge_s": 1.010077502,
+    "fold_prover_s": 0.217756611,
+    "outer_prover_s": 0.707075561,
+    "rows": 634272,
+    "committed_words": 8388608,
+    "proof_bytes": 180064,
+    "carried_bytes": 2664,
+    "complete_root_ms": 22.849846,
+    "own_settle_ms": 7.8913720000000005,
+    "leaf_complete_root_ms": 4.0693150000000005,
+    "first_complete_root_ms": 11.375769,
+    "settlements": {
+      "0": 0.842828,
+      "1": 0.150942,
+      "2": 7.33012
+    }
+  },
+  "weightedcols-node-same": {
+    "merge_s": 1.092192064,
+    "fold_prover_s": 0.255185399,
+    "outer_prover_s": 0.734698204,
+    "rows": 634272,
+    "committed_words": 8388608,
+    "proof_bytes": 179488,
+    "carried_bytes": 1968,
+    "complete_root_ms": 19.809476,
+    "own_settle_ms": 7.419005,
+    "leaf_complete_root_ms": 3.967219,
+    "first_complete_root_ms": 10.941573,
+    "settlements": {
+      "0": 0.6873009999999999,
+      "2": 7.605983
+    }
+  },
+  "weightedcols-node-mixed": {
+    "merge_s": 1.026872034,
+    "fold_prover_s": 0.221071911,
+    "outer_prover_s": 0.719818589,
+    "rows": 634272,
+    "committed_words": 8388608,
+    "proof_bytes": 180064,
+    "carried_bytes": 2664,
+    "complete_root_ms": 23.231641,
+    "own_settle_ms": 8.068249,
+    "leaf_complete_root_ms": 3.942083,
+    "first_complete_root_ms": 11.310305999999999,
+    "settlements": {
+      "0": 0.7682789999999999,
+      "1": 0.173015,
+      "2": 8.172991
+    }
+  },
+  "paired-baseline-same": {
+    "merge_s": 1.246076802,
+    "fold_prover_s": 0.020228793,
+    "outer_prover_s": 1.128468633
+  },
+  "paired-candidate-same": {
+    "merge_s": 1.165497451,
+    "fold_prover_s": 0.013934023,
+    "outer_prover_s": 1.051467761
+  },
+  "paired-baseline-mixed": {
+    "merge_s": 1.836067548,
+    "fold_prover_s": 0.485666795,
+    "outer_prover_s": 1.231943442
+  },
+  "paired-candidate-mixed": {
+    "merge_s": 1.8308848009999998,
+    "fold_prover_s": 0.248023522,
+    "outer_prover_s": 1.476226822
+  }
+}

@@ -1,0 +1,26 @@
+generator rows=52024 bindings=77873 eq_ms=0.777 source_ms=0.280 reduce_ms=0.371
+generator rows=2576 bindings=416 eq_ms=0.053 source_ms=0.084 reduce_ms=0.046
+generator rows=52024 bindings=77873 eq_ms=0.795 source_ms=0.362 reduce_ms=0.473
+generator rows=2576 bindings=416 eq_ms=0.054 source_ms=0.120 reduce_ms=0.047
+first layout [20, 20, 14, 164, 8, 16384, 4194304, 23, 8388608]
+generator rows=52024 bindings=77873 eq_ms=0.844 source_ms=0.264 reduce_ms=0.353
+generator rows=2576 bindings=416 eq_ms=0.076 source_ms=0.102 reduce_ms=0.104
+generator rows=558908 bindings=497816 eq_ms=5.985 source_ms=4.338 reduce_ms=2.620
+fold init=67.190 row_sum=56.390 columns=79.733 col_sum=28.521 terminal=16.884
+node layout [20, 20, 14, 164, 8, 16384, 4194304, 23, 8388608]
+generator rows=52024 bindings=77873 eq_ms=0.847 source_ms=0.268 reduce_ms=0.357
+generator rows=2576 bindings=416 eq_ms=0.064 source_ms=0.063 reduce_ms=0.030
+generator rows=558908 bindings=497816 eq_ms=6.385 source_ms=4.296 reduce_ms=2.800
+fold init=69.143 row_sum=60.584 columns=77.649 col_sum=27.225 terminal=17.188
+generator rows=52024 bindings=77873 eq_ms=1.021 source_ms=0.323 reduce_ms=0.302
+generator rows=2576 bindings=416 eq_ms=0.071 source_ms=0.062 reduce_ms=0.031
+generator rows=558908 bindings=497816 eq_ms=6.332 source_ms=4.009 reduce_ms=2.511
+generator rows=608461 bindings=623010 eq_ms=5.331 source_ms=4.374 reduce_ms=2.754
+generator rows=52024 bindings=77873 eq_ms=0.987 source_ms=0.310 reduce_ms=0.301
+generator rows=2576 bindings=416 eq_ms=0.070 source_ms=0.062 reduce_ms=0.027
+generator rows=558908 bindings=497816 eq_ms=5.524 source_ms=4.264 reduce_ms=2.575
+generator rows=608461 bindings=623010 eq_ms=6.992 source_ms=4.555 reduce_ms=2.760
+generator rows=52024 bindings=77873 eq_ms=1.031 source_ms=0.321 reduce_ms=0.298
+generator rows=52024 bindings=77873 eq_ms=0.898 source_ms=0.296 reduce_ms=0.292
+generator rows=2576 bindings=416 eq_ms=0.063 source_ms=0.062 reduce_ms=0.028
+generator rows=558908 bindings=497816 eq_ms=5.936 source_ms=3.957 reduce_ms=2.466

@@ -1,0 +1,14 @@
+   Compiling format_recursion v0.1.0 (/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/ht-L2r/crates/format_recursion)
+    Finished `release` profile [optimized] target(s) in 42.07s
+     Running unittests src/lib.rs (../target-ht-L2r/release/deps/format_recursion-ee46bce9623bc0db)
+
+running 6 tests
+test row_format::tests::sparse_affine_lowering_preserves_shared_definitions_and_rejects_changed_product ... ok
+test row_format::deferred::tests::merkle_application_matches_blake2s_and_rejects_wrong_statement_and_proof ... ok
+test row_format::spartan::tests::direct_spartan_and_r1cs_ccs_bind_products_hash_ports_and_public_output ... ok
+test row_format::deferred::tests::deferred_child_replay_agrees_and_binds_identity_and_values ... ok
+test row_format::deferred::tests::source_generator_matches_sparse_matrices_without_holding_csr ... ok
+test row_format::first::tests::carried_first_level_settles_and_refuses_wrong_value_and_application ... ok
+
+test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 88 filtered out; finished in 5.57s
+

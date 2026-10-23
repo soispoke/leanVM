@@ -95,7 +95,9 @@ impl Matrix {
             if r >= self.rows() {
                 return F192::ZERO;
             }
-            self.row(r).iter().fold(F192::ZERO, |s, &(c, v)| s + v * z[c])
+            self.row(r)
+                .iter()
+                .fold(F192::ZERO, |s, &(c, v)| s + spartan::scaled(v, z[c]))
         })
     }
 }

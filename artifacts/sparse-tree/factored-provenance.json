@@ -1,0 +1,18 @@
+{
+  "parent": "b19c88bf37f745d1af501b12dbbe656cbac185d3",
+  "binaries": {
+    "/tmp/L2r-factored-tree": "28c53df58a6e44c2cb5cd0548497e0cdaab2cd35e981ffa841c124dbbfdc045f",
+    "/tmp/L2r-factored-merge": "d7d4430996ba357ab955c54ec98f010864603e8d65ae9d5c6054b2b4fdecc248"
+  },
+  "order": [
+    "factored-node-same-1",
+    "factored-node-mixed-1",
+    "factored-node-mixed-2",
+    "factored-node-same-2",
+    "factored-node-same-3",
+    "factored-node-mixed-3"
+  ],
+  "cpus": "12-23",
+  "threads": 12,
+  "note": "uncommitted factorized equality weights, partial column table, parallel fold weighting; proof protocol unchanged"
+}
