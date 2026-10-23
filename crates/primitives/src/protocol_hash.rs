@@ -101,10 +101,12 @@ mod keccak_protocol {
         #[cfg(all(target_arch = "x86_64", target_feature = "avx512f"))]
         let (bytes, out) = {
             let batches = out.len() / (8 * OUT_LEN);
-            for (inputs, digests) in bytes[..batches * 8 * len]
-                .chunks_exact(8 * len)
-                .zip(out[..batches * 8 * OUT_LEN].chunks_exact_mut(8 * OUT_LEN))
-            {
+            for (inputs, digests) in bytes[..batches * 8 * len].chunks_exact(8 * len).zip(
+                out[..batches * 8 * OUT_LEN]
+                    .as_chunks_mut::<{ 8 * OUT_LEN }>()
+                    .0
+                    .iter_mut(),
+            ) {
                 super::keccak_batch::hash_eight(inputs, len, state, digests);
             }
             (&bytes[batches * 8 * len..], &mut out[batches * 8 * OUT_LEN..])
@@ -137,7 +139,10 @@ mod keccak_protocol {
                             (blocks * BLOCK_LEN) as u64,
                             &mut out,
                         );
-                        for (input, got) in bytes.chunks_exact(len).zip(out.chunks_exact(OUT_LEN)) {
+                        for (input, got) in bytes
+                            .chunks_exact(len)
+                            .zip(out.as_chunks::<OUT_LEN>().0.iter().map(|x| x.as_slice()))
+                        {
                             let mut reference = sha3::Keccak256::new();
                             reference.update(vec![0; blocks * BLOCK_LEN]);
                             reference.update(input);
