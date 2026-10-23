@@ -248,5 +248,90 @@
       "--",
       "--check"
     ]
+  },
+  {
+    "receipt": "C-quotient-census-build-t1",
+    "ok": true,
+    "sha256": "cc668286c657537d1884b34d8918333f6ab1b07a3efd85b49e263d53a3f2a9ea",
+    "command": [
+      "/usr/bin/taskset",
+      "-c",
+      "24-35",
+      "cargo",
+      "build",
+      "--release",
+      "-p",
+      "format_recursion",
+      "--example",
+      "quotient_rows"
+    ]
+  },
+  {
+    "receipt": "C-quotient-census-all-t1",
+    "ok": true,
+    "sha256": "20a43f678c37db7d2d92ef3fbdf96c73b298b5a0dcb575fd0883652772e5834c",
+    "command": [
+      "/usr/bin/taskset",
+      "-c",
+      "24-35",
+      "python3",
+      "-c",
+      "import subprocess,json,pathlib; rows=[json.loads(subprocess.check_output([\"target/release/examples/quotient_rows\",w],text=True)) for w in [\"blake64\",\"blake1k\",\"sha1k\",\"keccak1k\",\"shielded\",\"falcon\",\"mpt\"]]; pathlib.Path(\"artifacts/laneC-quotient-census.json\").write_text(json.dumps(rows,indent=2)+\"\\n\"); print(json.dumps(rows))"
+    ]
+  },
+  {
+    "receipt": "C-boundary-release-gates-t1",
+    "ok": true,
+    "sha256": "8f90c80340facb77e95a738a4fbf7fc40ad416c5827e3ff1c9e5083f63a7039f",
+    "command": [
+      "/usr/bin/taskset",
+      "-c",
+      "24-35",
+      "cargo",
+      "test",
+      "--release",
+      "-p",
+      "format_recursion",
+      "-p",
+      "rec_aggregation",
+      "--lib",
+      "--examples"
+    ]
+  },
+  {
+    "receipt": "C-boundary-clippy-t1",
+    "ok": true,
+    "sha256": "08a09120447a02e348253e0ea40576336c746bc725d6dc2c6096231f5da67f2d",
+    "command": [
+      "/usr/bin/taskset",
+      "-c",
+      "24-35",
+      "cargo",
+      "clippy",
+      "--release",
+      "-p",
+      "format_recursion",
+      "-p",
+      "rec_aggregation",
+      "--all-targets",
+      "--",
+      "-D",
+      "warnings"
+    ]
+  },
+  {
+    "receipt": "C-boundary-fmt-check-t1",
+    "ok": true,
+    "sha256": "f8399883384964ae59361a44e7a084e5115cade0ba69e44184c10cb9f072181f",
+    "command": [
+      "/usr/bin/taskset",
+      "-c",
+      "24-35",
+      "cargo",
+      "fmt",
+      "--all",
+      "--",
+      "--check"
+    ]
   }
 ]

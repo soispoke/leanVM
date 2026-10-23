@@ -1,6 +1,74 @@
 # Lane C: WALLET time to mempool-ready proof
 
-Snapshot: `8db3aaa7`, from lane A's dirty tree based on `ab39e040`. No pushes. All builds and measurements use CPUs 24-35, CARGO_BUILD_JOBS=12, RAYON_NUM_THREADS=12, LEANVM_NUM_THREADS=12. Historical timings are single development screens; BLAKE2s 64 B is superseded by the ABAB medians below. Receipts are `C-*` under the parent workspace, using Yukon `2e90b37`.
+Snapshot: `8db3aaa7`, from lane A's dirty tree based on `ab39e040`. No pushes. All builds and measurements use CPUs 24-35, CARGO_BUILD_JOBS=12, RAYON_NUM_THREADS=12, LEANVM_NUM_THREADS=12. Historical timings are single development screens; BLAKE2s 64 B and the completed native boundary screens are superseded by the ABAB medians below. Receipts are `C-*` under the parent workspace, using Yukon `2e90b37`.
+
+## Repeated boundary screen: native SHA256 1 KiB
+
+Three ABAB blocks, six samples per policy, CPUs 24-35, 12 threads, seed 20261024. A is complete-output control; B trims unused outputs. The full split `prove_base` path and serialized certificates are measured. Each timing sample has a separate wallet-only resource process; its certificate must match the full split certificate byte-for-byte. The one invalid resource receipt `C-boundary-sha1k-b3-A1-resources-t1` is excluded: the shared administrative plan JSON changed while the process ran, with all lane-C code unchanged. Its replacement is `...-t2`. Subsequent receipts use frozen `artifacts/laneC-run-plan.json`. Completed valid timing samples were preserved.
+
+|Role and metric|A control|B trimmed|
+|---|---:|---:|
+|WALLET time to mempool-ready proof, median [min, max] ms|3464.58 [3172.11, 3806.26]|1805.42 [1779.22, 1963.59]|
+|WALLET witness ms|367.30|203.91|
+|WALLET proof bytes|347,036|323,836|
+|WALLET transaction peak RSS KiB|7,613,130|4,070,106|
+|WALLET transaction start RSS KiB|3,142,568|1,734,666|
+|WALLET additional transaction peak RSS KiB|4,475,976|2,336,046|
+|MEMPOOL NODE native verification ms|8.06|7.07|
+|ONE-TIME setup wallet key ms|2774.15|1923.83|
+
+Native WALLET median time to mempool-ready proof falls 47.9%, with non-overlapping sample ranges. Native ONE-TIME setup padded arithmetic log rows fall 22 → 21. The trimmed proof uses 23,200 fewer WALLET bytes. RSS includes the wallet base key and retained allocator pages, with the setup high-water mark reset before the transaction; it never includes an aggregator node key. ONE-TIME wallet key setup is reported separately and is never added to transaction time. **Shape change:** this is a validated opt-in candidate for native SHA256; production defaults remain unchanged pending the requested sign-off. **Quotient paths:** ONE-TIME setup padded rows stay at 2²⁰, and WALLET computation/bytes are unaffected by the native flag; no quotient A/B timing delta was measured. Raw samples: `artifacts/laneC-boundary-abab.json`; summary: `artifacts/laneC-boundary-sha1k-summary.json`. AGGREGATOR merges remain outside this screen.
+
+## Repeated boundary screen: native Keccak 1 KiB
+
+Three ABAB blocks, six samples per policy, CPUs 24-35, 12 threads, seed 20261024. A is complete-output control; B trims unused outputs. The measured roles and certificate identity checks match the SHA256 screen.
+
+|Role and metric|A control|B trimmed|
+|---|---:|---:|
+|WALLET time to mempool-ready proof, median [min, max] ms|3265.80 [3201.97, 3471.07]|1668.75 [1624.55, 1804.40]|
+|WALLET witness ms|329.22|208.23|
+|WALLET proof bytes|346,652|324,060|
+|WALLET transaction peak RSS KiB|7,952,854|4,081,896|
+|WALLET transaction start RSS KiB|3,319,166|1,740,592|
+|WALLET additional transaction peak RSS KiB|4,634,132|2,342,074|
+|MEMPOOL NODE native verification ms|6.48|6.66|
+|ONE-TIME setup wallet key ms|11881.13|10470.32|
+
+Native WALLET median time to mempool-ready proof falls 48.9%, with non-overlapping sample ranges. Native ONE-TIME setup padded arithmetic log rows fall 22 → 21. The trimmed proof uses 22,592 fewer WALLET bytes. No MEMPOOL NODE verification speedup is established in this development screen (medians 6.48 → 6.66 ms, ranges overlap). The native flag does not alter quotient rows or claims: quotient padded rows stay at 2²⁰, so no leanPCS or leanR1CS-via-leanVM WALLET improvement is claimed. Full samples: `artifacts/laneC-boundary-abab.json`; summary: `artifacts/laneC-boundary-keccak1k-summary.json`. AGGREGATOR merges remain outside this compiler screen.
+
+## Cross-path result: quotient proofs and native trimming
+
+The unused-output candidate acts only in `native_application_support::Application::create`, after `circuit_suite::build` constructs the shared Boolean circuit. Native lowering emits independent equations for a full adder's sum and carry. The quotient backend uses one full-adder row for both outputs. Its circuit rows, wiring, index, witness construction, prover parameters, PCS openings and verifier are unchanged by this flag. Thus the native SHA256/Keccak padding wins do **not** apply to leanPCS or leanR1CS via leanVM. No quotient WALLET speedup is claimed, and no independent A/B timing is fabricated for these identical quotient computations.
+
+The new frozen `C-quotient-census-all-t1` screen runs circuit wiring validation and records the complete description hash for each workload on CPUs 24-35 with 12 threads. All following row metrics are **ONE-TIME setup** metadata. “Cut needed” is used rows minus the next lower padded capacity; the after column applies the native trimming candidate. Whole-row DCE is an analysis-only opportunity, not an implemented pass.
+
+|Workload|ONE-TIME setup quotient used rows|ONE-TIME setup quotient padded log rows, before → after|ONE-TIME setup cut needed for next lower boundary|ONE-TIME setup wholly dead non-input rows|ONE-TIME setup hypothetical whole-row DCE padded log|
+|---|---:|---:|---:|---:|---:|
+|blake2s-64b|31,228|15 → 15|14,844|0|15|
+|blake2s-1kib|502,762|19 → 19|240,618|0|19|
+|sha256-1kib|615,220|20 → 20|90,932|0|20|
+|keccak256-1KiB|1,003,539|20 → 20|479,251|0|20|
+|shielded-transfer|3,700,667|22 → 22|1,603,515|0|22|
+|falcon512|4,019,906|22 → 22|1,922,754|1,664|22|
+|mpt-storage-proof|8,379,278|23 → 23|4,184,974|3,714|23|
+
+Quotient SHA256 needs 90,932 shared Boolean rows removed to reach 2¹⁹, and has no wholly dead rows under this conservative backward analysis. Native trimming removes arithmetic output equations, not those full-adder rows. Falcon has 1,664 wholly dead non-input rows and MPT has 3,714; removing them alone crosses no quotient boundary. A shared optimization must rewrite the Boolean circuit (for example a separately validated adder-chain rewrite). This lane rejects whole-row DCE as the next performance candidate on the census evidence; no circuit or protocol rewrite is accepted here.
+
+Historical context below comes from `experiments/pcs-r1cs/evidence/2026-10-22-full`: medians of three, 16 threads on CPUs 0-15. These are **WALLET historical client-stage sums** (witness + quotient PIOP + all openings), not newly measured complete time to mempool-ready proof: the archived timer does not include the independent reference check or final serialization. They must not be treated as a matched comparison with current 12-thread native screens. PCS uses a Keccak proof transcript; R1CS-via-leanVM uses BLAKE2s. Application hashes are unchanged.
+
+|Workload|WALLET historical quotient client stages ms, PCS / R1CS-via-leanVM|MEMPOOL NODE historical native verification ms, PCS / R1CS-via-leanVM|WALLET quotient effect of native trimming|
+|---|---:|---:|---|
+|blake2s-64b|not in archived full matrix|not in archived full matrix|unchanged work; paired timing delta not measured|
+|blake2s-1kib|911.56 / 887.10|8.21 / 8.18|unchanged work; paired timing delta not measured|
+|sha256-1kib|1596.04 / 1662.32|8.71 / 8.66|unchanged work; paired timing delta not measured|
+|keccak256-1KiB|1615.15 / 1667.84|8.78 / 9.03|unchanged work; paired timing delta not measured|
+|shielded-transfer|6513.26 / 6602.36|9.79 / 10.09|unchanged work; paired timing delta not measured|
+|falcon512|6560.01 / 6620.98|9.86 / 9.32|unchanged work; paired timing delta not measured|
+|mpt-storage-proof|14268.35 / 14345.74|9.98 / 10.02|unchanged work; paired timing delta not measured|
+
+**WALLET quotient proof bytes:** the native trimming flag changes neither quotient proof parameters nor transport. These archived raw samples do not record the serialized wallet proof transport size; aggregator transport bytes and EVM calldata bytes are different metrics and are not substituted. No newly measured quotient byte value or RAM value is claimed. **ONE-TIME setup:** quotient key construction is unaffected. **AGGREGATOR:** quotient claims/openings are unaffected; no merge timing improvement is claimed. Native WALLET proof bytes and MEMPOOL NODE verification changes remain in the native tables below. Native ONE-TIME wallet key setup changes are reported separately for each repeated candidate.
+
+Machine-readable results and exact historical source paths: `artifacts/laneC-quotient-census.json` and `artifacts/laneC-quotient-effects.json`. The current native candidate therefore helps path 3 only; it gives no demonstrated improvement for leanPCS or leanR1CS via leanVM.
 
 ## Metric roles and BLAKE2s 64 B ABAB confirmation
 
@@ -44,15 +112,15 @@ The headline metric is witness construction plus creation and serialization of t
 <!-- mempool-table-start -->
 |Rank|Workload|WALLET control time to mempool-ready proof ms|WALLET trimmed time to mempool-ready proof ms|WALLET change|WALLET control / trimmed proof bytes|MEMPOOL NODE control / trimmed native verification ms|
 |---:|---|---:|---:|---:|---:|---:|
-|1|keccak256-1KiB|4093.24|1885.49|-2207.75 ms (-53.9%)|346,652 / 324,060|6.14 / 5.76|
-|2|sha256-1kib|3362.06|2064.20|-1297.87 ms (-38.6%)|347,036 / 323,836|5.86 / 5.80|
+|1|sha256-1kib (ABAB medians)|3464.58|1805.42|-1659.16 ms (-47.9%)|347,036 / 323,836|8.06 / 7.07|
+|2|keccak256-1KiB (ABAB medians)|3265.80|1668.75|-1597.05 ms (-48.9%)|346,652 / 324,060|6.48 / 6.66|
 |3|falcon512|13713.04|13153.26|-559.77 ms (-4.1%)|384,756 / 384,596|8.65 / 6.27|
 |4|blake2s-1kib|1936.10|1834.82|-101.28 ms (-5.2%)|323,356 / 324,124|9.90 / 6.64|
 |5|blake2s-64b (ABAB medians)|143.80|141.75|-2.04 ms (-1.4%; not accepted)|247,956 / 250,500|4.99 / 6.16|
 |6|shielded-transfer|13243.01|13476.35|+233.34 ms (+1.8%)|385,204 / 384,660|6.76 / 6.61|
 | |mpt-storage-proof|unavailable|13704.73|unranked|unavailable / 386,356|unavailable / 6.06|
 
-Ranking is by absolute change in time to mempool-ready proof (most time saved first), within each matched workload pair. It does not compare unlike workload latencies as optimization wins. Rows and backend-only proof timings are supporting evidence. BLAKE2s 64 B uses six samples per policy from three ABAB blocks; other workload figures remain single runs. CPUs 24-35, 12 threads, seed 20261024. MPT default already trims and its complete-output proof is infeasible. All feasible matched pairs are complete; all generated wallet certificates passed native verification.
+Ranking is by absolute change in time to mempool-ready proof (most time saved first), within each matched workload pair. It does not compare unlike workload latencies as optimization wins. Rows and backend-only proof timings are supporting evidence. BLAKE2s 64 B, SHA256 and Keccak use six samples per policy from three ABAB blocks; other workload figures remain single runs. CPUs 24-35, 12 threads, seed 20261024. MPT default already trims and its complete-output proof is infeasible. All feasible matched pairs are complete; all generated wallet certificates passed native verification.
 
 ## Padding census and boundary priority
 
@@ -126,7 +194,7 @@ All frozen release receipts passed on CPUs 24-35 with 12 threads: `C-release-gat
 
 The enhanced compiler regression checks that a trimmed proof is rejected by a complete-output setup and that the trimmed setup rejects a complete-output trace, even though both policies produce the same application claim. It also verifies fixed program identity across all eight input assignments for both policies. Exact receipt hashes and gate commands are preserved in `artifacts/laneC-gates.json`.
 
-Lane A: cherry-pick only the compiler screen commit on top of your current tree, not snapshot `8db3aaa7`. This lane changes only native application support, adds compiler_rows, and records artifacts. It does not touch prover/PCS code, recursive merge code, or production policy defaults. No push was made.
+Lane A: cherry-pick the research commits after snapshot `8db3aaa7`, resolving research-helper conflicts with your current tree; do not cherry-pick the snapshot itself. This lane changes only native application support, adds compiler_rows, and records artifacts. It does not touch prover/PCS code, recursive merge code, or production policy defaults. No push was made.
 
 
 ## Wallet metric reporting update
@@ -142,3 +210,17 @@ The reporting-only harness update passed `C-mempool-tests-t1` (release compiler_
 Reconciliation receipts: `C-reconcile-build-t1`, `C-reconcile-compiler-t1`, `C-reconcile-application-t1`, `C-reconcile-independent-verify-t1` (five saved certificates), `C-reconcile-clippy-t1` and `C-reconcile-fmt-check-t1` all passed with frozen sources. The only source update adds optional certificate export and key/hash reporting to the research tool. No proving implementation, parameter, verifier check or policy default changed.
 
 The ABAB harness update passed `C-abab-tests-t1`, `C-abab-clippy-t1` and `C-abab-fmt-check-t1`. The native adder regression still rejects wrong claims and forged non-Boolean witnesses. No verifier checks, proof parameters or production defaults changed.
+
+## Compiler-lane integration checkpoint
+
+Local branch is `lane/C`; no pushes. The snapshot commit `8db3aaa7` must not be cherry-picked onto lane A. Research code through `73dc61d7` exposes explicit trimming overrides and measurements while preserving production policy defaults, proof parameters and every verifier check. The quotient census adds reporting only; no shared circuit, witness, prover, PCS or verifier implementation is changed. Whole-row DCE is rejected as a performance candidate because its tiny row savings cross no quotient padding boundary. Existing constant folding, repeated-add cancellation and multiply/add fusion already cover the simple redundant-constraint cases; no unverified adder-chain rewrite is introduced.
+
+SHA256 and Keccak native output trimming are ready for the requested shape-change review based on six matched samples per policy for each. Their proof shapes change deliberately and remain opt-in. Quotient SHA256 and Keccak stay at 2²⁰ rows and have no measured improvement from this candidate. BLAKE2s 64 B trimming remains unaccepted because its repeated WALLET improvement is noise-sized with larger proofs/RAM. MPT already uses the large-circuit trim policy; the untrimmed MPT shape is above capacity, so there is no valid untrimmed proof-time control to repeat. Lane A owns default rollout and integration; the compiler lane does not change node merges or prover/PCS code.
+
+## Final frozen boundary/census gates
+
+`C-boundary-release-gates-t1`, `C-boundary-clippy-t1` and `C-boundary-fmt-check-t1` all passed on CPUs 24-35 with 12 threads. Release tests: format_recursion 79 passed; rec_aggregation 43 passed with its five existing ignored tests unchanged; all example tests passed, including non-Boolean forgery and cross-policy rejection. Clippy checked both packages and all targets with `-D warnings`. Formatting and `git diff --check` passed. No verifier check, proof parameter or policy default changed. No Lean proof source was edited.
+
+`artifacts/laneC-boundary-audit.json` records 48 valid receipts for the 24 complete WALLET samples and their separate wallet-resource processes, verifies identical Rust hashes across all runs, checks deterministic certificate identity within each policy, and confirms wallet-only certificates equal full split `prove_base` certificates. Both SHA256 and Keccak improve in all six matched A→B pairs. The censused quotient circuits all pass wiring validation. New results remain opt-in research evidence for the explicit native shape-change decision; no automatic rollout or push was performed.
+
+Integration order after the snapshot: `12d9f6d8` (research trim override, census and rejection tests), `df3d6dae` (complete WALLET metric), `b06e0de5` (path/byte reconciliation), `aa4fb157` (native padding census), `09ba5656` (BLAKE64 ABAB/resource harness), `73dc61d7` (role tags), followed by the boundary/quotient evidence commit. On lane A, preserve your newer prover changes and the existing large-circuit default when resolving helper conflicts. Enable SHA256/Keccak default trimming only after the requested user shape-change sign-off. BLAKE64 remains unchanged at 247,956 WALLET bytes by default. The row-count candidates do not alter quotient circuits or accelerate leanPCS/leanR1CS-via-leanVM.
