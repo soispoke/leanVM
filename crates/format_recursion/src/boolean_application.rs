@@ -52,6 +52,18 @@ pub fn lower_with_keccak(
     inputs: &[Word],
     calls: &[circuit_suite::KeccakCall],
 ) -> Vec<Word> {
+    lower_with_keccak_observe(b, circuit, sources, inputs, calls, |_, _| {})
+}
+
+/// Observe native row boundaries while retaining exactly the ordinary lowering.
+pub fn lower_with_keccak_observe(
+    b: &mut Builder,
+    circuit: &Circuit,
+    sources: &[Src],
+    inputs: &[Word],
+    calls: &[circuit_suite::KeccakCall],
+    mut observe: impl FnMut(usize, usize),
+) -> Vec<Word> {
     let starts: std::collections::HashMap<_, _> = calls.iter().map(|call| (call.output_start, call)).collect();
     let mut placeholders = vec![false; circuit.rows().len()];
     for call in calls {
@@ -85,6 +97,7 @@ pub fn lower_with_keccak(
     let mut outputs = vec![[Word::ZERO; 2]; circuit.rows().len()];
     let mut inputs = inputs.iter();
     for (r, row) in circuit.rows().iter().enumerate().skip(PUBLIC_ROWS) {
+        observe(r, b.rows());
         if let Some(call) = starts.get(&r) {
             let bits: Vec<_> = call
                 .input
@@ -126,6 +139,7 @@ pub fn lower_with_keccak(
             outputs[r] = [sum, carry];
         }
     }
+    observe(circuit.rows().len(), b.rows());
     assert!(inputs.next().is_none());
     sources.iter().map(|&src| read(&outputs, src, 0, one)).collect()
 }

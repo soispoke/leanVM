@@ -115,6 +115,7 @@ fn main() {
     match args[1].as_str() {
         "shielded" => run::<circuit_suite::shielded_keccak::ShieldedTransfer>(&args),
         "falcon" => run::<circuit_suite::falcon::Falcon512>(&args),
+        "sha256" => run::<circuit_suite::sha256::Sha256OneKiB>(&args),
         "keccak" => run::<circuit_suite::keccak::Keccak256OneKiB>(&args),
         "mpt" => run::<circuit_suite::mpt::MptStorageProof>(&args),
         _ => panic!("unknown workload"),
