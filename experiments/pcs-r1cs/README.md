@@ -1,5 +1,7 @@
 # leanPCS and structured leanR1CS
 
+The [specialized base diagnostic](evidence/2026-10-23-base-architecture-diagnostic/README.md) finds that removing recursive verification reduces average base creation from 1.658 s to 0.035 s at 16 steps, but only from 7.147 s to 6.855 s at 16,384 steps. Both full length circuits retain 16.8 million padded arithmetic rows. A constraint census identifies 774 extra arithmetic rows per tagged hash step, making private hash input connections a larger target. This is not yet integrated into closure; the full length VM comparison failed before its merge and remains incomplete.
+
 The [matched common-key leanVM comparison](evidence/2026-10-23-common-key-vm-comparison/README.md) now reuses one key per backend across all measured levels. At eight chain16 leaves, native/VM all creation is 19.890/7.284 s and final merge is 1.266/0.860 s over three alternating pairs. Native has faster complete Rust root verification. Leaf creation starts from raw hash inputs and is not work a builder repeats when it receives existing client proofs; real application wrapping and dependency-list aggregation remain unmeasured.
 
 This research branch compares where an application's quotient PIOP is checked. **leanPCS** checks it in the EVM and aggregates its PCS openings. **leanR1CS** checks it inside the aggregate; the application contract emits a claim. Both use leanVM's recursive prover and WHIR opening verification.
