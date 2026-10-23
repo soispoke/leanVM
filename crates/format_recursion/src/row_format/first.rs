@@ -195,13 +195,13 @@ mod tests {
         for w in b.hash_words(&[a, c, p]) {
             b.expose(w);
         }
-        let (circuit, connectors) = b.export_circuit();
+        let (circuit, connectors) = b.export_protocol_circuit();
         let fixed_len = circuit.public.len() - 4;
         Source {
             circuit,
             connectors,
-            values: b.values,
-            compressions: b.compressions,
+            values: b.values.clone(),
+            compressions: b.protocol_blocks(),
             fixed_len,
             rebuild: Box::new(|| unreachable!()),
         }
