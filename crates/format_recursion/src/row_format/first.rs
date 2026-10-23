@@ -246,6 +246,7 @@ impl SparseSetup {
     pub fn new(program: Trace, ccs: bool) -> Option<Self> {
         let mut program = crate::private_trace::PreparedProgram::new(program)?;
         let lower = program.lower_setup()?;
+        if !lower.keccak_connectors.is_empty() { return None; }
         let source = super::Source {
             fixed_len: lower.fixed_public.len(),
             circuit: lower.circuit,

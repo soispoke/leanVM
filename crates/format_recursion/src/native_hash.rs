@@ -278,8 +278,15 @@ impl Builder {
         PrivateBridge::new(self.circuit.clone(), self.connectors.clone())
     }
 
+    /// Export every native Keccak I/O obligation with the arithmetic graph.
+    pub fn export_keccak_circuit(&self) -> (Circuit, Vec<[usize; 50]>) {
+        assert!(self.compressions.is_empty(), "Keccak source export cannot discard BLAKE obligations");
+        (self.circuit.clone(), self.keccak_connectors.clone())
+    }
+
     /// Export the identical arithmetic graph and hash-port identities for format experiments.
     pub fn export_circuit(&self) -> (Circuit, Vec<[usize; 18]>) {
+        assert!(self.permutations.is_empty(), "BLAKE source export cannot discard Keccak obligations");
         (self.circuit.clone(), self.connectors.clone())
     }
 }

@@ -551,11 +551,13 @@ pub fn source(case: &str) -> Source {
         crate::closed_recursion::record_native_first(&bridge, &public[..public.len() - 4], &context, [&cert, &cert]);
     assert!(trace.satisfied());
     let lower = crate::private_trace::lower(&trace, &trace).unwrap();
+    assert!(lower.keccak_connectors.is_empty(), "sparse BLAKE source cannot discard Keccak obligations");
     let fixed_len = lower.fixed_public.len();
     let prefix = public[..public.len() - 4].to_vec();
     let rebuild = Box::new(move || {
         let trace = crate::closed_recursion::record_native_first(&bridge, &prefix, &context, [&cert, &cert]);
         let lower = crate::private_trace::lower(&trace, &trace).unwrap();
+    assert!(lower.keccak_connectors.is_empty(), "sparse BLAKE source cannot discard Keccak obligations");
         (lower.values, lower.compressions)
     });
     Source {

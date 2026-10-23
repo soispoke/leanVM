@@ -41,6 +41,7 @@ impl Setup {
         let mut prepared = private_trace::PreparedProgram::new(program)?;
         // The constructor's canonical witness is owned by the prepared program.
         let mut lower = prepared.lower_setup()?;
+        if !lower.keccak_connectors.is_empty() { return None; }
         let raw_fixed_len = lower.fixed_public.len();
         let bridge = if let Some(capacity) = public_capacity {
             if capacity < raw_fixed_len {
