@@ -15,7 +15,7 @@ use primitives::{
 };
 
 /// Resource cap, with four cell-address columns still fitting in u32.
-pub const MAX_LOG_ROWS: usize = 24;
+pub const MAX_LOG_ROWS: usize = 26;
 
 /// A row enforces z = x*y + u. Variables zero and one are pinned public anchors.
 #[derive(Clone)]

@@ -827,6 +827,7 @@ pub(crate) struct Modq {
     pub q: u64,
     /// For each residue, the fewest (then the lightest) signed digits `(exponent, negative)` of `r` or `r - q`.
     reps: Vec<Vec<(u8, bool)>>,
+    slack: usize,
 }
 
 fn naf(mut n: i64) -> Vec<(u8, bool)> {
@@ -862,23 +863,33 @@ impl Modq {
 
     /// `slack`: a representation may use up to `slack` more digits than the fewest if its mass is smaller.
     pub(crate) fn with_policy(q: u64, slack: usize) -> Self {
-        let reps = (0..q)
-            .map(|r| {
-                let cands = [
-                    naf(r as i64),
-                    naf(r as i64 - q as i64),
-                    naf(r as i64 + q as i64),
-                    naf(r as i64 - 2 * q as i64),
-                ];
-                let fewest = cands.iter().map(Vec::len).min().unwrap();
-                cands
-                    .into_iter()
-                    .filter(|d| d.len() <= fewest + slack)
-                    .min_by_key(|d| (digits_mass(d), d.len()))
-                    .unwrap()
-            })
-            .collect();
-        Self { q, reps }
+        let reps = if q <= 65536 {
+            (0..q).map(|r| Self::choose_digits(q, r, slack)).collect()
+        } else {
+            Vec::new()
+        };
+        Self { q, reps, slack }
+    }
+    fn choose_digits(q: u64, r: u64, slack: usize) -> Vec<(u8, bool)> {
+        let cands = [
+            naf(r as i64),
+            naf(r as i64 - q as i64),
+            naf(r as i64 + q as i64),
+            naf(r as i64 - 2 * q as i64),
+        ];
+        let fewest = cands.iter().map(Vec::len).min().unwrap();
+        cands
+            .into_iter()
+            .filter(|d| d.len() <= fewest + slack)
+            .min_by_key(|d| (digits_mass(d), d.len()))
+            .unwrap()
+    }
+    fn digits(&self, r: u64) -> std::borrow::Cow<'_, [(u8, bool)]> {
+        if self.reps.is_empty() {
+            std::borrow::Cow::Owned(Self::choose_digits(self.q, r, self.slack))
+        } else {
+            std::borrow::Cow::Borrowed(&self.reps[r as usize])
+        }
     }
 
     fn mulq(&self, a: u64, b: u64) -> u64 {
@@ -930,7 +941,7 @@ impl<'a> Lin<'a> {
                 continue;
             }
             let r = self.m.mulq(coef, cf % q);
-            for &(e, neg) in &self.m.reps[r as usize] {
+            for &(e, neg) in self.m.digits(r).as_ref() {
                 self.acc.lit(w, e as usize, neg);
             }
         }
