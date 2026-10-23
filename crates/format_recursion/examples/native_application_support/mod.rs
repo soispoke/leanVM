@@ -1,26 +1,8 @@
 use circuit_suite::{Circuit, Src, Workload, read_statement};
-use format_recursion::trace::{self, S, Trace, hash};
+use format_recursion::{application_lowering, trace::Trace};
+#[cfg(test)]
 use primitives::field::F192;
 use std::{marker::PhantomData, time::Instant};
-
-/// Relation-specific defaults approved for native output trimming. Unknown
-/// relations retain every output until their policy is explicitly reviewed.
-pub const DEFAULT_OUTPUT_TRIMMING: &[(&str, bool)] = &[
-    ("blake2s-64b", false),
-    ("blake2s-1kib", false),
-    ("sha256-1kib", true),
-    ("keccak256-1KiB", true),
-    ("mpt-storage-proof", true),
-    ("shielded-transfer", false),
-    ("falcon512", false),
-];
-
-fn default_output_trimming(relation: &str) -> bool {
-    DEFAULT_OUTPUT_TRIMMING
-        .iter()
-        .find(|(name, _)| *name == relation)
-        .is_some_and(|(_, enabled)| *enabled)
-}
 
 /// Compile the workload itself, not a verifier for another application proof.
 pub struct Application<W> {
@@ -115,16 +97,14 @@ impl<W: Workload> Application<W> {
     pub fn new() -> Self {
         let (circuit, sources, _) = circuit_suite::build::<W>();
         circuit.check_wired().expect("application wiring");
-        let mut identity = b"native-r1cs-full-adder-application-v1".to_vec();
-        identity.extend((circuit.log_rows as u64).to_le_bytes());
-        for s in &circuit.sigma {
-            identity.extend(s.to_le_bytes());
-        }
-        let trim_outputs = default_output_trimming(W::NAME);
+        let id = application_lowering::identity(&circuit);
+        let trim_outputs = application_lowering::select(&circuit, &sources)
+            .expect("native lowering shape comparison")
+            .trim_outputs;
         Self {
             circuit,
             sources,
-            id: primitives::hash::hash(&identity),
+            id,
             trim_outputs,
             workload: PhantomData,
         }
@@ -157,118 +137,31 @@ impl<W: Workload> Application<W> {
         let values = self.circuit.values(&instance.inputs);
         assert_eq!(read_statement(&values, &self.sources), instance.statement);
         let start = Instant::now();
-        let mut inputs = instance.inputs.iter();
-        trace::start();
-        let zero = S::u(0);
-        let one = S::u(1);
-        // Keep both output bits separately. All derived bits are Boolean by
-        // induction from constrained free inputs and the full-adder identities.
-        let mut outputs = vec![[zero, zero]; self.circuit.rows().len()];
-        let mut required = vec![[!self.trim_outputs; 2]; outputs.len()];
-        if self.trim_outputs {
-            for &src in &self.sources {
-                if let Src::Row(r) = src {
-                    required[r as usize][0] = true;
-                }
-            }
-            for (r, row) in self
-                .circuit
-                .rows()
-                .iter()
-                .enumerate()
-                .skip(circuit_suite::PUBLIC_ROWS)
-                .rev()
-            {
-                if required[r].iter().any(|&needed| needed) {
-                    for (src, component) in [(row.x, 0), (row.y, 0), (row.c, 1)] {
-                        if let Src::Row(from) = src {
-                            required[from as usize][component] = true;
-                        }
-                    }
-                }
-            }
-        }
-        let input_rows = self
-            .circuit
-            .rows()
-            .iter()
-            .enumerate()
-            .skip(circuit_suite::PUBLIC_ROWS)
-            .filter(|(r, row)| [row.x, row.y, row.c] == [Src::Row(*r as u32), Src::Zero, Src::Zero])
-            .count();
-        let unused_sums = required
-            .iter()
-            .skip(circuit_suite::PUBLIC_ROWS)
-            .filter(|r| !r[0])
-            .count();
-        let unused_carries = required
-            .iter()
-            .skip(circuit_suite::PUBLIC_ROWS)
-            .filter(|r| !r[1])
-            .count();
-        let read = |outputs: &[[S; 2]], src: Src, carry: usize| match src {
-            Src::Zero => zero,
-            Src::One => {
-                if carry == 0 {
-                    one
-                } else {
-                    zero
-                }
-            }
-            Src::Row(r) => outputs[r as usize][carry],
-        };
-        for (r, row) in self.circuit.rows().iter().enumerate().skip(circuit_suite::PUBLIC_ROWS) {
-            outputs[r] = if [row.x, row.y, row.c] == [Src::Row(r as u32), Src::Zero, Src::Zero] {
-                let bit = S::input(F192::new(u64::from(*inputs.next().expect("input row")), 0, 0));
-                (bit * bit).assert_eq(bit);
-                [bit, zero]
-            } else {
-                let x = read(&outputs, row.x, 0);
-                let y = read(&outputs, row.y, 0);
-                let c = read(&outputs, row.c, 1);
-                if required[r].iter().any(|&needed| needed) {
-                    let xy = x + y;
-                    [
-                        if required[r][0] { xy + c } else { zero },
-                        if required[r][1] { x * y + c * xy } else { zero },
-                    ]
-                } else {
-                    [zero, zero]
-                }
-            };
-        }
-        assert!(inputs.next().is_none());
+        let compiled = application_lowering::lower(
+            &self.circuit,
+            &self.sources,
+            self.id,
+            &instance.inputs,
+            self.trim_outputs,
+        );
         let statement = flock::membership::Statement {
             y: instance.statement[..32].try_into().unwrap(),
             root: instance.statement[32..].try_into().unwrap(),
         };
-        // Public statement halves are big endian bytes interpreted as little
-        // endian field limbs by the existing application claim convention.
-        let words: Vec<_> = self
-            .sources
-            .chunks(128)
-            .map(|bits| {
-                let mut parts = Vec::with_capacity(128);
-                for byte in (0..16).rev() {
-                    for bit in 0..8 {
-                        parts.push((read(&outputs, bits[8 * byte + bit], 0), 1));
-                    }
-                }
-                S::pack(&parts)
-            })
-            .collect();
-        for (word, expected) in words.iter().zip(statement.halves()) {
-            assert_eq!(word.value(), expected);
-        }
-        let id = fiat_shamir::merkle::hash_to_scalars(&self.id).map(S::c);
-        let mut parts = vec![(id[0], 16), (id[1], 16)];
-        parts.extend(words.iter().map(|&word| (word, 16)));
-        let digest = hash(&parts);
-        let mut program = trace::take();
-        program.public = digest.to_vec();
+        assert_eq!(compiled.statement_halves, statement.halves());
+        let program = compiled.trace;
         let trace_nodes = program.nodes.len();
         let native_trace_creation_ms = start.elapsed().as_secs_f64() * 1000.;
-        let claim = fiat_shamir::merkle::scalars_to_hash(&digest.map(|s| program.nodes[s.0].value)).unwrap();
+        let claim = fiat_shamir::merkle::scalars_to_hash(
+            &program
+                .public
+                .iter()
+                .map(|s| program.nodes[s.0].value)
+                .collect::<Vec<_>>()
+                .try_into()
+                .unwrap(),
+        )
+        .unwrap();
         assert_eq!(claim, self.expected_claim(seed));
         Created {
             trace: program,
@@ -279,9 +172,9 @@ impl<W: Workload> Application<W> {
                 "boolean_log_rows":self.circuit.log_rows,
                 "trim_unused_outputs":self.trim_outputs,
                 "trace_nodes":trace_nodes,
-                "boolean_input_rows":input_rows,
-                "omitted_sums":unused_sums,
-                "omitted_carries":unused_carries,
+                "boolean_input_rows":compiled.input_rows,
+                "omitted_sums":compiled.unused_sums,
+                "omitted_carries":compiled.unused_carries,
                 "public_pack_bits":512,
                 "range_checks":0,
             }),

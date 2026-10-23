@@ -32,12 +32,15 @@ pub(crate) const MAX_BLOCKS: usize = 1 << 17;
 
 /// Four native columns have three F64 limbs each. Unlike the standalone
 /// arithmetic stack, this joint commitment does not retain each fourth slot.
-fn joint_layout(log_rows: usize, q_log: usize) -> (usize, usize) {
-    let native_words = 12usize << log_rows;
-    let q_words = 1usize << q_log;
-    let q_offset = native_words.next_multiple_of(q_words);
-    let stack_log = (q_offset + q_words).next_power_of_two().trailing_zeros() as usize;
-    (q_offset, stack_log)
+fn joint_layout(log_rows: usize, q_log: usize) -> Option<(usize, usize)> {
+    let native_words = 12usize.checked_mul(1usize.checked_shl(log_rows.try_into().ok()?)?)?;
+    let q_words = 1usize.checked_shl(q_log.try_into().ok()?)?;
+    let q_offset = native_words.checked_next_multiple_of(q_words)?;
+    let stack_log = q_offset
+        .checked_add(q_words)?
+        .checked_next_power_of_two()?
+        .trailing_zeros() as usize;
+    Some((q_offset, stack_log))
 }
 
 #[cfg(test)]
@@ -81,6 +84,13 @@ pub struct PrivateShape {
 
 impl PrivateShape {
     pub fn for_circuit(rows: usize, public_len: usize, n_blocks: usize) -> Option<Self> {
+        let shape = Self::plan(rows, public_len, n_blocks)?;
+        (shape.index.log_rows <= native_arithmetic::MAX_LOG_ROWS).then_some(shape)
+    }
+
+    /// Metadata-only final layout, including connectors and alignment. Planning
+    /// may exceed the backend row cap; it does not authorize a proving key.
+    pub fn plan(rows: usize, public_len: usize, n_blocks: usize) -> Option<Self> {
         if n_blocks == 0 || n_blocks > MAX_BLOCKS || public_len < 2 {
             return None;
         }
@@ -91,11 +101,8 @@ impl PrivateShape {
         let connector_start = public_rows.checked_add(rows)?.checked_next_multiple_of(blocks)?;
         let count = connector_start.checked_add(6 * blocks)?;
         let log_rows = (count.checked_next_power_of_two()?.trailing_zeros() as usize).max(13);
-        if log_rows > native_arithmetic::MAX_LOG_ROWS {
-            return None;
-        }
         let q_log = K_LOG - LOG_PACKING + block_log;
-        let (q_offset, stack_log) = joint_layout(log_rows, q_log);
+        let (q_offset, stack_log) = joint_layout(log_rows, q_log)?;
         Some(Self {
             index: ArithmeticShape {
                 log_rows,
@@ -239,7 +246,7 @@ impl PrivateBridge {
         }
         let index = Index::new_with_rate(circuit, INDEX_LOG_INV_RATE);
         let q_log = K_LOG - LOG_PACKING + block_log;
-        let (q_offset, stack_log) = joint_layout(index.log_rows, q_log);
+        let (q_offset, stack_log) = joint_layout(index.log_rows, q_log)?;
         Some(Self {
             index,
             n_blocks,
@@ -708,15 +715,15 @@ mod tests {
             let n = 1usize << l;
             for q_log in 0..=24 {
                 let q_words = 1usize << q_log;
-                let (offset, log) = joint_layout(l, q_log);
+                let (offset, log) = joint_layout(l, q_log).unwrap();
                 assert!(offset >= 12 * n);
                 assert!(offset.is_multiple_of(q_words));
                 assert!(offset - 12 * n < q_words);
                 assert!(offset + q_words <= 1usize << log);
                 assert!(offset + q_words > 1usize << (log - 1));
             }
-            assert_eq!(joint_layout(l, l + 2), (12 * n, l + 4));
-            assert_eq!(joint_layout(l, l + 3), (16 * n, l + 5));
+            assert_eq!(joint_layout(l, l + 2).unwrap(), (12 * n, l + 4));
+            assert_eq!(joint_layout(l, l + 3).unwrap(), (16 * n, l + 5));
         }
     }
 

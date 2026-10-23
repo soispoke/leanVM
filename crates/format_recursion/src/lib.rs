@@ -29,3 +29,5 @@ pub mod lookup_reduction;
 pub mod shielded_application;
 pub mod shielded_lookup;
 pub mod shielded_lookup_prototype;
+
+pub mod application_lowering;
