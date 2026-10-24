@@ -65,12 +65,12 @@ fn main() {
         shapes: [
             (a.row_log, a.z_log),
             b.as_ref().map_or((a.row_log, a.z_log), |s| (s.row_log, s.z_log)),
-            if cfg!(feature = "keccak-merkle-cap") {
+            if cfg!(any(feature = "keccak-merkle-cap", feature = "keccak-quad-cap")) {
                 (21, 21)
             } else {
                 (22, 22)
             },
-            (22, 22),
+            if cfg!(feature = "keccak-quad-cap") { (21, 21) } else { (22, 22) },
         ],
     };
     let mut leafproofs = Vec::new();
@@ -111,7 +111,7 @@ fn main() {
         firsttraces[0].clone(),
         false,
         if cfg!(feature = "keccak-protocol") {
-            Some(if cfg!(feature = "keccak-merkle-cap") {
+            Some(if cfg!(any(feature = "keccak-merkle-cap", feature = "keccak-quad-cap")) {
                 (21, 21)
             } else {
                 (22, 22)
@@ -156,7 +156,7 @@ fn main() {
         canonical.clone(),
         false,
         if cfg!(feature = "keccak-protocol") {
-            Some((22, 22))
+            Some(if cfg!(feature = "keccak-quad-cap") { (21, 21) } else { (22, 22) })
         } else {
             None
         },

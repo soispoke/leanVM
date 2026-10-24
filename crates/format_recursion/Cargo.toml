@@ -24,6 +24,8 @@ tikv-jemallocator.workspace = true
 tracing.workspace = true
 
 [features]
+keccak-quad-cap-fast = ["keccak-quad-cap"]
+keccak-quad-cap = ["keccak-merkle-arity4", "keccak-batched-transcript"]
 keccak-merkle-arity4 = ["keccak-protocol", "primitives/keccak-merkle-arity4"]
 keccak-merkle-cap = ["keccak-protocol"]
 keccak-protocol = ["primitives/keccak-protocol"]
