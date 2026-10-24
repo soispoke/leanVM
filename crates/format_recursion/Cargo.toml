@@ -10,6 +10,7 @@ workspace = true
 [features]
 default = []
 experimental-log26 = []
+keccak-merkle-cap = ["keccak-protocol"]
 keccak-protocol = ["primitives/keccak-protocol"]
 keccak-batched-transcript = ["keccak-protocol", "fiat_shamir/keccak-batched-transcript"]
 
