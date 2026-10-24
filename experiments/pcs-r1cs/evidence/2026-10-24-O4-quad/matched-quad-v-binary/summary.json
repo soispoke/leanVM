@@ -1,0 +1,34 @@
+{
+  "first": {
+    "A": {
+      "median_s": 2.0739496979949763,
+      "samples": 6,
+      "proof_bytes": [
+        193304
+      ]
+    },
+    "B": {
+      "median_s": 2.0069328369863797,
+      "samples": 6,
+      "proof_bytes": [
+        235240
+      ]
+    }
+  },
+  "node": {
+    "A": {
+      "median_s": 4.729100235985243,
+      "samples": 6,
+      "proof_bytes": [
+        202765
+      ]
+    },
+    "B": {
+      "median_s": 2.710721615992952,
+      "samples": 6,
+      "proof_bytes": [
+        237485
+      ]
+    }
+  }
+}

@@ -1,0 +1,1 @@
+Required default and Keccak format gates passed; extra legacy VM Keccak diagnostic failed, see feature-scope.md

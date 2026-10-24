@@ -1,0 +1,13 @@
+{
+  "passed": true,
+  "workloads": [
+    "blake2s-64b",
+    "blake2s-1kib",
+    "sha256-1kib",
+    "keccak256-1KiB",
+    "mpt-storage-proof",
+    "shielded-transfer",
+    "falcon512"
+  ],
+  "scope": "Default configuration, seven application circuits, seed 20261024; exact key, shape, statement, certificate length and SHA256 equality; not performance evidence"
+}

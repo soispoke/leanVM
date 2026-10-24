@@ -1,0 +1,1 @@
+Required default and supported Keccak gates passed; legacy VM feature limitation documented in ../feature-scope.md

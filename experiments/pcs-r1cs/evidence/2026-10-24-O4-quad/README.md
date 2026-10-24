@@ -1,0 +1,3 @@
+Validated source af32e4847bd867625cc9b480b11726e7435effc6. Default and opt-in full gates, native quad tests, seven-workload reconciliation and exact default compatibility passed. Publication code tree must equal this source. Matched and five-round referee results are trial controls, not an eligible challenge score. Fixed Keccak and security parameters are unchanged.
+
+The first compatibility attempt used an earlier binary path and was discarded; archived results here use the corrected target-ref-O4-quad binary. Published O1 validation completed after its initial publication; its earlier ordering error is retained in the O4 report. Local accidental prefix apply/revert history remains unpublished.

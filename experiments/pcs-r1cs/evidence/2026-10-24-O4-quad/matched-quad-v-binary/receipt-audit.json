@@ -1,0 +1,5 @@
+{
+  "samples": 24,
+  "findings": [],
+  "scope": "Matched complete-transport receipt and immutable binary integrity; no separate soundness or admission claim"
+}

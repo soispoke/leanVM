@@ -1,0 +1,18 @@
+{
+  "commit": "af32e4847bd867625cc9b480b11726e7435effc6",
+  "features": "keccak-quad-cap-fast",
+  "binaries": {
+    "trial_first": "260529c1bf5e4cade1554b7db0b33c7c73fd90444289b08efc4c56a4b341f0e4",
+    "trial_sparse": "f98549d8081db31afbb248ea9d0c091cf42a58e4cd2597200cb0ae37ca6e6e7b",
+    "trial_sparse_admission": "8f6a4673bc4d47dcca21964a9ea775cd3e7004853668a5c2fb927a0325566aab",
+    "trial_wallet_v2": "b7365f49714a5363f2446dd6ac3f5cae4192b24cf62319b19152303a7d5f2fe2"
+  },
+  "adapters": {
+    "trial_first": "c6bbe3afea52fea1b6ab59f3ddc7439ccc0385c6c1e2f8936b37b7d7b49b588f",
+    "trial_sparse": "7234cb4ae99a19ecc10a51fcd14e2d9668116a81861de9597f7da12f83a84eab",
+    "trial_sparse_admission": "e85cf66de1338ba6de622b0ea08e39a8530645212de4f419afb20ffec97c0048",
+    "trial_wallet_v2": "f8bbd5ecdcfb78c42340152bea4398921243528f4d38ed3396f46ad7ebe8cd89"
+  },
+  "target": "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/O4/build-o4-quad/frozen",
+  "scope": "Original trial transport adapters; accepted quad-cap schema/padding dimensions only, 21/21 under the opt-in feature"
+}
