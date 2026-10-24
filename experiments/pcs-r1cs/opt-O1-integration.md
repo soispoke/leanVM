@@ -1,0 +1,7 @@
+# O1 aligned stack ordering
+
+This integrates accepted implementation ae3c0e07 and its diagnostic harness, without later witness-generation or SIMD candidates. The Keccak-only sparse layout places q first when it is at least as large as an arithmetic limb and places the three field limbs after it. The default BLAKE layout remains unchanged. Native and recorded verifier offsets move together; all field evaluations, public bindings and 50 Keccak port equalities remain enforced.
+
+The lane accepted this change after a matched ABAB run with three rounds per first/node workload, six samples per variant. The complete report and immutable executable receipts are in the parent workspace artifacts/opt-O1.md and artifacts/opt-O1/layout-abab. Those lane measurements are not O4 referee medians. The O4 referee builds separate trial adapters from the accepted source commit and retains the trial control scope.
+
+Packing is an injective relocation of the existing packed words, not a removed equation or weakened verifier check. The source tests generate proofs with wrong permutation data and swapped blocks, then require native verifier rejection without prover prechecks. Existing tests cover public output, proof-stream, key, carried-claim, transcript and opening mutations. The setup key changes for the opt-in layout. Query counts, grinding, rates and the Keccak relation are unchanged. Regression results do not establish a new security theorem.
