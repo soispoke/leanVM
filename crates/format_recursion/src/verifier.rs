@@ -41,7 +41,11 @@ fn cap_select(nodes: &[[S; 2]], query: S, start: usize, sibling: bool) -> [S; 2]
 
 #[cfg(any(feature = "keccak-merkle-cap", feature = "keccak-quad-cap"))]
 fn cap_arity(width: usize) -> usize {
-    if primitives::protocol_hash::MERKLE_ARITY4 && width >= 4 { 4 } else { 2 }
+    if primitives::protocol_hash::MERKLE_ARITY4 && width >= 4 {
+        4
+    } else {
+        2
+    }
 }
 
 #[cfg(any(feature = "keccak-merkle-cap", feature = "keccak-quad-cap"))]
@@ -285,7 +289,9 @@ impl<'a> Transcript<'a> {
         #[cfg(feature = "keccak-merkle-cap")]
         let cap_height = depth.min(queries.len().ilog2() as usize).min(4);
         #[cfg(feature = "keccak-quad-cap")]
-        let cap_height = if queries.len() == 1 { 0 } else {
+        let cap_height = if queries.len() == 1 {
+            0
+        } else {
             depth.min((queries.len().ilog2() as usize).min(6) / 2 * 2 + depth % 2)
         };
         #[cfg(not(any(feature = "keccak-merkle-cap", feature = "keccak-quad-cap")))]
@@ -399,7 +405,9 @@ impl<'a> Transcript<'a> {
                 let mut bits = cut;
                 for nodes in cap.iter().take(cap.len() - 1) {
                     let arity = cap_arity(nodes.len());
-                    let children: Vec<_> = (0..arity).map(|slot| cap_fixed_child(nodes, query, bits, arity, slot)).collect();
+                    let children: Vec<_> = (0..arity)
+                        .map(|slot| cap_fixed_child(nodes, query, bits, arity, slot))
+                        .collect();
                     for rank in 0..arity - 1 {
                         #[cfg(feature = "keccak-quad-cap-fast")]
                         let supplied = hash_to_scalars(&path.path[cursor + rank]).map(S::input);
@@ -408,9 +416,13 @@ impl<'a> Transcript<'a> {
                         // The equality below is over the full F192 value.
                         // Its selected cap digest is already canonical, so an
                         // additional range decomposition of this alias is redundant.
-                        let choices: Vec<_> = (0..arity).map(|own| children[if rank < own { rank } else { rank + 1 }]).collect();
+                        let choices: Vec<_> = (0..arity)
+                            .map(|own| children[if rank < own { rank } else { rank + 1 }])
+                            .collect();
                         let expected = cap_select(&choices, query, bits, false);
-                        for i in 0..2 { supplied[i].assert_eq(expected[i]); }
+                        for i in 0..2 {
+                            supplied[i].assert_eq(expected[i]);
+                        }
                     }
                     cursor += arity - 1;
                     bits += arity.ilog2() as usize;
@@ -463,8 +475,12 @@ impl<'a> Transcript<'a> {
                 let own = index % arity;
                 let mut children = Vec::new();
                 for child in 0..arity {
-                    children.push(if child == own { digest } else {
-                        let sibling = path.path[cursor]; cursor += 1; sibling
+                    children.push(if child == own {
+                        digest
+                    } else {
+                        let sibling = path.path[cursor];
+                        cursor += 1;
+                        sibling
                     });
                 }
                 if bits >= cut {
@@ -516,10 +532,14 @@ impl<'a> Transcript<'a> {
             let mut parent_present = Vec::new();
             let arity = cap_arity(widths[level - 1]);
             for (index, children) in layers[level - 1].chunks(arity).enumerate() {
-                let absent = present[index * arity..(index + 1) * arity].iter()
+                let absent = present[index * arity..(index + 1) * arity]
+                    .iter()
                     .fold(S::u(1), |absent, &p| absent * (S::u(1) + p));
                 let occupied = S::u(1) + absent;
-                let parts: Vec<_> = children.iter().flat_map(|child| child.iter().map(|&v| (v, 16))).collect();
+                let parts: Vec<_> = children
+                    .iter()
+                    .flat_map(|child| child.iter().map(|&v| (v, 16)))
+                    .collect();
                 let computed = hash(&parts);
                 let opaque = cap_input_digest(&known[level][index]);
                 parents.push(std::array::from_fn(|i| S::select(occupied, opaque[i], computed[i])));
@@ -1040,22 +1060,35 @@ mod tests {
         let bytes: Vec<_> = rows.iter().flat_map(|w| w.0.to_le_bytes()).collect();
         let tree = pcs::merkle::merkle_tree(&bytes, 512);
         let root = *tree.last().unwrap();
-        let make = |q: &[usize]| fiat_shamir::merkle::PrunedMerklePaths::prune(&tree, 512, q, |i| vec![rows[i]])
-            .open(&root, 512, q, 1, 1).unwrap();
+        let make = |q: &[usize]| {
+            fiat_shamir::merkle::PrunedMerklePaths::prune(&tree, 512, q, |i| vec![rows[i]])
+                .open(&root, 512, q, 1, 1)
+                .unwrap()
+        };
         let record = |q: &[usize], paths: Vec<RawMerklePath>| {
             trace::start();
-            let proof = RawProof { stream: Vec::new(), merkle: paths };
+            let proof = RawProof {
+                stream: Vec::new(),
+                merkle: paths,
+            };
             let mut t = Transcript::new(&proof, digest_constant(&[0; 32]), digest_constant(&[1; 32]));
-            let queries: Vec<_> = q.iter().map(|&q| S::input(F192::from(F64(q as u64))).slice(0, depth)).collect();
+            let queries: Vec<_> = q
+                .iter()
+                .map(|&q| S::input(F192::from(F64(q as u64))).slice(0, depth))
+                .collect();
             t.merkle(digest_constant(&root), depth, &queries, 1, true, 1);
-            t.finish(); trace::take()
+            t.finish();
+            trace::take()
         };
         let sparse = vec![0; 112];
         let distributed: Vec<_> = (0..112).map(|i| i * 73 % 512).collect();
         let a = record(&sparse, make(&sparse));
         let b = record(&distributed, make(&distributed));
         assert!(a.satisfied() && b.satisfied());
-        assert!(a.same_program(&b), "128 cap regions must keep a fixed key under arbitrary occupancy");
+        assert!(
+            a.same_program(&b),
+            "128 cap regions must keep a fixed key under arbitrary occupancy"
+        );
         for q in [&sparse, &distributed] {
             let mut bad = make(q);
             bad[0].path.last_mut().unwrap()[0] ^= 1;
@@ -1065,9 +1098,16 @@ mod tests {
                 let paths = make(q);
                 let half = hash_to_scalars(paths[0].path.last().unwrap())[0];
                 let mut program = record(q, paths);
-                let input = program.nodes.iter().rposition(|n| n.op == trace::Op::Input && n.value == half).unwrap();
+                let input = program
+                    .nodes
+                    .iter()
+                    .rposition(|n| n.op == trace::Op::Input && n.value == half)
+                    .unwrap();
                 program.nodes[input].value += F192::new(0, 0, 1);
-                assert!(!program.satisfied(), "full-field sibling equality rejects discarded high limbs");
+                assert!(
+                    !program.satisfied(),
+                    "full-field sibling equality rejects discarded high limbs"
+                );
             }
         }
     }

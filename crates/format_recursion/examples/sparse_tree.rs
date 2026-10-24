@@ -70,7 +70,11 @@ fn main() {
             } else {
                 (22, 22)
             },
-            if cfg!(feature = "keccak-quad-cap") { (21, 21) } else { (22, 22) },
+            if cfg!(feature = "keccak-quad-cap") {
+                (21, 21)
+            } else {
+                (22, 22)
+            },
         ],
     };
     let mut leafproofs = Vec::new();
@@ -111,11 +115,13 @@ fn main() {
         firsttraces[0].clone(),
         false,
         if cfg!(feature = "keccak-protocol") {
-            Some(if cfg!(any(feature = "keccak-merkle-cap", feature = "keccak-quad-cap")) {
-                (21, 21)
-            } else {
-                (22, 22)
-            })
+            Some(
+                if cfg!(any(feature = "keccak-merkle-cap", feature = "keccak-quad-cap")) {
+                    (21, 21)
+                } else {
+                    (22, 22)
+                },
+            )
         } else {
             None
         },
@@ -156,7 +162,11 @@ fn main() {
         canonical.clone(),
         false,
         if cfg!(feature = "keccak-protocol") {
-            Some(if cfg!(feature = "keccak-quad-cap") { (21, 21) } else { (22, 22) })
+            Some(if cfg!(feature = "keccak-quad-cap") {
+                (21, 21)
+            } else {
+                (22, 22)
+            })
         } else {
             None
         },
