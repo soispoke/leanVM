@@ -1,0 +1,6 @@
+{
+  "accepted_latency": true,
+  "first_reduction_percent": 11.86,
+  "node_reduction_percent": 1.81,
+  "scope": "Modest node median win with variable samples; full gate, root/admission and cadence remain necessary"
+}

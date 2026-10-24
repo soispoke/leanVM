@@ -1,0 +1,8 @@
+{
+  "selected_unix": 1792807548.6369636,
+  "r1cs_commit": "062eb3c4a071aacf271ac657e2ed13e6f12099e5",
+  "vm_commit": "096437a8e89edcd857fab8c9c57dcc53d5ac3f71",
+  "r1cs_target": "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/O4/build-o4-canonical/frozen",
+  "vm_target": "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/target-ref-O4-vm-streaming",
+  "scope": "Trial scope controls and warm complete-certificate boundaries, five rounds; no eligible scalar"
+}

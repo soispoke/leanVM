@@ -1,0 +1,19 @@
+{
+  "variants": {
+    "A": {
+      "commit": "af32e484",
+      "binaries": {
+        "trial_first": "260529c1bf5e4cade1554b7db0b33c7c73fd90444289b08efc4c56a4b341f0e4",
+        "trial_sparse": "f98549d8081db31afbb248ea9d0c091cf42a58e4cd2597200cb0ae37ca6e6e7b"
+      }
+    },
+    "B": {
+      "commit": "062eb3c4",
+      "binaries": {
+        "trial_first": "bee43b07e5708b894859074a185bc3b9976b00e6a5a6fd9eec6b2404b7a0b568",
+        "trial_sparse": "f9295b4e95eacec418cf68e6f8115502e4e4946b67a1eec6844905f6dbb76069"
+      }
+    }
+  },
+  "method": "ABAB x3 per workload, six complete external samples per variant; fixed-child trial controls, no eligible challenge score"
+}

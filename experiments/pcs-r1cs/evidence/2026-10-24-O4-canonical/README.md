@@ -1,0 +1,1 @@
+Canonical routing source 062eb3c4. Full gate exit0, default and supported Keccak tests, native tests, seven reconciliations, corrected exact compatibility7/7, matched comparison and r135 referee audit passed. Canonical is an optimization follow-on to the published quad source; publication uses ordinary merge ancestry and code-tree identity.

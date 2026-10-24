@@ -1,0 +1,18 @@
+{
+  "commit": "062eb3c4a071aacf271ac657e2ed13e6f12099e5",
+  "features": "keccak-canonical-route",
+  "binaries": {
+    "trial_first": "bee43b07e5708b894859074a185bc3b9976b00e6a5a6fd9eec6b2404b7a0b568",
+    "trial_sparse": "f9295b4e95eacec418cf68e6f8115502e4e4946b67a1eec6844905f6dbb76069",
+    "trial_sparse_admission": "17b67c0adcf150686c330aa16b33688163a5a05d0f2046aa6eaa471530fb01c3",
+    "trial_wallet_v2": "ef73a642e2159d7797ac21c9ad062549dc753603dad7c730109f3f6d15088eeb"
+  },
+  "adapters": {
+    "trial_first": "c6bbe3afea52fea1b6ab59f3ddc7439ccc0385c6c1e2f8936b37b7d7b49b588f",
+    "trial_sparse": "7234cb4ae99a19ecc10a51fcd14e2d9668116a81861de9597f7da12f83a84eab",
+    "trial_sparse_admission": "e85cf66de1338ba6de622b0ea08e39a8530645212de4f419afb20ffec97c0048",
+    "trial_wallet_v2": "f8bbd5ecdcfb78c42340152bea4398921243528f4d38ed3396f46ad7ebe8cd89"
+  },
+  "target": "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/O4/build-o4-canonical/frozen",
+  "scope": "Original trial transport adapters; accepted quad-cap schema/padding dimensions only, 21/21 under the opt-in feature"
+}
