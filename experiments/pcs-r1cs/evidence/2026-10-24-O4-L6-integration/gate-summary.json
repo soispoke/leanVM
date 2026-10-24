@@ -1,0 +1,80 @@
+{
+  "validated_source": "76316d5c11fcc2d505a93ccfb1aab1f444600ea6",
+  "logs": {
+    "fmt.log": {
+      "path": "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/O4/fmt.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "test_results": [],
+      "compile_finished": []
+    },
+    "clippy-default.log": {
+      "path": "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/O4/clippy-default.log",
+      "sha256": "68b22b4debf38b36c37e95d76975a407fdbff6c5dac8c13b7368538c04b386a8",
+      "test_results": [],
+      "compile_finished": [
+        "    Finished `release` profile [optimized] target(s) in 6.60s"
+      ]
+    },
+    "clippy-keccak.log": {
+      "path": "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/O4/clippy-keccak.log",
+      "sha256": "caf133de3f409008e02b41b61161d0ebb2ce9ec78a7cdf75f5a6a3b4d7beba6b",
+      "test_results": [],
+      "compile_finished": [
+        "    Finished `release` profile [optimized] target(s) in 7.44s"
+      ]
+    },
+    "test-default.log": {
+      "path": "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/O4/test-default.log",
+      "sha256": "32dd026ff7f8f9249ce49bdaf3eb34f4d0e8623892527029e535c2def4a9477c",
+      "test_results": [
+        "test result: ok. 79 passed; 0 failed; 4 ignored; 0 measured; 0 filtered out; finished in 406.28s",
+        "test result: ok. 112 passed; 0 failed; 1 ignored; 0 measured; 0 filtered out; finished in 77.19s",
+        "test result: ok. 43 passed; 0 failed; 5 ignored; 0 measured; 0 filtered out; finished in 107.78s"
+      ],
+      "compile_finished": [
+        "    Finished `release` profile [optimized] target(s) in 1m 59s"
+      ]
+    },
+    "test-default-first-resume.log": {
+      "path": "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/O4/test-default-first-resume.log",
+      "sha256": "a04405573a6bfdaf0409b5752be1c66f6ff60024220a40aa7601c8f8484ac7df",
+      "test_results": [
+        "test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 112 filtered out; finished in 5.41s"
+      ],
+      "compile_finished": [
+        "    Finished `release` profile [optimized] target(s) in 1m 05s"
+      ]
+    },
+    "test-flock-keccak.log": {
+      "path": "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/O4/test-flock-keccak.log",
+      "sha256": "302218cf03af2c360ddeacf932652a69f89f0f693dc32d8b5bfaf812b99e9386",
+      "test_results": [
+        "test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 64 filtered out; finished in 4.59s"
+      ],
+      "compile_finished": [
+        "    Finished `release` profile [optimized] target(s) in 1m 06s"
+      ]
+    },
+    "test-keccak.log": {
+      "path": "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/O4/test-keccak.log",
+      "sha256": "c1a79dc3ffeb656d727507c513313d007af8849e7df7a51abcc0f1843fbd1897",
+      "test_results": [
+        "test result: ok. 9 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.17s",
+        "test result: ok. 67 passed; 0 failed; 1 ignored; 0 measured; 0 filtered out; finished in 124.10s",
+        "test result: ok. 30 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.16s",
+        "test result: FAILED. 28 passed; 15 failed; 5 ignored; 0 measured; 0 filtered out; finished in 99.11s"
+      ],
+      "compile_finished": [
+        "    Finished `release` profile [optimized] target(s) in 1m 36s"
+      ]
+    },
+    "build-reconcile.log": {
+      "path": "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/O4/build-reconcile.log",
+      "sha256": "e57ebc2b7d26e33e9e1143c992211c0347fc8356fbc11e26e848b3e9b4b5d376",
+      "test_results": [],
+      "compile_finished": [
+        "    Finished `release` profile [optimized] target(s) in 40.70s"
+      ]
+    }
+  }
+}
