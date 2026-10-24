@@ -65,7 +65,11 @@ fn main() {
         shapes: [
             (a.row_log, a.z_log),
             b.as_ref().map_or((a.row_log, a.z_log), |s| (s.row_log, s.z_log)),
-            (22, 22),
+            if cfg!(feature = "keccak-merkle-cap") {
+                (21, 21)
+            } else {
+                (22, 22)
+            },
             (22, 22),
         ],
     };
@@ -107,7 +111,11 @@ fn main() {
         firsttraces[0].clone(),
         false,
         if cfg!(feature = "keccak-protocol") {
-            Some((22, 22))
+            Some(if cfg!(feature = "keccak-merkle-cap") {
+                (21, 21)
+            } else {
+                (22, 22)
+            })
         } else {
             None
         },
