@@ -29,3 +29,5 @@ bincode.workspace = true
 tikv-jemallocator.workspace = true
 tracing.workspace = true
 
+[dev-dependencies]
+bench.workspace = true

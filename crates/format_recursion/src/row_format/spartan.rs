@@ -56,6 +56,7 @@ pub struct Setup {
     pub z_log: usize,
     pub row_log: usize,
     pub q_offset: usize,
+    pub field_offset: usize,
     pub stack_log: usize,
     pub committed_words: usize,
 }
@@ -86,8 +87,14 @@ impl Setup {
         let z_log = r1cs.origins.len().next_power_of_two().trailing_zeros() as usize;
         let row_log = r1cs.rows().next_power_of_two().trailing_zeros() as usize;
         let q_words = 1usize << (K_LOG - LOG_PACKING + r1cs.block_log);
-        let q_offset = (3usize << z_log).next_multiple_of(q_words);
-        let committed_words = q_offset + q_words;
+        let field_words = 3usize << z_log;
+        let (field_offset, q_offset, committed_words) =
+            if cfg!(feature = "keccak-protocol") && q_words >= 1usize << z_log {
+                (q_words, 0, q_words + field_words)
+            } else {
+                let q_offset = field_words.next_multiple_of(q_words);
+                (0, q_offset, q_offset + q_words)
+            };
         let stack_log = committed_words.next_power_of_two().trailing_zeros() as usize;
         let mut h = primitives::protocol_hash::Hasher::new();
         h.update(b"standard-row-format-direct-matrices-v1");
@@ -125,6 +132,7 @@ impl Setup {
             z_log,
             row_log,
             q_offset,
+            field_offset,
             stack_log,
             committed_words,
         }
@@ -156,7 +164,7 @@ impl Setup {
         let mut limbs = [F192::ZERO; 3];
         let n = 1usize << self.z_log;
         for limb in 0..3 {
-            let at = limb * n + offset;
+            let at = self.field_offset + limb * n + offset;
             let value = whir::inner_product_base_ext(&stack[at..at + weights.len()], &weights);
             ps.add_scalar(value);
             limbs[limb] = value;
@@ -180,7 +188,7 @@ impl Setup {
             let value = vs.next_scalar().ok()?;
             limbs[limb] = value;
             claims.push(StackClaim::Point {
-                offset: limb * (1usize << self.z_log) + offset,
+                offset: self.field_offset + limb * (1usize << self.z_log) + offset,
                 low_point: point.to_vec(),
                 value,
             });
@@ -196,7 +204,7 @@ impl Setup {
                 .zip(&weights)
                 .fold(F192::ZERO, |s, (&v, &w)| s + w.mul_base(F64([v.c0, v.c1, v.c2][limb])));
             claims.push(StackClaim::Point {
-                offset: limb * n,
+                offset: self.field_offset + limb * n,
                 low_point: point.to_vec(),
                 value,
             });
@@ -208,7 +216,7 @@ impl Setup {
         for (slot, &value) in values.iter().enumerate() {
             for limb in 0..3 {
                 claims.push(StackClaim::Point {
-                    offset: limb * n + self.r1cs.port_start + slot * blocks,
+                    offset: self.field_offset + limb * n + self.r1cs.port_start + slot * blocks,
                     low_point: point.to_vec(),
                     value: if limb == 0 { value } else { F192::ZERO },
                 });
@@ -322,15 +330,19 @@ impl Setup {
             .in_scope(|| generate_witness_with_ab_packed_and_lincheck(blocks, self.r1cs.block_log));
         let mut stack = vec![F64::ZERO; self.committed_words];
         let n = z.len();
-        parallel::chunks_mut(&mut stack[..3 * n], n.min(4096), |chunk, out| {
-            let start = chunk * n.min(4096);
-            let limb = start / n;
-            let at = start % n;
-            let len = out.len();
-            for (dest, v) in out.iter_mut().zip(&z[at..at + len]) {
-                *dest = F64([v.c0, v.c1, v.c2][limb]);
-            }
-        });
+        parallel::chunks_mut(
+            &mut stack[self.field_offset..self.field_offset + 3 * n],
+            n.min(4096),
+            |chunk, out| {
+                let start = chunk * n.min(4096);
+                let limb = start / n;
+                let at = start % n;
+                let len = out.len();
+                for (dest, v) in out.iter_mut().zip(&z[at..at + len]) {
+                    *dest = F64([v.c0, v.c1, v.c2][limb]);
+                }
+            },
+        );
         for (dest, &v) in stack[self.q_offset..].iter_mut().zip(&q) {
             *dest = F64(v);
         }
@@ -380,7 +392,7 @@ impl Setup {
         let weights = eq_table(&point);
         let mut ports = [F192::ZERO; PORTS];
         for (slot, v) in ports.iter_mut().enumerate() {
-            let at = self.r1cs.port_start + slot * (1usize << self.r1cs.block_log);
+            let at = self.field_offset + self.r1cs.port_start + slot * (1usize << self.r1cs.block_log);
             *v = whir::inner_product_base_ext(&stack[at..at + weights.len()], &weights);
             ps.add_scalar(*v);
         }
@@ -508,6 +520,7 @@ mod tests {
         let c = b.input(5);
         let p = b.gate(a, c, b.zero());
         let hash = b.hash_words(&[p, a, c]);
+        let hash = b.hash_words(&hash);
         for w in hash {
             b.expose(w);
         }
@@ -527,6 +540,23 @@ mod tests {
             let mut bad = proof.clone();
             bad.stream[5] += F192::ONE;
             assert!(setup.verify(&public, &context, &bad).is_none());
+            #[cfg(feature = "keccak-protocol")]
+            {
+                let mut wrong_output = b.protocol_blocks();
+                wrong_output[0][0] ^= 1;
+                let forged = setup.prove(&b.values, &wrong_output, &context);
+                assert!(
+                    setup.verify(&public, &context, &forged).is_none(),
+                    "permutation output must match bound ports"
+                );
+                let mut wrong_wiring = b.protocol_blocks();
+                wrong_wiring.swap(0, 1);
+                let forged = setup.prove(&b.values, &wrong_wiring, &context);
+                assert!(
+                    setup.verify(&public, &context, &forged).is_none(),
+                    "permutations cannot be reassigned to connectors"
+                );
+            }
             let mut foreign = b.values.clone();
             foreign[2] += F192::ONE;
             let z = setup.r1cs.witness(&foreign);

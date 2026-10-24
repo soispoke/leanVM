@@ -131,7 +131,7 @@ pub(crate) fn verify_shape_in_rows(
         let v = t.next();
         zv = zv + S::c(basis) * v;
         claims.push(Claim {
-            offset: limb * n,
+            offset: setup.field_offset + limb * n,
             point: col_point.clone(),
             value: v,
         });
@@ -146,7 +146,7 @@ pub(crate) fn verify_shape_in_rows(
             .zip(&weights)
             .fold(S::u(0), |s, (&v, &w)| s + w * v.slice(limb * 64, 64));
         claims.push(Claim {
-            offset: limb * n,
+            offset: setup.field_offset + limb * n,
             point: point.clone(),
             value,
         });
@@ -163,7 +163,7 @@ pub(crate) fn verify_shape_in_rows(
     for (slot, &value) in values.iter().enumerate() {
         for limb in 0..3 {
             claims.push(Claim {
-                offset: limb * n + setup.r1cs.port_start + slot * blocks,
+                offset: setup.field_offset + limb * n + setup.r1cs.port_start + slot * blocks,
                 point: point.clone(),
                 value: if limb == 0 { value } else { S::u(0) },
             });
