@@ -1,3 +1,5 @@
+#[cfg(all(feature = "keccak-merkle-cap", feature = "keccak-merkle-arity4"))]
+compile_error!("quaternary caps are not yet supported");
 use crate::trace::{self, S, Trace, digest_constant, hash};
 use fiat_shamir::{
     merkle::{Hash, hash_to_scalars},
@@ -224,7 +226,7 @@ impl<'a> Transcript<'a> {
                 .map(|query| fiat_shamir::merkle::RawMerklePath {
                     leaf_index: query.value().c0 as usize,
                     leaf_data: vec![primitives::field::F64::ZERO; words],
-                    path: vec![[0; 32]; depth],
+                    path: vec![[0; 32]; fiat_shamir::merkle::path_hash_count(depth)],
                 })
                 .collect::<Vec<_>>()
         };
@@ -255,9 +257,9 @@ impl<'a> Transcript<'a> {
             self.phase += queries.len();
             match supplied {
                 Some(paths)
-                    if paths
-                        .iter()
-                        .all(|p| p.path.len() == depth && p.leaf_data.len() == words) =>
+                    if paths.iter().all(|p| {
+                        p.path.len() == fiat_shamir::merkle::path_hash_count(depth) && p.leaf_data.len() == words
+                    }) =>
                 {
                     paths
                 }
@@ -278,7 +280,7 @@ impl<'a> Transcript<'a> {
         let cap = self.merkle_cap(root, depth, cap_height, queries, paths);
         let mut rows = Vec::new();
         for (&query, path) in queries.iter().zip(paths) {
-            assert_eq!(path.path.len(), depth);
+            assert_eq!(path.path.len(), fiat_shamir::merkle::path_hash_count(depth));
             let words = if base { lanes } else { 3 * lanes };
             assert_eq!(path.leaf_data.len(), words);
             let leaf: Vec<S> = path
@@ -319,17 +321,56 @@ impl<'a> Transcript<'a> {
                 self.phase,
                 queries.len()
             ));
-            for (level, sibling) in path.path.iter().take(cut).enumerate() {
-                let sibling = hash_to_scalars(sibling).map(|x| {
-                    let word = S::input(x);
-                    let low = word.slice(0, 128);
-                    word.assert_eq(low);
-                    low
-                });
+            let mut level = 0;
+            let mut cursor = 0;
+            while level < cut {
+                let arity = if primitives::protocol_hash::MERKLE_ARITY4 && cut - level >= 2 {
+                    4
+                } else {
+                    2
+                };
+                let siblings: Vec<[S; 2]> = path.path[cursor..cursor + arity - 1]
+                    .iter()
+                    .map(|sibling| {
+                        hash_to_scalars(sibling).map(|x| {
+                            let word = S::input(x);
+                            let low = word.slice(0, 128);
+                            word.assert_eq(low);
+                            low
+                        })
+                    })
+                    .collect();
                 let bit = query.slice(level, 1);
-                let left = [S::select(bit, node[0], sibling[0]), S::select(bit, node[1], sibling[1])];
-                let right = [S::select(bit, sibling[0], node[0]), S::select(bit, sibling[1], node[1])];
-                node = hash(&[(left[0], 16), (left[1], 16), (right[0], 16), (right[1], 16)]);
+                let children: Vec<[S; 2]> = if arity == 2 {
+                    vec![
+                        std::array::from_fn(|i| S::select(bit, node[i], siblings[0][i])),
+                        std::array::from_fn(|i| S::select(bit, siblings[0][i], node[i])),
+                    ]
+                } else {
+                    let high = query.slice(level + 1, 1);
+                    let choices = [
+                        [node, siblings[0], siblings[1], siblings[2]],
+                        [siblings[0], node, siblings[1], siblings[2]],
+                        [siblings[0], siblings[1], node, siblings[2]],
+                        [siblings[0], siblings[1], siblings[2], node],
+                    ];
+                    (0..4)
+                        .map(|slot| {
+                            std::array::from_fn(|i| {
+                                let lo = S::select(bit, choices[0][slot][i], choices[1][slot][i]);
+                                let hi = S::select(bit, choices[2][slot][i], choices[3][slot][i]);
+                                S::select(high, lo, hi)
+                            })
+                        })
+                        .collect()
+                };
+                let parts: Vec<_> = children
+                    .iter()
+                    .flat_map(|child| child.iter().map(|&v| (v, 16)))
+                    .collect();
+                node = hash(&parts);
+                cursor += arity - 1;
+                level += if arity == 4 { 2 } else { 1 };
             }
             trace::mark(&section);
             #[cfg(feature = "keccak-merkle-cap")]
@@ -869,6 +910,63 @@ mod tests {
             let mut badq = *q;
             badq[0] ^= 1;
             assert!(!record(&badq, make(q)).satisfied(), "wrong query challenge");
+        }
+    }
+
+    #[cfg(feature = "keccak-merkle-arity4")]
+    #[test]
+    fn quad_paths_bind_every_sibling_leaf_packing_and_query() {
+        use primitives::field::F64;
+        for depth in 1..=6 {
+            let count = 1usize << depth;
+            let rows: Vec<_> = (0..count).map(|i| F64(i as u64 + 1)).collect();
+            let bytes: Vec<_> = rows.iter().flat_map(|w| w.0.to_le_bytes()).collect();
+            let tree = pcs::merkle::merkle_tree(&bytes, count);
+            let root = *tree.last().unwrap();
+            let queries = [0, count - 1, count / 2, 0];
+            let proof = fiat_shamir::merkle::PrunedMerklePaths::prune(&tree, count, &queries, |q| vec![rows[q]]);
+            let paths = proof.open(&root, count, &queries, 1, 1).unwrap();
+            for (&q, path) in queries.iter().zip(&paths) {
+                assert_eq!(path.root(q), root);
+            }
+            let record = |q: &[usize], paths: Vec<RawMerklePath>| {
+                trace::start();
+                let proof = RawProof {
+                    stream: Vec::new(),
+                    merkle: paths,
+                };
+                let mut t = Transcript::new(&proof, digest_constant(&[0; 32]), digest_constant(&[1; 32]));
+                let q: Vec<_> = q
+                    .iter()
+                    .map(|&q| S::input(F192::from(F64(q as u64))).slice(0, depth))
+                    .collect();
+                t.merkle(digest_constant(&root), depth, &q, 1, true, 1);
+                t.finish();
+                trace::take()
+            };
+            assert!(record(&queries, paths.clone()).satisfied());
+            for position in 0..paths[0].path.len() {
+                let mut bad = paths.clone();
+                bad[0].path[position][0] ^= 1;
+                assert!(
+                    !record(&queries, bad).satisfied(),
+                    "wrong sibling depth={depth} position={position}"
+                );
+            }
+            let mut bad = paths.clone();
+            bad[0].leaf_data[0] += F64::ONE;
+            assert!(!record(&queries, bad).satisfied());
+            let mut badq = queries;
+            badq[0] ^= 1;
+            assert!(!record(&badq, paths).satisfied());
+            let mut bad = proof.clone();
+            bad.leaf_data[0].push(F64::ZERO);
+            assert!(bad.open(&root, count, &queries, 1, 1).is_none());
+            for position in 0..proof.sibling_hashes.len() {
+                let mut bad = proof.clone();
+                bad.sibling_hashes[position][0] ^= 1;
+                assert!(bad.open(&root, count, &queries, 1, 1).is_none());
+            }
         }
     }
 

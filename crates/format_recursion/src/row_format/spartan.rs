@@ -91,6 +91,9 @@ impl Setup {
         let stack_log = committed_words.next_power_of_two().trailing_zeros() as usize;
         let mut h = primitives::protocol_hash::Hasher::new();
         h.update(b"standard-row-format-direct-matrices-v1");
+        if primitives::protocol_hash::MERKLE_ARITY4 {
+            h.update(b"whir-quad-v1");
+        }
         h.update(&[u8::from(ccs)]);
         for x in [
             r1cs.rows(),

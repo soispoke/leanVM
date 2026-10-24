@@ -1,5 +1,8 @@
 //! Protocol hash selection. The Keccak configuration keeps the transcript's
 //! domain-separated grinding chain and replaces its byte hash, not its layout.
+/// Experimental four-child WHIR Merkle nodes.
+pub const MERKLE_ARITY4: bool = cfg!(feature = "keccak-merkle-arity4");
+
 #[cfg(not(feature = "keccak-protocol"))]
 pub use crate::hash::{
     BATCH, BLOCK_LEN, Hasher, LANES, OUT_LEN, hash, hash_from_state, hash_many, hash_many_dyn_from_state,

@@ -14,6 +14,7 @@ rand = { workspace = true, optional = true }
 serde.workspace = true
 
 [features]
+keccak-merkle-arity4 = ["keccak-protocol"]
 keccak-protocol = ["dep:keccak"]
 # Test-only helpers (`test_rng`) used by this and other crates' tests.
 # Kept off the default build so `rand` stays out of the production graph.
