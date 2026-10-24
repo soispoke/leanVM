@@ -1,0 +1,8 @@
+# Canonical sibling routing
+
+`keccak-canonical-route` moves the existing 128-bit digest-half checks from the supplied lower siblings to all children after the query-controlled permutation. Each query bit is still a constrained one-bit slice. At a binary step, the two output children are a swap of node and sibling. At a quaternary step, the four output children are a permutation of node and all three siblings, with node inserted at the two-bit query slot. Every sibling appears exactly once. The current node is already a 256-bit Keccak digest.
+
+For each allowed Boolean query, canonicality of every output child is therefore equivalent to canonicality of every input sibling. No sibling, path, leaf, challenge or root check is omitted. Hash preimages and leaf semantics are unchanged. Each full F192 output equals its low-128-bit slice; this is not a truncating equality. The routed limbs feed the native Keccak bridge directly, which already enforces their F64 membership. The compiler can consequently avoid extra, otherwise-unused limb decompositions of the raw input siblings and their fallback typing permutations.
+
+The new regression coherently replays every downstream trace operation after injecting a high F192 limb into each supplied sibling half, for all query slots over depths 1–6, including odd binary roots. It requires rejection both by recorded equations and lowered native rows. It bypasses native proof decoding and prover prechecks. The full package retains wrong-path, wrong-leaf-width, wrong-challenge, false-carried-claim, substituted-key and tampered-proof regressions. Tests are evidence about this implementation, not a formal soundness proof.
+

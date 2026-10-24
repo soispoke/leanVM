@@ -355,9 +355,16 @@ impl<'a> Transcript<'a> {
                     .map(|sibling| {
                         hash_to_scalars(sibling).map(|x| {
                             let word = S::input(x);
-                            let low = word.slice(0, 128);
-                            word.assert_eq(low);
-                            low
+                            #[cfg(feature = "keccak-canonical-route")]
+                            {
+                                word
+                            }
+                            #[cfg(not(feature = "keccak-canonical-route"))]
+                            {
+                                let low = word.slice(0, 128);
+                                word.assert_eq(low);
+                                low
+                            }
                         })
                     })
                     .collect();
@@ -385,6 +392,20 @@ impl<'a> Transcript<'a> {
                         })
                         .collect()
                 };
+                // A Boolean query permutes node + siblings bijectively.
+                // Canonicality of every output therefore enforces canonicality
+                // of every supplied sibling, including those not in our slot.
+                #[cfg(feature = "keccak-canonical-route")]
+                let children: Vec<[S; 2]> = children
+                    .into_iter()
+                    .map(|child| {
+                        child.map(|word| {
+                            let low = word.slice(0, 128);
+                            word.assert_eq(low);
+                            low
+                        })
+                    })
+                    .collect();
                 let parts: Vec<_> = children
                     .iter()
                     .flat_map(|child| child.iter().map(|&v| (v, 16)))
@@ -928,7 +949,11 @@ mod tests {
             .collect();
         assert_eq!(
             ranges.iter().map(|(_, width)| *width).collect::<Vec<_>>(),
-            [64, 128, 128]
+            if cfg!(feature = "keccak-canonical-route") {
+                vec![64]
+            } else {
+                vec![64, 128, 128]
+            }
         );
         for (input, width) in ranges {
             let old = program.nodes[input].value;
@@ -940,6 +965,112 @@ mod tests {
             program.nodes[input].value += high;
             assert!(!program.satisfied(), "discarded high bits must be constrained");
             program.nodes[input].value = old;
+        }
+    }
+
+    #[cfg(feature = "keccak-canonical-route")]
+    #[test]
+    fn routed_children_reject_coherent_high_limb_mutations_in_every_slot() {
+        use primitives::field::F64;
+        fn replay(mut p: Trace, target: usize) -> Trace {
+            fn project(v: F192, start: usize, len: usize) -> F192 {
+                let x = [v.c0, v.c1, v.c2];
+                let mut out = [0u64; 3];
+                for bit in 0..len {
+                    out[bit / 64] |= ((x[(start + bit) / 64] >> ((start + bit) % 64)) & 1) << (bit % 64);
+                }
+                F192::new(out[0], out[1], out[2])
+            }
+            let mut high = std::collections::HashMap::new();
+            for at in 0..p.nodes.len() {
+                let get = |s: S| p.nodes[s.0].value;
+                let value = match p.nodes[at].op.clone() {
+                    trace::Op::Constant => p.nodes[at].value,
+                    trace::Op::Input => p.nodes[at].value + if at == target { F192::new(0, 0, 1) } else { F192::ZERO },
+                    trace::Op::Add(a, b) => get(a) + get(b),
+                    trace::Op::Mul(a, b) => get(a) * get(b),
+                    trace::Op::Frobenius(a) => get(a).frobenius(),
+                    trace::Op::Slice(a, start, len) => project(get(a), start, len),
+                    trace::Op::Pack(parts) => {
+                        let mut out = [0u64; 3];
+                        let mut offset = 0;
+                        for (a, len) in parts {
+                            let v = get(a);
+                            let x = [v.c0, v.c1, v.c2];
+                            for bit in 0..len {
+                                out[(offset + bit) / 64] |= ((x[bit / 64] >> (bit % 64)) & 1) << ((offset + bit) % 64);
+                            }
+                            offset += len;
+                        }
+                        F192::new(out[0], out[1], out[2])
+                    }
+                    trace::Op::Select(bit, a, b) => {
+                        if get(bit) == F192::ZERO {
+                            get(a)
+                        } else {
+                            get(b)
+                        }
+                    }
+                    trace::Op::Hash(parts) => {
+                        let mut bytes = Vec::new();
+                        for (a, len) in parts {
+                            let v = get(a);
+                            let all: Vec<_> = [v.c0, v.c1, v.c2].iter().flat_map(|x| x.to_le_bytes()).collect();
+                            bytes.extend_from_slice(&all[..len]);
+                        }
+                        let digest = hash_to_scalars(&primitives::protocol_hash::hash(&bytes));
+                        high.insert(at, digest[1]);
+                        digest[0]
+                    }
+                    trace::Op::HashHigh(a) => high[&a.0],
+                };
+                p.nodes[at].value = value;
+            }
+            p
+        }
+        for depth in 1..=6 {
+            let n = 1usize << depth;
+            let rows: Vec<_> = (0..n).map(|i| F64(i as u64 + 1)).collect();
+            let bytes: Vec<_> = rows.iter().flat_map(|v| v.0.to_le_bytes()).collect();
+            let tree = pcs::merkle::merkle_tree(&bytes, n);
+            let root = *tree.last().unwrap();
+            for q in [0, n / 4, n / 2, n - 1] {
+                let paths = fiat_shamir::merkle::PrunedMerklePaths::prune(&tree, n, &[q], |i| vec![rows[i]])
+                    .open(&root, n, &[q], 1, 1)
+                    .unwrap();
+                trace::start();
+                let proof = RawProof {
+                    stream: Vec::new(),
+                    merkle: paths,
+                };
+                let mut t = Transcript::new(&proof, digest_constant(&[0; 32]), digest_constant(&[1; 32]));
+                let query = S::input(F192::from(F64(q as u64))).slice(0, depth);
+                t.merkle(digest_constant(&root), depth, &[query], 1, true, 1);
+                t.finish();
+                let p = trace::take();
+                assert!(p.satisfied());
+                let inputs: Vec<_> = p
+                    .nodes
+                    .iter()
+                    .enumerate()
+                    .filter_map(|(at, node)| (node.op == trace::Op::Input && node.value.c1 != 0).then_some(at))
+                    .collect();
+                assert_eq!(inputs.len(), 2 * fiat_shamir::merkle::path_hash_count(depth));
+                for input in inputs {
+                    let bad = replay(p.clone(), input);
+                    assert!(!bad.satisfied(), "depth={depth} q={q} input={input}");
+                    let lowered = crate::private_trace::lower(&p, &bad).unwrap();
+                    let v = &lowered.values;
+                    assert!(
+                        lowered
+                            .circuit
+                            .rows
+                            .iter()
+                            .any(|&[a, b, c, d]| v[a] * v[b] + v[c] != v[d]),
+                        "raw native rows reject high limbs after coherent replay"
+                    );
+                }
+            }
         }
     }
 

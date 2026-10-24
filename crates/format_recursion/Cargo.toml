@@ -10,6 +10,7 @@ workspace = true
 [features]
 default = []
 experimental-log26 = []
+keccak-canonical-route = ["keccak-quad-cap-fast"]
 keccak-quad-cap-fast = ["keccak-quad-cap"]
 keccak-quad-cap = ["keccak-merkle-arity4", "keccak-batched-transcript"]
 keccak-merkle-arity4 = ["keccak-protocol", "primitives/keccak-merkle-arity4"]
