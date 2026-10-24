@@ -1,0 +1,76 @@
+{
+  "published_source": "014f6adf3698cfc6cb04738b91e999888cc9e814",
+  "compatibility_commit": "c36d075e07baa6d06e5a1d0c0aaa1cca7c544e9d",
+  "code_trees_equal": true,
+  "local_apply_revert": "An unpublished prefix apply/revert occurred after test compilation during reconciliation; resulting code exactly equals published source. Comparison built after restoration. Local history is retained and has not been pushed.",
+  "logs": {
+    "fmt.log": {
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "test_results": [],
+      "finished": []
+    },
+    "build-reconcile.log": {
+      "sha256": "c887a1f7aebb5cc6756c98c61c00338fca1de8104d8111d213bf0200d86fd3c0",
+      "test_results": [],
+      "finished": [
+        "    Finished `release` profile [optimized] target(s) in 2m 16s"
+      ]
+    },
+    "test-flock-keccak.log": {
+      "sha256": "dc8da0659a3c23b398ee51877e8889aea27593dc3e8c845a91d713fe71a26966",
+      "test_results": [
+        "test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 64 filtered out; finished in 4.62s"
+      ],
+      "finished": [
+        "    Finished `release` profile [optimized] target(s) in 53.83s"
+      ]
+    },
+    "test-default.log": {
+      "sha256": "cb19fc0dd4a438ef9a83866dc68aba4fdd898a1d62c8f4000c86331792cd2049",
+      "test_results": [
+        "test result: ok. 79 passed; 0 failed; 4 ignored; 0 measured; 0 filtered out; finished in 502.05s",
+        "test result: ok. 112 passed; 0 failed; 1 ignored; 0 measured; 0 filtered out; finished in 264.53s",
+        "test result: ok. 43 passed; 0 failed; 5 ignored; 0 measured; 0 filtered out; finished in 299.48s"
+      ],
+      "finished": [
+        "    Finished `release` profile [optimized] target(s) in 1m 58s"
+      ]
+    },
+    "compatibility-controller.log": {
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "test_results": [],
+      "finished": []
+    },
+    "controller.log": {
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "test_results": [],
+      "finished": []
+    },
+    "clippy-keccak.log": {
+      "sha256": "9bc67f16edd8d2f873c71006af7c69294ef9cfbb901b0b7a0380ed3815afea66",
+      "test_results": [],
+      "finished": [
+        "    Finished `release` profile [optimized] target(s) in 17.70s"
+      ]
+    },
+    "clippy-default.log": {
+      "sha256": "c4a5dab6266e318e5769a7042641ce518e5d16dfae832f0c075618a6001435b8",
+      "test_results": [],
+      "finished": [
+        "    Finished `release` profile [optimized] target(s) in 14.31s"
+      ]
+    },
+    "test-keccak.log": {
+      "sha256": "47bfe225b4b0691ec4d3e5923399130d3d4ea7b4e17326f2d717b778fc16b431",
+      "test_results": [
+        "test result: ok. 79 passed; 0 failed; 4 ignored; 0 measured; 0 filtered out; finished in 477.26s",
+        "test result: ok. 9 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.13s",
+        "test result: ok. 67 passed; 0 failed; 1 ignored; 0 measured; 0 filtered out; finished in 140.15s",
+        "test result: ok. 31 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.43s"
+      ],
+      "finished": [
+        "    Finished `release` profile [optimized] target(s) in 1m 43s"
+      ]
+    }
+  }
+}
