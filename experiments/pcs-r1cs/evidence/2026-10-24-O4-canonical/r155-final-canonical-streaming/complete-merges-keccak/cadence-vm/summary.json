@@ -1,0 +1,13 @@
+{
+  "system": "vm",
+  "arrivals": 60,
+  "arrival_interval_ms": 1000,
+  "arrival_window_s": 60,
+  "completed": 60,
+  "drain_included_s": 79.05245347798336,
+  "throughput_per_s": 0.7589897259382392,
+  "p95_latency_s": 18.687081533978926,
+  "p95_service_s": 1.4958473360165954,
+  "backlog_at_60s": 15,
+  "scope": "repeated fixed-child node merge control; not the required three-application score node"
+}

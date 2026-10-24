@@ -1,0 +1,15 @@
+{
+  "canonical-integration/fmt.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "canonical-integration/build-reconcile.log": "ae9634fcfb14d7f54a9b85b44c747eb8a2a2877f94e2a106ce6b976b0c14fca7",
+  "canonical-integration/test-flock-keccak.log": "7302ee5afa6173e0c0d81f36d7a887f743affc6cb1b824960c5d6133ad88cbc7",
+  "canonical-integration/test-default.log": "e1e7c8bc031dae189ad67a75b03d2e48d7df6433227778264c5b3a9ce189350a",
+  "canonical-integration/compatibility-controller.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "canonical-integration/gates-passed.txt": "57eb63566022d935e695107b4f9ec1e0b63f3276747bd479107468c3d295e3fc",
+  "canonical-integration/controller.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "canonical-integration/clippy-keccak.log": "8e6c295a19780772db791548b4e2b09ddc438d8433ca7c4ab4933a0bb2cd35d7",
+  "canonical-integration/reconciliation.jsonl": "823cb6846adc65b6638ac75d089d6b9ae9f729f775e04ce1cfc810401d22d8bd",
+  "canonical-integration/clippy-default.log": "e3654aad79aa5bdc1723a24be41ffb9e21bf6d4f3707a35474de91d18a31957d",
+  "canonical-integration/test-native-quad.log": "f95123e6ee7b417bd150e17dd57b097a54d82d5095f3d10aa1209743a892a9d1",
+  "canonical-integration/test-keccak.log": "274412d7fe2651d1e87827a504d345de4b9e899d95fb194d22f870f1a0a97914",
+  "canonical-integration/exit.json": "c90781a5c77df98907f6ce3eea8f2328f5f0b067490bff1ac991791eba61c0aa"
+}

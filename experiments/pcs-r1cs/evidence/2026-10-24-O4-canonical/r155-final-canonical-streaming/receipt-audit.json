@@ -1,0 +1,127 @@
+{
+  "samples": 261,
+  "forwarded_file_references": 221,
+  "findings": [],
+  "counts": [
+    {
+      "section": "admission-keccak",
+      "system": "r1cs",
+      "case": "A admission",
+      "mode": "warm",
+      "count": 10
+    },
+    {
+      "section": "admission-keccak",
+      "system": "r1cs",
+      "case": "B admission",
+      "mode": "warm",
+      "count": 10
+    },
+    {
+      "section": "admission-keccak",
+      "system": "vm",
+      "case": "A admission",
+      "mode": "warm",
+      "count": 10
+    },
+    {
+      "section": "admission-keccak",
+      "system": "vm",
+      "case": "B admission",
+      "mode": "warm",
+      "count": 10
+    },
+    {
+      "section": "complete-merges-keccak",
+      "system": "r1cs",
+      "case": "complete root two real apps control",
+      "mode": "warm",
+      "count": 10
+    },
+    {
+      "section": "complete-merges-keccak",
+      "system": "r1cs",
+      "case": "first complete control",
+      "mode": "warm",
+      "count": 10
+    },
+    {
+      "section": "complete-merges-keccak",
+      "system": "r1cs",
+      "case": "node cadence control",
+      "mode": "warm",
+      "count": 60
+    },
+    {
+      "section": "complete-merges-keccak",
+      "system": "r1cs",
+      "case": "node complete control",
+      "mode": "warm",
+      "count": 10
+    },
+    {
+      "section": "complete-merges-keccak",
+      "system": "vm",
+      "case": "complete root two real apps control",
+      "mode": "warm",
+      "count": 10
+    },
+    {
+      "section": "complete-merges-keccak",
+      "system": "vm",
+      "case": "first A+B preparation",
+      "mode": "cold combined setup",
+      "count": 1
+    },
+    {
+      "section": "complete-merges-keccak",
+      "system": "vm",
+      "case": "first complete control",
+      "mode": "warm",
+      "count": 10
+    },
+    {
+      "section": "complete-merges-keccak",
+      "system": "vm",
+      "case": "node cadence control",
+      "mode": "warm",
+      "count": 60
+    },
+    {
+      "section": "complete-merges-keccak",
+      "system": "vm",
+      "case": "node complete control",
+      "mode": "warm",
+      "count": 10
+    },
+    {
+      "section": "wallet-keccak-complete-abab",
+      "system": "r1cs",
+      "case": "A",
+      "mode": "warm",
+      "count": 10
+    },
+    {
+      "section": "wallet-keccak-complete-abab",
+      "system": "r1cs",
+      "case": "B",
+      "mode": "warm",
+      "count": 10
+    },
+    {
+      "section": "wallet-keccak-complete-abab",
+      "system": "vm",
+      "case": "A",
+      "mode": "warm",
+      "count": 10
+    },
+    {
+      "section": "wallet-keccak-complete-abab",
+      "system": "vm",
+      "case": "B",
+      "mode": "warm",
+      "count": 10
+    }
+  ],
+  "scope": "Completed raw receipts, frozen binary hashes, forwarded file sizes/hashes and recorded acceptance. Harness pins children to 0-11 with 12 threads. This is artifact integrity, not a soundness certificate."
+}

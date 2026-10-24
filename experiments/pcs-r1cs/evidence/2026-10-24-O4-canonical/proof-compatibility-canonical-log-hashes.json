@@ -1,0 +1,19 @@
+{
+  "proof-compatibility-canonical/integration-shielded-transfer.jsonl": "98372995c5946b5bc9216a56c00c4273a45e3187602667f6c4e89beeb111d38c",
+  "proof-compatibility-canonical/integration-blake2s-1kib.cert": "cc53c0753eac137d2c18f05dad97836a64e8e15016c3edbdd6920106eb9188e4",
+  "proof-compatibility-canonical/integration-sha256-1kib.cert": "7023155464b676aeb3f16dade51aa326ff1cd423a658f115f6c4cc2606fb64c9",
+  "proof-compatibility-canonical/integration-shielded-transfer.cert": "b43628488a4a46559fc75d6fa79d3635555344e71ba5680f01b0fc9692411569",
+  "proof-compatibility-canonical/integration-sha256-1kib.jsonl": "10e253b870bc2c1b574dd23580db9c1661d018b11c67c84221d0b74ae118a804",
+  "proof-compatibility-canonical/integration-falcon512.jsonl": "26fa51a9409e4aedca269f2eb1cb568f870e8ae88d51e6473a3adfc31ebf9c35",
+  "proof-compatibility-canonical/integration-blake2s-1kib.jsonl": "53f6767e32bdbf2eb29c77c9f3b01f183a17ee2ac0b4124e312197af31495211",
+  "proof-compatibility-canonical/results.json": "44e3272bfc908eccc97be389789f6861cda65bd76b49a3cb4f486f30c10e8617",
+  "proof-compatibility-canonical/integration-blake2s-64b.cert": "58aa0c4ee29c38690876c89d8f807bf3d046cdfe28ce4dd6ea1a428afe6408a4",
+  "proof-compatibility-canonical/integration-falcon512.cert": "96d4ebad38fbc7dc363cdd69bf83736be13b749458549739d4a2d86caa12cdd7",
+  "proof-compatibility-canonical/integration-mpt-storage-proof.jsonl": "bbe46f60e1f803d2f0c5e13793942d7113ff48e4d1c844933c49a6c2cfd3f07f",
+  "proof-compatibility-canonical/integration-keccak256-1KiB.cert": "5730c73d7dc971d0de8ab4d3f80a227605c882e919cb8b0d0a89a50c4564923e",
+  "proof-compatibility-canonical/integration-mpt-storage-proof.cert": "0e4c76797b9bc8cd72eac6d0d24e3fd6c75a99cf5f077a810d60f66aab7ba7dc",
+  "proof-compatibility-canonical/integration-build.log": "42a3c790557c4c86f2888ad4d63ea1ccdd36735cc688606dfedb9a2f8d09e041",
+  "proof-compatibility-canonical/integration-keccak256-1KiB.jsonl": "8b99759300971cbc5e5755156aa7acc909ebb827d24889538ec0e9968c9b5fb4",
+  "proof-compatibility-canonical/integration-blake2s-64b.jsonl": "b9df405ea50e1c36915c3e58f112da8b4bee095437668e8d9370c979c95b411b",
+  "proof-compatibility-canonical/passed.json": "2e2a97674c6818ba1d82dcb582a73bd2aebd07a465c70985ae3a494c12013b4f"
+}

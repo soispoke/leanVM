@@ -1,0 +1,13 @@
+{
+  "system": "r1cs",
+  "arrivals": 60,
+  "arrival_interval_ms": 1000,
+  "arrival_window_s": 60,
+  "completed": 60,
+  "drain_included_s": 134.6403785640141,
+  "throughput_per_s": 0.4456315456025942,
+  "p95_latency_s": 71.1498554770078,
+  "p95_service_s": 2.44625847399584,
+  "backlog_at_60s": 34,
+  "scope": "repeated fixed-child node merge control; not the required three-application score node"
+}
