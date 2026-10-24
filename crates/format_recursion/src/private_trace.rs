@@ -685,7 +685,7 @@ impl Compiler {
     /// Outputs remain private and otherwise unused.
     /// Derive F64 membership from key-fixed constants, Boolean constraints and
     /// existing equations a*b+c=d. Private values never drive type inference.
-    #[cfg(feature = "keccak-merkle-cap")]
+    #[cfg(any(feature = "keccak-merkle-cap", feature = "keccak-merkle-arity4"))]
     fn infer_subfield_types(&mut self) {
         for (&(_, mid, hi), &at) in &self.constants {
             if mid == 0 && hi == 0 {
@@ -725,7 +725,7 @@ impl Compiler {
 
     #[cfg(feature = "keccak-protocol")]
     fn constrain_unused_limbs(&mut self) {
-        #[cfg(feature = "keccak-merkle-cap")]
+        #[cfg(any(feature = "keccak-merkle-cap", feature = "keccak-merkle-arity4"))]
         self.infer_subfield_types();
         let mut pending: Vec<_> = self
             .pending_limbs

@@ -10,6 +10,9 @@ workspace = true
 [features]
 default = []
 experimental-log26 = []
+keccak-quad-cap-fast = ["keccak-quad-cap"]
+keccak-quad-cap = ["keccak-merkle-arity4", "keccak-batched-transcript"]
+keccak-merkle-arity4 = ["keccak-protocol", "primitives/keccak-merkle-arity4"]
 keccak-merkle-cap = ["keccak-protocol"]
 keccak-protocol = ["primitives/keccak-protocol"]
 keccak-batched-transcript = ["keccak-protocol", "fiat_shamir/keccak-batched-transcript"]
@@ -32,3 +35,4 @@ tracing.workspace = true
 
 [dev-dependencies]
 bench.workspace = true
+

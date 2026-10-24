@@ -287,6 +287,13 @@ fn verify_fold(
             (a * (c.app_key[j] + keys[slot][j])).assert_eq(S::u(0));
         }
         let (r, co) = schema.shapes[slot];
+        // The fixed verifier shape can differ from an inactive routing slot.
+        // Such a route is forbidden when active; do not evaluate mismatched
+        // equality kernels even though their contribution is gated off.
+        if c.row_point.len() != r || c.col_point.len() != co {
+            a.assert_eq(S::u(0));
+            continue;
+        }
         let v = output[slot].matrix_values;
         total = total
             + a * p

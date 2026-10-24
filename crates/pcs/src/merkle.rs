@@ -204,7 +204,15 @@ impl Nodes {
         for j in level..level + height {
             // SAFETY: level `j` of the subtree is initialized, and level `j + 1` is ours to write.
             let (children, parents) = unsafe { (self.level_mut(j, first, n), self.level_mut(j + 1, first / 2, n / 2)) };
-            hash_many::<{ 2 * OUT_LEN }>(digests_as_bytes(children), digests_as_bytes(parents));
+            if primitives::protocol_hash::MERKLE_ARITY4 && j % 2 == 1 {
+                // Odd intermediate levels remain allocated but are not on an
+                // authentication path. Their completion implies the four
+                // grandchildren are initialized and disjoint from this output.
+                let grandchildren = unsafe { self.level_mut(j - 1, first * 2, n * 2) };
+                hash_many::<{ 4 * OUT_LEN }>(digests_as_bytes(grandchildren), digests_as_bytes(parents));
+            } else {
+                hash_many::<{ 2 * OUT_LEN }>(digests_as_bytes(children), digests_as_bytes(parents));
+            }
             (first, n) = (first / 2, n / 2);
         }
     }
@@ -429,7 +437,14 @@ mod tests {
         let (mut start, mut len) = (0, num_leaves);
         while len > 1 {
             for i in 0..len / 2 {
-                tree.push(hash_pair(&tree[start + 2 * i], &tree[start + 2 * i + 1]));
+                let digest = if primitives::protocol_hash::MERKLE_ARITY4 && (num_leaves / len).ilog2() % 2 == 1 {
+                    let begin = start - 2 * len + 4 * i;
+                    let bytes: Vec<_> = tree[begin..begin + 4].iter().flat_map(|h| h.iter().copied()).collect();
+                    primitives::protocol_hash::hash(&bytes)
+                } else {
+                    hash_pair(&tree[start + 2 * i], &tree[start + 2 * i + 1])
+                };
+                tree.push(digest);
             }
             (start, len) = (start + len, len / 2);
         }
