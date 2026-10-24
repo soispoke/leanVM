@@ -257,18 +257,34 @@ mod tests {
                 trace.public.iter().map(|s| trace.nodes[s.0].value).collect::<Vec<_>>(),
                 output
             );
+            #[cfg(not(feature = "keccak-protocol"))]
             let merge = private_recursion::Setup::new(trace.clone()).unwrap();
+            #[cfg(not(feature = "keccak-protocol"))]
             let proof = merge.prove(&trace, &output).unwrap();
+            #[cfg(feature = "keccak-protocol")]
+            let merge = SparseSetup::new(trace.clone(), false).unwrap();
+            #[cfg(feature = "keccak-protocol")]
+            let proof = merge.prove(&trace, &ctx).unwrap();
+            let accepts = |digest: &Hash, claims: &[DeferredClaim], proof: &Proof, gs: &[&Generator]| {
+                #[cfg(not(feature = "keccak-protocol"))]
+                {
+                    verify_root(&merge, digest, claims, proof, gs)
+                }
+                #[cfg(feature = "keccak-protocol")]
+                {
+                    verify_sparse_root(&merge, &ctx, digest, claims, proof, gs)
+                }
+            };
             let generators: Vec<_> = apps.iter().map(|s| Generator::new(&src, 8, s.key)).collect();
             let gs: Vec<_> = generators.iter().collect();
-            assert!(verify_root(&merge, &digest, &reduction.carried, &proof, &gs));
+            assert!(accepts(&digest, &reduction.carried, &proof, &gs));
             let mut bad = reduction.clone();
             bad.carried[0].matrix_values[0] += F192::ONE;
             assert!(!fold::record(&apps, &fresh, &digest, &bad).satisfied());
-            assert!(!verify_root(&merge, &digest, &bad.carried, &proof, &gs));
+            assert!(!accepts(&digest, &bad.carried, &proof, &gs));
             let mut bad = reduction.clone();
             bad.carried[0].app_key[0] ^= 1;
-            assert!(!verify_root(&merge, &digest, &bad.carried, &proof, &gs));
+            assert!(!accepts(&digest, &bad.carried, &proof, &gs));
             let mut fresh_bad = fresh.clone();
             fresh_bad[0].matrix_values[2] += F192::ONE;
             assert!(!fold::record(&apps, &fresh_bad, &digest, &reduction).satisfied());
