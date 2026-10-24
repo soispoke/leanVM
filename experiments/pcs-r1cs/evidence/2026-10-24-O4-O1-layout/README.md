@@ -1,0 +1,7 @@
+# O4 accepted O1 stack layout integration
+
+Implementation ae3c0e07 relocates the same aligned Keccak q table and arithmetic limb tables, with native and recorded coordinate changes together. Lane O1 matched ABAB3 reported first 4.348033 to 3.601539 seconds and node 5.529166 to 3.652452 seconds, with all twelve samples per workload verified. Timings are the lane comparison, not the external referee boundary. See artifacts/opt-O1/layout and opt-O1 report for frozen binary provenance and direct raw-verifier rejection checks.
+
+Default fmt, Clippy and all three release package suites passed. Keccak Clippy, circuit, primitive, transcript and format checks passed; Flock Keccak passed six tests. The initial feature-format failure was the old first-level fixture, resolved by merging the already-published sparse-backend fixture. The resumed format suite passed 67 with one ignored; the default fixture passed. Seven default reference workloads preserve keys, claims and programs with no retiming. The L6 default exact certificate comparison and feature-scope limitation remain in the preceding evidence directory.
+
+Soundness scope: injective coordinate relocation preserves all 50 connector ports, field/public bindings and ring-opening offsets; setup binds the new q offset. No hash, relation, security parameter, rate, query count or grinding change. Tests provide regression evidence and do not establish a new soundness theorem.
