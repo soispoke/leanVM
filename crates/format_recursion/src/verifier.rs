@@ -9,6 +9,34 @@ use flock::{
 };
 use primitives::field::F192;
 
+#[cfg(feature = "keccak-merkle-cap")]
+fn cap_input_digest(digest: &Hash) -> [S; 2] {
+    hash_to_scalars(digest).map(|v| {
+        let word = S::input(v);
+        let low = word.slice(0, 128);
+        word.assert_eq(low);
+        low
+    })
+}
+
+#[cfg(feature = "keccak-merkle-cap")]
+fn cap_select(nodes: &[[S; 2]], query: S, start: usize, sibling: bool) -> [S; 2] {
+    let mut selected = nodes.to_vec();
+    let mut level = 0;
+    while selected.len() > 1 {
+        let bit = query.slice(start + level, 1);
+        let bit = if sibling && level == 0 { S::u(1) + bit } else { bit };
+        selected = selected
+            .as_chunks::<2>()
+            .0
+            .iter()
+            .map(|pair| std::array::from_fn(|i| S::select(bit, pair[0][i], pair[1][i])))
+            .collect();
+        level += 1;
+    }
+    selected[0]
+}
+
 pub struct Child {
     pub log_rows: usize,
     pub index_root: Hash,
@@ -240,6 +268,14 @@ impl<'a> Transcript<'a> {
                 }
             }
         };
+        let section = trace::section_name();
+        #[cfg(feature = "keccak-merkle-cap")]
+        let cap_height = depth.min(queries.len().ilog2() as usize).min(4);
+        #[cfg(not(feature = "keccak-merkle-cap"))]
+        let cap_height = 0;
+        let cut = depth - cap_height;
+        #[cfg(feature = "keccak-merkle-cap")]
+        let cap = self.merkle_cap(root, depth, cap_height, queries, paths);
         let mut rows = Vec::new();
         for (&query, path) in queries.iter().zip(paths) {
             assert_eq!(path.path.len(), depth);
@@ -262,6 +298,11 @@ impl<'a> Transcript<'a> {
                     word.assert_eq(S::u(0));
                 }
             }
+            trace::mark(&format!(
+                "{section}/whir-leaf/phase-{}/depth-{depth}/words-{words}/queries-{}",
+                self.phase,
+                queries.len()
+            ));
             let mut node = hash(
                 &leaf
                     .iter()
@@ -273,7 +314,12 @@ impl<'a> Transcript<'a> {
                     })
                     .collect::<Vec<_>>(),
             );
-            for (level, sibling) in path.path.iter().enumerate() {
+            trace::mark(&format!(
+                "{section}/whir-path/phase-{}/depth-{depth}/queries-{}",
+                self.phase,
+                queries.len()
+            ));
+            for (level, sibling) in path.path.iter().take(cut).enumerate() {
                 let sibling = hash_to_scalars(sibling).map(|x| {
                     let word = S::input(x);
                     let low = word.slice(0, 128);
@@ -285,6 +331,24 @@ impl<'a> Transcript<'a> {
                 let right = [S::select(bit, sibling[0], node[0]), S::select(bit, sibling[1], node[1])];
                 node = hash(&[(left[0], 16), (left[1], 16), (right[0], 16), (right[1], 16)]);
             }
+            trace::mark(&section);
+            #[cfg(feature = "keccak-merkle-cap")]
+            {
+                let expected = cap_select(&cap[0], query, cut, false);
+                for i in 0..2 {
+                    node[i].assert_eq(expected[i]);
+                }
+                // Bind every redundant upper sibling too: none may disappear
+                // merely because another query reconstructs the same subtree.
+                for level in 0..cap_height {
+                    let supplied = cap_input_digest(&path.path[cut + level]);
+                    let expected = cap_select(&cap[level], query, cut + level, true);
+                    for i in 0..2 {
+                        supplied[i].assert_eq(expected[i]);
+                    }
+                }
+            }
+            #[cfg(not(feature = "keccak-merkle-cap"))]
             for i in 0..2 {
                 node[i].assert_eq(root[i]);
             }
@@ -298,6 +362,77 @@ impl<'a> Transcript<'a> {
         }
         rows
     }
+    #[cfg(feature = "keccak-merkle-cap")]
+    fn merkle_cap(
+        &self,
+        root: [S; 2],
+        depth: usize,
+        height: usize,
+        queries: &[S],
+        paths: &[fiat_shamir::merkle::RawMerklePath],
+    ) -> Vec<Vec<[S; 2]>> {
+        if height == 0 {
+            return vec![vec![root]];
+        }
+        let cut = depth - height;
+        let mut known: Vec<Vec<Hash>> = (0..=height).map(|l| vec![[0; 32]; 1 << (height - l)]).collect();
+        for (&query, path) in queries.iter().zip(paths) {
+            let bytes: Vec<_> = path.leaf_data.iter().flat_map(|w| w.0.to_le_bytes()).collect();
+            let mut digest = fiat_shamir::merkle::hash_leaf(&bytes);
+            let mut index = query.value().c0 as usize;
+            for (level, sibling) in path.path.iter().enumerate() {
+                if level >= cut {
+                    known[level - cut][index] = digest;
+                    known[level - cut][index ^ 1] = *sibling;
+                }
+                digest = if index & 1 == 0 {
+                    fiat_shamir::merkle::hash_pair(&digest, sibling)
+                } else {
+                    fiat_shamir::merkle::hash_pair(sibling, &digest)
+                };
+                index >>= 1;
+            }
+            known[height][0] = digest;
+        }
+        let mut layers = vec![known[0].iter().map(cap_input_digest).collect::<Vec<_>>()];
+        let mut present: Vec<_> = (0..1 << height)
+            .map(|index| {
+                let absent = queries.iter().fold(S::u(1), |absent, &query| {
+                    let matches = (0..height).fold(S::u(1), |same, bit| {
+                        let value = query.slice(cut + bit, 1);
+                        same * if (index >> bit) & 1 == 0 {
+                            S::u(1) + value
+                        } else {
+                            value
+                        }
+                    });
+                    absent * (S::u(1) + matches)
+                });
+                S::u(1) + absent
+            })
+            .collect();
+        for level in 1..=height {
+            let mut parents = Vec::new();
+            let mut parent_present = Vec::new();
+            for (index, pair) in layers[level - 1].as_chunks::<2>().0.iter().enumerate() {
+                let a = present[2 * index];
+                let b = present[2 * index + 1];
+                let occupied = a + b + a * b;
+                let computed = hash(&[(pair[0][0], 16), (pair[0][1], 16), (pair[1][0], 16), (pair[1][1], 16)]);
+                let opaque = cap_input_digest(&known[level][index]);
+                parents.push(std::array::from_fn(|i| S::select(occupied, opaque[i], computed[i])));
+                parent_present.push(occupied);
+            }
+            layers.push(parents);
+            present = parent_present;
+        }
+        present[0].assert_eq(S::u(1));
+        for i in 0..2 {
+            layers[height][0][i].assert_eq(root[i]);
+        }
+        layers
+    }
+
     pub(crate) fn finish(&self) {
         let consumed = self.placeholder
             || (self.cursor == self.proof.stream.len()
@@ -683,6 +818,57 @@ mod tests {
             program.nodes[input].value += high;
             assert!(!program.satisfied(), "discarded high bits must be constrained");
             program.nodes[input].value = old;
+        }
+    }
+
+    #[cfg(feature = "keccak-merkle-cap")]
+    #[test]
+    fn cap_binds_every_sibling_and_query_in_fixed_shape() {
+        use primitives::field::F64;
+        let rows: Vec<_> = (0..64).map(|i| F64(i + 1)).collect();
+        let bytes: Vec<_> = rows.iter().flat_map(|w| w.0.to_le_bytes()).collect();
+        let tree = pcs::merkle::merkle_tree(&bytes, 64);
+        let root = *tree.last().unwrap();
+        let make = |q: &[usize]| {
+            fiat_shamir::merkle::PrunedMerklePaths::prune(&tree, 64, q, |i| vec![rows[i]])
+                .open(&root, 64, q, 1, 1)
+                .unwrap()
+        };
+        let record = |queries: &[usize], paths: Vec<RawMerklePath>| {
+            trace::start();
+            let proof = RawProof {
+                stream: Vec::new(),
+                merkle: paths,
+            };
+            let mut t = Transcript::new(&proof, digest_constant(&[0; 32]), digest_constant(&[1; 32]));
+            let q: Vec<_> = queries
+                .iter()
+                .map(|&q| S::input(F192::from(F64(q as u64))).slice(0, 6))
+                .collect();
+            t.merkle(digest_constant(&root), 6, &q, 1, true, 1);
+            t.finish();
+            trace::take()
+        };
+        let sparse = [0; 8];
+        let distributed = [0, 8, 16, 24, 32, 40, 48, 63];
+        let a = record(&sparse, make(&sparse));
+        let b = record(&distributed, make(&distributed));
+        assert!(a.satisfied() && b.satisfied());
+        assert!(a.same_program(&b));
+        for q in [&sparse, &distributed] {
+            for level in 0..6 {
+                for query in 0..q.len() {
+                    let mut bad = make(q);
+                    bad[query].path[level][0] ^= 1;
+                    assert!(!record(q, bad).satisfied(), "sibling query={query} level={level}");
+                }
+            }
+            let mut bad = make(q);
+            bad[0].leaf_data[0] += F64::ONE;
+            assert!(!record(q, bad).satisfied(), "wrong leaf");
+            let mut badq = *q;
+            badq[0] ^= 1;
+            assert!(!record(&badq, make(q)).satisfied(), "wrong query challenge");
         }
     }
 

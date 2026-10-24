@@ -1,0 +1,87 @@
+{
+  "total": 14289,
+  "purposes": {
+    "unsectioned": [
+      1439,
+      67,
+      1
+    ],
+    "sparse-outer-sumcheck": [
+      1380,
+      184,
+      2
+    ],
+    "sparse-inner-sumcheck": [
+      4090,
+      160,
+      2
+    ],
+    "sparse-flock-reduction": [
+      673566,
+      630,
+      2
+    ],
+    "sparse-joint-opening": [
+      227543,
+      668,
+      446
+    ],
+    "leaf": [
+      19124,
+      1556,
+      444
+    ],
+    "path": [
+      168492,
+      8868,
+      444
+    ],
+    "final-equalities-and-unused-limbs": [
+      44034,
+      2156,
+      1
+    ]
+  },
+  "phases": {
+    "sparse-joint-opening/whir-leaf/phase-1/depth-21/words-64/queries-112": [
+      11424,
+      896
+    ],
+    "sparse-joint-opening/whir-path/phase-1/depth-21/queries-112": [
+      89376,
+      4704
+    ],
+    "sparse-joint-opening/whir-leaf/phase-2/depth-20/words-48/queries-45": [
+      3150,
+      270
+    ],
+    "sparse-joint-opening/whir-path/phase-2/depth-20/queries-45": [
+      34200,
+      1800
+    ],
+    "sparse-joint-opening/whir-leaf/phase-3/depth-19/words-48/queries-28": [
+      1960,
+      168
+    ],
+    "sparse-joint-opening/whir-path/phase-3/depth-19/queries-28": [
+      20216,
+      1064
+    ],
+    "sparse-joint-opening/whir-leaf/phase-4/depth-18/words-48/queries-21": [
+      1470,
+      126
+    ],
+    "sparse-joint-opening/whir-path/phase-4/depth-18/queries-21": [
+      14364,
+      756
+    ],
+    "sparse-joint-opening/whir-leaf/phase-5/depth-17/words-48/queries-16": [
+      1120,
+      96
+    ],
+    "sparse-joint-opening/whir-path/phase-5/depth-17/queries-16": [
+      10336,
+      544
+    ]
+  }
+}

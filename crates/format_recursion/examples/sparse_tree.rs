@@ -142,6 +142,7 @@ fn main() {
     let rows = lower.circuit.rows.len();
     let compressions = lower.compressions.len();
     let permutations = lower.permutations.len();
+    let stages = lower.stage_census.clone();
     drop(lower);
     let node = first::SparseSetup::new_with_padding(
         canonical.clone(),
@@ -373,6 +374,6 @@ fn main() {
     ));
     println!(
         "{}",
-        serde_json::json!({"leaf_root_distinct_apps":1,"leaf_complete_root_ms":one_root_ms,"first_root_distinct_apps":if mixed{3}else{2},"first_complete_root_ms":first_root_ms,"node_root_distinct_apps":if mixed{4}else{3},"case":if mixed{"mixed"}else{"same"},"merge_s":merge_s,"native_child_checks_s":admitted,"fold_prover_s":fold_s,"record_s":record_s,"outer_prover_s":outer_s,"rows":rows,"compressions":compressions,"permutations":permutations,"committed_words":node.setup.committed_words,"proof_bytes":bytes,"first_generator_bindings":first.generator.binding_count(),"node_generator_bindings":node.generator.binding_count(),"carried_bytes":statement.slots.iter().filter(|s|s.active).map(|s|24*(5+s.claim.row_point.len()+s.claim.col_point.len())).sum::<usize>(),"statement_bytes":outputs.len()*24,"core_verify_ms":verify_ms,"own_settle_ms":own_ms,"settlements":settles,"complete_root_ms":root_ms,"first_key":format!("{:02x?}",first.setup.key),"node_key":format!("{:02x?}",node.setup.key),"verifier_rejections":["false carried evaluation","substituted app key","omitted claim","duplicated claim","wrong child kind","swapped children unchanged reduction","tampered child proof","tampered root proof"],"verified":true})
+        serde_json::json!({"leaf_root_distinct_apps":1,"leaf_complete_root_ms":one_root_ms,"first_root_distinct_apps":if mixed{3}else{2},"first_complete_root_ms":first_root_ms,"node_root_distinct_apps":if mixed{4}else{3},"case":if mixed{"mixed"}else{"same"},"merge_s":merge_s,"native_child_checks_s":admitted,"fold_prover_s":fold_s,"record_s":record_s,"outer_prover_s":outer_s,"rows":rows,"compressions":compressions,"permutations":permutations,"stage_census":stages,"committed_words":node.setup.committed_words,"proof_bytes":bytes,"first_generator_bindings":first.generator.binding_count(),"node_generator_bindings":node.generator.binding_count(),"carried_bytes":statement.slots.iter().filter(|s|s.active).map(|s|24*(5+s.claim.row_point.len()+s.claim.col_point.len())).sum::<usize>(),"statement_bytes":outputs.len()*24,"core_verify_ms":verify_ms,"own_settle_ms":own_ms,"settlements":settles,"complete_root_ms":root_ms,"first_key":format!("{:02x?}",first.setup.key),"node_key":format!("{:02x?}",node.setup.key),"verifier_rejections":["false carried evaluation","substituted app key","omitted claim","duplicated claim","wrong child kind","swapped children unchanged reduction","tampered child proof","tampered root proof"],"verified":true})
     );
 }

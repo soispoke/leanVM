@@ -683,8 +683,50 @@ impl Compiler {
     /// inputs, so one compression types fourteen F64 words. This is not a
     /// standard hash invocation: no fixed-IV or final-flag claim is made.
     /// Outputs remain private and otherwise unused.
+    /// Derive F64 membership from key-fixed constants, Boolean constraints and
+    /// existing equations a*b+c=d. Private values never drive type inference.
+    #[cfg(feature = "keccak-merkle-cap")]
+    fn infer_subfield_types(&mut self) {
+        for (&(_, mid, hi), &at) in &self.constants {
+            if mid == 0 && hi == 0 {
+                self.typed.insert(at);
+            }
+        }
+        for (at, &bit) in self.booleans.0.iter().enumerate() {
+            if bit {
+                self.typed.insert(at);
+            }
+        }
+        loop {
+            let mut changed = false;
+            for &[a, b, c, d] in &self.rows {
+                let ta = self.typed.contains(&a);
+                let tb = self.typed.contains(&b);
+                let tc = self.typed.contains(&c);
+                let td = self.typed.contains(&d);
+                if ta && tb && tc {
+                    changed |= self.typed.insert(d);
+                }
+                if ta && tb && td {
+                    changed |= self.typed.insert(c);
+                }
+                if b == 1 && tc && td {
+                    changed |= self.typed.insert(a);
+                }
+                if a == 1 && tc && td {
+                    changed |= self.typed.insert(b);
+                }
+            }
+            if !changed {
+                break;
+            }
+        }
+    }
+
     #[cfg(feature = "keccak-protocol")]
     fn constrain_unused_limbs(&mut self) {
+        #[cfg(feature = "keccak-merkle-cap")]
+        self.infer_subfield_types();
         let mut pending: Vec<_> = self
             .pending_limbs
             .iter()

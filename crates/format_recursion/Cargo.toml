@@ -24,5 +24,6 @@ tikv-jemallocator.workspace = true
 tracing.workspace = true
 
 [features]
+keccak-merkle-cap = ["keccak-protocol"]
 keccak-protocol = ["primitives/keccak-protocol"]
 keccak-batched-transcript = ["keccak-protocol", "fiat_shamir/keccak-batched-transcript"]
