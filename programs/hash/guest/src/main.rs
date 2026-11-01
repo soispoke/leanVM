@@ -4,11 +4,11 @@
 #![no_std]
 #![no_main]
 
-use leanvm_guest::{Blake2s, commit, read};
+use leanvm_guest::{Keccak256, commit, read};
 
 #[unsafe(no_mangle)]
 extern "C" fn main() {
-    let mut hasher = Blake2s::new();
+    let mut hasher = Keccak256::new();
     let mut chunk = [0u8; 64];
     let (length, mut next) = (*read::<u64>(), 0u64);
     while next < length {

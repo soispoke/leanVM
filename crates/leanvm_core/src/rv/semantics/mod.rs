@@ -17,7 +17,7 @@
 mod alu;
 mod divide;
 mod ext;
-mod hash;
+mod keccak;
 mod memory;
 mod multiply;
 mod shift;
@@ -25,7 +25,7 @@ mod shift;
 pub use alu::Alu;
 pub use divide::Div;
 pub use ext::{Ext, Limb};
-pub use hash::{BlockAccess, Hash, blake2s_witness};
+pub use keccak::{Keccak, PermutationAccess};
 pub use memory::{Ld, Load, Sd, Store, WordAccess};
 pub use multiply::{Mul, Mulh};
 pub use shift::Shift;

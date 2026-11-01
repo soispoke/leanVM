@@ -43,7 +43,7 @@ const _: () = assert!(cfg!(target_endian = "little"));
 
 impl Program {
     /// The domain separator of the digest, versioned with the statement's format.
-    const DIGEST_DOMAIN: &'static [u8] = b"leanvm-rv64im-11";
+    const DIGEST_DOMAIN: &'static [u8] = b"leanvm-rv64im-keccak-13";
 
     /// The cycles between two checks of a running trace against one commitment.
     const SIZE_CHECK_PERIOD: u64 = 1 << 16;
@@ -389,7 +389,7 @@ impl Program {
         &self.rv
     }
 
-    /// BLAKE2s over the decoded text, the entry and halt addresses, the region sizes and the initial RAM image.
+    /// Keccak over the decoded text, the entry and halt addresses, the region sizes and the initial RAM image.
     ///
     /// ELF metadata is no part of it, and every illegal encoding decodes to the same entry.
     #[doc(hidden)]
@@ -1448,7 +1448,7 @@ mod tests {
         //
         // Fixture state: the run sets `a0 = 42` and exits, never touching `a1`.
         // Past the exit sits `jal a1, 0`, a jump to itself, which the run never reaches.
-        // The two no-ops size ALU's fill so that it ends on the lone jump.
+        // The no-op sizes ALU's fill so that it ends on the lone jump.
         // Mutation: a padding instance of it takes the place of the fill's lone jump, its write pulling `a1`'s seed.
         // `a1`'s final value is what it pushes, so the output claims `a1 = pc + 4`.
         let text = Asm::new()
@@ -1480,7 +1480,7 @@ mod tests {
         // Invariant: a row of the run pulls only timestamps of the run, which have the live bit.
         //
         // Fixture state: `t0 = 5`, then `a0 = t0 + x0`; past the exit sits `jal t0, 0`, a jump to itself.
-        // The two no-ops size ALU's fill so that it ends on the lone jump.
+        // The no-op sizes ALU's fill so that it ends on the lone jump.
         // Mutation: a padding instance of the jump pulls `t0`'s write and pushes `(t0, 3, pc + 4)`, which the run's read pulls.
         // The read's `prev` is 3, live bit clear, and the output claims `a0 = pc + 4`.
         let text = Asm::new()

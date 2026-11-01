@@ -6,7 +6,7 @@ use super::{BAD_SLOT, EXIT_SLOT, Part, PerTable, TableId, Word};
 use crate::constraints::{BitColumns, BitField};
 use crate::leaf::BusForm;
 use crate::leaf::Coord::{self, Col, Const, Scaled};
-use crate::rv::{Ext, Hash, Reg, RegisterFile};
+use crate::rv::{Ext, Reg, RegisterFile};
 use primitives::field::{F64, F192, g_pow};
 use std::sync::OnceLock;
 
@@ -265,7 +265,7 @@ impl ClassTable {
         }
         // The hash's block: word `k` at `v1 ^ 8k`, which is `v1 + 8k` in the field.
         if let Some(block) = c.block {
-            for k in 0..Hash::WORDS {
+            for k in 0..block.n_words {
                 let addr = Coord::Sum(vec![Col(c.v1), Const(F64(8 * k as u64))]);
                 accesses.write(
                     Separator::Memory.coordinate(),

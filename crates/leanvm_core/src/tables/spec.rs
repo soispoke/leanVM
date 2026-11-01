@@ -2,8 +2,8 @@
 
 use super::clock::Clock;
 use super::{N_TABLES, TableId, Word};
-use crate::rv::{Alu, Class, Ext, Hash, Ld, Load, Mul, Mulh, Shift, Store};
-use crate::{class_flock, rv};
+use crate::class_flock;
+use crate::rv::{Alu, Class, Ext, Ld, Load, Mul, Mulh, Shift, Store};
 use flock::circuit::Circuit;
 use std::ops::Range;
 
@@ -17,7 +17,8 @@ pub enum Ram {
     /// One cell read and rewritten.
     Write,
     /// Sixteen hash block words, with four output words rewritten.
-    Block,
+    /// Keccak input and output banks.
+    Permutation,
     /// Nine extension-field limbs, with the destination's three limbs rewritten.
     Limbs,
 }
@@ -28,7 +29,7 @@ impl Ram {
         match self {
             Self::None => 0..0,
             Self::Read | Self::Write => Clock::RAM_SLOT..Clock::RAM_SLOT + 1,
-            Self::Block => Clock::block_slot(0)..Clock::block_slot(Hash::WORDS),
+            Self::Permutation => Clock::block_slot(0)..Clock::block_slot(50),
             Self::Limbs => Clock::limb_slot(0)..Clock::limb_slot(Ext::LIMBS),
         }
     }
@@ -299,25 +300,27 @@ impl ClassSpec {
         clock_outputs: &[],
     };
 
-    /// BLAKE2s compression over sixteen memory words, rewriting the four output words.
-    pub const HASH: Self = Self {
-        class: Class::Hash,
-        name: "HASH",
+    /// Full Keccak-f[1600], with all lanes bound to the memory bus.
+    pub const KECCAK: Self = Self {
+        class: Class::Keccak,
+        name: "KECCAK",
         control: false,
-        reads_rs2: true,
+        reads_rs2: false,
         writes_rd: false,
         reads_rd: false,
-        ram: Ram::Block,
+        ram: Ram::Permutation,
         copies: false,
         circuit: Some(ClassCircuit {
-            k_log: 14,
+            k_log: 16,
             inputs: &[
-                Word::V2,
-                Word::Flags,
                 Word::Cell(0),
                 Word::Cell(1),
                 Word::Cell(2),
                 Word::Cell(3),
+                Word::Cell(4),
+                Word::Cell(5),
+                Word::Cell(6),
+                Word::Cell(7),
                 Word::Cell(8),
                 Word::Cell(9),
                 Word::Cell(10),
@@ -326,11 +329,46 @@ impl ClassSpec {
                 Word::Cell(13),
                 Word::Cell(14),
                 Word::Cell(15),
+                Word::Cell(16),
+                Word::Cell(17),
+                Word::Cell(18),
+                Word::Cell(19),
+                Word::Cell(20),
+                Word::Cell(21),
+                Word::Cell(22),
+                Word::Cell(23),
+                Word::Cell(24),
             ],
-            outputs: &[Word::CellNew(4), Word::CellNew(5), Word::CellNew(6), Word::CellNew(7)],
-            fill: Fill::Instance(rv::circuits::blake2s_witness),
+            outputs: &[
+                Word::CellNew(25),
+                Word::CellNew(26),
+                Word::CellNew(27),
+                Word::CellNew(28),
+                Word::CellNew(29),
+                Word::CellNew(30),
+                Word::CellNew(31),
+                Word::CellNew(32),
+                Word::CellNew(33),
+                Word::CellNew(34),
+                Word::CellNew(35),
+                Word::CellNew(36),
+                Word::CellNew(37),
+                Word::CellNew(38),
+                Word::CellNew(39),
+                Word::CellNew(40),
+                Word::CellNew(41),
+                Word::CellNew(42),
+                Word::CellNew(43),
+                Word::CellNew(44),
+                Word::CellNew(45),
+                Word::CellNew(46),
+                Word::CellNew(47),
+                Word::CellNew(48),
+                Word::CellNew(49),
+            ],
+            fill: Fill::Walk,
         }),
-        clock_k_log: 11,
+        clock_k_log: 13,
         clock_inputs: &[],
         clock_outputs: &[],
     };
@@ -392,7 +430,7 @@ impl ClassSpec {
             let moves = match self.ram {
                 Ram::Read => self.writes_rd && !self.reads_rs2,
                 Ram::Write => self.reads_rs2 && !self.writes_rd,
-                Ram::None | Ram::Block | Ram::Limbs => false,
+                Ram::None | Ram::Permutation | Ram::Limbs => false,
             };
             let ports = [Word::V1, Word::Imm, Word::Address];
             assert!(

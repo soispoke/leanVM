@@ -25,12 +25,13 @@
 #[cfg(not(all(target_arch = "riscv64", target_os = "none")))]
 extern crate alloc;
 
-mod blake2s;
 pub mod ext;
+mod hashing;
 mod io;
 pub mod keccak;
-pub use blake2s::{Blake2s, Stream, Template, hash_prefix_with, hash_with};
+pub use hashing::{Stream, Template, hash_prefix_with, hash_with};
 pub use io::{PublicValues, Words, as_words_unchecked};
+pub use keccak::Keccak256;
 
 // A run's advice is a heap vector, which only a host has.
 #[cfg(not(all(target_arch = "riscv64", target_os = "none")))]

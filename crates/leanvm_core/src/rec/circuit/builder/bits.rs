@@ -89,13 +89,6 @@ impl Builder {
         std::array::from_fn(|i| Kw(w[WORDS + i]))
     }
 
-    /// The digest whose first three words are `e`'s limbs and whose last is `k`.
-    pub fn e_and_k_to_d(&mut self, e: Ew, k: Kw) -> Dw {
-        let v = self.e(e);
-        let w = self.cast_row(&[(ELEMENT, e.0), (WORDS + 3, k.0)], [v.c0, v.c1, v.c2, self.k(k)]);
-        Dw(w[DIGEST])
-    }
-
     /// A digest's first three words as an element, and its last word.
     pub fn d_to_e_and_k(&mut self, d: Dw) -> (Ew, Kw) {
         let v = self.d(d);
@@ -114,15 +107,10 @@ impl Builder {
     }
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    impl Builder {
-        pub(crate) fn k_to_d(&mut self, k: [Kw; 4]) -> Dw {
-            let v = k.map(|w| self.k(w));
-            let given: [(usize, u32); 4] = std::array::from_fn(|i| (WORDS + i, k[i].0));
-            Dw(self.cast_row(&given, v)[DIGEST])
-        }
+impl Builder {
+    pub(crate) fn k_to_d(&mut self, k: [Kw; 4]) -> Dw {
+        let v = k.map(|w| self.k(w));
+        let given: [(usize, u32); 4] = std::array::from_fn(|i| (WORDS + i, k[i].0));
+        Dw(self.cast_row(&given, v)[DIGEST])
     }
 }

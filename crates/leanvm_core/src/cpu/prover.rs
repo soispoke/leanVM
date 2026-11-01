@@ -114,4 +114,34 @@ mod tests {
             Err(ProveError::AdviceTooLong { max: 1, got: 2 })
         );
     }
+    #[test]
+    fn keccak_instruction_proves_all_lanes_and_rejects_tampering() {
+        use crate::rv::asm::{Ld, Xor};
+        use primitives::field::F192;
+        let input: [u64; 25] = std::array::from_fn(|i| (i as u64 + 1).wrapping_mul(0xdead_beef_1234));
+        let mut expected = input;
+        primitives::keccak::keccak_f(&mut expected);
+        let mut image = input.to_vec();
+        image.resize(50, 0);
+        let mut asm = Asm::new();
+        asm.li(Reg::T0, Region::RAM.base()).keccak(Reg::T0).li(Reg::A0, 0);
+        for i in 0..25 {
+            asm.load(Ld, Reg::T1, (25 + i) * 8, Reg::T0)
+                .r(Xor, Reg::A0, Reg::A0, Reg::T1);
+        }
+        let text = asm.exit().finish();
+        let program = Program::new(&text, Region::TEXT.base(), image, 6, 0).unwrap();
+        let prover = Prover::new(Rate::new(2).unwrap());
+        let proven = prover.prove(&program, &[]).unwrap();
+        assert_eq!(proven.output, [expected.into_iter().fold(0, |a, b| a ^ b), 0, 0, 0]);
+        program.verify(proven.output, &proven.proof).unwrap();
+        let mut bad = proven.proof.clone();
+        bad.0.stream[0] += F192::ONE;
+        assert!(program.verify(proven.output, &bad).is_err());
+        let mut foreign_image = input.to_vec();
+        foreign_image[0] ^= 1;
+        foreign_image.resize(50, 0);
+        let foreign = Program::new(&text, Region::TEXT.base(), foreign_image, 6, 0).unwrap();
+        assert!(foreign.verify(proven.output, &proven.proof).is_err());
+    }
 }

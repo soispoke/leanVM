@@ -73,7 +73,7 @@ impl SecretKey {
         let (randomness, digits) = (0..MAX_RANDOMIZER_TRIALS)
             .find_map(|trial| {
                 // Trial `j`'s randomness: the first 24 bytes of a hash of the seed and the message.
-                let mut hasher = Blake2s::new();
+                let mut hasher = Keccak256::new();
                 hasher.update_words(&tweak(TWEAK_RANDOMIZER, trial as u32, leaf_index));
                 hasher.update_words(pp).update_words(seed).update_words(message);
                 let [r0, r1, r2, _] = hasher.finalize_words();

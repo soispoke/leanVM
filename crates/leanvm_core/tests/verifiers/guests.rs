@@ -205,7 +205,8 @@ fn malformed_elf_layouts_are_refused() {
     let word_at = |at: usize| u64::from_le_bytes(elf[at..at + 8].try_into().unwrap());
     let ph = word_at(32) as usize;
     let data = ph + 56;
-    let bss = data + 56;
+    // The rebuilt guest has one writable load segment, entirely zero-filled.
+    let bss = data;
     let text_len = word_at(ph + 32);
     let sh = word_at(40) as usize;
     let n_sections = u16::from_le_bytes(elf[60..62].try_into().unwrap()) as usize;
@@ -247,11 +248,14 @@ fn malformed_elf_layouts_are_refused() {
                 entry: Region::TEXT.base() + text_len,
             },
         ),
-        (ph + 40, 8, text_len - 1, ElfError::MalformedSegment),
+        // A text memory size smaller than its file image is malformed. The
+        // Keccak rebuild changed the exact text length, so reducing it by one
+        // no longer necessarily crosses the loader's alignment boundary.
+        (ph + 40, 8, 0, ElfError::MalformedSegment),
         (ph + 48, 8, 3, ElfError::MalformedSegment),
         (ph + 8, 8, word_at(ph + 8) + 1, ElfError::MalformedSegment),
-        (data + 40, 8, word_at(data + 40) + 8, ElfError::MalformedSegment),
-        (bss + 40, 8, 8 << guest.log_ram, ElfError::RamSize),
+        (data + 32, 8, word_at(data + 40) + 8, ElfError::MalformedSegment),
+        (bss + 40, 8, (8 << guest.log_ram) + 8, ElfError::RamSize),
         (sym + 56, 8, 1, ElfError::MalformedSymbols),
         (sym + 32, 8, word_at(sym + 32) - 1, ElfError::MalformedSymbols),
     ] {

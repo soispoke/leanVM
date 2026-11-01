@@ -10,7 +10,7 @@ use super::entry::{Class, Entry};
 use super::program::RiscvProgram;
 use super::region::Region;
 use super::register::{Reg, RegisterFile, Syscall};
-use super::semantics::{BlockAccess, Ext, Hash, Limb, Load, WordAccess};
+use super::semantics::{Ext, Keccak, Limb, Load, PermutationAccess, WordAccess};
 use thiserror::Error;
 
 /// Why a run stops without halting: a fault of the ISA.
@@ -133,8 +133,8 @@ impl<'a> Machine<'a> {
             }
             _ => None,
         };
-        let block = match entry.class {
-            Class::Hash => Some(self.block(pc, v1)?),
+        let permutation = match entry.class {
+            Class::Keccak => Some(self.permutation_cells(pc, v1)?),
             _ => None,
         };
         let limbs = match entry.class {
@@ -144,16 +144,27 @@ impl<'a> Machine<'a> {
 
         // Compute, then apply the memory access.
         let outcome = entry.evaluate(pc, v1, v2, cell.map_or(0, |cell| self.memory.get(cell)));
-        let memory = match (cell, outcome.access, block, limbs) {
-            (Some(cell), Some(access), _, _) => {
+        let memory = match (cell, outcome.access, limbs) {
+            (Some(cell), Some(access), _) => {
                 self.memory.set(cell, access.new);
                 MemoryAccess::Word(access)
             }
-            (_, _, Some(cells), _) => MemoryAccess::Block(Box::new(self.compress(&cells, v2, entry.flags))),
-            (_, _, _, Some((pointers, cells))) => {
+            (_, _, Some((pointers, cells))) => {
                 MemoryAccess::Ext(Box::new(self.multiply(pointers, &cells, entry.flags)))
             }
             _ => MemoryAccess::None,
+        };
+
+        let memory = if let Some(cells) = permutation {
+            let access = PermutationAccess::from(Keccak {
+                block: cells.map(|cell| self.memory.get(cell)),
+            });
+            for (&cell, &word) in cells[25..].iter().zip(&access.out) {
+                self.memory.set(cell, word);
+            }
+            MemoryAccess::Permutation(Box::new(access))
+        } else {
+            memory
         };
 
         // Write the destination: the output, which is `pc + 4` for a jump that links.
@@ -244,8 +255,8 @@ impl<'a> Machine<'a> {
     /// The cells of the hash block at `base`, word `k` at `base ^ 8k`.
     ///
     /// The base must be a word address, and every word of the block mapped.
-    fn block(&self, pc: u64, base: u64) -> Result<[usize; Hash::WORDS], Trap> {
-        let mut cells = [0; Hash::WORDS];
+    fn permutation_cells(&self, pc: u64, base: u64) -> Result<[usize; 50], Trap> {
+        let mut cells = [0; 50];
         for (k, cell) in cells.iter_mut().enumerate() {
             *cell = self.cell(pc, base ^ (8 * k as u64), 3)?;
         }
@@ -278,17 +289,6 @@ impl<'a> Machine<'a> {
         instance
     }
 
-    /// Compress the block in `cells` and write the result to its result words.
-    fn compress(&mut self, cells: &[usize; Hash::WORDS], t: u64, flags: u64) -> BlockAccess {
-        let block = cells.map(|cell| self.memory.get(cell));
-        let access = BlockAccess::from(Hash { flags, t, block });
-        let result = &cells[Hash::OUT as usize / 8..][..4];
-        for (&cell, &word) in result.iter().zip(&access.out) {
-            self.memory.set(cell, word);
-        }
-        access
-    }
-
     /// Write `vd` to the entry's destination and return what it held.
     ///
     /// A store and a hash always write the sink, which nothing reads.
@@ -298,7 +298,7 @@ impl<'a> Machine<'a> {
     /// They make no write at all, so their tables have none to prove.
     const fn write_destination(&mut self, entry: &Entry, vd: u64) -> u64 {
         match entry.class {
-            Class::Store | Class::Sd | Class::Hash | Class::Ext => 0,
+            Class::Store | Class::Sd | Class::Keccak | Class::Ext => 0,
             _ => self.registers.replace(entry.ad, vd),
         }
     }
@@ -312,7 +312,8 @@ pub enum MemoryAccess {
     /// One cell: a load or a store.
     Word(WordAccess),
     /// A whole block: the hash.
-    Block(Box<BlockAccess>),
+    /// Full Keccak permutation and both memory banks.
+    Permutation(Box<PermutationAccess>),
     /// The limbs of an extension-field product: the instance as the row found it.
     Ext(Box<Ext>),
 }
@@ -421,7 +422,6 @@ mod tests {
     use super::*;
     use crate::rv::Region;
     use crate::rv::asm::*;
-    use crate::rv::semantics::InstructionClass;
     use crate::rv::semantics::tests::edge_word;
     use proptest::prelude::*;
 
@@ -528,28 +528,17 @@ mod tests {
 
     #[test]
     fn a_hash_compresses_its_block_in_place() {
-        // Fixture: a block at RAM's base, h = 1..4 and m = 9..16, a final compression.
-        let block: [u64; Hash::WORDS] = std::array::from_fn(|k| if (4..8).contains(&k) { 0 } else { k as u64 + 1 });
+        let block: [u64; 50] = std::array::from_fn(|k| k as u64 + 1);
         let text = exiting(|a| {
-            a.li(Reg::T0, Region::RAM.base())
-                .li(Reg::T1, 64)
-                .blake2s(Reg::T0, Reg::T1, true);
+            a.li(Reg::T0, Region::RAM.base()).keccak(Reg::T0);
         });
         let program = RiscvProgram::new(&text, Region::TEXT.base(), block.to_vec(), LOG_RAM, 0).unwrap();
         let mut m = Machine::new(&program, &[]);
         m.run().unwrap();
-
-        // Only the result words changed, to the reference compression.
-        let expected = Hash {
-            flags: Hash::FINAL,
-            t: 64,
-            block,
-        }
-        .eval();
-        let ram = m.memory().ram();
-        assert_eq!(ram[4..8], expected);
-        assert_eq!(ram[..4], block[..4]);
-        assert_eq!(ram[8..16], block[8..16]);
+        let mut expected: [u64; 25] = block[..25].try_into().unwrap();
+        primitives::keccak::keccak_f(&mut expected);
+        assert_eq!(m.memory().ram()[25..50], expected);
+        assert_eq!(m.memory().ram()[..25], block[..25]);
     }
 
     #[test]
@@ -668,11 +657,10 @@ mod tests {
 
         // A hash block at no word address, and one below RAM.
         let unaligned_block = exiting(|a| {
-            a.li(Reg::T0, Region::RAM.base() + 4).blake2s(Reg::T0, Reg::ZERO, false);
+            a.li(Reg::T0, Region::RAM.base() + 4).keccak(Reg::T0);
         });
         let below_block = exiting(|a| {
-            a.li(Reg::T0, Region::RAM.base() - 128)
-                .blake2s(Reg::T0, Reg::ZERO, false);
+            a.li(Reg::T0, Region::RAM.base() - 128).keccak(Reg::T0);
         });
         // Both bases take two instructions to form, so the hash is the third.
         let pc = Region::TEXT.base() + 8;
@@ -716,7 +704,7 @@ mod tests {
         //
         //     words 0..8    in RAM, the result words 4..8 among them
         //     words 8..16   past RAM
-        let text = Asm::new().blake2s(Reg::T0, Reg::ZERO, false).finish();
+        let text = Asm::new().keccak(Reg::T0).finish();
         let program = RiscvProgram::new(&text, Region::TEXT.base(), vec![7; 8], 3, 0).unwrap();
         let mut m = Machine::new(&program, &[]);
         m.registers.set(Reg::T0, Region::RAM.base());

@@ -802,3 +802,84 @@ fn the_matrix_reduction_reduces_to_the_matrices() {
         );
     }
 }
+
+#[test]
+fn mixed_programs_bind_identities_tables_and_outputs() {
+    let a = program();
+    let text = Asm::new()
+        .li(Reg::T0, Region::ADVICE.base())
+        .load(Ld, Reg::A0, 0, Reg::T0)
+        .li(Reg::T1, 10)
+        .label("loop")
+        .i(Addi, Reg::T1, Reg::T1, -1)
+        .branch(Bne, Reg::T1, Reg::ZERO, "loop")
+        .exit()
+        .finish();
+    let b = Program::new(&text, Region::TEXT.base(), vec![11, 13, 17, 19], 2, 0).unwrap();
+    let pa = Prover::new(Rate::MIN).prove(a, &[7]).unwrap();
+    let pb = Prover::new(Rate::new(2).unwrap()).prove(&b, &[11]).unwrap();
+    let mut tree = Tree::new_mixed(
+        [
+            (a, LeafShape::of(&pa.proof).unwrap()),
+            (&b, LeafShape::of(&pb.proof).unwrap()),
+        ],
+        2,
+        Rate::MIN,
+    )
+    .unwrap();
+    let leaves = [(*a.digest(), Leaf::from(&pa)), (*b.digest(), Leaf::from(&pb))];
+    let claims = [(*a.digest(), pa.output), (*b.digest(), pb.output)];
+    let root = tree.prove_first_claims(&leaves).unwrap();
+    let root = TreeProof::from_bytes(&root.to_bytes()).unwrap();
+    tree.verify_claims(&root, &claims).unwrap();
+    let parent = tree.prove_node(&[root.clone(), root.clone()]).unwrap();
+    tree.verify_claims(&parent, &claims.repeat(2)).unwrap();
+    let mut swapped = claims;
+    swapped.swap(0, 1);
+    assert!(matches!(
+        tree.verify_claims(&root, &swapped),
+        Err(TreeError::ProgramDigest { .. })
+    ));
+    let mut unknown = claims;
+    unknown[1].0[0] ^= 1;
+    assert_eq!(
+        tree.verify_claims(&root, &unknown),
+        Err(TreeError::ProgramDigest { index: 1 })
+    );
+    let mut unknown_leaf = leaves;
+    unknown_leaf[1].0[0] ^= 1;
+    assert!(matches!(
+        tree.prove_first_claims(&unknown_leaf),
+        Err(TreeError::ProgramDigest { index: 1 })
+    ));
+    let wrong_leaves = [(*a.digest(), Leaf::from(&pb)), (*b.digest(), Leaf::from(&pa))];
+    assert!(tree.prove_first_claims(&wrong_leaves).is_err());
+    let wrong_outputs = [(*a.digest(), pb.output), (*b.digest(), pa.output)];
+    assert_eq!(tree.verify_claims(&root, &wrong_outputs), Err(TreeError::Outputs));
+    let mut bad = root.clone();
+    bad.words[1] += F192::ONE;
+    assert!(tree.verify_claims(&bad, &claims).is_err());
+    let native = b.verify_to_raw(pb.output, &pb.proof).unwrap();
+    let mut builder = Builder::new();
+    let output = pb.output.words().map(|o| builder.free_k(o));
+    // Match B's heights and rate, so the only foreign verifier input is program A.
+    let second = tree.design.second.as_ref().unwrap();
+    let foreign = ProofShape::new(a, *second.taus(), second.rate()).unwrap();
+    foreign.verify_core(&mut builder, output, ProofSource::Proof(&native));
+    assert!(
+        !builder.finish().failures.is_empty(),
+        "the row verifier rejects a foreign program, independently of the API digest check"
+    );
+    for poly in [DensePoly::Bytecode, DensePoly::Image] {
+        // Independently corrupt both halves, including the second program's deferred claim.
+        for slot in 0..2 {
+            let offset = slot * tree.tables.0[poly as usize].len() / 2;
+            tree.tables.0[poly as usize][offset] += F64::ONE;
+            assert_eq!(
+                tree.verify_claims(&root, &claims),
+                Err(TreeError::Claim(FalseClaim::Dense(poly)))
+            );
+            tree.tables.0[poly as usize][offset] += F64::ONE;
+        }
+    }
+}

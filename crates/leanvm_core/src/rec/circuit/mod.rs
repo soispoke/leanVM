@@ -13,7 +13,7 @@ mod compression;
 
 pub use builder::Builder;
 pub(crate) use compression::digest_limbs;
-pub use compression::{Compression, PARAM_IV, chain, zero_prefix};
+pub use compression::{Compression, chain};
 
 use super::table::{PerRecTable, Table};
 use thiserror::Error;

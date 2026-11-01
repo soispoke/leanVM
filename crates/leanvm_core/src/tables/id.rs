@@ -34,10 +34,9 @@ impl TableId {
     pub const MULH: Self = Self(Class::Mulh);
     /// Quotients and remainders.
     pub const DIV: Self = Self(Class::Div);
-    /// The BLAKE2s compression.
-    pub const HASH: Self = Self(Class::Hash);
     /// The extension-field product.
     pub const EXT: Self = Self(Class::Ext);
+    pub const KECCAK: Self = Self(Class::Keccak);
 
     /// Every table, in protocol order.
     pub const ALL: [Self; N_TABLES] = [
@@ -50,7 +49,7 @@ impl TableId {
         Self::MUL,
         Self::MULH,
         Self::DIV,
-        Self::HASH,
+        Self::KECCAK,
         Self::EXT,
     ];
 
@@ -85,7 +84,7 @@ impl TableId {
             Class::Mul => &ClassSpec::MUL,
             Class::Mulh => &ClassSpec::MULH,
             Class::Div => &ClassSpec::DIV,
-            Class::Hash => &ClassSpec::HASH,
+            Class::Keccak => &ClassSpec::KECCAK,
             Class::Ext => &ClassSpec::EXT,
             Class::Illegal => unreachable!(),
         }

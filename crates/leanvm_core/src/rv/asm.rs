@@ -168,11 +168,9 @@ impl Asm {
         if lo == 0 { self } else { self.i(Addi, rd, rd, lo as i32) }
     }
 
-    /// `blake2s rs1, rs2`: compress the block at `rs1` with the counter `rs2`.
-    ///
-    /// `last` marks the final block.
-    pub fn blake2s(&mut self, rs1: Reg, rs2: Reg, last: bool) -> &mut Self {
-        self.emit(Op::Blake2s { rs1, rs2, last })
+    /// Full Keccak-f[1600] on the input/output block at `rs1`.
+    pub fn keccak(&mut self, rs1: Reg) -> &mut Self {
+        self.emit(Op::Keccak { rs1 })
     }
 
     /// `op rd, rs1, rs2`: an extension-field multiplication, every register an address.

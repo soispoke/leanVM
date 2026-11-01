@@ -249,10 +249,12 @@ impl MatrixProver {
         let powers: Vec<F192> = std::iter::successors(Some(F192::ONE), |&p| Some(p * theta))
             .take(claims.len())
             .collect();
+        // Equality tables may dispatch internally for large circuits.
+        let weights: Vec<_> = claims.iter().map(|c| (c.row.table(), c.col.table())).collect();
         let mut claims = parallel::map_collect(claims.len(), |i| {
             let c = &claims[i];
-            let u: Vec<F192> = c.row.table().into_iter().map(|x| powers[i] * x).collect();
-            let (ra, rb) = c.circuit.circuit().row_values(&c.col.table());
+            let u: Vec<F192> = weights[i].0.iter().map(|&x| powers[i] * x).collect();
+            let (ra, rb) = c.circuit.circuit().row_values(&weights[i].1);
             let [a, b] = c.coefficients.map(Coefficient::value);
             let g = ra.iter().zip(&rb).map(|(&x, &y)| a * x + b * y).collect();
             RowTables {
@@ -286,21 +288,28 @@ impl MatrixProver {
 
     /// The column phase at the row point `r`: per circuit, two backward walks for `A(r, .)` and `B(r, .)`, and the claims' column weights.
     pub(crate) fn columns(&self, claims: &[MatrixClaim<F192>], r: &[F192]) -> ColumnPhase {
-        let mut circuits = parallel::map_collect(N_FLOCKS, |f| {
-            let f = FlockId::ALL[f];
+        let row_weights: Vec<_> = FlockId::ALL.iter().map(|f| eq_table(&r[..f.k_log()])).collect();
+        let col_weights: Vec<_> = claims.iter().map(|c| c.col.table()).collect();
+        let mut circuits = parallel::map_collect(N_FLOCKS, |i| {
+            let f = FlockId::ALL[i];
             let k = f.k_log();
             let circuit = f.circuit();
-            let eq = eq_table(&r[..k]);
-            let at = circuit.fold_alpha_batched(F192::ZERO, &eq);
-            let both = circuit.fold_alpha_batched(F192::ONE, &eq);
+            let eq = &row_weights[i];
+            let at = circuit.fold_alpha_batched(F192::ZERO, eq);
+            let both = circuit.fold_alpha_batched(F192::ONE, eq);
             let bt: Vec<F192> = at.iter().zip(&both).map(|(&x, &y)| x + y).collect();
             let lambda = r[k..].iter().fold(F192::ONE, |acc, &x| acc * x);
             let (mut wa, mut wb) = (vec![F192::ZERO; 1 << k], vec![F192::ZERO; 1 << k]);
-            for (c, t) in claims.iter().zip(&self.claims).filter(|(c, _)| c.circuit == f) {
+            for ((c, t), weights) in claims
+                .iter()
+                .zip(&self.claims)
+                .zip(&col_weights)
+                .filter(|((c, _), _)| c.circuit == f)
+            {
                 let [a, b] = c.coefficients.map(Coefficient::value);
                 let scale = lambda * t.u.values[0];
                 let (sa, sb) = (scale * a, scale * b);
-                for ((x, y), w) in wa.iter_mut().zip(wb.iter_mut()).zip(c.col.table()) {
+                for ((x, y), w) in wa.iter_mut().zip(wb.iter_mut()).zip(weights.iter().copied()) {
                     *x += sa * w;
                     *y += sb * w;
                 }

@@ -44,17 +44,9 @@ impl Rng {
     }
 }
 
-/// The official unkeyed BLAKE2s-256 test vectors, as `(input, digest)` pairs.
-///
-/// Input `n` is the `n` bytes `00 01 .. n-1`, for `n` in `0..256`: every length through four blocks.
-///
-/// `test_vectors.txt` is extracted from `testvectors/blake2-kat.json` of <https://github.com/BLAKE2/BLAKE2>:
-///
-/// ```text
-/// jq -r '.[] | select(.hash == "blake2s" and .key == "") | .out' blake2-kat.json
-/// ```
+/// Independent RustCrypto Keccak-256 vectors for input bytes 00..n-1, n=0..255.
 pub fn test_vectors() -> impl Iterator<Item = (Vec<u8>, [u8; OUT_LEN])> {
-    let lines: Vec<&str> = include_str!("hash/test_vectors.txt").lines().collect();
+    let lines: Vec<&str> = include_str!("keccak_test_vectors.txt").lines().collect();
     assert_eq!(lines.len(), 256, "the vector file is truncated");
     lines.into_iter().enumerate().map(|(n, line)| {
         let input = (0..n).map(|i| i as u8).collect();

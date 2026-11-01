@@ -2,7 +2,7 @@
 
 use super::{ClassSpec, Ram, Word};
 use crate::leaf::Coord::{self, Col};
-use crate::rv::{Ext, Hash};
+use crate::rv::Ext;
 
 /// The `rs2` read's columns: the register's number and what it held.
 #[derive(Clone, Copy)]
@@ -75,6 +75,9 @@ pub(super) struct MemoryColumns {
 pub(super) struct BlockColumns {
     /// First hash block word column.
     pub(super) words: usize,
+    pub(super) n_words: usize,
+    pub(super) output_start: usize,
+    pub(super) n_outputs: usize,
 
     /// Result value, or a shared memory-cell column.
     pub(super) out: usize,
@@ -83,8 +86,8 @@ pub(super) struct BlockColumns {
 impl BlockColumns {
     /// What the row leaves in word `k` of its block.
     pub(super) const fn left(&self, k: usize) -> usize {
-        match k.wrapping_sub(Hash::OUT as usize / 8) {
-            j if j < 4 => self.out + j,
+        match k.wrapping_sub(self.output_start) {
+            j if j < self.n_outputs => self.out + j,
             _ => self.words + k,
         }
     }
@@ -229,13 +232,17 @@ impl Columns {
                 };
                 (Some(MemoryColumns { address, cell, new }), None)
             }
-            Ram::Block => {
-                let words = allocator.allocate(Hash::WORDS);
+            Ram::Permutation => {
+                let (n_words, output_start, n_outputs) = (50, 25, 25);
+                let words = allocator.allocate(n_words);
                 (
                     None,
                     Some(BlockColumns {
                         words,
-                        out: allocator.allocate(4),
+                        n_words,
+                        output_start,
+                        n_outputs,
+                        out: allocator.allocate(n_outputs),
                     }),
                 )
             }

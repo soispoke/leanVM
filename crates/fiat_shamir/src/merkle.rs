@@ -36,7 +36,7 @@ pub fn scalars_to_hash(scalars: &[F192; 2]) -> Result<Hash, TranscriptError> {
     Ok(hash)
 }
 
-/// Hash one leaf with standard BLAKE2s-256.
+/// Hash one leaf with standard Keccak-256-256.
 #[inline]
 pub fn hash_leaf(data: &[u8]) -> Hash {
     primitives::hash::hash(data)

@@ -116,7 +116,7 @@ impl Word {
 mod tests {
     use super::super::Clock;
     use super::*;
-    use crate::cpu::execute::{ExtRow, HashRow, Row};
+    use crate::cpu::execute::{ExtRow, KeccakRow, Row};
     use crate::rv::{Class, Entry, InstructionClass, Region, WordAccess};
     use proptest::prelude::*;
 
@@ -231,29 +231,29 @@ mod tests {
     }
 
     #[test]
-    fn word_hash_cells_replace_only_the_four_output_words() {
+    fn word_keccak_cells_replace_only_the_output_bank() {
         // The compression writes words 4..8, preserving the chaining input and message.
         let row = row();
         let entry = entry();
-        let hash = HashRow {
+        let hash = KeccakRow {
             block: std::array::from_fn(|i| 100 + i as u64),
-            out: [200, 201, 202, 203],
+            out: std::array::from_fn(|i| 200 + i as u64),
             prev: std::array::from_fn(|i| 300 + i as u64),
         };
         let r = RowRef {
             row: &row,
-            payload: Payload::Hash(&hash),
+            payload: Payload::Keccak(&hash),
         };
-        for k in 0..16 {
+        for k in 0..50 {
             assert_eq!(Word::Cell(k).value(r, at(&entry, 0), &[]), 100 + u64::from(k));
-            let expected = if (4..8).contains(&k) {
-                196 + u64::from(k)
+            let expected = if (25..50).contains(&k) {
+                175 + u64::from(k)
             } else {
                 100 + u64::from(k)
             };
             assert_eq!(Word::CellNew(k).value(r, at(&entry, 0), &[]), expected);
         }
-        for i in 0..18 {
+        for i in 0..51 {
             assert_eq!(Word::Prev(i).value(r, at(&entry, 0), &[]), 300 + u64::from(i));
         }
     }

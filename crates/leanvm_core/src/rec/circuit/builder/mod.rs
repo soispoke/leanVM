@@ -253,6 +253,7 @@ impl Builder {
     }
 
     /// A free digest.
+    #[cfg(test)]
     pub fn free_d(&mut self, value: Limbs) -> Dw {
         Dw(self.wire(WireKind::D, value))
     }

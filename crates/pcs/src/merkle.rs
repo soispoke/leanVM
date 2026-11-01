@@ -1,5 +1,5 @@
 // CREDIT: https://github.com/succinctlabs/flock (flock-core), MIT OR Apache-2.0.
-//! Binary Merkle tree with BLAKE2s, built in cache-resident subtree blocks.
+//! Binary Merkle tree with Keccak, built in cache-resident subtree blocks.
 //!
 //! The committer's half. What a proof carries lives in [`fiat_shamir::merkle`].
 //!
@@ -240,7 +240,7 @@ enum LeafHasher {
     /// Past the shared prefix, each row is its own whole-block image.
     Direct {
         row_bytes: usize,
-        state: [u32; 8],
+        state: [u64; 25],
         t_offset: u64,
     },
     /// The rest of the padding does not fill a block, so rows are zero-extended in a tile first.
@@ -249,23 +249,14 @@ enum LeafHasher {
     Staged {
         row_bytes: usize,
         image: usize,
-        state: [u32; 8],
+        state: [u64; 25],
         t_offset: u64,
     },
-    /// Leaves of no whole block: one at a time, zero-extended to `leaf_bytes`.
-    Single { row_bytes: usize, leaf_bytes: usize },
 }
 
 impl LeafHasher {
     fn new(row_bytes: usize, leaf_bytes: usize) -> Self {
         assert!(0 < row_bytes && row_bytes <= leaf_bytes, "a leaf holds its row");
-        if !leaf_bytes.is_multiple_of(BLOCK_LEN) {
-            assert!(
-                row_bytes == leaf_bytes || leaf_bytes <= STAGE_TILE_BYTES,
-                "a padded leaf fits the tile"
-            );
-            return Self::Single { row_bytes, leaf_bytes };
-        }
         let zero_blocks = (leaf_bytes - row_bytes) / BLOCK_LEN;
         let (state, t_offset) = (zero_prefix_state(zero_blocks), (zero_blocks * BLOCK_LEN) as u64);
         let image = leaf_bytes - zero_blocks * BLOCK_LEN;
@@ -288,9 +279,7 @@ impl LeafHasher {
 
     const fn row_bytes(&self) -> usize {
         match *self {
-            Self::Direct { row_bytes, .. } | Self::Staged { row_bytes, .. } | Self::Single { row_bytes, .. } => {
-                row_bytes
-            }
+            Self::Direct { row_bytes, .. } | Self::Staged { row_bytes, .. } => row_bytes,
         }
     }
 
@@ -321,17 +310,6 @@ impl LeafHasher {
                 for (out, rows) in out.chunks_mut(per_tile).zip(rows.chunks(per_tile * row_bytes)) {
                     let images = tile.extend(rows, row_bytes, image);
                     hash_many_dyn_from_state(images, image, &state, t_offset, digests_as_bytes(out));
-                }
-            }
-            Self::Single { row_bytes, leaf_bytes } if row_bytes == leaf_bytes => {
-                for (slot, row) in out.iter_mut().zip(rows.chunks_exact(row_bytes)) {
-                    slot.write(hash_leaf(row));
-                }
-            }
-            Self::Single { row_bytes, leaf_bytes } => {
-                let mut tile = Tile::new();
-                for (slot, row) in out.iter_mut().zip(rows.chunks_exact(row_bytes)) {
-                    slot.write(hash_leaf(tile.extend(row, row_bytes, leaf_bytes)));
                 }
             }
         }
@@ -397,7 +375,7 @@ mod tests {
         builder.finish()
     }
 
-    /// The tree over `num_leaves` equal byte leaves, each hashed as plain BLAKE2s-256 of its bytes.
+    /// The tree over `num_leaves` equal byte leaves, each hashed as plain Keccak-256 of its bytes.
     fn merkle_tree(data: &[u8], num_leaves: usize) -> Vec<Hash> {
         let leaf_bytes = data.len() / num_leaves;
         let builder = MerkleBuilder::with_bytes(num_leaves, leaf_bytes, leaf_bytes);

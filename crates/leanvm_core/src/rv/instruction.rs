@@ -29,7 +29,7 @@ use std::ops::Range;
 
 use super::entry::Class;
 use super::register::Reg;
-use super::semantics::{Alu, Div, Ext, Hash, Load, Mul, Mulh, Shift};
+use super::semantics::{Alu, Div, Ext, Load, Mul, Mulh, Shift};
 
 /// Sign-extend the low bits of a 32-bit value to a 64-bit word.
 const fn sign_extend(value: u32, bits: u32) -> u64 {
@@ -84,10 +84,12 @@ impl BitField {
 pub enum Opcode {
     /// Loads.
     Load = 0x03,
-    /// The custom-0 space, which holds the BLAKE2s compression.
+    /// The reserved former custom-0 hash space.
     Custom0 = 0x0b,
     /// The custom-1 space, which holds the extension-field multiplication.
     Custom1 = 0x2b,
+    /// Full Keccak-f[1600] permutation.
+    Custom2 = 0x5b,
     /// `FENCE`.
     MiscMem = 0x0f,
     /// Register-immediate arithmetic.
@@ -115,11 +117,12 @@ pub enum Opcode {
 }
 
 impl Opcode {
-    /// Every opcode the machine uses: rv64im's, and the two custom spaces.
-    pub const ALL: [Self; 15] = [
+    /// Every opcode the machine uses: rv64im's, and the custom spaces.
+    pub const ALL: [Self; 16] = [
         Self::Load,
         Self::Custom0,
         Self::Custom1,
+        Self::Custom2,
         Self::MiscMem,
         Self::OpImm,
         Self::Auipc,
@@ -142,6 +145,7 @@ impl Opcode {
             0x03 => Self::Load,
             0x0b => Self::Custom0,
             0x2b => Self::Custom1,
+            0x5b => Self::Custom2,
             0x0f => Self::MiscMem,
             0x13 => Self::OpImm,
             0x17 => Self::Auipc,
@@ -360,11 +364,7 @@ impl Instruction {
             Opcode::System if self == Self::ECALL => Op::Ecall,
 
             // The compression has no destination, and function 1 marks the final block.
-            Opcode::Custom0 if f7 == 0 && rd == Reg::ZERO && f3 <= 1 => Op::Blake2s {
-                rs1,
-                rs2,
-                last: f3 == 1,
-            },
+            Opcode::Custom2 if f7 == 0 && f3 == 0 && rd == Reg::ZERO && rs2 == Reg::ZERO => Op::Keccak { rs1 },
 
             // Every register is an address, and the address in x0 would be 0, which is unmapped.
             Opcode::Custom1 if f7 == 0 && rd != Reg::ZERO => Op::Ext {
@@ -907,8 +907,8 @@ pub enum Op {
     Fence,
     /// `ecall`, which the machine runs only as its exit.
     Ecall,
-    /// `blake2s rs1, rs2`: compress the block at `rs1` with the counter in `rs2`, the final one if `last`.
-    Blake2s { rs1: Reg, rs2: Reg, last: bool },
+    /// Full Keccak-f[1600] permutation on the input/output block at rs1.
+    Keccak { rs1: Reg },
     /// `op rd, rs1, rs2`, every register an address, `rd` never `x0`.
     Ext { op: ExtOp, rd: Reg, rs1: Reg, rs2: Reg },
 }
@@ -929,7 +929,7 @@ impl Op {
             Self::Jalr { rd, rs1, offset } => Instruction::i(Opcode::Jalr, 0, rd, rs1, offset),
             Self::Fence => Instruction::i(Opcode::MiscMem, 0, Reg::ZERO, Reg::ZERO, 0),
             Self::Ecall => Instruction::ECALL,
-            Self::Blake2s { rs1, rs2, last } => Instruction::r(Opcode::Custom0, last as u32, 0, Reg::ZERO, rs1, rs2),
+            Self::Keccak { rs1 } => Instruction::r(Opcode::Custom2, 0, 0, Reg::ZERO, rs1, Reg::ZERO),
             Self::Ext { op, rd, rs1, rs2 } => op.encode(rd, rs1, rs2),
         }
     }
@@ -948,7 +948,7 @@ impl Op {
             Self::Lui { .. } | Self::Auipc { .. } | Self::Fence => (Class::Alu, 0),
             Self::Jal { .. } | Self::Ecall => (Class::Alu, Alu::ALWAYS),
             Self::Jalr { .. } => (Class::Alu, Alu::INDIRECT | Alu::ALWAYS),
-            Self::Blake2s { last, .. } => (Class::Hash, if last { Hash::FINAL } else { 0 }),
+            Self::Keccak { .. } => (Class::Keccak, 0),
             Self::Ext { op, .. } => (Class::Ext, op.flags()),
         }
     }
@@ -1003,7 +1003,7 @@ mod tests {
             (reg(), reg(), imm()).prop_map(|(rd, rs1, offset)| Op::Jalr { rd, rs1, offset }),
             Just(Op::Fence),
             Just(Op::Ecall),
-            (reg(), reg(), any::<bool>()).prop_map(|(rs1, rs2, last)| Op::Blake2s { rs1, rs2, last }),
+            reg().prop_map(|rs1| Op::Keccak { rs1 }),
             (select(&ExtOp::ALL[..]), nonzero_reg(), reg(), reg()).prop_map(|(op, rd, rs1, rs2)| Op::Ext {
                 op,
                 rd,

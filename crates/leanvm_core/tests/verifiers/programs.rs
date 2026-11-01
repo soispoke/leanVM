@@ -3,8 +3,8 @@
 use fiat_shamir::transcript::TranscriptError;
 use leanvm::asm::*;
 use leanvm::{
-    BusError, CpuError, Hash, Machine, N_TABLES, Output, Program, Proof, ProveError, ProvenRun, Prover, Rate, Region,
-    Trap, UNGROUND_LOG_BYTECODE,
+    BusError, CpuError, Machine, N_TABLES, Output, Program, Proof, ProveError, ProvenRun, Prover, Rate, Region, Trap,
+    UNGROUND_LOG_BYTECODE,
 };
 use primitives::field::{F64, F192};
 
@@ -223,66 +223,44 @@ fn divisions_prove_and_verify() {
     proves_and_verifies("div", &program, expected);
 }
 
+/// Hash 200 bytes with two Keccak permutations and verify against independent vectors.
 #[test]
-fn blake2s_precompile_proves_and_verifies() {
-    // Hash 100 bytes in two compressions, using a block 128 bytes into RAM.
-    const BLOCK: u64 = Region::RAM.base() + 128;
-    let data: Vec<u8> = (0..100u32).map(|i| (i * 37 + 11) as u8).collect();
-    let words = |bytes: &[u8]| -> Vec<u64> {
-        let mut padded = bytes.to_vec();
-        padded.resize(64, 0);
-        padded
-            .chunks(8)
-            .map(|w| u64::from_le_bytes(w.try_into().unwrap()))
-            .collect()
-    };
-    let iv: Vec<u64> = primitives::hash::PARAM_IV
-        .chunks(2)
-        .map(|w| w[0] as u64 | (w[1] as u64) << 32)
+fn keccak_precompile_proves_a_multiblock_hash() {
+    const BLOCK: u64 = Region::RAM.base() + 512;
+    let data: Vec<u8> = (0..200).map(|i| (i * 37 + 11) as u8).collect();
+    let mut padded = data.clone();
+    padded.push(1);
+    padded.resize(272, 0);
+    padded[271] |= 128;
+    let words: Vec<u64> = padded
+        .as_chunks::<8>()
+        .0
+        .iter()
+        .map(|b| u64::from_le_bytes(*b))
         .collect();
-    // The image: the block (its chaining value seeded, its message the first 64 bytes),
-    // then the second message block.
-    let mut image = vec![0u64; ((BLOCK - Region::RAM.base()) / 8) as usize];
-    image.extend(&iv);
-    image.extend([0; 4]);
-    image.extend(words(&data[..64]));
-    image.extend(words(&data[64..]));
-    let second = BLOCK + 128;
-
+    let mut image = vec![0; 64 + 50];
+    image[64..64 + 17].copy_from_slice(&words[..17]);
+    image.extend_from_slice(&words[17..]);
     let mut a = Asm::new();
-    a.li(Reg::S0, BLOCK).li(Reg::S1, 64).blake2s(Reg::S0, Reg::S1, false);
-    for k in 0..4 {
-        a.load(Ld, Reg::T0, (Hash::OUT + 8 * k) as i32, Reg::S0)
-            .store(Sd, Reg::T0, (Hash::H + 8 * k) as i32, Reg::S0);
+    a.li(Reg::S0, BLOCK).keccak(Reg::S0);
+    for k in 0..25 {
+        a.load(Ld, Reg::T0, 8 * (25 + k), Reg::S0);
+        if k < 17 {
+            a.load(Ld, Reg::T1, 8 * (50 + k), Reg::S0)
+                .r(Xor, Reg::T0, Reg::T0, Reg::T1);
+        }
+        a.store(Sd, Reg::T0, 8 * k, Reg::S0);
     }
-    a.li(Reg::T1, second);
-    for k in 0..8 {
-        a.load(Ld, Reg::T0, 8 * k, Reg::T1)
-            .store(Sd, Reg::T0, (Hash::M + 8 * k as u64) as i32, Reg::S0);
-    }
-    a.li(Reg::S1, data.len() as u64).blake2s(Reg::S0, Reg::S1, true);
+    a.keccak(Reg::S0);
     for (i, reg) in [Reg::A0, Reg::A1, Reg::A2, Reg::A3].into_iter().enumerate() {
-        a.load(Ld, reg, (Hash::OUT + 8 * i as u64) as i32, Reg::S0);
+        a.load(Ld, reg, (8 * (25 + i)) as i32, Reg::S0);
     }
-    let program =
-        Program::new(&a.exit().finish(), Region::TEXT.base(), image, 7, 0).expect("valid instruction program");
-    let expected: [u64; 4] = words(&primitives::hash::hash(&data))[..4].try_into().unwrap();
-    proves_and_verifies("blake2s", &program, expected);
-
-    // A block pointer that is no word address traps, like a misaligned load.
-    let text = Asm::new()
-        .li(Reg::S0, BLOCK + 4)
-        .blake2s(Reg::S0, Reg::ZERO, true)
-        .exit()
-        .finish();
-    let program = Program::new(&text, Region::TEXT.base(), vec![], 7, 0).expect("valid instruction program");
-    assert_eq!(
-        Prover::new(Rate::MIN).prove(&program, &[]).err(),
-        Some(ProveError::Trap(Trap::Misaligned {
-            pc: Region::TEXT.base() + 8,
-            address: BLOCK + 4
-        }))
-    );
+    let program = Program::new(&a.exit().finish(), Region::TEXT.base(), image, 8, 0).unwrap();
+    let expected = primitives::hash::digest_words(&primitives::hash::hash(&data));
+    proves_and_verifies("keccak-200", &program, expected);
+    // Former BLAKE opcode is illegal, including its previously canonical encoding.
+    let old = Instruction::r(Opcode::Custom0, 1, 0, Reg::ZERO, Reg::T0, Reg::T1);
+    assert!(old.decode().is_none());
 }
 
 /// The extension-field precompile, checked against the host's `GF(2^192)`.

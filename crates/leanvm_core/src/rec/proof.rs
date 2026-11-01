@@ -14,7 +14,7 @@ use super::table::{HashFlock, Table};
 use crate::constraints::{Columns, ConstraintError};
 use crate::leaf::PublicColumns;
 use crate::pcs::{Commitment, Committed, Rate, RingSwitch, StackClaim};
-use crate::rv::circuits::blake2s_witness;
+
 use crate::{constraints, witness};
 use fiat_shamir::arith::Verifier;
 use fiat_shamir::transcript::{Challenger, ProofTranscript, ProverState, RawProof, VerifierState};
@@ -79,7 +79,7 @@ impl HashFlock {
             hash,
             &Compression::PADDING,
             tau,
-            |row, z, az, bz| blake2s_witness(row.inputs(), z, az, bz),
+            |row, z, az, bz| Self::circuit().witness_instance(row.inputs(), z, az, bz),
             ports_of,
         );
         if hash.len() < 1 << tau {
@@ -356,7 +356,7 @@ mod tests {
     use crate::constraints::ConstraintError;
     use crate::leaf::BusError;
     use crate::pcs::{self, Rate};
-    use crate::rec::circuit::{Builder, Dw, Ew, Finished, Kw, PARAM_IV};
+    use crate::rec::circuit::{Builder, Dw, Ew, Finished, Kw};
     use fiat_shamir::arith::Arith;
     use fiat_shamir::{DS_OBSERVE, DS_SQUEEZE};
     use std::panic::AssertUnwindSafe;
@@ -410,13 +410,11 @@ mod tests {
         let root = b.node(right, bits[0], [5, 6, 7, 8]);
 
         // A leaf's two blocks.
-        let h = b.d_const(PARAM_IV);
-        let m: [Kw; 8] = std::array::from_fn(|i| b.free_k(77 * i as u64 + 1));
-        let first = b.leaf_block(h, m, 64, false);
+        let m: [Kw; 17] = std::array::from_fn(|i| b.free_k(77 * i as u64 + 1));
         let words = b.d_to_k(root);
         let zero_k = b.k_const(0);
         let m2 = [words[0], words[1], words[2], words[3], zero_k, zero_k, zero_k, zero_k];
-        let leaf = b.leaf_block(first, m2, 128, true);
+        let leaf = b.chain(&[m.as_slice(), m2.as_slice()].concat());
 
         // Every cast, and equalities across tables.
         let limbs = b.e_to_k(challenge);
@@ -615,7 +613,7 @@ mod tests {
                 b.compress(acc, e, ds).0
             } else {
                 let m: [Kw; 8] = std::array::from_fn(|j| b.free_k(i * 8 + j as u64));
-                b.leaf_block(acc, m, 64 * (i + 1), i % 4 == 3)
+                b.chain(&m)
             };
         }
         b.expose_d(acc);

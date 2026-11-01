@@ -1,6 +1,6 @@
 //! The recursion machine's tables: their slots, the columns each slot's limbs are made of, and their identities.
 //!
-//! The hash table's first columns are ports of its rows' packed BLAKE2s witnesses, which flock proves.
+//! The hash table's first columns are ports of its rows' packed Keccak-256 witnesses, which flock proves.
 //! The public table commits nothing: its blocks are the framework's.
 
 use super::circuit::{Assignment, WireKind};
@@ -19,7 +19,7 @@ pub enum Table {
     Emul,
     /// `c = a·k + d` with `k` in `K`, slots `a`, `k`, `d`, `c`.
     Exk,
-    /// One BLAKE2s compression per row: a transcript step, a Merkle node or a block of a leaf.
+    /// One Keccak-256 compression per row: a transcript step, a Merkle node or a block of a leaf.
     Hash,
     /// A word and its 64 bits.
     Split,
@@ -43,7 +43,7 @@ struct LimbOf {
     limb: usize,
 }
 
-/// The packed BLAKE2s witness behind the hash table, which flock proves.
+/// The packed Keccak-256 witness behind the hash table, which flock proves.
 ///
 /// The table's first columns are ports of it: the inputs `t`, `f`, `h0..h3`, `m0..m7`, then the outputs `o0..o3`.
 pub(crate) struct HashFlock;
@@ -55,7 +55,7 @@ pub(crate) struct HashFlock;
 /// - the message's words 4 to 6 as `x` and its word 7 as `ds`;
 /// - the output, the output's first three words as a challenge;
 /// - the eight message words.
-const HASH_KINDS: [WireKind; 16] = [D, D, D, K, E, K, D, E, K, K, K, K, K, K, K, K];
+const HASH_KINDS: [WireKind; 50] = [K; 50];
 
 /// A cast row's slots: the digest, the element of its first three words, its two halves, its four words.
 const CAST_KINDS: [WireKind; 8] = [D, E, E, E, K, K, K, K];
@@ -117,7 +117,7 @@ impl Table {
         match self {
             Self::Emul => 9,
             Self::Exk => 7,
-            Self::Hash => HashFlock::N_PORTS + 1,
+            Self::Hash => HashFlock::N_PORTS,
             Self::Split => 65,
             Self::Cast => 4,
             Self::Pub => 0,
@@ -172,7 +172,7 @@ impl Table {
         let boolean = |c: usize| form(&[(c, F192::ONE)], vec![(c, c, F192::ONE)]);
         match self {
             // A Boolean mux bit; what a hash row hashes is its wiring's.
-            Self::Hash => vec![boolean(HashFlock::SEL)],
+            Self::Hash => Vec::new(),
             // A word is its bits, each Boolean.
             Self::Split => {
                 let word: Vec<(usize, F192)> = std::iter::once((0, F192::ONE))
@@ -278,29 +278,7 @@ impl SlotForm {
 
     /// `HASH`'s slots, over its ports and its mux bit.
     fn hash(s: usize) -> Option<Self> {
-        let (t, f, h, m, o, sel) = (
-            HashFlock::T,
-            HashFlock::F,
-            HashFlock::H,
-            HashFlock::M,
-            HashFlock::O,
-            HashFlock::SEL,
-        );
-        match s {
-            0 => Self::d(h),
-            1 => Some(Self([Col(t), Col(f), Self::ZERO, Self::ZERO])),
-            // The Merkle mux: the message's left half at `b = 0`, its right half at `b = 1`.
-            2 => Some(Self(std::array::from_fn(|i| {
-                Sum(vec![Col(m + i), Prod(sel, m + i), Prod(sel, m + 4 + i)])
-            }))),
-            3 => Self::k(sel),
-            4 => Self::e(m + 4),
-            5 => Self::k(m + 7),
-            6 => Self::d(o),
-            7 => Self::e(o),
-            8..16 => Self::k(m + s - 8),
-            _ => None,
-        }
+        (s < HashFlock::N_PORTS).then(|| Self::k(s).unwrap())
     }
 
     /// `CAST`'s slots over its four words.
@@ -336,19 +314,12 @@ impl TableKey<{ Self::COUNT }> for Table {
 
 impl HashFlock {
     /// How many ports the hash table reads, at the witness's words `0..18`.
-    pub(crate) const N_PORTS: usize = 18;
-    const T: usize = 0;
-    const F: usize = 1;
-    const H: usize = 2;
-    const M: usize = 6;
-    const O: usize = 14;
-    /// The hash table's mux bit, its one committed column, after its ports.
-    const SEL: usize = Self::N_PORTS;
+    pub(crate) const N_PORTS: usize = 50;
 
-    /// The packed witness of the BLAKE2s class circuit, which proves every hash row.
-    pub(crate) const FLOCK: FlockId = FlockId::class(TableId::HASH).expect("the HASH class has a circuit");
+    /// The packed witness of the Keccak-256 class circuit, which proves every hash row.
+    pub(crate) const FLOCK: FlockId = FlockId::class(TableId::KECCAK).expect("the HASH class has a circuit");
 
-    /// The BLAKE2s compression circuit.
+    /// The Keccak-256 compression circuit.
     pub(crate) fn circuit() -> &'static Circuit {
         Self::FLOCK.circuit()
     }
@@ -413,11 +384,9 @@ mod tests {
 
     #[test]
     fn the_hash_ports_are_the_precompile_ports() {
-        let ports: Vec<Word> = ClassSpec::HASH.ports().collect();
+        let ports: Vec<Word> = ClassSpec::KECCAK.ports().collect();
         assert_eq!(ports.len(), HashFlock::N_PORTS);
-        assert_eq!((ports[HashFlock::T], ports[HashFlock::F]), (Word::V2, Word::Flags));
-        assert!((0..4).all(|i| ports[HashFlock::H + i] == Word::Cell(i as u8)));
-        assert!((0..8).all(|i| ports[HashFlock::M + i] == Word::Cell(8 + i as u8)));
-        assert!((0..4).all(|i| ports[HashFlock::O + i] == Word::CellNew(4 + i as u8)));
+        assert!((0..25).all(|i| ports[i] == Word::Cell(i as u8)));
+        assert!((0..25).all(|i| ports[25 + i] == Word::CellNew(25 + i as u8)));
     }
 }

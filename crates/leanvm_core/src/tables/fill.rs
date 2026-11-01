@@ -181,7 +181,7 @@ impl ClassTable {
                 ctx.column(out, rows, rd.out, move |r| F64(r.out));
             }
         }
-        let (hash, ext) = (&ctx.trace.hash, &ctx.trace.ext);
+        let ext = &ctx.trace.ext;
         if let Some(p) = c.pointer {
             ctx.column(out, rows, p.ad, move |r| F64(entry(r).ad as u64));
             ctx.column(out, ext, p.vd, |x| F64(x.instance.pointers[2]));
@@ -209,8 +209,9 @@ impl ClassTable {
             }
         }
         if let Some(block) = c.block {
-            ctx.columns(out, hash, block.words, |h| h.block.map(F64));
-            ctx.columns(out, hash, block.out, |h| h.out.map(F64));
+            let permutations = &ctx.trace.keccak;
+            ctx.columns(out, permutations, block.words, |h| h.block.map(F64));
+            ctx.columns(out, permutations, block.out, |h| h.out.map(F64));
         }
         if let Some(limbs) = c.limbs {
             ctx.columns(out, ext, limbs.limbs, |x| x.instance.limbs.map(F64));

@@ -1,6 +1,6 @@
 //! Keccak in software: the `Keccak-f[1600]` permutation, and keccak256 over it.
 //!
-//! The machine has no Keccak instruction, so this is ordinary code, on the VM and off it alike.
+//! On the VM, f1600 uses the full Keccak permutation instruction. Off the VM it uses software.
 //!
 //! rv64im has no rotate and no and-not, so a round is shifts, ORs, XORs and ANDs.
 //!
@@ -53,6 +53,7 @@ pub fn keccak256(words: &[u64], len: usize) -> [u64; 4] {
 }
 
 /// The round constants, which break the rounds' symmetry.
+#[cfg(not(all(target_arch = "riscv64", target_os = "none")))]
 const ROUND_CONSTANTS: [u64; 24] = [
     0x0000_0000_0000_0001,
     0x0000_0000_0000_8082,
@@ -83,6 +84,7 @@ const ROUND_CONSTANTS: [u64; 24] = [
 /// The lanes kept complemented through the rounds, `x + 5y` for `be bi go ki mi sa` (lane complementing).
 ///
 /// With them complemented, chi needs one NOT per plane instead of one per lane.
+#[cfg(not(all(target_arch = "riscv64", target_os = "none")))]
 const COMPLEMENTED: [usize; 6] = [1, 2, 8, 12, 17, 20];
 
 /// The `Keccak-f[1600]` permutation, lane `x + 5y` at index `x + 5 * y`.
@@ -91,6 +93,7 @@ const COMPLEMENTED: [usize; 6] = [1, 2, 8, 12, 17, 20];
 ///
 /// - theta, rho and pi are fused into chi's inputs;
 /// - the next round's column parities are summed from chi's outputs.
+#[cfg(not(all(target_arch = "riscv64", target_os = "none")))]
 pub fn f1600(state: &mut [u64; 25]) {
     let mut a = *state;
     for i in COMPLEMENTED {
@@ -114,6 +117,7 @@ pub fn f1600(state: &mut [u64; 25]) {
 /// Each output plane `y` is chi over the five lanes pi moves to plane `y`.
 ///
 /// Each lane is first XORed with its column's theta term, then rotated by rho.
+#[cfg(not(all(target_arch = "riscv64", target_os = "none")))]
 #[inline(always)]
 fn round(a: &[u64; 25], e: &mut [u64; 25], c: [u64; 5], rc: u64) -> [u64; 5] {
     let d: [u64; 5] = core::array::from_fn(|x| c[(x + 4) % 5] ^ c[(x + 1) % 5].rotate_left(1));
@@ -163,4 +167,78 @@ fn round(a: &[u64; 25], e: &mut [u64; 25], c: [u64; 5], rc: u64) -> [u64; 5] {
     e[24] = su ^ (sa & se);
 
     core::array::from_fn(|x| e[x] ^ e[x + 5] ^ e[x + 10] ^ e[x + 15] ^ e[x + 20])
+}
+
+/// Full permutation, proven by the VM's Flock circuit; the input is preserved in its own bank.
+#[cfg(all(target_arch = "riscv64", target_os = "none"))]
+#[inline(never)]
+pub fn f1600(state: &mut [u64; 25]) {
+    #[repr(C, align(512))]
+    struct Block([u64; 50]);
+    let mut block = Block([0; 50]);
+    block.0[..25].copy_from_slice(state);
+    // SAFETY: the 512-aligned block contains 50 readable/writable words. The instruction
+    // reads words 0..25 and writes the full permutation to words 25..50.
+    unsafe {
+        core::arch::asm!(".insn r 0x5b, 0, 0, x0, {base}, x0", base = in(reg) block.0.as_mut_ptr(), options(nostack));
+    }
+    state.copy_from_slice(&block.0[25..]);
+}
+
+/// Streaming Keccak-256 for protocol and application hashing.
+#[derive(Default)]
+pub struct Keccak256 {
+    state: [u64; 25],
+    next: usize,
+}
+impl Keccak256 {
+    pub const fn new() -> Self {
+        Self {
+            state: [0; 25],
+            next: 0,
+        }
+    }
+    pub fn update(&mut self, bytes: &[u8]) -> &mut Self {
+        for &byte in bytes {
+            self.state[self.next / 8] ^= u64::from(byte) << (8 * (self.next % 8));
+            self.next += 1;
+            if self.next == 136 {
+                f1600(&mut self.state);
+                self.next = 0;
+            }
+        }
+        self
+    }
+    pub fn update_words(&mut self, words: &[u64]) -> &mut Self {
+        if !self.next.is_multiple_of(8) {
+            for &word in words {
+                self.update(&word.to_le_bytes());
+            }
+        } else {
+            for &word in words {
+                self.state[self.next / 8] ^= word;
+                self.next += 8;
+                if self.next == 136 {
+                    f1600(&mut self.state);
+                    self.next = 0;
+                }
+            }
+        }
+        self
+    }
+    pub fn finalize_words(mut self) -> [u64; 4] {
+        self.state[self.next / 8] ^= 1 << (8 * (self.next % 8));
+        self.state[RATE - 1] ^= 1 << 63;
+        f1600(&mut self.state);
+        self.state[..4].try_into().unwrap()
+    }
+    pub fn finalize(self) -> [u8; 32] {
+        let words = self.finalize_words();
+        core::array::from_fn(|i| (words[i / 8] >> (8 * (i % 8))) as u8)
+    }
+    pub fn hash(data: &[u8]) -> [u8; 32] {
+        let mut h = Self::new();
+        h.update(data);
+        h.finalize()
+    }
 }

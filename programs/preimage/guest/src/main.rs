@@ -4,12 +4,12 @@
 #![no_std]
 #![no_main]
 
-use leanvm_guest::{Blake2s, commit, read, read_slice};
+use leanvm_guest::{Keccak256, commit, read, read_slice};
 
 #[unsafe(no_mangle)]
 extern "C" fn main() {
     let length = *read::<u64>() as usize;
-    let mut hasher = Blake2s::new();
+    let mut hasher = Keccak256::new();
     for (i, word) in read_slice::<u64>(length.div_ceil(8)).iter().enumerate() {
         let n = length.saturating_sub(8 * i).min(8);
         hasher.update(&word.to_le_bytes()[..n]);

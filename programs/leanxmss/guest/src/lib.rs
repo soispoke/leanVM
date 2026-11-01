@@ -20,7 +20,7 @@
 //! [XMSS specification]: https://github.com/leanEthereum/leanVM/releases/download/doc-latest/XMSS.pdf
 #![no_std]
 use core::ops::Range;
-use leanvm_guest::{Blake2s, Template, hash_with};
+use leanvm_guest::{Keccak256, Template, hash_with};
 use thiserror::Error;
 
 mod sign;

@@ -5,7 +5,7 @@
 //! Everything else comes back from the program's entry at the row's index.
 
 use crate::rv::machine::{MemoryAccess, Step};
-use crate::rv::{BlockAccess, Class, Ext, Hash, Limb, Machine, RegisterFile, RiscvProgram, WordAccess};
+use crate::rv::{Class, Ext, Limb, Machine, RegisterFile, RiscvProgram, WordAccess};
 use crate::tables::{Clock, PerTable, TableId};
 use primitives::field::F64;
 
@@ -95,7 +95,7 @@ pub(super) struct TraceBuilder {
     /// Each table's rows.
     rows: PerTable<Vec<Row>>,
     /// The hash table's payloads, one per row.
-    hash: Vec<HashRow>,
+    keccak: Vec<KeccakRow>,
     /// The extension-field table's payloads, one per row.
     ext: Vec<ExtRow>,
     /// Each table's access slots, which a padding row's accesses pull as their previous timestamps.
@@ -122,7 +122,7 @@ impl TraceBuilder {
             regs: LastAccess::new(RegisterFile::CELLS),
             ram: LastAccess::new((1 << p.log_ram()) + (1 << p.log_advice())),
             rows: PerTable::default(),
-            hash: Vec::new(),
+            keccak: Vec::new(),
             ext: Vec::new(),
             padding_prev: PerTable::from_fn(|t: TableId| t.spec().slots().into_iter().map(u64::from).collect()),
             adv_init: advice.iter().map(|&w| F64(w)).collect(),
@@ -160,14 +160,15 @@ impl TraceBuilder {
                 word = access;
             }
             // A hash row's block, word `k` at `v1 ^ 8k`.
-            MemoryAccess::Block(h) => {
-                let mut all = [0; 2 + Hash::WORDS];
+            MemoryAccess::Permutation(h) => {
+                let mut all = [0; 51];
                 all[..n].copy_from_slice(&prev[..n]);
-                for k in 0..Hash::WORDS {
-                    let cell = cell_of(step.v1 ^ (8 * k as u64));
-                    all[n + k] = self.ram.access(cell, ts | u64::from(Clock::block_slot(k)));
+                for k in 0..50 {
+                    all[n + k] = self
+                        .ram
+                        .access(cell_of(step.v1 ^ (8 * k as u64)), ts | u64::from(Clock::block_slot(k)));
                 }
-                self.hash.push(HashRow {
+                self.keccak.push(KeccakRow {
                     block: h.block,
                     out: h.out,
                     prev: all,
@@ -222,21 +223,14 @@ impl TraceBuilder {
         let mut prev = [0; 4];
         match e.class {
             // A hash row compresses a zero block, and rewrites the result it finds there.
-            Class::Hash => {
-                let block = [0; Hash::WORDS];
-                let mut h = BlockAccess::from(Hash {
-                    flags: e.flags,
-                    t: 0,
-                    block,
-                });
-                h.block[Hash::OUT as usize / 8..][..4].copy_from_slice(&h.out);
-                let mut all = [0; 2 + Hash::WORDS];
+            Class::Keccak => {
+                let mut block = [0; 50];
+                let mut out = [0; 25];
+                primitives::keccak::keccak_f(&mut out);
+                block[25..].copy_from_slice(&out);
+                let mut all = [0; 51];
                 all.copy_from_slice(slots);
-                self.hash.push(HashRow {
-                    block: h.block,
-                    out: h.out,
-                    prev: all,
-                });
+                self.keccak.push(KeccakRow { block, out, prev: all });
             }
             // An extension-field row multiplies zeros at address zero, and writes zero over zero.
             Class::Ext => {
@@ -275,7 +269,7 @@ impl TraceBuilder {
         let (ram_ts, adv_ts) = ram_last.split_at(1 << p.log_ram());
         Trace {
             rows: self.rows,
-            hash: self.hash,
+            keccak: self.keccak,
             ext: self.ext,
             reg_fin: m.registers().cells().iter().map(|&r| F64(r)).collect(),
             reg_ts: self.regs.timestamps(),
@@ -289,24 +283,10 @@ impl TraceBuilder {
     }
 }
 
-/// What a hash row adds to a row.
-pub(crate) struct HashRow {
-    /// The block's words as the row found them.
-    pub(crate) block: [u64; Hash::WORDS],
-    /// The four words the compression writes.
-    pub(crate) out: [u64; 4],
-    /// The previous timestamp of every access, the registers' first.
-    pub(crate) prev: [u64; 2 + Hash::WORDS],
-}
-
-impl HashRow {
-    /// Word `k` of the block after the row.
-    pub(crate) const fn word_after(&self, k: usize) -> u64 {
-        match k.wrapping_sub(Hash::OUT as usize / 8) {
-            j if j < 4 => self.out[j],
-            _ => self.block[k],
-        }
-    }
+pub(crate) struct KeccakRow {
+    pub(crate) block: [u64; 50],
+    pub(crate) out: [u64; 25],
+    pub(crate) prev: [u64; 51],
 }
 
 /// What an extension-field row adds to a row.
@@ -349,7 +329,7 @@ pub(crate) enum Payload<'a> {
     /// Nothing: the row of a table with at most one word access.
     None,
     /// A hash row's block, and its accesses.
-    Hash(&'a HashRow),
+    Keccak(&'a KeccakRow),
     /// An extension-field row's limbs, and its accesses.
     Ext(&'a ExtRow),
 }
@@ -376,7 +356,7 @@ impl<'a> RowRef<'a> {
     pub(crate) const fn prev(self) -> &'a [u64] {
         match self.payload {
             Payload::None => &self.row.prev,
-            Payload::Hash(hash) => &hash.prev,
+            Payload::Keccak(h) => &h.prev,
             Payload::Ext(ext) => &ext.prev,
         }
     }
@@ -384,7 +364,7 @@ impl<'a> RowRef<'a> {
     /// Cell `k` before the row: a hash row's block word, or the one cell of a load or a store.
     pub(crate) const fn cell(self, k: usize) -> u64 {
         match self.payload {
-            Payload::Hash(hash) => hash.block[k],
+            Payload::Keccak(h) => h.block[k],
             _ => self.row.ram.old,
         }
     }
@@ -392,7 +372,13 @@ impl<'a> RowRef<'a> {
     /// Cell `k` after the row.
     pub(crate) const fn cell_new(self, k: usize) -> u64 {
         match self.payload {
-            Payload::Hash(hash) => hash.word_after(k),
+            Payload::Keccak(h) => {
+                if k >= 25 {
+                    h.out[k - 25]
+                } else {
+                    h.block[k]
+                }
+            }
             _ => self.row.ram.new,
         }
     }
@@ -404,7 +390,7 @@ pub(crate) enum Payloads<'a> {
     /// The table records none.
     None,
     /// The hash table's.
-    Hash(&'a [HashRow]),
+    Keccak(&'a [KeccakRow]),
     /// The extension-field table's.
     Ext(&'a [ExtRow]),
 }
@@ -423,7 +409,7 @@ impl<'a> TableRows<'a> {
     pub(crate) const fn row(self, i: usize) -> RowRef<'a> {
         let payload = match self.payloads {
             Payloads::None => Payload::None,
-            Payloads::Hash(hash) => Payload::Hash(&hash[i]),
+            Payloads::Keccak(h) => Payload::Keccak(&h[i]),
             Payloads::Ext(ext) => Payload::Ext(&ext[i]),
         };
         RowRef {
@@ -438,7 +424,7 @@ pub(crate) struct Trace {
     /// Each table's rows, in table order.
     pub(crate) rows: PerTable<Vec<Row>>,
     /// The hash table's payloads, row `i`'s at `i`.
-    pub(crate) hash: Vec<HashRow>,
+    pub(crate) keccak: Vec<KeccakRow>,
     /// The extension-field table's payloads, row `i`'s at `i`.
     pub(crate) ext: Vec<ExtRow>,
     /// The registers after the run.
@@ -471,7 +457,7 @@ impl Trace {
     /// Table `t`'s rows, with the payloads they record.
     pub(crate) fn table(&self, t: TableId) -> TableRows<'_> {
         let payloads = match t.class() {
-            Class::Hash => Payloads::Hash(&self.hash),
+            Class::Keccak => Payloads::Keccak(&self.keccak),
             Class::Ext => Payloads::Ext(&self.ext),
             _ => Payloads::None,
         };

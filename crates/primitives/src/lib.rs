@@ -4,7 +4,9 @@
 pub mod bit_fold;
 pub mod bits;
 pub mod field;
-pub mod hash;
+pub mod protocol_hash;
+pub use protocol_hash as hash;
+pub mod keccak;
 pub mod multilinear;
 pub mod stream;
 

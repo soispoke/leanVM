@@ -1,17 +1,12 @@
 //! What a guest reads and what it proves: `read` takes values from the advice, in place,
 //! and `commit` makes values public. There are no system calls: the advice is memory the
 //! prover fills before the run, at the addresses `link.ld` fixes, and the run's output is
-//! the BLAKE2s digest of everything committed, in order, which the verifier recomputes from
+//! the Keccak-256 digest of everything committed, in order, which the verifier recomputes from
 //! the public values.
 
-use crate::Blake2s;
-#[cfg(any(test, all(target_arch = "riscv64", target_os = "none")))]
-use crate::blake2s::{Block, IV};
+use crate::keccak::Keccak256;
 #[cfg(not(all(target_arch = "riscv64", target_os = "none")))]
 use alloc::vec::Vec;
-#[cfg(any(test, all(target_arch = "riscv64", target_os = "none")))]
-use core::mem::MaybeUninit;
-
 #[cfg(all(target_arch = "riscv64", target_os = "none"))]
 pub use vm::{commit, read, read_slice, read_unchecked};
 
@@ -49,11 +44,11 @@ const fn assert_words<T>() {
     );
 }
 
-/// The public values a run commits, and the output they make: their BLAKE2s digest.
+/// The public values a run commits, and the output they make: their Keccak-256 digest.
 ///
 /// On the VM, `commit` feeds the run's own; off it, this is how a host computes the output
 /// a guest must give.
-pub struct PublicValues(Blake2s);
+pub struct PublicValues(Keccak256);
 
 impl Default for PublicValues {
     fn default() -> Self {
@@ -63,7 +58,7 @@ impl Default for PublicValues {
 
 impl PublicValues {
     pub const fn new() -> Self {
-        Self(Blake2s::new())
+        Self(Keccak256::new())
     }
 
     /// Commit a value.
@@ -92,93 +87,23 @@ pub struct Run {
     pub expected: [u64; 4],
 }
 
-/// The committed words' BLAKE2s, in progress, as `commit` keeps it: the block the instruction reads, where the next
-/// committed word goes in its message, and the bytes compressed before the message.
-///
-/// A word is one store and a pointer bump, and a full block is compressed where it is, only once a word is known to
-/// follow it: the last block is the one compressed as last. `next` points into the value itself, so a `Public` never
-/// moves, and it is reached only through a raw pointer, which `next` derives from: a reference to it, or to its block,
-/// held across a use of `next` would be invalidated by it, so a reference to the block lives only inside a compression.
+/// Streaming protocol commitment state, shared by VM and native checks.
 #[cfg(any(test, all(target_arch = "riscv64", target_os = "none")))]
-struct Public {
-    block: Block,
-    next: *mut u64,
-    done: u64,
-}
-
+struct Public(Keccak256);
 #[cfg(any(test, all(target_arch = "riscv64", target_os = "none")))]
 impl Public {
-    /// Nothing committed, the next word going to `next`, which must be the new value's first message word.
-    const fn new(next: *mut u64) -> Self {
-        Self {
-            block: Block {
-                h: IV,
-                out: MaybeUninit::uninit(),
-                m: [0; 8],
-            },
-            next,
-            done: 0,
-        }
+    const fn new() -> Self {
+        Self(Keccak256::new())
     }
-
-    /// Commit `words`.
-    ///
-    /// # Safety
-    ///
-    /// `this` points to a `Public` made by [`Self::new`] with its first message word, `next` derived from `this`,
-    /// and nothing else reaches it.
-    #[inline(always)]
     unsafe fn commit(this: *mut Self, words: &[u64]) {
-        // SAFETY: the caller's; `next` is a word of the message, at most its end, and is written only below it.
+        // SAFETY: caller exclusively owns this state.
         unsafe {
-            let start = (&raw mut (*this).block.m).cast::<u64>();
-            let end = start.add(8);
-            let mut next = (*this).next;
-            for &word in words {
-                if next == end {
-                    Self::absorb(this);
-                    next = start;
-                }
-                next.write(word);
-                next = next.add(1);
-            }
-            (*this).next = next;
+            (*this).0.update_words(words);
         }
     }
-
-    /// Compress the full message, which more words follow: the compression becomes the chaining value.
-    ///
-    /// # Safety
-    ///
-    /// As [`Self::commit`].
-    #[inline(always)]
-    unsafe fn absorb(this: *mut Self) {
-        // SAFETY: the caller's; the reference to the block ends before `next` is used again.
-        unsafe {
-            (*this).done += 64;
-            let done = (*this).done;
-            let block = &mut (*this).block;
-            block.h = block.compress(done, false);
-        }
-    }
-
-    /// The digest: the last block zero-padded, the counter every byte committed.
-    ///
-    /// # Safety
-    ///
-    /// As [`Self::commit`].
     unsafe fn finish(this: *mut Self) -> [u64; 4] {
-        // SAFETY: the caller's; `next` is in the message or at its end, and the reference to the block is the last
-        // use of the value.
-        unsafe {
-            let filled = (*this)
-                .next
-                .offset_from_unsigned((&raw const (*this).block.m).cast::<u64>());
-            let t = (*this).done + 8 * filled as u64;
-            let block = &mut (*this).block;
-            block.m[filled..].fill(0);
-            block.compress(t, true)
-        }
+        // SAFETY: caller exclusively owns the state and finishes only once.
+        unsafe { core::ptr::read(this).0.finalize_words() }
     }
 }
 
@@ -190,7 +115,7 @@ pub(crate) mod vm {
     pub(crate) static mut OUTPUT: [u64; 4] = [0; 4];
     /// What the run has committed so far, streamed through the instruction's own block.
     // SAFETY: only the address of the static's message is taken, nothing is read.
-    static mut PUBLIC: Public = Public::new(unsafe { (&raw mut PUBLIC.block.m).cast() });
+    static mut PUBLIC: Public = Public::new();
     /// The advice words read so far.
     static mut READ: usize = 0;
 
@@ -309,12 +234,10 @@ mod tests {
 
     /// The digest `commit` gives for `words` committed `n` at a time: a `Public` as the VM's, made in place.
     fn committed(words: &[u64], n: usize) -> [u64; 4] {
-        let mut public = MaybeUninit::<Public>::uninit();
-        let this = public.as_mut_ptr();
-        // SAFETY: the value is made with its own first message word, `next` derived from `this`, and is reached only
-        // through `this`.
+        let mut public = Public::new();
+        let this = &raw mut public;
+        // SAFETY: this local state is exclusively owned and finalized once.
         unsafe {
-            this.write(Public::new((&raw mut (*this).block.m).cast()));
             for piece in words.chunks(n) {
                 Public::commit(this, piece);
             }

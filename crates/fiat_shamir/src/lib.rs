@@ -1,4 +1,7 @@
-//! Fiat-Shamir state, proof transport, and the verifier's arithmetic over them. The state is a domain-separated chain of BLAKE2s compressions, each one VM hash opcode: the seed from the parameter IV, then every step keyed by the state.
+//! Fiat–Shamir using Keccak-256 (Ethereum suffix 0x01, 136-byte rate).
+//! Seed and grinding checks hash a domain word plus 64-byte preimages. Each ratchet hashes the prior
+//! domain word, 32-byte state and 64-byte tagged step block. Scalar count and role
+//! tags remain bound. Grinding and all security/query parameters are unchanged.
 
 pub mod arith;
 pub mod merkle;
@@ -6,17 +9,14 @@ pub mod transcript;
 
 use primitives::field::{F64, F192};
 
-/// `f(a, b) = BLAKE2s(a‖b)` on two 256-bit halves laid out little-endian into
-/// 64 bytes, *exactly* the VM's `Blake2s` opcode from the parameter IV: 64 input bytes → 32-byte
-/// digest, split back into four field words. It seeds the chain and checks a proof of work;
-/// every later step is [`step`], keyed by the state.
-///
-/// A 64-byte input is one compression, so this is `compress(PARAM_IV, m,
-/// t = 64, last = true)` and nothing about the byte-level padding rules can
-/// leak into the in-circuit version.
+/// Domain-separated Keccak-256 of the 64-byte seed or grinding preimage.
+pub const DS_HASH: u64 = u64::from_le_bytes(*b"LVFSH001");
+/// Domain separator for transcript ratchets (distinct from Merkle leaf/node lengths).
+pub const DS_STEP: u64 = u64::from_le_bytes(*b"LVFSS001");
 pub fn compress(a: [F64; 4], b: [F64; 4]) -> [F64; 4] {
-    let mut input = [0u8; 64];
-    for (slot, w) in input.as_chunks_mut::<8>().0.iter_mut().zip(a.into_iter().chain(b)) {
+    let mut input = [0u8; 72];
+    input[..8].copy_from_slice(&DS_HASH.to_le_bytes());
+    for (slot, w) in input[8..].as_chunks_mut::<8>().0.iter_mut().zip(a.into_iter().chain(b)) {
         *slot = w.0.to_le_bytes();
     }
     digest_words(&primitives::hash::hash(&input))
@@ -88,14 +88,20 @@ pub fn step_block(scalars: &[F192], tag: F64) -> [F64; 8] {
     ]
 }
 
-/// A transcript step: the BLAKE2s compression of `block` into the chaining value `h`, at byte counter 64 and final, one VM hash opcode.
+/// Keccak-256(LVFSS001 || state32 || step_block64), one Keccak-f[1600] permutation.
 pub fn step(h: [F64; 4], scalars: &[F192], tag: F64) -> [F64; 4] {
-    let halves = |w: [F64; 4]| -> [u32; 8] { std::array::from_fn(|i| (w[i / 2].0 >> (32 * (i % 2))) as u32) };
-    let mut state = halves(h);
     let block = step_block(scalars, tag);
-    let m: [u32; 16] = std::array::from_fn(|i| (block[i / 2].0 >> (32 * (i % 2))) as u32);
-    primitives::hash::compress(&mut state, &m, 64, true);
-    std::array::from_fn(|i| F64(u64::from(state[2 * i]) | u64::from(state[2 * i + 1]) << 32))
+    let mut input = [0u8; 104];
+    input[..8].copy_from_slice(&DS_STEP.to_le_bytes());
+    for (dst, word) in input[8..]
+        .as_chunks_mut::<8>()
+        .0
+        .iter_mut()
+        .zip(h.into_iter().chain(block))
+    {
+        *dst = word.0.to_le_bytes();
+    }
+    digest_words(&primitives::hash::hash(&input))
 }
 
 /// The shared Fiat-Shamir state (see the module docs). Protocol functions take
@@ -105,7 +111,7 @@ pub fn step(h: [F64; 4], scalars: &[F192], tag: F64) -> [F64; 4] {
 /// An absorbed scalar waits for the next step, which takes up to [`MAX_PENDING`] of them: a squeeze absorbs the waiting scalars in its own step, and a third scalar first absorbs the two before it.
 #[derive(Clone)]
 pub struct FiatShamirState {
-    /// The 256-bit chaining value: a Merkle-Damgård hash of the transcript's steps so far.
+    /// The 256-bit digest state binding all prior domain-separated transcript steps.
     cv: [F64; 4],
     /// The scalars absorbed since the last step, the first `n_pending`.
     pending: [F192; MAX_PENDING],
@@ -123,7 +129,7 @@ impl FiatShamirState {
 
     /// Seed from two 256-bit digests: `iv` names everything fixed about the
     /// proving environment (the domain, the circuit, the program) and IS the
-    /// starting chaining value, and `public_input` is the one block absorbed
+    /// first digest input, and `public_input` is the second digest input hashed
     /// before any challenge. So a transcript opens on a single compression, and
     /// the whole statement is bound before anything is sampled; there is no
     /// mid-protocol "observe public data" step to get wrong (or forget).
@@ -131,7 +137,7 @@ impl FiatShamirState {
         Self::at(compress(iv, public_input))
     }
 
-    /// Seed a protocol that has no public input of its own: `BLAKE2s(label)` is
+    /// Seed a protocol that has no public input of its own: `Keccak-256(label)` is
     /// the chaining value, which is all a domain separator has to be.
     pub fn from_label(label: &[u8]) -> Self {
         Self::at(digest_words(&primitives::hash::hash(label)))
@@ -214,20 +220,21 @@ impl FiatShamirState {
             }
         } else {
             const BATCH: usize = 2 * primitives::hash::LANES;
-            let mut template = [[0u8; 64]; BATCH];
+            let mut template = [[0u8; 72]; BATCH];
             for input in &mut template {
-                for (slot, word) in input[..32].as_chunks_mut::<8>().0.iter_mut().zip(base) {
+                input[..8].copy_from_slice(&DS_HASH.to_le_bytes());
+                for (slot, word) in input[8..40].as_chunks_mut::<8>().0.iter_mut().zip(base) {
                     *slot = word.0.to_le_bytes();
                 }
-                input[56..].copy_from_slice(&DS_POW_NONCE.0.to_le_bytes());
+                input[64..].copy_from_slice(&DS_POW_NONCE.0.to_le_bytes());
             }
             let batch = |first: u64| {
                 let mut inputs = template;
                 for (i, input) in inputs.iter_mut().enumerate() {
-                    input[32..40].copy_from_slice(&(first + i as u64).to_le_bytes());
+                    input[40..48].copy_from_slice(&(first + i as u64).to_le_bytes());
                 }
                 let mut digests = [[0u8; 32]; BATCH];
-                primitives::hash::hash_many::<64>(inputs.as_flattened(), digests.as_flattened_mut());
+                primitives::hash::hash_many::<72>(inputs.as_flattened(), digests.as_flattened_mut());
                 digests
                     .iter()
                     .position(|d| u64::from_le_bytes(d[..8].try_into().unwrap()) & ((1u64 << bits) - 1) == 0)

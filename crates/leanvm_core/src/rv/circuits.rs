@@ -3,8 +3,6 @@
 //! Port layout and product order define the circuit.
 //! Only products are committed; XOR, NOT and copying are free.
 
-pub use super::semantics::blake2s_witness;
-
 use flock::circuit::{Builder, Circuit, Wire};
 
 /// A class's circuit: its function as a gate list over the words its table puts on the bus.
@@ -282,14 +280,14 @@ mod tests {
         Class::Mul,
         Class::Mulh,
         Class::Div,
-        Class::Hash,
+        Class::Keccak,
     ];
 
     #[test]
     fn instance_sizes_are_pinned() {
         // The log of each instance's bits, which the tables fix before any circuit is built.
         let sizes = CLASSES.map(|class| class.circuit().k_log());
-        assert_eq!(sizes, [10, 10, 10, 10, 8, 8, 12, 13, 13, 14]);
+        assert_eq!(sizes, [10, 10, 10, 10, 8, 8, 12, 13, 13, 16]);
     }
 
     #[test]

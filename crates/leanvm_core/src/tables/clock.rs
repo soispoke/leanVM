@@ -23,7 +23,7 @@ impl Clock {
     pub const CLOCK_BITS: usize = Self::LIVE_BIT as usize + 1;
 
     /// The low bits of a timestamp, which number a row's access slots.
-    pub const SLOT_BITS: u32 = 5;
+    pub const SLOT_BITS: u32 = 6;
 
     /// One cycle of the clock.
     pub const CYCLE: u64 = 1 << Self::SLOT_BITS;
@@ -66,7 +66,7 @@ impl Clock {
     ///
     /// # Panics
     ///
-    /// Panics if an access slot does not fit in five bits.
+    /// Panics if an access slot does not fit in six bits.
     pub fn circuit(slots: &[u32]) -> Circuit {
         Self::builder(slots, &[], &[]).finish()
     }
@@ -76,7 +76,7 @@ impl Clock {
     ///
     /// # Panics
     ///
-    /// Panics if an access slot does not fit in five bits.
+    /// Panics if an access slot does not fit in six bits.
     pub fn builder(slots: &[u32], inputs: &[usize], outputs: &[usize]) -> Builder {
         // Invariant: the clock's slot bits are structural zeros.
         // So the timestamp an access is ordered at, its slot ORed in, is the one its tuple carries, its slot XORed in.
@@ -209,7 +209,7 @@ impl Clock {
         let mut products = Products::new([z, az, bz], step_word + 1 + extra[1]);
         products.push(1, 1, 1);
 
-        let (mut in_order, mut disagree) = (0u32, 0);
+        let (mut in_order, mut disagree) = (0u64, 0);
         for (i, (&prev, &slot)) in prev.iter().zip(slots).enumerate() {
             let prev = prev & READ;
             let x = ts & LOW | u64::from(slot);
@@ -222,7 +222,7 @@ impl Clock {
             }
             let cycles = |w: u64| w >> Self::SLOT_BITS & run(CYCLES);
             products.push(cycles(x ^ c), cycles(y ^ c), CYCLES);
-            in_order |= ((c >> Self::LIVE_BIT) as u32) << i;
+            in_order |= (c >> Self::LIVE_BIT) << i;
 
             let differs = prev >> Self::LIVE_BIT ^ live;
             if i > 0 {
@@ -230,9 +230,9 @@ impl Clock {
             }
             disagree |= differs;
         }
-        let mut ordered = u64::from(in_order & 1);
+        let mut ordered = in_order & 1;
         for i in 1..n {
-            let next = u64::from(in_order >> i & 1);
+            let next = in_order >> i & 1;
             products.push(ordered, next, 1);
             ordered &= next;
         }

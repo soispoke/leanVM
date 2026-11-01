@@ -22,6 +22,7 @@
 pub mod circuit;
 mod error;
 pub mod gadgets;
+pub mod keccak;
 pub mod lincheck;
 pub mod reduction;
 mod witness;

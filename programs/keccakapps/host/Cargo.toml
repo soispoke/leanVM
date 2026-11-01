@@ -1,0 +1,19 @@
+[package]
+name = "keccakapps-host"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+publish = false
+[lints]
+workspace = true
+[dependencies]
+keccakapps = { path = "../guest" }
+leanvm_guest.workspace = true
+leanvm.workspace = true
+primitives.workspace = true
+sha3 = "0.11"
+serde_json = "1"
+bench.workspace = true
+falcon-host.workspace = true
+stateproof-host.workspace = true

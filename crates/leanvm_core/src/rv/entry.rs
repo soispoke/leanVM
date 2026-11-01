@@ -10,7 +10,7 @@ use super::circuits::ClassCircuit;
 use super::instruction::{ExtOp, ImmOp, Instruction, LoadOp, Op, RegOp, ShiftOp, StoreOp};
 use super::register::{Reg, RegisterFile};
 use super::semantics::{
-    Alu, Div, Ext, Hash, InstructionClass, Ld, Load, Mul, Mulh, Outcome, Sd, Shift, Store, WordAccess,
+    Alu, Div, Ext, InstructionClass, Keccak, Ld, Load, Mul, Mulh, Outcome, Sd, Shift, Store, WordAccess,
 };
 use flock::circuit::Circuit;
 
@@ -37,8 +37,8 @@ pub enum Class {
     Mulh,
     /// Quotients and remainders.
     Div,
-    /// The BLAKE2s compression, a custom instruction.
-    Hash,
+    /// The full Keccak-f[1600] permutation.
+    Keccak,
     /// The multiplication in the extension field, by an element of it or of the base field: a custom instruction.
     Ext,
     /// No table runs it, so reaching one is a trap.
@@ -62,7 +62,7 @@ impl Class {
             Self::Mul => Mul::LEGAL,
             Self::Mulh => Mulh::LEGAL,
             Self::Div => Div::LEGAL,
-            Self::Hash => Hash::LEGAL,
+            Self::Keccak => Keccak::LEGAL,
             Self::Ext => Ext::LEGAL,
             Self::Illegal => &[],
         }
@@ -132,7 +132,7 @@ impl Class {
                 rs1,
                 rs2,
             },
-            Self::Hash => Op::Blake2s { rs1, rs2, last: false },
+            Self::Keccak => Op::Keccak { rs1 },
             Self::Ext => Op::Ext {
                 op: ExtOp::Extmul,
                 rd: Reg::RA,
@@ -160,7 +160,7 @@ impl Class {
             Self::Mul => Mul::circuit(),
             Self::Mulh => Mulh::circuit(),
             Self::Div => Div::circuit(),
-            Self::Hash => Hash::circuit(),
+            Self::Keccak => Keccak::circuit(),
             Self::Ext => panic!("the extension-field product has no circuit"),
             Self::Illegal => panic!("the illegal class has no circuit"),
         }
@@ -304,7 +304,7 @@ impl Entry {
                 };
                 (0, false, Some(access))
             }
-            Class::Hash | Class::Ext | Class::Illegal => (0, false, None),
+            Class::Keccak | Class::Ext | Class::Illegal => (0, false, None),
         };
         Outcome { out, taken, access }
     }
@@ -336,7 +336,7 @@ impl Entry {
             Op::Shift { rd, rs1, amount, .. } => entry(rs1, zero, rd, amount as u64),
             Op::Load { rd, rs1, offset, .. } => entry(rs1, zero, rd, offset as i64 as u64),
             Op::Store { rs1, rs2, offset, .. } => entry(rs1, rs2, zero, offset as i64 as u64),
-            Op::Blake2s { rs1, rs2, .. } => entry(rs1, rs2, zero, 0),
+            Op::Keccak { rs1 } => entry(rs1, zero, zero, 0),
             Op::Fence => entry(zero, zero, zero, 0),
             Op::Ecall => Self::EXIT,
 
@@ -447,7 +447,7 @@ impl Entry {
         match self.class {
             Class::Load | Class::Ld => self.a2 == 0,
             Class::Store | Class::Sd => self.ad == RegisterFile::SINK,
-            Class::Hash => self.ad == RegisterFile::SINK && self.imm == 0,
+            Class::Keccak => self.ad == RegisterFile::SINK && self.a2 == 0 && self.imm == 0,
             Class::Ext => self.ad < RegisterFile::SINK && self.imm == 0,
             _ => true,
         }
@@ -595,8 +595,6 @@ mod tests {
                 Op::Jalr { rd, rs1, offset: 0 },
                 Op::Fence,
                 Op::Ecall,
-                Op::Blake2s { rs1, rs2, last: false },
-                Op::Blake2s { rs1, rs2, last: true },
             ])
             .collect();
 
@@ -622,7 +620,6 @@ mod tests {
             Class::Mul,
             Class::Mulh,
             Class::Div,
-            Class::Hash,
             Class::Ext,
         ] {
             let used: HashSet<u64> = ops
@@ -672,7 +669,6 @@ mod tests {
             Class::Mul,
             Class::Mulh,
             Class::Div,
-            Class::Hash,
         ];
         assert_eq!(Class::Illegal.nop(), None);
 

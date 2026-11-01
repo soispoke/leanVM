@@ -33,6 +33,8 @@ const DOMAIN: &[u8] = b"leanvm-tree-6";
 pub(crate) struct Design<'p> {
     /// The leaves' shape: the program, its tables' heights, its rate.
     pub(crate) leaf: ProofShape<'p>,
+    /// Optional second program, fixed to slot one in a heterogeneous first level.
+    pub(crate) second: Option<ProofShape<'p>>,
     /// The leaves a first-level node verifies.
     pub(crate) arity_0: usize,
     /// The children a node verifies.
@@ -150,6 +152,7 @@ impl<'p> Design<'p> {
         let statement = StatementLayout::new(vars.0.into_iter().max().unwrap_or(0));
         let mut design = Self {
             leaf,
+            second: None,
             arity_0,
             arity,
             rate,
@@ -162,6 +165,30 @@ impl<'p> Design<'p> {
         };
         design.iv = design.seed();
         Ok(design)
+    }
+
+    /// Add the second program as another half of each public program polynomial.
+    pub(crate) fn with_second(mut self, second: ProofShape<'p>) -> Self {
+        assert_eq!(self.arity_0, 2, "the mixed prototype has two fixed program slots");
+        let rv = second.program().rv();
+        self.vars.0[DensePoly::Bytecode as usize] = self.vars.0[DensePoly::Bytecode as usize]
+            .max(crate::log2_strict_usize(rv.entries().len()) + N_TUPLE_BITS)
+            + 1;
+        self.vars.0[DensePoly::Image as usize] =
+            self.vars.0[DensePoly::Image as usize].max(crate::log2_ceil_usize(rv.image().len().max(1))) + 1;
+        self.statement = StatementLayout::new(self.vars.0.into_iter().max().unwrap_or(0));
+        self.second = Some(second);
+        self.iv = self.seed();
+        self
+    }
+
+    /// The fixed verifier for this child slot.
+    pub(crate) fn leaf_at(&self, index: usize) -> &ProofShape<'p> {
+        if index == 1 {
+            self.second.as_ref().unwrap_or(&self.leaf)
+        } else {
+            &self.leaf
+        }
     }
 
     /// The transcript's seed: everything that fixes the circuits.
@@ -179,6 +206,14 @@ impl<'p> Design<'p> {
             h.update(&(x as u64).to_le_bytes());
         }
         h.update(&[self.leaf.rate().log_inv_rate(), self.rate.log_inv_rate()]);
+        if let Some(second) = &self.second {
+            h.update(b"mixed-fixed-pair-v1");
+            h.update(second.program().digest());
+            for &tau in second.taus().values() {
+                h.update(&(tau as u64).to_le_bytes());
+            }
+            h.update(&[second.rate().log_inv_rate()]);
+        }
         fiat_shamir::digest_words(&h.finalize())
     }
 
@@ -191,13 +226,18 @@ impl<'p> Design<'p> {
             let leaf = inputs.item(i);
             let output = leaf.map_or([0; 4], |l| l.output).map(|o| b.free_k(o));
             let source = leaf.map_or(ProofSource::Shape, |l| ProofSource::Proof(&l.raw));
-            let core = b.scope(format!("leaf {i}"), |b| self.leaf.verify_core(b, output, source));
+            let shape = self.leaf_at(i);
+            let core = b.scope(format!("leaf {i}"), |b| shape.verify_core(b, output, source));
             claims.bind_state(&mut b, core.state);
             b.scope(format!("leaf {i} program"), |b| {
-                self.program_claims(b, &core.claims.program, inputs, &mut claims);
+                self.program_claims(b, i, &core.claims.program, inputs, &mut claims);
             });
             let fresh = FlockId::ALL.into_iter().zip(&core.claims.circuits);
             claims.matrices.extend(fresh.map(|(f, c)| MatrixClaim::fresh(f, c)));
+            if self.second.is_some() {
+                let digest = crate::rec::circuit::digest_limbs(shape.program().digest());
+                outputs.push(digest.map(|w| b.k_const(w)));
+            }
             outputs.push(output);
         }
         let digest = Kind::First.digest_rows(&mut b, &outputs);
@@ -274,25 +314,35 @@ impl<'p> Design<'p> {
     fn program_claims(
         &self,
         b: &mut Builder,
+        index: usize,
         program: &Claim<ProgramPoint<Ew>, Ew>,
         inputs: &NodeInputs<'_, LeafWitness>,
         claims: &mut NodeClaims<Ew>,
     ) {
         let p = &program.point;
-        let kbc = self.vars.0[DensePoly::Bytecode as usize] - N_TUPLE_BITS;
+        let rv = self.leaf_at(index).program().rv();
+        let kbc = crate::log2_strict_usize(rv.entries().len());
         let (chi, alpha) = p.bytecode.split_at(kbc);
         let ladders: Vec<Vec<Ew>> = chi.iter().map(|&x| inverse_frobenius_ladder(b, x, 1)).collect();
         let mut total = b.zero();
         for (i, &mu) in p.twist.iter().enumerate() {
-            let point: Vec<Ew> = ladders.iter().map(|l| l[i]).chain(alpha.iter().copied()).collect();
+            let mut point: Vec<Ew> = ladders.iter().map(|l| l[i]).chain(alpha.iter().copied()).collect();
+            if self.second.is_some() {
+                point.resize(self.vars.0[DensePoly::Bytecode as usize] - 1, b.zero());
+                point.push(b.e_const(F192::new(index as u64, 0, 0)));
+            }
             let d = inputs.hint(b, DensePoly::Bytecode, &point);
             let twisted = (0..i).fold(d, |x, _| b.square(x));
             total = b.mul_add(mu, twisted, total);
             claims.bound.push(d);
             claims.dense.push(DenseClaim::at(DensePoly::Bytecode, point, None, d));
         }
-        let m = self.vars.0[DensePoly::Image as usize];
-        let low = p.image_point[..m].to_vec();
+        let m = crate::log2_ceil_usize(rv.image().len().max(1));
+        let mut low = p.image_point[..m].to_vec();
+        if self.second.is_some() {
+            low.resize(self.vars.0[DensePoly::Image as usize] - 1, b.zero());
+            low.push(b.e_const(F192::new(index as u64, 0, 0)));
+        }
         let image = inputs.hint(b, DensePoly::Image, &low);
         let above = (p.image_point[m..].iter()).fold(p.image_weight, |acc, &x| b.times_one_plus(acc, x));
         total = b.mul_add(above, image, total);

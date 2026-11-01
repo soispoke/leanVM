@@ -1,6 +1,6 @@
 //! A Fiat-Shamir transcript replayed in rows: every absorb and squeeze is a hash row on the wires it binds.
 
-use super::circuit::{Builder, Dw, Ew, Kw, Limbs, digest_limbs, zero_prefix};
+use super::circuit::{Builder, Dw, Ew, Kw, Limbs, digest_limbs};
 use fiat_shamir::transcript::RawProof;
 use fiat_shamir::{DS_OBSERVE, DS_POW_BASE, DS_POW_NONCE, DS_SQUEEZE, MAX_GRINDING_BITS, MAX_PENDING};
 use primitives::field::F192;
@@ -205,21 +205,15 @@ impl<'a> Transcript<'a> {
         );
         let opening = self.next_opening(leaf_words, bits.len());
         let prefix = leaf_words - row_words;
-        let zero_blocks = prefix / 8;
-        let mut h = b.d_const(zero_prefix(zero_blocks));
         let zero = b.k_const(0);
-        let words: Vec<Kw> = (zero_blocks * 8..leaf_words)
+        let words: Vec<Kw> = (0..leaf_words)
             .map(|i| if i < prefix { zero } else { b.free_k(opening.image[i]) })
             .collect();
-        let n_blocks = leaf_words / 8;
-        for (j, m) in words.as_chunks::<8>().0.iter().enumerate() {
-            let index = zero_blocks + j;
-            h = b.leaf_block(h, *m, 64 * (index as u64 + 1), index + 1 == n_blocks);
-        }
+        let mut h = b.chain(&words);
         for (&bit, sibling) in bits.iter().zip(&opening.path) {
             h = b.node(h, bit, *sibling);
         }
-        (h, words[prefix - zero_blocks * 8..].to_vec())
+        (h, words[prefix..].to_vec())
     }
 }
 

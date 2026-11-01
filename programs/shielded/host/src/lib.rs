@@ -15,7 +15,7 @@
 //! - a withdrawal: value leaves the pool to a recipient, one output empty;
 //! - a dummy input: one input of value zero, so the other alone is spent.
 
-use leanvm_guest::{Blake2s, PublicValues, Run, as_words_unchecked};
+use leanvm_guest::{Keccak256, PublicValues, Run, as_words_unchecked};
 use shielded::{Amount, DEPTH, Header, InputNote, OutputNote, Spend};
 use std::collections::BTreeMap;
 
@@ -161,7 +161,7 @@ fn make(i: usize) -> Input {
 
 /// BLAKE2s-256 of a tag byte, then the parts: every hash of the specification.
 fn tagged(tag: u8, parts: &[&[u8]]) -> [u8; 32] {
-    let mut hasher = Blake2s::new();
+    let mut hasher = Keccak256::new();
     hasher.update(&[tag]);
     parts.iter().for_each(|part| {
         hasher.update(part);
