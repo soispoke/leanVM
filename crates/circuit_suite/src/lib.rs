@@ -701,3 +701,5 @@ impl Wire {
         }
     }
 }
+
+pub mod shielded_keccak;
