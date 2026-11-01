@@ -4,9 +4,8 @@
 //! at base XOR 8*k, as with the existing hash block. The SDK aligns to 512 bytes.
 
 use super::InstructionClass;
-use crate::rv::circuits::{ClassCircuit, WordGadgets};
-use flock::circuit::{Builder, Circuit, Wire};
-use primitives::keccak::{PI, RC, RHO};
+use crate::rv::circuits::{ClassCircuit};
+use flock::circuit::Circuit;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct Keccak {
@@ -47,43 +46,7 @@ impl From<Keccak> for PermutationAccess {
 
 impl ClassCircuit for Keccak {
     fn circuit() -> Circuit {
-        let mut c = Builder::new(&[64; Self::LANES], &[64; Self::LANES]);
-        let mut state: [[Wire; 64]; 25] = std::array::from_fn(|i| c.input(i));
-        for rc in RC {
-            let mut parity = [[Wire::ZERO; 64]; 5];
-            for x in 0..5 {
-                for y in 0..5 {
-                    parity[x] = c.xor_word(&parity[x], &state[x + 5 * y]);
-                }
-            }
-            let mut b = [[Wire::ZERO; 64]; 25];
-            for i in 0..25 {
-                let x = i % 5;
-                let rotate = std::array::from_fn(|bit| parity[(x + 1) % 5][(bit + 63) % 64]);
-                let d = c.xor_word(&parity[(x + 4) % 5], &rotate);
-                let theta = c.xor_word(&state[i], &d);
-                b[PI[i]] = std::array::from_fn(|bit| theta[(bit + 64 - RHO[i] as usize) % 64]);
-            }
-            for y in 0..5 {
-                for x in 0..5 {
-                    let j = x + 5 * y;
-                    for bit in 0..64 {
-                        let not_next = c.not(b[(x + 1) % 5 + 5 * y][bit]);
-                        let product = c.and(not_next, b[(x + 2) % 5 + 5 * y][bit]);
-                        state[j][bit] = c.xor(b[j][bit], product);
-                    }
-                }
-            }
-            for (bit, wire) in state[0].iter_mut().enumerate() {
-                if rc >> bit & 1 != 0 {
-                    *wire = c.not(*wire);
-                }
-            }
-        }
-        for (i, lane) in state.iter().enumerate() {
-            c.output_word(i, lane);
-        }
-        c.finish()
+        Circuit::keccak()
     }
 }
 

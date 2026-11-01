@@ -187,6 +187,42 @@ pub fn forward(w: &[F192]) -> (Vec<F192>, Vec<F192>) {
     (a, b)
 }
 
+/// Evaluate the matrix bilinear form while walking only its nonzero rows.
+fn bilinear_walk(alpha: F192, u: impl Fn(usize) -> F192, w: impl Fn(usize) -> F192) -> F192 {
+    let pin = w(PIN);
+    let mut acc = u(PIN) * (pin + alpha * pin);
+    let input: Vec<_> = (INPUT..PRODUCTS).map(&w).collect();
+    for (i, &v) in input.iter().enumerate() {
+        acc += u(INPUT + i) * (v + alpha * pin);
+    }
+    let out = rounds(&input, pin, |slot, a, b| {
+        acc += u(slot) * (a + alpha * b);
+        w(slot)
+    });
+    for (i, v) in out.into_iter().enumerate() {
+        acc += u(OUTPUT + i) * (v + alpha * pin);
+    }
+    acc
+}
+
+/// The VM port layout uses the same row and column permutation.
+pub(crate) fn ported_bilinear(alpha: F192, u: &[F192], w: &[F192]) -> F192 {
+    assert_eq!(u.len(), 1 << K_LOG);
+    assert_eq!(w.len(), 1 << K_LOG);
+    let at = |i: usize| {
+        let word = i / 64;
+        let word = match word {
+            0 => 50,
+            1..26 => word - 1,
+            26..626 => word + 25,
+            626..651 => word - 601,
+            _ => word,
+        };
+        64 * word + i % 64
+    };
+    bilinear_walk(alpha, |i| u[at(i)], |i| w[at(i)])
+}
+
 /// The block's matrices, reached only through [`forward`] and its transpose.
 pub struct KeccakCircuit;
 
@@ -236,12 +272,9 @@ impl LincheckCircuit for KeccakCircuit {
     }
 
     fn bilinear_form(&self, alpha: F192, u: &[F192], w: &[F192]) -> Option<F192> {
-        let (a, b) = forward(w);
-        Some(
-            u.iter()
-                .zip(a.iter().zip(&b))
-                .fold(F192::ZERO, |acc, (&e, (&x, &y))| acc + e * (x + alpha * y)),
-        )
+        assert_eq!(u.len(), 1 << K_LOG);
+        assert_eq!(w.len(), 1 << K_LOG);
+        Some(bilinear_walk(alpha, |i| u[i], |i| w[i]))
     }
 }
 
@@ -298,7 +331,70 @@ impl KeccakCircuit {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::circuit::Circuit;
+    use crate::reduction::{self, Instance};
+    use fiat_shamir::transcript::{ProofTranscript, ProverState, VerifierState};
+    use primitives::multilinear::eq_table;
     use primitives::test_util::Rng;
+
+    #[test]
+    fn ported_reduction_rejects_false_keccak_outputs_without_prechecks() {
+        let circuit = Circuit::keccak();
+        let inputs: Vec<[u64; 25]> = (0..8).map(|i| std::array::from_fn(|j| (i * 25 + j) as u64)).collect();
+        let honest = circuit.witness_by_walk(&inputs, &[0; 25], 3, |row, words| words.copy_from_slice(row));
+        let accepts = |w: &Witness, label: &[u8]| {
+            let block = circuit.block();
+            let mut ps = ProverState::from_label(b"O3-ported-keccak");
+            let claims = reduction::prove(&[Instance::of(block, 3, w)], &mut ps);
+            let proof = ps.into_proof();
+            let mut vs = VerifierState::from_label(label, &proof);
+            reduction::verify(&[(block.shape(), 3)], &mut vs)
+                .is_ok_and(|r| r[0].claim == claims[0] && r[0].matrices.check(&circuit).is_ok())
+                && vs.finish().is_ok()
+        };
+        assert!(accepts(&honest, b"O3-ported-keccak"));
+        assert!(!accepts(&honest, b"O3-wrong-transcript"));
+        for lane in 0..25 {
+            let mut bad = Witness {
+                z: honest.z.clone(),
+                az: honest.az.clone(),
+                bz: honest.bz.clone(),
+            };
+            // Feed a false output directly to the reduction, bypassing the native execution/witness checks.
+            bad.z[25 + lane] ^= 1;
+            assert!(!accepts(&bad, b"O3-ported-keccak"), "false Keccak output lane {lane}");
+        }
+    }
+
+    #[test]
+    fn port_relabeling_preserves_witness_and_linear_maps() {
+        let input = std::array::from_fn(|i| (i as u64 + 1).wrapping_mul(0xdead_beef_1234));
+        let witness = permutation_witness(&input);
+        let circuit = Circuit::keccak();
+        let mut z = vec![0; 1024];
+        let mut a = z.clone();
+        let mut b = z.clone();
+        circuit.witness_instance(&input, &mut z, &mut a, &mut b);
+        assert_eq!(structured(&z), witness.z);
+        assert_eq!(structured(&a), witness.az);
+        assert_eq!(structured(&b), witness.bz);
+        for i in 0..1024 {
+            assert_eq!(a[i] & b[i], z[i]);
+        }
+        let w: Vec<_> = (0..65536).map(|i| F192::new(i as u64 + 7, 0, 0)).collect();
+        let u: Vec<_> = (0..65536).map(|i| F192::new(i as u64 * 17 + 9, 0, 0)).collect();
+        let alpha = F192::new(23, 0, 0);
+        let (a, b) = circuit.row_values(&w);
+        let direct = u
+            .iter()
+            .zip(a.iter().zip(&b))
+            .fold(F192::ZERO, |sum, (&u, (&a, &b))| sum + u * (a + alpha * b));
+        let marginal = circuit.fold_alpha_batched(alpha, &u);
+        let transposed = marginal.iter().zip(&w).fold(F192::ZERO, |sum, (&m, &w)| sum + m * w);
+        assert_eq!(direct, transposed);
+        assert_eq!(Some(direct), circuit.bilinear_form(alpha, &u, &w));
+    }
+
     /// FIPS 202 on 64-bit lanes, written independently of the circuit.
     fn reference_round(a: &mut [u64; 25], rc: u64) {
         let c: [u64; 5] = std::array::from_fn(|x| (0..5).fold(0, |p, y| p ^ a[x + 5 * y]));
@@ -412,10 +508,6 @@ mod tests {
     }
     #[test]
     fn shared_reduction_roundtrip_and_transcript_rejections() {
-        use crate::reduction::{self, Instance};
-        use fiat_shamir::transcript::{ProofTranscript, ProverState, VerifierState};
-        use primitives::multilinear::eq_table;
-
         let mut rng = Rng::new(0x4c3701);
         let n_log = 3;
         let mut batch = Witness::default();
@@ -458,4 +550,26 @@ mod tests {
             assert!(!accepts(&bad, b"L7-keccak-flock"), "tampered word {word}");
         }
     }
+}
+
+/// Relabel structured words to the VM's 25 input, 25 output, constant, product layout.
+pub(crate) fn ports_first<T: Copy>(source: &[T]) -> Vec<T> {
+    let scale = if source.len() == 1024 { 1 } else { 64 };
+    let mut result = source.to_vec();
+    result[..25 * scale].copy_from_slice(&source[scale..26 * scale]);
+    result[25 * scale..50 * scale].copy_from_slice(&source[626 * scale..651 * scale]);
+    result[50 * scale..51 * scale].copy_from_slice(&source[..scale]);
+    result[51 * scale..651 * scale].copy_from_slice(&source[26 * scale..626 * scale]);
+    result
+}
+
+/// Inverse relabeling for both row and column weights.
+pub(crate) fn structured<T: Copy>(source: &[T]) -> Vec<T> {
+    let scale = if source.len() == 1024 { 1 } else { 64 };
+    let mut result = source.to_vec();
+    result[scale..26 * scale].copy_from_slice(&source[..25 * scale]);
+    result[626 * scale..651 * scale].copy_from_slice(&source[25 * scale..50 * scale]);
+    result[..scale].copy_from_slice(&source[50 * scale..51 * scale]);
+    result[26 * scale..626 * scale].copy_from_slice(&source[51 * scale..651 * scale]);
+    result
 }

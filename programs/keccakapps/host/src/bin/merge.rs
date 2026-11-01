@@ -14,6 +14,7 @@ fn load(elf: &str, prefix: &str) -> (Program, Proof, Output) {
     (program, proof, Output::new(output))
 }
 fn main() {
+    bench::init_tracing_from_env();
     let args: Vec<String> = std::env::args().collect();
     assert!(
         args.len() >= 9,
@@ -92,6 +93,6 @@ fn main() {
     let stats = tree.stats(if node { Kind::Node } else { Kind::First });
     println!(
         "{}",
-        json!({"kind":"merge","case":case,"merge_s":merge_s,"setup_s":setup_s,"proof_bytes":bytes.len(),"committed_words":stats.committed,"rows":stats.tables.iter().map(|t|t.rows).sum::<usize>(),"recursion_log_inv_rate":1,"leaf_log_inv_rate":2,"protocol_hash":"keccak256"})
+        json!({"kind":"merge","case":case,"merge_s":merge_s,"setup_s":setup_s,"proof_bytes":bytes.len(),"committed_words":stats.committed,"tables":stats.tables.iter().map(|t|json!({"name":t.name,"rows":t.rows,"height_log":t.height_log})).collect::<Vec<_>>(),"rows":stats.tables.iter().map(|t|t.rows).sum::<usize>(),"recursion_log_inv_rate":1,"leaf_log_inv_rate":2,"protocol_hash":"keccak256"})
     );
 }

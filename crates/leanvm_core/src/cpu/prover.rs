@@ -135,6 +135,9 @@ mod tests {
         let proven = prover.prove(&program, &[]).unwrap();
         assert_eq!(proven.output, [expected.into_iter().fold(0, |a, b| a ^ b), 0, 0, 0]);
         program.verify(proven.output, &proven.proof).unwrap();
+        let mut wrong_keccak_output = *proven.output.words();
+        wrong_keccak_output[0] ^= 1;
+        assert!(program.verify(crate::Output::new(wrong_keccak_output), &proven.proof).is_err());
         let mut bad = proven.proof.clone();
         bad.0.stream[0] += F192::ONE;
         assert!(program.verify(proven.output, &bad).is_err());

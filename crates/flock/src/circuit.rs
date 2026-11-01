@@ -287,6 +287,7 @@ impl Builder {
             useful_bits,
             n_input_words: self.n_input_words,
             gates: self.gates,
+            keccak: false,
         }
     }
 }
@@ -294,6 +295,7 @@ impl Builder {
 /// A finished gate list: an R1CS over GF(2) whose matrices are never built.
 #[derive(Debug)]
 pub struct Circuit {
+    keccak: bool,
     /// The gates, in order; a gate's index is its wire.
     gates: Vec<Gate>,
     /// The constant wire's slot.
@@ -307,6 +309,18 @@ pub struct Circuit {
 }
 
 impl Circuit {
+    /// Structured Keccak reduction with the VM's input/output ports first.
+    pub fn keccak() -> Self {
+        Self {
+            gates: Vec::new(),
+            const_pos: 3200,
+            k_log: crate::keccak::K_LOG,
+            useful_bits: crate::keccak::USED,
+            n_input_words: 25,
+            keccak: true,
+        }
+    }
+
     /// The base-two logarithm of the bits one instance occupies.
     pub const fn k_log(&self) -> usize {
         self.k_log
@@ -343,6 +357,13 @@ impl Circuit {
     /// `inputs` are the input ports' words, and the three buffers come zeroed.
     pub fn witness_instance(&self, inputs: &[u64], z: &mut [u64], az: &mut [u64], bz: &mut [u64]) {
         assert_eq!(inputs.len(), self.n_input_words);
+        if self.keccak {
+            let witness = crate::keccak::permutation_witness(inputs.try_into().expect("25 input lanes"));
+            z.copy_from_slice(&crate::keccak::ports_first(&witness.z));
+            az.copy_from_slice(&crate::keccak::ports_first(&witness.az));
+            bz.copy_from_slice(&crate::keccak::ports_first(&witness.bz));
+            return;
+        }
         let set = |buf: &mut [u64], slot: Slot, v: bool| {
             let i = slot.index();
             buf[i / 64] |= u64::from(v) << (i % 64);
@@ -460,6 +481,20 @@ impl Circuit {
         input_words: impl Fn(&S, &mut [u64]) + Sync,
         check: impl Fn(&S, &[u64]) + Sync,
     ) -> Tables {
+        if self.keccak {
+            return self.witness_by_instance_into(
+                z,
+                rows,
+                padding,
+                n_blocks_log,
+                |row, z, az, bz| {
+                    let mut words = [0; 25];
+                    input_words(row, &mut words);
+                    self.witness_instance(&words, z, az, bz);
+                },
+                check,
+            );
+        }
         assert!(rows.len() <= 1 << n_blocks_log, "more rows than instances");
         // A batch below 64 instances is walked in full and stored in part.
         let lanes = LANES.min(1 << n_blocks_log);
@@ -585,6 +620,10 @@ impl Circuit {
 
     /// The matrix-vector products `(A_0 w, B_0 w)`, by one forward walk.
     pub fn row_values(&self, w: &[F192]) -> (Vec<F192>, Vec<F192>) {
+        if self.keccak {
+            let (a, b) = crate::keccak::forward(&crate::keccak::structured(w));
+            return (crate::keccak::ports_first(&a), crate::keccak::ports_first(&b));
+        }
         let k = self.n_cols();
         assert_eq!(w.len(), k);
         // The constant column's weight is what `B` takes wherever its row reads the constant.
@@ -665,6 +704,10 @@ impl LincheckCircuit for Circuit {
     ///
     /// Every gate, in reverse, hands its wire's adjoint to its operands or deposits it on its slot.
     fn fold_alpha_batched(&self, alpha: F192, u: &[F192]) -> Vec<F192> {
+        if self.keccak {
+            let folded = crate::keccak::KeccakCircuit.fold_alpha_batched(alpha, &crate::keccak::structured(u));
+            return crate::keccak::ports_first(&folded);
+        }
         assert_eq!(u.len(), self.n_cols());
         let c = self.const_pos;
         let mut m = vec![F192::ZERO; u.len()];
@@ -704,6 +747,9 @@ impl LincheckCircuit for Circuit {
     }
 
     fn bilinear_form(&self, alpha: F192, u: &[F192], w: &[F192]) -> Option<F192> {
+        if self.keccak {
+            return Some(crate::keccak::ported_bilinear(alpha, u, w));
+        }
         let (ra, rb) = self.row_values(w);
         Some((u.iter().zip(ra.iter().zip(&rb))).fold(F192::ZERO, |acc, (&u, (&a, &b))| acc + u * (a + alpha * b)))
     }

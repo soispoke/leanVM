@@ -6,6 +6,10 @@ use primitives::field::F192;
 
 impl Builder {
     fn xor_word(&mut self, a: Kw, b: Kw) -> Kw {
+        let zero = self.k_zero();
+        if a == zero { return b; }
+        if b == zero { return a; }
+        if a == b { return zero; }
         let (a, b) = (self.k_to_e1(a), self.k_to_e1(b));
         let c = self.add(a, b);
         self.e_to_k(c)[0]
