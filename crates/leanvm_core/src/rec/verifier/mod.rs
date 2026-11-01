@@ -228,7 +228,10 @@ impl OpeningVerifier for Rows<'_, '_> {
         row_words: usize,
         leaf_words: usize,
     ) -> Result<Vec<Vec<Kw>>, TranscriptError> {
-        Ok(authenticate(self, *root, queries, row_words, leaf_words))
+        self.b.enter("Merkle paths");
+        let rows = authenticate(self, *root, queries, row_words, leaf_words);
+        self.b.leave();
+        Ok(rows)
     }
 
     fn mul_k_add(&mut self, a: Ew, k: Kw, d: Ew) -> Ew {

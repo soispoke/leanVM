@@ -1,0 +1,29 @@
+   Compiling getrandom v0.3.4
+   Compiling ppv-lite86 v0.2.21
+   Compiling tracing v0.1.44
+   Compiling thiserror v2.0.18
+   Compiling regex-automata v0.4.16
+   Compiling rand_core v0.9.5
+   Compiling rand_chacha v0.9.0
+   Compiling rand_xorshift v0.4.0
+   Compiling rand v0.9.4
+   Compiling primitives v0.1.0 (/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/leanvm-riscv/crates/primitives)
+   Compiling proptest v1.11.0
+   Compiling matchers v0.2.0
+   Compiling tracing-subscriber v0.3.23
+   Compiling fiat_shamir v0.1.0 (/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/leanvm-riscv/crates/fiat_shamir)
+   Compiling pcs v0.1.0 (/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/leanvm-riscv/crates/pcs)
+   Compiling tracing-forest v0.3.1
+   Compiling flock v0.1.0 (/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/leanvm-riscv/crates/flock)
+   Compiling bench v0.1.0 (/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/leanvm-riscv/crates/bench)
+   Compiling leanvm v0.1.0 (/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/leanvm-riscv/crates/leanvm_core)
+    Finished `release` profile [optimized] target(s) in 2m 02s
+     Running unittests src/lib.rs (/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/target-leanvm-riscv/release/deps/leanvm-2cc6c5259a69770e)
+
+running 3 tests
+test rec::circuit::builder::arith::tests::units_emit_no_row ... ok
+test rec::circuit::builder::arith::tests::a_repeated_row_is_the_earlier_one ... ok
+test rec::circuit::builder::hash::tests::the_chain_in_rows_is_the_native_chain ... ok
+
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 206 filtered out; finished in 0.00s
+

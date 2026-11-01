@@ -1,0 +1,2 @@
+{"resource_policy": "dedicated_cpu_slices_no_wait", "role": "build", "cpus": [12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23], "LEANVM_NUM_THREADS": 12, "RAYON_NUM_THREADS": 12}
+{"ok": true, "result": "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/leanvm-riscv-build-t1/result.json", "median_wall_seconds": 114.18711587999132}

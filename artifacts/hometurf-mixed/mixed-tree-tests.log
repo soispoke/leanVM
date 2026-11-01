@@ -1,0 +1,20 @@
+   Compiling leanvm v0.1.0 (/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/leanvm-riscv/crates/leanvm_core)
+    Finished `release` profile [optimized] target(s) in 2m 04s
+     Running unittests src/lib.rs (/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/target-leanvm-riscv/release/deps/leanvm-2cc6c5259a69770e)
+
+running 12 tests
+test rec::tree::tests::the_dense_reduction_reduces_to_the_polynomials ... ok
+test rec::tree::tests::the_dense_reduction_reduces_claims_on_a_prefix ... ok
+test rec::tree::tests::the_matrix_reduction_reduces_to_the_matrices ... ok
+test rec::tree::tests::mixed_programs_bind_identities_tables_and_outputs ... ok
+test rec::tree::tests::tree_proof_bytes_round_trip ... ok
+test rec::tree::tests::a_tree_verifies_and_binds_its_leaves_in_order ... ok
+test rec::tree::tests::what_a_prover_is_handed_is_checked ... ok
+test rec::tree::tests::a_proven_circuit_is_the_shapes ... ok
+test rec::tree::tests::mixed_levels_are_refused_at_the_root ... ok
+test rec::tree::tests::a_fake_child_circuit_is_refused_at_the_root ... ok
+test rec::tree::tests::one_leaf_is_a_root ... ok
+test rec::tree::tests::forged_reduced_claims_are_refused ... ok
+
+test result: ok. 12 passed; 0 failed; 0 ignored; 0 measured; 198 filtered out; finished in 6.73s
+

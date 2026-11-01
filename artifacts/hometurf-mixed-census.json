@@ -1,0 +1,421 @@
+{
+  "source_commit": "5eeb6207",
+  "row_order": [
+    "EMUL",
+    "EXK",
+    "HASH",
+    "SPLIT",
+    "CAST",
+    "PUB"
+  ],
+  "unpadded_words_per_row": [
+    9,
+    7,
+    257,
+    65,
+    4,
+    0
+  ],
+  "cases": {
+    "same": {
+      "rows": 112776,
+      "committed_words": 5948416,
+      "unpadded_words": 3498408,
+      "padding_words": 2450008,
+      "tables": [
+        {
+          "height_log": 17,
+          "name": "EMUL",
+          "rows": 72899
+        },
+        {
+          "height_log": 16,
+          "name": "EXK",
+          "rows": 22328
+        },
+        {
+          "height_log": 14,
+          "name": "HASH",
+          "rows": 10219
+        },
+        {
+          "height_log": 10,
+          "name": "SPLIT",
+          "rows": 530
+        },
+        {
+          "height_log": 13,
+          "name": "CAST",
+          "rows": 6322
+        },
+        {
+          "height_log": 10,
+          "name": "PUB",
+          "rows": 478
+        }
+      ],
+      "stages": {
+        "leaf 0/bus and tables": {
+          "row_vector": [
+            2778,
+            409,
+            457,
+            0,
+            418,
+            138
+          ],
+          "rows": 4200,
+          "unpadded_words": 146986
+        },
+        "leaf 0 program": {
+          "row_vector": [
+            936,
+            26,
+            0,
+            0,
+            13,
+            0
+          ],
+          "rows": 975,
+          "unpadded_words": 8658
+        },
+        "leaf 1/bus and tables": {
+          "row_vector": [
+            2778,
+            409,
+            457,
+            0,
+            418,
+            0
+          ],
+          "rows": 4062,
+          "unpadded_words": 146986
+        },
+        "leaf 1 program": {
+          "row_vector": [
+            936,
+            26,
+            0,
+            0,
+            13,
+            0
+          ],
+          "rows": 975,
+          "unpadded_words": 8658
+        },
+        "reduction": {
+          "row_vector": [
+            4905,
+            0,
+            83,
+            0,
+            83,
+            0
+          ],
+          "rows": 5071,
+          "unpadded_words": 65808
+        }
+      }
+    },
+    "mixed": {
+      "rows": 110511,
+      "committed_words": 5948416,
+      "unpadded_words": 3393252,
+      "padding_words": 2555164,
+      "tables": [
+        {
+          "height_log": 17,
+          "name": "EMUL",
+          "rows": 71458
+        },
+        {
+          "height_log": 16,
+          "name": "EXK",
+          "rows": 21867
+        },
+        {
+          "height_log": 14,
+          "name": "HASH",
+          "rows": 9874
+        },
+        {
+          "height_log": 10,
+          "name": "SPLIT",
+          "rows": 527
+        },
+        {
+          "height_log": 13,
+          "name": "CAST",
+          "rows": 6297
+        },
+        {
+          "height_log": 10,
+          "name": "PUB",
+          "rows": 488
+        }
+      ],
+      "stages": {
+        "leaf 0/bus and tables": {
+          "row_vector": [
+            2778,
+            409,
+            457,
+            0,
+            418,
+            138
+          ],
+          "rows": 4200,
+          "unpadded_words": 146986
+        },
+        "leaf 0 program": {
+          "row_vector": [
+            936,
+            26,
+            0,
+            0,
+            13,
+            0
+          ],
+          "rows": 975,
+          "unpadded_words": 8658
+        },
+        "leaf 1/bus and tables": {
+          "row_vector": [
+            2647,
+            381,
+            435,
+            0,
+            397,
+            0
+          ],
+          "rows": 3860,
+          "unpadded_words": 139873
+        },
+        "leaf 1 program": {
+          "row_vector": [
+            909,
+            26,
+            0,
+            0,
+            13,
+            0
+          ],
+          "rows": 948,
+          "unpadded_words": 8415
+        },
+        "reduction": {
+          "row_vector": [
+            4870,
+            0,
+            83,
+            0,
+            83,
+            0
+          ],
+          "rows": 5036,
+          "unpadded_words": 65493
+        }
+      }
+    },
+    "same-stacked": {
+      "rows": 112818,
+      "committed_words": 5948416,
+      "unpadded_words": 3499241,
+      "padding_words": 2449175,
+      "tables": [
+        {
+          "height_log": 17,
+          "name": "EMUL",
+          "rows": 72934
+        },
+        {
+          "height_log": 16,
+          "name": "EXK",
+          "rows": 22328
+        },
+        {
+          "height_log": 14,
+          "name": "HASH",
+          "rows": 10221
+        },
+        {
+          "height_log": 10,
+          "name": "SPLIT",
+          "rows": 530
+        },
+        {
+          "height_log": 13,
+          "name": "CAST",
+          "rows": 6323
+        },
+        {
+          "height_log": 10,
+          "name": "PUB",
+          "rows": 482
+        }
+      ],
+      "stages": {
+        "leaf 0/bus and tables": {
+          "row_vector": [
+            2778,
+            409,
+            457,
+            0,
+            418,
+            138
+          ],
+          "rows": 4200,
+          "unpadded_words": 146986
+        },
+        "leaf 0 program": {
+          "row_vector": [
+            936,
+            26,
+            0,
+            0,
+            13,
+            0
+          ],
+          "rows": 975,
+          "unpadded_words": 8658
+        },
+        "leaf 1/bus and tables": {
+          "row_vector": [
+            2778,
+            409,
+            457,
+            0,
+            418,
+            0
+          ],
+          "rows": 4062,
+          "unpadded_words": 146986
+        },
+        "leaf 1 program": {
+          "row_vector": [
+            936,
+            26,
+            0,
+            0,
+            13,
+            0
+          ],
+          "rows": 975,
+          "unpadded_words": 8658
+        },
+        "reduction": {
+          "row_vector": [
+            4940,
+            0,
+            84,
+            0,
+            84,
+            0
+          ],
+          "rows": 5108,
+          "unpadded_words": 66384
+        }
+      }
+    },
+    "xmss": {
+      "rows": 108137,
+      "committed_words": 5948416,
+      "unpadded_words": 3286466,
+      "padding_words": 2661950,
+      "tables": [
+        {
+          "height_log": 17,
+          "name": "EMUL",
+          "rows": 69951
+        },
+        {
+          "height_log": 16,
+          "name": "EXK",
+          "rows": 21406
+        },
+        {
+          "height_log": 14,
+          "name": "HASH",
+          "rows": 9525
+        },
+        {
+          "height_log": 10,
+          "name": "SPLIT",
+          "rows": 524
+        },
+        {
+          "height_log": 13,
+          "name": "CAST",
+          "rows": 6270
+        },
+        {
+          "height_log": 10,
+          "name": "PUB",
+          "rows": 461
+        }
+      ],
+      "stages": {
+        "leaf 0/bus and tables": {
+          "row_vector": [
+            2647,
+            381,
+            435,
+            0,
+            397,
+            124
+          ],
+          "rows": 3984,
+          "unpadded_words": 139873
+        },
+        "leaf 0 program": {
+          "row_vector": [
+            909,
+            26,
+            0,
+            0,
+            13,
+            0
+          ],
+          "rows": 948,
+          "unpadded_words": 8415
+        },
+        "leaf 1/bus and tables": {
+          "row_vector": [
+            2647,
+            381,
+            435,
+            0,
+            397,
+            0
+          ],
+          "rows": 3860,
+          "unpadded_words": 139873
+        },
+        "leaf 1 program": {
+          "row_vector": [
+            909,
+            26,
+            0,
+            0,
+            13,
+            0
+          ],
+          "rows": 948,
+          "unpadded_words": 8415
+        },
+        "reduction": {
+          "row_vector": [
+            4769,
+            0,
+            81,
+            0,
+            81,
+            0
+          ],
+          "rows": 4931,
+          "unpadded_words": 64062
+        }
+      }
+    }
+  }
+}

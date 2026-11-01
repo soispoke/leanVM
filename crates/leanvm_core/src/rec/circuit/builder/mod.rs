@@ -98,6 +98,9 @@ pub struct Builder {
     /// The names the checks run under, outermost first.
     scope: Vec<String>,
 
+    /// Optional diagnostic snapshots, enabled only for untimed row accounting.
+    profile: Vec<[usize; 6]>,
+
     /// Failed checks collected with their enclosing scope names, the first few only.
     failures: Vec<Unsatisfied>,
 }
@@ -121,11 +124,18 @@ impl Builder {
 
     /// Enter a named scope, which the next leave closes.
     pub(crate) fn enter(&mut self, name: impl Into<String>) {
+        if std::env::var_os("LEANVM_ROW_PROFILE").is_some() {
+            self.profile.push(std::array::from_fn(|i| self.rows.len(Table::ALL[i])));
+        }
         self.scope.push(name.into());
     }
 
     /// Close the innermost scope.
     pub(crate) fn leave(&mut self) {
+        if let Some(before) = self.profile.pop() {
+            let delta: [usize; 6] = std::array::from_fn(|i| self.rows.len(Table::ALL[i]) - before[i]);
+            eprintln!("ROW_PROFILE|{}|{delta:?}", self.scope.join("/"));
+        }
         self.scope.pop();
     }
 

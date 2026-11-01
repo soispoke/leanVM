@@ -1498,6 +1498,7 @@ dependencies = [
  "parallel",
  "primitives",
  "serde_json",
+ "sha2",
  "shielded-host",
  "stateproof-host",
  "tracing",

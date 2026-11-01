@@ -418,3 +418,17 @@ mod tests {
         assert!(on_the_vm(&run).is_err());
     }
 }
+
+#[test]
+#[ignore = "exports independent parity fixtures to an explicitly selected directory"]
+fn export_hometurf_fixtures() {
+    let directory = std::path::PathBuf::from(std::env::var("HOMETURF_EXPORT_DIR").expect("output directory"));
+    std::fs::create_dir_all(&directory).unwrap();
+    for i in 0..3 {
+        let input = make(i);
+        let digest = input.spend().verify().unwrap();
+        std::fs::write(directory.join(format!("shielded-{i}.input.bin")), input.0).unwrap();
+        let bytes: Vec<u8> = digest.into_iter().flat_map(u64::to_le_bytes).collect();
+        std::fs::write(directory.join(format!("shielded-{i}.digest.bin")), bytes).unwrap();
+    }
+}

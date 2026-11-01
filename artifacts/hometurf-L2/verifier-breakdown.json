@@ -1,0 +1,752 @@
+{
+  "leanxmss": {
+    "total_rows": 54610,
+    "committed_words": 5358592,
+    "tables": [
+      35219,
+      10703,
+      4797,
+      262,
+      3169,
+      460
+    ],
+    "groups": {
+      "program claim and bus": {
+        "rows": 4932,
+        "table_rows": [
+          3556,
+          407,
+          435,
+          0,
+          410,
+          124
+        ],
+        "unpadded_committed_words": 148288
+      },
+      "Flock": {
+        "rows": 3874,
+        "table_rows": [
+          2178,
+          8,
+          780,
+          0,
+          769,
+          139
+        ],
+        "unpadded_committed_words": 223194
+      },
+      "WHIR opening excluding Merkle": {
+        "rows": 39359,
+        "table_rows": [
+          26857,
+          10288,
+          105,
+          261,
+          1773,
+          75
+        ],
+        "unpadded_committed_words": 364771
+      },
+      "Merkle paths and leaf hashing": {
+        "rows": 3527,
+        "table_rows": [
+          0,
+          0,
+          3393,
+          0,
+          124,
+          10
+        ],
+        "unpadded_committed_words": 872497
+      },
+      "announcement, reduction and other": {
+        "rows": 2918,
+        "table_rows": [
+          2628,
+          0,
+          84,
+          1,
+          93,
+          112
+        ],
+        "unpadded_committed_words": 45677
+      }
+    },
+    "padding_and_floors_words": 3704165
+  },
+  "leansphincs": {
+    "total_rows": 59155,
+    "committed_words": 5358592,
+    "tables": [
+      36573,
+      13533,
+      5139,
+      262,
+      3175,
+      473
+    ],
+    "groups": {
+      "program claim and bus": {
+        "rows": 5032,
+        "table_rows": [
+          3614,
+          433,
+          436,
+          0,
+          411,
+          138
+        ],
+        "unpadded_committed_words": 149253
+      },
+      "Flock": {
+        "rows": 3888,
+        "table_rows": [
+          2186,
+          8,
+          784,
+          0,
+          771,
+          139
+        ],
+        "unpadded_committed_words": 224302
+      },
+      "WHIR opening excluding Merkle": {
+        "rows": 43383,
+        "table_rows": [
+          28077,
+          13092,
+          105,
+          261,
+          1775,
+          73
+        ],
+        "unpadded_committed_words": 395387
+      },
+      "Merkle paths and leaf hashing": {
+        "rows": 3862,
+        "table_rows": [
+          0,
+          0,
+          3729,
+          0,
+          124,
+          9
+        ],
+        "unpadded_committed_words": 958849
+      },
+      "announcement, reduction and other": {
+        "rows": 2990,
+        "table_rows": [
+          2696,
+          0,
+          85,
+          1,
+          94,
+          114
+        ],
+        "unpadded_committed_words": 46550
+      }
+    },
+    "padding_and_floors_words": 3584251
+  },
+  "hashchain-16": {
+    "total_rows": 51764,
+    "committed_words": 5358592,
+    "tables": [
+      33220,
+      10703,
+      4364,
+      234,
+      2790,
+      453
+    ],
+    "groups": {
+      "program claim and bus": {
+        "rows": 4689,
+        "table_rows": [
+          3397,
+          378,
+          411,
+          0,
+          387,
+          116
+        ],
+        "unpadded_committed_words": 140394
+      },
+      "Flock": {
+        "rows": 3854,
+        "table_rows": [
+          2166,
+          8,
+          774,
+          0,
+          767,
+          139
+        ],
+        "unpadded_committed_words": 221536
+      },
+      "WHIR opening excluding Merkle": {
+        "rows": 37248,
+        "table_rows": [
+          25089,
+          10317,
+          100,
+          233,
+          1435,
+          74
+        ],
+        "unpadded_committed_words": 344605
+      },
+      "Merkle paths and leaf hashing": {
+        "rows": 3116,
+        "table_rows": [
+          0,
+          0,
+          2997,
+          0,
+          109,
+          10
+        ],
+        "unpadded_committed_words": 770665
+      },
+      "announcement, reduction and other": {
+        "rows": 2857,
+        "table_rows": [
+          2568,
+          0,
+          82,
+          1,
+          92,
+          114
+        ],
+        "unpadded_committed_words": 44619
+      }
+    },
+    "padding_and_floors_words": 3836773
+  },
+  "hashchain-256": {
+    "total_rows": 55629,
+    "committed_words": 5358592,
+    "tables": [
+      35920,
+      10936,
+      4889,
+      262,
+      3150,
+      472
+    ],
+    "groups": {
+      "program claim and bus": {
+        "rows": 4778,
+        "table_rows": [
+          3425,
+          414,
+          413,
+          0,
+          389,
+          137
+        ],
+        "unpadded_committed_words": 141420
+      },
+      "Flock": {
+        "rows": 3881,
+        "table_rows": [
+          2182,
+          8,
+          782,
+          0,
+          770,
+          139
+        ],
+        "unpadded_committed_words": 223748
+      },
+      "WHIR opening excluding Merkle": {
+        "rows": 40376,
+        "table_rows": [
+          27649,
+          10514,
+          105,
+          261,
+          1774,
+          73
+        ],
+        "unpadded_committed_words": 373485
+      },
+      "Merkle paths and leaf hashing": {
+        "rows": 3639,
+        "table_rows": [
+          0,
+          0,
+          3505,
+          0,
+          124,
+          10
+        ],
+        "unpadded_committed_words": 901281
+      },
+      "announcement, reduction and other": {
+        "rows": 2955,
+        "table_rows": [
+          2664,
+          0,
+          84,
+          1,
+          93,
+          113
+        ],
+        "unpadded_committed_words": 46001
+      }
+    },
+    "padding_and_floors_words": 3672657
+  },
+  "hashchain-4096": {
+    "total_rows": 62870,
+    "committed_words": 5358592,
+    "tables": [
+      40784,
+      12406,
+      5640,
+      273,
+      3265,
+      502
+    ],
+    "groups": {
+      "program claim and bus": {
+        "rows": 5404,
+        "table_rows": [
+          3832,
+          462,
+          488,
+          0,
+          457,
+          165
+        ],
+        "unpadded_committed_words": 164966
+      },
+      "Flock": {
+        "rows": 3909,
+        "table_rows": [
+          2198,
+          8,
+          790,
+          0,
+          774,
+          139
+        ],
+        "unpadded_committed_words": 225964
+      },
+      "WHIR opening excluding Merkle": {
+        "rows": 46194,
+        "table_rows": [
+          31962,
+          11936,
+          134,
+          272,
+          1815,
+          75
+        ],
+        "unpadded_committed_words": 430588
+      },
+      "Merkle paths and leaf hashing": {
+        "rows": 4276,
+        "table_rows": [
+          0,
+          0,
+          4142,
+          0,
+          124,
+          10
+        ],
+        "unpadded_committed_words": 1064990
+      },
+      "announcement, reduction and other": {
+        "rows": 3087,
+        "table_rows": [
+          2792,
+          0,
+          86,
+          1,
+          95,
+          113
+        ],
+        "unpadded_committed_words": 47675
+      }
+    },
+    "padding_and_floors_words": 3424409
+  },
+  "merkle-20": {
+    "total_rows": 51944,
+    "committed_words": 5358592,
+    "tables": [
+      33288,
+      10815,
+      4364,
+      234,
+      2790,
+      453
+    ],
+    "groups": {
+      "program claim and bus": {
+        "rows": 4687,
+        "table_rows": [
+          3395,
+          378,
+          411,
+          0,
+          387,
+          116
+        ],
+        "unpadded_committed_words": 140376
+      },
+      "Flock": {
+        "rows": 3854,
+        "table_rows": [
+          2166,
+          8,
+          774,
+          0,
+          767,
+          139
+        ],
+        "unpadded_committed_words": 221536
+      },
+      "WHIR opening excluding Merkle": {
+        "rows": 37430,
+        "table_rows": [
+          25159,
+          10429,
+          100,
+          233,
+          1435,
+          74
+        ],
+        "unpadded_committed_words": 346019
+      },
+      "Merkle paths and leaf hashing": {
+        "rows": 3116,
+        "table_rows": [
+          0,
+          0,
+          2997,
+          0,
+          109,
+          10
+        ],
+        "unpadded_committed_words": 770665
+      },
+      "announcement, reduction and other": {
+        "rows": 2857,
+        "table_rows": [
+          2568,
+          0,
+          82,
+          1,
+          92,
+          114
+        ],
+        "unpadded_committed_words": 44619
+      }
+    },
+    "padding_and_floors_words": 3835377
+  },
+  "merkle-32": {
+    "total_rows": 52758,
+    "committed_words": 5358592,
+    "tables": [
+      33740,
+      11165,
+      4368,
+      234,
+      2792,
+      459
+    ],
+    "groups": {
+      "program claim and bus": {
+        "rows": 4734,
+        "table_rows": [
+          3421,
+          390,
+          412,
+          0,
+          388,
+          123
+        ],
+        "unpadded_committed_words": 140955
+      },
+      "Flock": {
+        "rows": 3860,
+        "table_rows": [
+          2170,
+          8,
+          776,
+          0,
+          767,
+          139
+        ],
+        "unpadded_committed_words": 222086
+      },
+      "WHIR opening excluding Merkle": {
+        "rows": 38158,
+        "table_rows": [
+          25549,
+          10767,
+          100,
+          233,
+          1436,
+          73
+        ],
+        "unpadded_committed_words": 351899
+      },
+      "Merkle paths and leaf hashing": {
+        "rows": 3116,
+        "table_rows": [
+          0,
+          0,
+          2997,
+          0,
+          109,
+          10
+        ],
+        "unpadded_committed_words": 770665
+      },
+      "announcement, reduction and other": {
+        "rows": 2890,
+        "table_rows": [
+          2600,
+          0,
+          83,
+          1,
+          92,
+          114
+        ],
+        "unpadded_committed_words": 45164
+      }
+    },
+    "padding_and_floors_words": 3827823
+  },
+  "shielded": {
+    "total_rows": 56938,
+    "committed_words": 5358592,
+    "tables": [
+      36693,
+      11164,
+      5144,
+      265,
+      3195,
+      477
+    ],
+    "groups": {
+      "program claim and bus": {
+        "rows": 5175,
+        "table_rows": [
+          3714,
+          435,
+          457,
+          0,
+          431,
+          138
+        ],
+        "unpadded_committed_words": 155644
+      },
+      "Flock": {
+        "rows": 3874,
+        "table_rows": [
+          2178,
+          8,
+          780,
+          0,
+          769,
+          139
+        ],
+        "unpadded_committed_words": 223194
+      },
+      "WHIR opening excluding Merkle": {
+        "rows": 41054,
+        "table_rows": [
+          28105,
+          10721,
+          112,
+          264,
+          1777,
+          75
+        ],
+        "unpadded_committed_words": 381044
+      },
+      "Merkle paths and leaf hashing": {
+        "rows": 3844,
+        "table_rows": [
+          0,
+          0,
+          3710,
+          0,
+          124,
+          10
+        ],
+        "unpadded_committed_words": 953966
+      },
+      "announcement, reduction and other": {
+        "rows": 2991,
+        "table_rows": [
+          2696,
+          0,
+          85,
+          1,
+          94,
+          115
+        ],
+        "unpadded_committed_words": 46550
+      }
+    },
+    "padding_and_floors_words": 3598194
+  },
+  "sha256-1kib": {
+    "total_rows": 60119,
+    "committed_words": 5358592,
+    "tables": [
+      38186,
+      12425,
+      5508,
+      271,
+      3234,
+      495
+    ],
+    "groups": {
+      "program claim and bus": {
+        "rows": 5319,
+        "table_rows": [
+          3792,
+          469,
+          464,
+          0,
+          435,
+          159
+        ],
+        "unpadded_committed_words": 158399
+      },
+      "Flock": {
+        "rows": 3903,
+        "table_rows": [
+          2194,
+          8,
+          788,
+          0,
+          774,
+          139
+        ],
+        "unpadded_committed_words": 225414
+      },
+      "WHIR opening excluding Merkle": {
+        "rows": 43621,
+        "table_rows": [
+          29402,
+          11948,
+          122,
+          270,
+          1805,
+          74
+        ],
+        "unpadded_committed_words": 404378
+      },
+      "Merkle paths and leaf hashing": {
+        "rows": 4182,
+        "table_rows": [
+          0,
+          0,
+          4048,
+          0,
+          124,
+          10
+        ],
+        "unpadded_committed_words": 1040832
+      },
+      "announcement, reduction and other": {
+        "rows": 3094,
+        "table_rows": [
+          2798,
+          0,
+          86,
+          1,
+          96,
+          113
+        ],
+        "unpadded_committed_words": 47733
+      }
+    },
+    "padding_and_floors_words": 3481836
+  },
+  "keccak256-1kib": {
+    "total_rows": 59633,
+    "committed_words": 5358592,
+    "tables": [
+      37264,
+      13077,
+      5358,
+      265,
+      3183,
+      486
+    ],
+    "groups": {
+      "program claim and bus": {
+        "rows": 5037,
+        "table_rows": [
+          3594,
+          438,
+          441,
+          0,
+          413,
+          151
+        ],
+        "unpadded_committed_words": 150401
+      },
+      "Flock": {
+        "rows": 3895,
+        "table_rows": [
+          2190,
+          8,
+          786,
+          0,
+          772,
+          139
+        ],
+        "unpadded_committed_words": 224856
+      },
+      "WHIR opening excluding Merkle": {
+        "rows": 43612,
+        "table_rows": [
+          28752,
+          12631,
+          112,
+          264,
+          1780,
+          73
+        ],
+        "unpadded_committed_words": 400249
+      },
+      "Merkle paths and leaf hashing": {
+        "rows": 4067,
+        "table_rows": [
+          0,
+          0,
+          3934,
+          0,
+          124,
+          9
+        ],
+        "unpadded_committed_words": 1011534
+      },
+      "announcement, reduction and other": {
+        "rows": 3022,
+        "table_rows": [
+          2728,
+          0,
+          85,
+          1,
+          94,
+          114
+        ],
+        "unpadded_committed_words": 46838
+      }
+    },
+    "padding_and_floors_words": 3524714
+  }
+}

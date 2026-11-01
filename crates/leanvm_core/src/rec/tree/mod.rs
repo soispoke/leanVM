@@ -181,6 +181,12 @@ pub enum TreeError {
         /// The leaf's index among its node's.
         index: usize,
     },
+    /// A claimed program identity is not the program fixed to that slot.
+    #[error("leaf {index} names an unknown or swapped program digest")]
+    ProgramDigest {
+        /// The child slot.
+        index: usize,
+    },
     /// A leaf proof does not verify.
     #[error("leaf {index}: {error}")]
     Leaf {
@@ -407,6 +413,77 @@ impl<'p> Tree<'p> {
         })
     }
 
+    /// Prototype tree with two fixed, ordered program identities at its first level.
+    /// Both program tables are zero-padded and stacked, then reduced by the same checked sumcheck.
+    /// The statement digest commits `(program_digest, output)` for every leaf.
+    pub fn new_mixed(programs: [(&'p Program, LeafShape); 2], arity: usize, rate: Rate) -> Result<Self, TreeError> {
+        if arity < 2 {
+            return Err(TreeError::Arity { arity_0: 2, arity });
+        }
+        let leaf = |i: usize| {
+            ProofShape::new(programs[i].0, programs[i].1.taus, programs[i].1.rate)
+                .map_err(|e| TreeError::LeafShape(e.into()))
+        };
+        let (design, circuits) =
+            Self::converge(|taus| Ok(Design::new(leaf(0)?, 2, arity, rate, taus)?.with_second(leaf(1)?)))?;
+        let columns = circuits.each_ref().map(|c| FixedColumns::of(c, &design.taus));
+        let fixed = design.fixed.polynomial([&columns[0], &columns[1]]);
+        let table = |poly: DensePoly| {
+            let block = 1usize << (design.vars.0[poly as usize] - 1);
+            let mut all = Vec::with_capacity(2 * block);
+            for (program, _) in programs {
+                let mut values = if poly == DensePoly::Bytecode {
+                    Lookup::Bytecode.table(program.rv())
+                } else {
+                    program.rv().image().iter().map(|&w| F64(w)).collect()
+                };
+                values.resize(block, F64::ZERO);
+                all.extend(values);
+            }
+            all
+        };
+        let tables = DenseTables([table(DensePoly::Bytecode), table(DensePoly::Image), fixed]);
+        Ok(Self {
+            shape: TreeShape {
+                leaf: programs[0].1,
+                arity_0: 2,
+                arity,
+                rate,
+            },
+            design,
+            circuits,
+            columns,
+            tables,
+        })
+    }
+
+    /// First-level proving with each caller-supplied program identity checked against its slot.
+    pub fn prove_first_claims(&self, leaves: &[([u8; 32], Leaf<'_>)]) -> Result<TreeProof, TreeError> {
+        if leaves.len() != self.design.arity_0 {
+            return Err(TreeError::Children {
+                expected: self.design.arity_0,
+                got: leaves.len(),
+            });
+        }
+        for (index, (digest, _)) in leaves.iter().enumerate() {
+            if digest != self.design.leaf_at(index).program().digest() {
+                return Err(TreeError::ProgramDigest { index });
+            }
+        }
+        self.prove_first(&leaves.iter().map(|(_, leaf)| *leaf).collect::<Vec<_>>())
+    }
+
+    /// Root verification with explicit per-leaf identities, retaining all recursion and deferred checks.
+    pub fn verify_claims(&self, root: &TreeProof, claims: &[([u8; 32], Output)]) -> Result<(), TreeError> {
+        self.shape.root_kind(claims.len())?;
+        for (index, (digest, _)) in claims.iter().enumerate() {
+            if digest != self.design.leaf_at(index % self.design.arity_0).program().digest() {
+                return Err(TreeError::ProgramDigest { index });
+            }
+        }
+        self.verify(root, &claims.iter().map(|(_, output)| *output).collect::<Vec<_>>())
+    }
+
     /// The heights both circuits share, and the circuits at them.
     ///
     /// They are the least fixed point of `tau -> max(tau, first(tau), node(tau))`, from the first level's own heights.
@@ -451,10 +528,11 @@ impl<'p> Tree<'p> {
                 got: leaves.len(),
             });
         }
-        let shape = LeafShape::new(*d.leaf.taus(), d.leaf.rate());
-        let program = d.leaf.program();
         let items = (leaves.iter().enumerate())
             .map(|(index, &Leaf { proof, output })| {
+                let slot = d.leaf_at(index);
+                let shape = LeafShape::new(*slot.taus(), slot.rate());
+                let program = slot.program();
                 if LeafShape::announced(proof) != Some(shape) {
                     return Err(TreeError::ForeignLeaf { index });
                 }
@@ -566,7 +644,25 @@ impl<'p> Tree<'p> {
     fn digest(&self, outputs: &[Output]) -> [u64; 4] {
         let (arity_0, arity) = (self.design.arity_0, self.design.arity);
         let outputs: Vec<[u64; 4]> = outputs.iter().map(|output| *output.words()).collect();
-        let mut level: Vec<[u64; 4]> = outputs.chunks(arity_0).map(|o| Kind::First.digest(o)).collect();
+        let mut level: Vec<[u64; 4]> = outputs
+            .chunks(arity_0)
+            .map(|o| {
+                if self.design.second.is_none() {
+                    return Kind::First.digest(o);
+                }
+                let items: Vec<[u64; 4]> = o
+                    .iter()
+                    .enumerate()
+                    .flat_map(|(i, output)| {
+                        [
+                            crate::rec::circuit::digest_limbs(self.design.leaf_at(i).program().digest()),
+                            *output,
+                        ]
+                    })
+                    .collect();
+                Kind::First.digest(&items)
+            })
+            .collect();
         while level.len() > 1 {
             level = level.chunks(arity).map(|c| Kind::Node.digest(c)).collect();
         }
