@@ -1,0 +1,2 @@
+Please freeze entry6 separately and draw heldouts. New binary accepts bounded canonical native-graph generator bytes and private native witness files. Upstream external witness construction is excluded from file mode timing and explicitly unscored. Known pool builtin modes remain; no Falcon A/B success.
+/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/trial/entries/entry-6/manifest.json

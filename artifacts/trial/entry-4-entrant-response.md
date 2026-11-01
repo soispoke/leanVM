@@ -1,0 +1,5 @@
+# Entry4 response to draw
+
+Referee seed10374396495394007149 drew MPT and Keccak-2561KiB. Frozen entry4 v3binary admitted both under the same aggregate key: four independent wallets,twofirst merges,onenode,complete root and outer admission passed. Exact requests/certificates are universal-keccak-v4/entry4-heldout/, receipts universal-keccak-v4/samples.jsonl. The tree contains shielded,Keccak1KiB,MPT; Falcon is outside the envelope,so this is not the required A/B heldout gate. Known pool decoders are frozen; arbitrary unseen-generator interchange remains unsupported. No eligible score. Aggregate key hash is checked separately after all requests.
+
+All90 main cold/warm requests passed; summary universal-keccak-v3/summary.json. v4structured-evaluator comparison is a changed binary,not retrofitted into entry4. Frozen manifest/interface notes are unchanged. Root cold paths load locally derived trusted public setup rather than recompiling generator bytes at each root; see entry2boundary correction,also applicable here.

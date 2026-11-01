@@ -18,7 +18,7 @@ Falcon-512, Keccak-256 1 KiB and MPT retain their existing application inputs an
 
 Primitive Keccak-256(empty) = c5d2460186f7233c927e7db2dcc703c0e500b653ca82273b7bfad8045d85a470.
 Primitive Keccak-256("abc") = 4e03657aea45a94fc7d47ba826c8d667c0d1e6e33a64a036ec44f58fa12d6c45.
-Application fixture digests will be appended after independent reference evaluation; no wallet result is claimed yet.
+Application fixture digests are independently checked and wallet results are recorded in `hometurf-keccak-everywhere-leanvm.md`.
 
 Shielded fixture seed `20261024`: statement digest `599943d4ea06d97bbd20b602add63200e167a17a72d9775d91d33fa3eb72e4d3`, validity 1. Independent RustCrypto reference agrees with the Boolean circuit and native-row lowering.
 
@@ -27,3 +27,10 @@ Withdrawn exploratory Merkle vector (opposite path convention, do not use as the
 Corrected L2r-compatible depth-16 Merkle fixture, seed 1: `1357b0fe3e7707641fdc297b6e3b8810a9d98be16f1474446ce61974bb7d4327`.
 
 Shielded STATEMENT preimage is exactly 265 bytes: `0x08 || nullifier0[32] || nullifier1[32] || output_commitment0[32] || output_commitment1[32] || input[0:136]`. Input prefix is root[32], domain[32], public_amount[16], fee[16], recipient[20], authorizer[20]. Each note at 136+k*724 is spend_key[32], rho[32], value[16], index[4], and 20 siblings[32] in leaf-first order. Outputs at 1584+k*48 are inner[32], value[16]. All application integers are big-endian.
+
+
+## L7 receipt parity
+
+The corrected depth-16 Merkle seed-1 root is the shared application digest used by the L7 ABAB wallets: `1357b0fe3e7707641fdc297b6e3b8810a9d98be16f1474446ce61974bb7d4327`. L7's independent RustCrypto check hashes the leaf and sixteen ordered sibling pairs with Keccak-256. The shielded seed-20261024 statement is the 32-byte digest above followed by validity 1 and zero padding.
+
+For exact L6 application receipts, the exported Falcon fixture uses the L6 NIST key/message/signature and statement `3bb98c1c0286f78aac9b0643968de4a8fd1301fa7d3e998a0df369442241cd970100000000000000000000000000000000000000000000000000000000000000`; bounded MPT uses account/storage inclusion and statement `ebce2b98f2d26e025e2ed7f93f05af0635092210079ee9cb8fb0b2d91ec888620100000000000000000000000000000000000000000000000000000000000000`. Both match L6 B wallet receipts byte-for-byte.

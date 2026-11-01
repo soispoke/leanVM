@@ -1,0 +1,1 @@
+Entry2 is ready for an independent immutable freeze/draw. Manifest: /root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/trial/entries/entry-2/manifest.json. Partial calibration only; no required A/B or heldout success claimed. Frozen entry1 is unchanged.

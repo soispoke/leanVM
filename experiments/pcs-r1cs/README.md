@@ -1,5 +1,7 @@
 # leanPCS and structured leanR1CS
 
+The follow-up study comparing leanR1CS with RISC-V leanVM for EIP-8288 (native hash rows, lookups, Keccak everywhere, application-independent merge trees, the challenge trial and the Keccak merge optimization round) has its own entry point: [experiments/leanr1cs-study/README.md](../leanr1cs-study/README.md).
+
 The [specialized base diagnostic](evidence/2026-10-23-base-architecture-diagnostic/README.md) finds that removing recursive verification reduces average base creation from 1.658 s to 0.035 s at 16 steps, but only from 7.147 s to 6.855 s at 16,384 steps. Both full length circuits retain 16.8 million padded arithmetic rows. A constraint census identifies 774 extra arithmetic rows per tagged hash step, making private hash input connections a larger target. This is not yet integrated into closure; the full length VM comparison failed before its merge and remains incomplete.
 
 The [matched common-key leanVM comparison](evidence/2026-10-23-common-key-vm-comparison/README.md) now reuses one key per backend across all measured levels. At eight chain16 leaves, native/VM all creation is 19.890/7.284 s and final merge is 1.266/0.860 s over three alternating pairs. Native has faster complete Rust root verification. Leaf creation starts from raw hash inputs and is not work a builder repeats when it receives existing client proofs; real application wrapping and dependency-list aggregation remain unmeasured.
