@@ -1,0 +1,1 @@
+ML-DSA-44 signature verification vectors from NIST ACVP-Server commit 65370b8, gen-val/json-files/ML-DSA-sigVer-FIPS204/internalProjection.json. Each line contains tcId, expected validity, public key, internal message, signature. Hex encoding is unchanged. These exercise FIPS 204 Verify_internal. The ordinary guest uses Verify with empty context.

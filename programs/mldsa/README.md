@@ -1,0 +1,11 @@
+# ML-DSA-44 guest
+
+The baseline verifies standard FIPS 204 public-key and signature bytes with RustCrypto `ml-dsa` 0.1.1, default features disabled. Its SHAKE and Keccak run as ordinary RISC-V code. Advice holds a count, then 164 public-key words, four message words, and 303 signature words per item, all little endian. The final signature word has four zero padding bytes. Each item commits validity, the key and the message through the SDK public-output digest. Invalid signatures commit zero validity.
+
+From the repository root, run `programs/mldsa/build.sh` for the baseline ELF or `programs/mldsa/build.sh sdk-keccak` for `mldsa-sdk.elf`. The latter patches only the SHAKE permutation callback to `leanvm_guest::keccak::f1600`. Both use the pinned guest nightly. `programs/build.sh` also builds the baseline.
+
+`cargo test --release -p mldsa-host` runs ACVP and rejection tests. Set `L5_TEST_ELF` to an absolute ELF path to run interpreter tests against the variant. To test its native SHAKE as well, use `cargo --config 'patch.crates-io.shake.path="programs/mldsa/vendor/shake"' test --release -p mldsa-host`.
+
+The `measure` example accepts `mldsa|falcon` followed by `cycles`, `prove <proof-file>`, `verify <proof-file>`, or `merge <leaf-proof-file>`. Set `L5_LOG_INV_RATE=2` for rate 1/4. Its default is `Rate::MIN`, rate 1/2. `L5_PROFILE_ELF` selects an alternate guest ELF. Merge uses two copies of one leaf proof, leaf rate 1/4 and tree rate 1/2. Wallet timing excludes fixture preparation, ELF loading and proof encoding, and includes execution and proof construction. Both programs use the same allocator and exact 12-thread pool.
+
+For phase profiling, run `python3 programs/mldsa/tools/make-profile.py` from the repository root, then build the guest with `--config 'patch.crates-io.ml-dsa.path="../../../../L5-profile-mldsa"'`. That temporary dependency inserts ordinary `addi x0,x0,id` instructions. Pass the ELF to `tools/extract-markers.py` to produce the marker map, then use `measure mldsa phases <marker-map>` with `L5_PROFILE_ELF` pointing to that ELF. IDs are 100 (remaining work), 101 (ExpandA), 103 (NTTs/products), 104 (decoding), 105 (hint/norm), 106 (tr), 107 (mu), 108 (SampleInBall), and 109 (challenge hash). The harness excludes marker instructions from phase counts.

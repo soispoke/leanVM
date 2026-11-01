@@ -1,0 +1,9 @@
+[package]
+name = "mldsa"
+version = "0.1.0"
+edition = "2024"
+publish = false
+[dependencies]
+leanvm_guest = { path = "../../../sdk" }
+ml-dsa = { version = "=0.1.1", default-features = false }
+[workspace]

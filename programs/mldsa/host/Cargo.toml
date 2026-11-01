@@ -1,0 +1,13 @@
+[package]
+name = "mldsa-host"
+version.workspace = true
+edition.workspace = true
+publish = false
+[dependencies]
+mldsa = { path = "../guest" }
+ml-dsa = { version = "=0.1.1", default-features = false }
+leanvm_guest.workspace = true
+leanvm.workspace = true
+parallel.workspace = true
+falcon-host.workspace = true
+
