@@ -24,5 +24,13 @@ tikv-jemallocator.workspace = true
 tracing.workspace = true
 
 [features]
+keccak-route-qfirst = ["keccak-route-alias"]
+keccak-route-alias = ["keccak-route-compact"]
+keccak-route-compact = ["keccak-canonical-route"]
+keccak-canonical-route = ["keccak-quad-cap-fast"]
+keccak-quad-cap-fast = ["keccak-quad-cap"]
+keccak-quad-cap = ["keccak-merkle-arity4", "keccak-batched-transcript"]
+keccak-merkle-arity4 = ["keccak-protocol", "primitives/keccak-merkle-arity4"]
+keccak-merkle-cap = ["keccak-protocol"]
 keccak-protocol = ["primitives/keccak-protocol"]
 keccak-batched-transcript = ["keccak-protocol", "fiat_shamir/keccak-batched-transcript"]

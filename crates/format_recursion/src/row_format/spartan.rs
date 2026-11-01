@@ -56,6 +56,7 @@ pub struct Setup {
     pub z_log: usize,
     pub row_log: usize,
     pub q_offset: usize,
+    pub z_offset: usize,
     pub stack_log: usize,
     pub committed_words: usize,
 }
@@ -86,11 +87,37 @@ impl Setup {
         let z_log = r1cs.origins.len().next_power_of_two().trailing_zeros() as usize;
         let row_log = r1cs.rows().next_power_of_two().trailing_zeros() as usize;
         let q_words = 1usize << (K_LOG - LOG_PACKING + r1cs.block_log);
-        let q_offset = (3usize << z_log).next_multiple_of(q_words);
-        let committed_words = q_offset + q_words;
-        let stack_log = committed_words.next_power_of_two().trailing_zeros() as usize;
+        let q_first = cfg!(feature = "keccak-route-qfirst") && q_words >= (1usize << z_log);
+        let q_offset = if q_first {
+            0
+        } else {
+            (3usize << z_log).next_multiple_of(q_words)
+        };
+        let z_offset = if q_first { q_words } else { 0 };
+        let raw_words = if q_first {
+            q_words + (3usize << z_log)
+        } else {
+            q_offset + q_words
+        };
+        let stack_log = raw_words.next_power_of_two().trailing_zeros() as usize;
+        // WHIR rows have a fixed common lane count. Pad only to that public
+        // granularity, rather than a second full q region.
+        let row_words = 1usize << stack_log.saturating_sub(INITIAL_FOLDING_FACTOR);
+        let committed_words = if q_first {
+            raw_words.next_multiple_of(row_words)
+        } else {
+            raw_words
+        };
         let mut h = primitives::protocol_hash::Hasher::new();
         h.update(b"standard-row-format-direct-matrices-v1");
+        if primitives::protocol_hash::MERKLE_ARITY4 {
+            h.update(b"whir-quad-v1");
+        }
+        if q_first {
+            h.update(b"q-first-joint-stack-v1");
+            h.update(&(z_offset as u64).to_le_bytes());
+            h.update(&(committed_words as u64).to_le_bytes());
+        }
         h.update(&[u8::from(ccs)]);
         for x in [
             r1cs.rows(),
@@ -125,6 +152,7 @@ impl Setup {
             z_log,
             row_log,
             q_offset,
+            z_offset,
             stack_log,
             committed_words,
         }
@@ -156,7 +184,7 @@ impl Setup {
         let mut limbs = [F192::ZERO; 3];
         let n = 1usize << self.z_log;
         for limb in 0..3 {
-            let at = limb * n + offset;
+            let at = self.z_offset + limb * n + offset;
             let value = whir::inner_product_base_ext(&stack[at..at + weights.len()], &weights);
             ps.add_scalar(value);
             limbs[limb] = value;
@@ -180,7 +208,7 @@ impl Setup {
             let value = vs.next_scalar().ok()?;
             limbs[limb] = value;
             claims.push(StackClaim::Point {
-                offset: limb * (1usize << self.z_log) + offset,
+                offset: self.z_offset + limb * (1usize << self.z_log) + offset,
                 low_point: point.to_vec(),
                 value,
             });
@@ -196,7 +224,7 @@ impl Setup {
                 .zip(&weights)
                 .fold(F192::ZERO, |s, (&v, &w)| s + w.mul_base(F64([v.c0, v.c1, v.c2][limb])));
             claims.push(StackClaim::Point {
-                offset: limb * n,
+                offset: self.z_offset + limb * n,
                 low_point: point.to_vec(),
                 value,
             });
@@ -208,7 +236,7 @@ impl Setup {
         for (slot, &value) in values.iter().enumerate() {
             for limb in 0..3 {
                 claims.push(StackClaim::Point {
-                    offset: limb * n + self.r1cs.port_start + slot * blocks,
+                    offset: self.z_offset + limb * n + self.r1cs.port_start + slot * blocks,
                     low_point: point.to_vec(),
                     value: if limb == 0 { value } else { F192::ZERO },
                 });
@@ -322,16 +350,20 @@ impl Setup {
             .in_scope(|| generate_witness_with_ab_packed_and_lincheck(blocks, self.r1cs.block_log));
         let mut stack = vec![F64::ZERO; self.committed_words];
         let n = z.len();
-        parallel::chunks_mut(&mut stack[..3 * n], n.min(4096), |chunk, out| {
-            let start = chunk * n.min(4096);
-            let limb = start / n;
-            let at = start % n;
-            let len = out.len();
-            for (dest, v) in out.iter_mut().zip(&z[at..at + len]) {
-                *dest = F64([v.c0, v.c1, v.c2][limb]);
-            }
-        });
-        for (dest, &v) in stack[self.q_offset..].iter_mut().zip(&q) {
+        parallel::chunks_mut(
+            &mut stack[self.z_offset..self.z_offset + 3 * n],
+            n.min(4096),
+            |chunk, out| {
+                let start = chunk * n.min(4096);
+                let limb = start / n;
+                let at = start % n;
+                let len = out.len();
+                for (dest, v) in out.iter_mut().zip(&z[at..at + len]) {
+                    *dest = F64([v.c0, v.c1, v.c2][limb]);
+                }
+            },
+        );
+        for (dest, &v) in stack[self.q_offset..self.q_offset + q.len()].iter_mut().zip(&q) {
             *dest = F64(v);
         }
         let (commitment, data) = tracing::info_span!("Joint commitment")
@@ -380,7 +412,7 @@ impl Setup {
         let weights = eq_table(&point);
         let mut ports = [F192::ZERO; PORTS];
         for (slot, v) in ports.iter_mut().enumerate() {
-            let at = self.r1cs.port_start + slot * (1usize << self.r1cs.block_log);
+            let at = self.z_offset + self.r1cs.port_start + slot * (1usize << self.r1cs.block_log);
             *v = whir::inner_product_base_ext(&stack[at..at + weights.len()], &weights);
             ps.add_scalar(*v);
         }
@@ -531,6 +563,24 @@ mod tests {
             foreign[2] += F192::ONE;
             let z = setup.r1cs.witness(&foreign);
             assert!(!setup.r1cs.satisfied(&z));
+            #[cfg(feature = "keccak-route-qfirst")]
+            {
+                assert_eq!(setup.q_offset, 0);
+                assert!(setup.z_offset > 0);
+                let mut shifted = setup;
+                let z_offset = shifted.z_offset;
+                shifted.z_offset = 0;
+                assert!(
+                    shifted.verify(&public, &context, &proof).is_none(),
+                    "wrong logical-to-physical witness offset rejects through the verifier"
+                );
+                shifted.z_offset = z_offset;
+                shifted.q_offset = z_offset;
+                assert!(
+                    shifted.verify(&public, &context, &proof).is_none(),
+                    "wrong native-witness offset rejects through the verifier"
+                );
+            }
         }
     }
 }

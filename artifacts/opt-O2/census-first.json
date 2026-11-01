@@ -1,0 +1,118 @@
+{
+  "total": 9808,
+  "purposes": {
+    "unsectioned": [
+      57,
+      6,
+      1
+    ],
+    "sparse-outer-sumcheck": [
+      991,
+      132,
+      2
+    ],
+    "sparse-inner-sumcheck": [
+      851,
+      111,
+      2
+    ],
+    "sparse-flock-reduction": [
+      673090,
+      560,
+      2
+    ],
+    "sparse-joint-opening": [
+      122534,
+      306,
+      392
+    ],
+    "leaf": [
+      17234,
+      1394,
+      390
+    ],
+    "path": [
+      106552,
+      5608,
+      390
+    ],
+    "matrix-fold-input-binding": [
+      41916,
+      15,
+      1
+    ],
+    "matrix-fold-row-sumcheck": [
+      378,
+      54,
+      1
+    ],
+    "matrix-fold-column-sumcheck": [
+      623,
+      60,
+      1
+    ],
+    "final-equalities-and-unused-limbs": [
+      35270,
+      1562,
+      1
+    ]
+  },
+  "phases": {
+    "sparse-joint-opening/whir-leaf/phase-1/depth-16/words-64/queries-112": [
+      5712,
+      448
+    ],
+    "sparse-joint-opening/whir-path/phase-1/depth-16/queries-112": [
+      34048,
+      1792
+    ],
+    "sparse-joint-opening/whir-leaf/phase-2/depth-15/words-48/queries-45": [
+      1575,
+      135
+    ],
+    "sparse-joint-opening/whir-path/phase-2/depth-15/queries-45": [
+      12825,
+      675
+    ],
+    "sparse-joint-opening/whir-leaf/phase-3/depth-14/words-48/queries-28": [
+      980,
+      84
+    ],
+    "sparse-joint-opening/whir-path/phase-3/depth-14/queries-28": [
+      7448,
+      392
+    ],
+    "sparse-joint-opening/whir-leaf/phase-4/depth-13/words-48/queries-20": [
+      700,
+      60
+    ],
+    "sparse-joint-opening/whir-path/phase-4/depth-13/queries-20": [
+      4940,
+      260
+    ],
+    "sparse-joint-opening/whir-leaf/phase-1/depth-14/words-64/queries-112": [
+      5712,
+      448
+    ],
+    "sparse-joint-opening/whir-path/phase-1/depth-14/queries-112": [
+      29792,
+      1568
+    ],
+    "sparse-joint-opening/whir-leaf/phase-2/depth-13/words-48/queries-45": [
+      1575,
+      135
+    ],
+    "sparse-joint-opening/whir-path/phase-2/depth-13/queries-45": [
+      11115,
+      585
+    ],
+    "sparse-joint-opening/whir-leaf/phase-3/depth-12/words-48/queries-28": [
+      980,
+      84
+    ],
+    "sparse-joint-opening/whir-path/phase-3/depth-12/queries-28": [
+      6384,
+      336
+    ]
+  }
+}

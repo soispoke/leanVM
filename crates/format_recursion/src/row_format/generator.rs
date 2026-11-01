@@ -132,6 +132,16 @@ impl Generator {
                 );
             }
         }
+        // Match the R1CS compiler's source-ID port aliases exactly.
+        #[cfg(feature = "keccak-route-alias")]
+        for slot in 0..crate::row_hash::PORTS {
+            for (block, io) in source.connectors.iter().enumerate() {
+                let id = io[slot];
+                if map[id] == usize::MAX && defs[id].is_none() && !fixed.contains_key(&id) {
+                    map[id] = port_start + slot * blocks + block;
+                }
+            }
+        }
         let mut rows = Vec::new();
         let mut insert = |forms: &[Arc<Form>]| {
             for f in forms {
@@ -408,5 +418,63 @@ impl Generator {
             && claim.row_point.len() == self.row_log
             && claim.col_point.len() == self.col_log
             && self.evaluate(&claim.row_point, &claim.col_point) == claim.matrix_values
+    }
+}
+
+#[cfg(all(test, feature = "keccak-route-alias"))]
+mod alias_tests {
+    use super::*;
+    use crate::{
+        native_arithmetic::Circuit,
+        row_format::{R1cs, spartan::Setup},
+    };
+
+    #[test]
+    fn port_aliases_keep_repeated_ports_arithmetic_and_generator_bound() {
+        let a = F192::new(37, 0, 0);
+        let b = F192::new(11, 0, 0);
+        let values = vec![F192::ZERO, F192::ONE, a, b, a * b];
+        let mut io = [2usize; crate::row_hash::PORTS];
+        io[1] = 3;
+        io[25] = 4;
+        // The compiler treats ports as identities; this fixture tests that
+        // mapping separately from the native permutation relation.
+        let source = Source {
+            circuit: Circuit {
+                variables: 5,
+                rows: vec![[2, 3, 0, 4]],
+                public: vec![0, 1, 4],
+            },
+            fixed_len: 2,
+            connectors: vec![io, io],
+            values,
+            compressions: vec![[0; 25]; 2],
+            rebuild: Box::new(|| unreachable!()),
+        };
+        let r = R1cs::lower_bounded(&source.circuit, &source.connectors, &source.values, 2, 8);
+        let witness = r.witness(&source.values);
+        assert!(r.satisfied(&witness));
+        let mut bad = witness.clone();
+        bad[r.port_start + 1] += F192::ONE;
+        assert!(!r.satisfied(&bad), "a repeated port still equals its representative");
+        let mut bad = witness;
+        for (v, origin) in bad.iter_mut().zip(&r.origins) {
+            if matches!(origin, Origin::Variable(2)) {
+                *v += F192::ONE;
+            }
+        }
+        assert!(
+            !r.satisfied(&bad),
+            "coherently changed aliases still satisfy the original product only if valid"
+        );
+        let setup = Setup::new(r, false);
+        let generator = Generator::new(&source, 8, setup.key);
+        let rp: Vec<_> = (0..setup.row_log).map(|i| F192::new(i as u64 + 3, 5, 7)).collect();
+        let cp: Vec<_> = (0..setup.z_log).map(|i| F192::new(i as u64 + 11, 13, 17)).collect();
+        assert_eq!(
+            generator.evaluate(&rp, &cp),
+            setup.matrix_evals(&rp, &cp),
+            "trusted generator and explicit matrices use exactly the same alias map"
+        );
     }
 }

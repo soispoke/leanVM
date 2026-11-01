@@ -262,6 +262,19 @@ impl R1cs {
                 );
             }
         }
+        // These are identical source variable IDs, not equal witness values.
+        // A live native port can serve as its source column directly. Repeated
+        // ports keep equality rows to that first representative; affine and
+        // fixed definitions continue to be materialized normally.
+        #[cfg(feature = "keccak-route-alias")]
+        for slot in 0..PORTS {
+            for (block, io) in connectors.iter().enumerate() {
+                let id = io[slot];
+                if map[id] == usize::MAX && defs[id].is_none() && !fixed.contains_key(&id) {
+                    map[id] = port_start + slot * blocks + block;
+                }
+            }
+        }
         let mut expand = Expand {
             defs: &defs,
             fixed: &fixed,

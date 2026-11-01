@@ -4,6 +4,17 @@
 use crate::transcript::Error;
 use primitives::field::{F64, F192};
 
+#[path = "merkle_quad.rs"]
+mod quad;
+
+pub fn path_hash_count(depth: usize) -> usize {
+    if primitives::protocol_hash::MERKLE_ARITY4 {
+        3 * (depth / 2) + depth % 2
+    } else {
+        depth
+    }
+}
+
 pub type Hash = [u8; 32];
 
 /// Encode a Merkle hash as the two field words transcripts carry it in: two
@@ -99,6 +110,9 @@ impl PrunedMerklePaths {
     /// hashes (what `q` independent paths would cost) and typically much
     /// smaller, since a sibling shared by several paths is emitted once.
     pub fn prune(tree: &[Hash], num_leaves: usize, positions: &[usize], row: impl Fn(usize) -> Vec<F64>) -> Self {
+        if primitives::protocol_hash::MERKLE_ARITY4 {
+            return quad::prune(tree, num_leaves, positions, row);
+        }
         assert!(num_leaves.is_power_of_two() && num_leaves > 0);
         assert_eq!(tree.len(), 2 * num_leaves - 1);
         let sorted = sorted_unique(positions);
@@ -168,6 +182,9 @@ impl PrunedMerklePaths {
         row_words: usize,
         leaf_words: usize,
     ) -> Option<Vec<RawMerklePath>> {
+        if primitives::protocol_hash::MERKLE_ARITY4 {
+            return quad::open(self, root, num_leaves, queries, row_words, leaf_words);
+        }
         if !num_leaves.is_power_of_two() || num_leaves == 0 || queries.is_empty() {
             return None;
         }
@@ -255,6 +272,9 @@ pub struct RawMerklePath {
 impl RawMerklePath {
     /// Recompute the root this opening claims, from its leaf and path.
     pub fn root(&self, leaf_index: usize) -> Hash {
+        if primitives::protocol_hash::MERKLE_ARITY4 {
+            return quad::root(self, leaf_index);
+        }
         let mut acc = hash_words(&self.leaf_data);
         let mut idx = leaf_index;
         for sibling in &self.path {
@@ -275,7 +295,14 @@ mod tests {
         let (mut start, mut len) = (0usize, rows.len());
         while len > 1 {
             for i in 0..len / 2 {
-                tree.push(hash_pair(&tree[start + 2 * i], &tree[start + 2 * i + 1]));
+                let digest = if primitives::protocol_hash::MERKLE_ARITY4 && (rows.len() / len).ilog2() % 2 == 1 {
+                    let begin = start - 2 * len + 4 * i;
+                    let bytes: Vec<_> = tree[begin..begin + 4].iter().flat_map(|h| h.iter().copied()).collect();
+                    primitives::protocol_hash::hash(&bytes)
+                } else {
+                    hash_pair(&tree[start + 2 * i], &tree[start + 2 * i + 1])
+                };
+                tree.push(digest);
             }
             start += len;
             len /= 2;
@@ -300,7 +327,7 @@ mod tests {
         assert_eq!(openings.len(), queries.len());
         for (opening, &q) in openings.iter().zip(&queries) {
             assert_eq!(opening.leaf_data, rows[q], "row must follow query order");
-            assert_eq!(opening.path.len(), height);
+            assert_eq!(opening.path.len(), path_hash_count(height));
             assert_eq!(opening.root(q), root, "each unpruned path must reach the root");
         }
     }

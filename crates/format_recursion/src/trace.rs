@@ -74,6 +74,16 @@ pub(crate) fn gate_checks_since(start: usize, enabled: S) {
     }
 }
 
+pub(crate) fn section_name() -> String {
+    TRACE.with(|t| {
+        t.borrow()
+            .sections
+            .last()
+            .map(|x| x.0.clone())
+            .unwrap_or_else(|| "unsectioned".into())
+    })
+}
+
 pub fn mark(name: &str) {
     TRACE.with(|t| {
         let mut t = t.borrow_mut();

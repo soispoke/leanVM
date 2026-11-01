@@ -1,0 +1,5 @@
+# Source-ID aliases for native ports
+
+`keccak-route-alias` lets a live hash port be the R1CS column for the identical source variable ID. The first such port is chosen deterministically by slot and block order. This is independent of private values. Public columns keep their existing mappings; fixed and eliminated affine definitions are still materialized normally. Repeated ports keep equality rows to their representative. Only identity equations x=x disappear. The explicit R1CS compiler and trusted generator use the same map, and setup keys authenticate the resulting matrices and dimensions.
+
+This neither removes a native permutation nor omits a hash relation or source equation. A new regression changes a repeated port directly, then coherently changes all aliases of a source while preserving its claimed product; both fail the original arithmetic equations. It also compares generator evaluations to the explicit sparse matrices at nontrivial extension-field points. Full verifier regressions retain false carried claims, substituted keys, wrong paths/leaves/challenges and tampered proofs. These are implementation tests, not a formal soundness proof.
