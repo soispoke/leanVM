@@ -1,0 +1,400 @@
+{
+  "aggregate": {
+    "census": {
+      "constraints": 4194304,
+      "eliminated_definitions": 464255,
+      "hash_port_start": 16384,
+      "hash_slots": 16384,
+      "linear_constraints": 882181,
+      "max_row_nonzeros": 12,
+      "native_compressions": 14419,
+      "nonzeros": [
+        2688114,
+        2170937,
+        1011042
+      ],
+      "public_length": 304,
+      "pure_add_rows": 300850,
+      "pure_add_share": 0.261524552969914,
+      "source_rows": 1150370,
+      "source_variables": 1847193,
+      "witness_length_f192": 4194304,
+      "witness_padded_f192": 4194304
+    },
+    "col_log": 22,
+    "committed_words": 33554432,
+    "joint_whir": {
+      "level_ks": [
+        4,
+        4,
+        4,
+        4
+      ],
+      "log_inverse_rates": [
+        2,
+        5,
+        8,
+        11,
+        14
+      ],
+      "ood_samples": [
+        0,
+        1,
+        1,
+        1,
+        1
+      ],
+      "queries": [
+        112,
+        45,
+        28,
+        21,
+        16
+      ],
+      "query_grinding_bits": [
+        17,
+        17,
+        17,
+        17,
+        17
+      ],
+      "target_bits": 128
+    },
+    "key": [
+      55,
+      127,
+      254,
+      128,
+      70,
+      64,
+      249,
+      49,
+      160,
+      217,
+      233,
+      181,
+      154,
+      60,
+      36,
+      119,
+      90,
+      191,
+      113,
+      27,
+      31,
+      126,
+      144,
+      225,
+      143,
+      17,
+      254,
+      36,
+      16,
+      108,
+      21,
+      252
+    ],
+    "q_offset": 16777216,
+    "row_log": 22,
+    "stack_log": 25
+  },
+  "shielded": {
+    "census": {
+      "constraints": 4194304,
+      "eliminated_definitions": 213637,
+      "hash_port_start": 16384,
+      "hash_slots": 16384,
+      "linear_constraints": 836723,
+      "max_row_nonzeros": 11,
+      "native_compressions": 57,
+      "nonzeros": [
+        1525748,
+        970508,
+        116957
+      ],
+      "public_length": 304,
+      "pure_add_rows": 50146,
+      "pure_add_share": 0.14417476007291252,
+      "source_rows": 347814,
+      "source_variables": 347904,
+      "witness_length_f192": 4194304,
+      "witness_padded_f192": 4194304
+    },
+    "col_log": 22,
+    "committed_words": 33554432,
+    "joint_whir": {
+      "level_ks": [
+        4,
+        4,
+        4,
+        4
+      ],
+      "log_inverse_rates": [
+        2,
+        5,
+        8,
+        11,
+        14
+      ],
+      "ood_samples": [
+        0,
+        1,
+        1,
+        1,
+        1
+      ],
+      "queries": [
+        112,
+        45,
+        28,
+        21,
+        16
+      ],
+      "query_grinding_bits": [
+        17,
+        17,
+        17,
+        17,
+        17
+      ],
+      "target_bits": 128
+    },
+    "key": [
+      76,
+      49,
+      44,
+      18,
+      89,
+      194,
+      30,
+      220,
+      187,
+      130,
+      196,
+      113,
+      164,
+      206,
+      138,
+      84,
+      222,
+      74,
+      239,
+      146,
+      78,
+      159,
+      209,
+      162,
+      147,
+      229,
+      102,
+      234,
+      213,
+      188,
+      2,
+      57
+    ],
+    "q_offset": 16777216,
+    "row_log": 22,
+    "stack_log": 25
+  },
+  "keccak1k": {
+    "census": {
+      "constraints": 4194304,
+      "eliminated_definitions": 29576,
+      "hash_port_start": 16384,
+      "hash_slots": 16384,
+      "linear_constraints": 823365,
+      "max_row_nonzeros": 11,
+      "native_compressions": 9,
+      "nonzeros": [
+        1290075,
+        844357,
+        20992
+      ],
+      "public_length": 304,
+      "pure_add_rows": 7107,
+      "pure_add_share": 0.130571376079368,
+      "source_rows": 54430,
+      "source_variables": 54521,
+      "witness_length_f192": 4194304,
+      "witness_padded_f192": 4194304
+    },
+    "col_log": 22,
+    "committed_words": 33554432,
+    "joint_whir": {
+      "level_ks": [
+        4,
+        4,
+        4,
+        4
+      ],
+      "log_inverse_rates": [
+        2,
+        5,
+        8,
+        11,
+        14
+      ],
+      "ood_samples": [
+        0,
+        1,
+        1,
+        1,
+        1
+      ],
+      "queries": [
+        112,
+        45,
+        28,
+        21,
+        16
+      ],
+      "query_grinding_bits": [
+        17,
+        17,
+        17,
+        17,
+        17
+      ],
+      "target_bits": 128
+    },
+    "key": [
+      34,
+      19,
+      212,
+      17,
+      69,
+      115,
+      229,
+      139,
+      148,
+      97,
+      60,
+      75,
+      154,
+      184,
+      139,
+      150,
+      20,
+      134,
+      105,
+      187,
+      154,
+      117,
+      25,
+      197,
+      250,
+      76,
+      178,
+      83,
+      175,
+      14,
+      149,
+      111
+    ],
+    "q_offset": 16777216,
+    "row_log": 22,
+    "stack_log": 25
+  },
+  "mpt": {
+    "census": {
+      "constraints": 4194304,
+      "eliminated_definitions": 680106,
+      "hash_port_start": 16384,
+      "hash_slots": 16384,
+      "linear_constraints": 918084,
+      "max_row_nonzeros": 17,
+      "native_compressions": 63,
+      "nonzeros": [
+        3289266,
+        1868150,
+        445294
+      ],
+      "public_length": 304,
+      "pure_add_rows": 578194,
+      "pure_add_share": 0.4723880517753135,
+      "source_rows": 1223981,
+      "source_variables": 1224071,
+      "witness_length_f192": 4194304,
+      "witness_padded_f192": 4194304
+    },
+    "col_log": 22,
+    "committed_words": 33554432,
+    "joint_whir": {
+      "level_ks": [
+        4,
+        4,
+        4,
+        4
+      ],
+      "log_inverse_rates": [
+        2,
+        5,
+        8,
+        11,
+        14
+      ],
+      "ood_samples": [
+        0,
+        1,
+        1,
+        1,
+        1
+      ],
+      "queries": [
+        112,
+        45,
+        28,
+        21,
+        16
+      ],
+      "query_grinding_bits": [
+        17,
+        17,
+        17,
+        17,
+        17
+      ],
+      "target_bits": 128
+    },
+    "key": [
+      2,
+      40,
+      72,
+      54,
+      179,
+      136,
+      197,
+      41,
+      96,
+      181,
+      111,
+      43,
+      32,
+      250,
+      57,
+      163,
+      122,
+      1,
+      153,
+      206,
+      80,
+      255,
+      0,
+      168,
+      22,
+      34,
+      132,
+      182,
+      74,
+      13,
+      90,
+      3
+    ],
+    "q_offset": 16777216,
+    "row_log": 22,
+    "stack_log": 25
+  },
+  "helper_binary_sha256": "9b0d5a8eb09091990335845380cf1b61ca9965955c2221898b7803569d308bfb",
+  "scope": "Read-only census of public cached setup sharing entry7 compact key/derivation; not timed proof results."
+}

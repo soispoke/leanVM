@@ -1,0 +1,10 @@
+    Blocking waiting for file lock on build directory
+   Compiling format_recursion v0.1.0 (/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/trial-entrant/crates/format_recursion)
+    Finished `release` profile [optimized] target(s) in 48.97s
+     Running unittests src/lib.rs (../target-trial-entrant/release/deps/format_recursion-71b74cbe500e5564)
+
+running 1 test
+test row_format::fold::native_tests::native_matrix_fold_matches_symbolic_and_rejects_mutations ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 69 filtered out; finished in 0.04s
+

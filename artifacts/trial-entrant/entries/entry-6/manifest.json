@@ -1,0 +1,162 @@
+{
+  "id": "entry-6",
+  "system": "leanR1CS",
+  "source_commit": "bc7de4ca323dca4d7020f4c4164bba96bd275486",
+  "protocol_hash": "Keccak-256 Ethereum padding everywhere; native Keccak-f1600 rows",
+  "relation_B": "not admitted in bounded sparse envelope",
+  "zk": false,
+  "binaries": [
+    {
+      "path": "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/trial/entries/entry-6/trial_universal",
+      "sha256": "da1684edd4ae118b50bf92f9d5808d7fc9a9f534615fb50a40f3d931aa18b697"
+    }
+  ],
+  "generators": {},
+  "aggregate_key": {
+    "path": "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/trial/universal-keccak-tight-setup-v1/aggregate.key",
+    "sha256": "65d74ef5bae806e327050dd092de55cf2829e63103d98b6c4d25632ae0d4dd00",
+    "derivation": "uniform public dummy verifier,22/22dimensions,blocklog14,6slots,exact structured padding evaluator",
+    "max_applications": 5,
+    "max_depth": 2,
+    "retained_artifacts": [
+      {
+        "path": "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/trial/universal-keccak-tight-setup-v1/aggregate.trace",
+        "bytes": 55649160,
+        "sha256": "f5f5df819a2ce48216d8b40b78077d6458b2bd90309738b0f1dc880d34666740"
+      },
+      {
+        "path": "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/trial/universal-keccak-tight-setup-v1/aggregate.key",
+        "bytes": 32,
+        "sha256": "65d74ef5bae806e327050dd092de55cf2829e63103d98b6c4d25632ae0d4dd00"
+      },
+      {
+        "path": "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/trial/universal-keccak-tight-setup-v1/aggregate.public-cache",
+        "bytes": 554493614,
+        "sha256": "97d2ad48abe5d297e624babcd871b195a625911fd83d1f95f245689e4633340e"
+      },
+      {
+        "path": "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/trial/universal-keccak-tight-setup-v1/aggregate.setup",
+        "bytes": 376864169,
+        "sha256": "3805204e0408dcc2f6a989435c71170a58e7443fe3e0c1500daa45de5cd78379"
+      }
+    ],
+    "retained_bytes": 987006975
+  },
+  "setup": {
+    "argv": [
+      "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/trial/entries/entry-6/trial_universal",
+      "setup",
+      "{output}"
+    ],
+    "public_only_input_contract": "Deterministic public dummy generator; witness-erased trace. No real application inputs. Native workload decoders compiled into binary before freeze.",
+    "output_directory": "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/trial/universal-keccak-tight-setup-v1",
+    "retained_artifacts": [
+      {
+        "path": "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/trial/universal-keccak-tight-setup-v1/aggregate.trace",
+        "bytes": 55649160,
+        "sha256": "f5f5df819a2ce48216d8b40b78077d6458b2bd90309738b0f1dc880d34666740"
+      },
+      {
+        "path": "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/trial/universal-keccak-tight-setup-v1/aggregate.key",
+        "bytes": 32,
+        "sha256": "65d74ef5bae806e327050dd092de55cf2829e63103d98b6c4d25632ae0d4dd00"
+      },
+      {
+        "path": "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/trial/universal-keccak-tight-setup-v1/aggregate.public-cache",
+        "bytes": 554493614,
+        "sha256": "97d2ad48abe5d297e624babcd871b195a625911fd83d1f95f245689e4633340e"
+      },
+      {
+        "path": "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/trial/universal-keccak-tight-setup-v1/aggregate.setup",
+        "bytes": 376864169,
+        "sha256": "3805204e0408dcc2f6a989435c71170a58e7443fe3e0c1500daa45de5cd78379"
+      }
+    ],
+    "wall_time": 16.592529219022254,
+    "process_tree_peak_ram_kib": 5600952,
+    "retained_key_bytes": 987006975,
+    "application_retained_artifacts": [],
+    "note": "Same aggregate key/setupbytes asentry5; changedbinary/decoder requires new freeze/draw. Extra public-only generator-setup interface accepts bounded canonical Description bytes without reading witness."
+  },
+  "commands": {
+    "wallet": [
+      "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/trial/entries/entry-6/trial_universal",
+      "wallet",
+      "{setup}",
+      "{input}",
+      "{output}"
+    ],
+    "merge_first": [
+      "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/trial/entries/entry-6/trial_universal",
+      "merge",
+      "{setup}",
+      "{input}",
+      "{output}"
+    ],
+    "merge_node": [
+      "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/trial/entries/entry-6/trial_universal",
+      "merge",
+      "{setup}",
+      "{input}",
+      "{output}"
+    ],
+    "admission": [
+      "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/trial/entries/entry-6/trial_universal",
+      "admission",
+      "{setup}",
+      "{input}"
+    ],
+    "root": [
+      "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/trial/entries/entry-6/trial_universal",
+      "root",
+      "{setup}",
+      "{input}"
+    ],
+    "reject": []
+  },
+  "input_contract": "Wallet case shielded|merkle|hash3|keccak1k|mpt and seed; fully consumed seeded independent instance. Native workload decoders frozen; only specified decoders, no arbitrary generator execution. v2 schema with 50-connector arrays length checked, full512-bit workload statement bound. Existing entry2 file contracts otherwise unchanged. External native-graph case: generator-setup SETUP ALNUM_CASE CANONICAL_DESCRIPTION; walletJSON case,seed,witness binarypath. Witnessgrammar(version1,seed,valuesF192[],nativeblocks[]),shape/count/fixedanchors checked. Export-witness CASE SEED OUT is a diagnostic helper; upstream external witness construction is not in wallet timer,so no eligible external-wallet score. Builtin wallet modes still include witness generation.",
+  "claim_schema": "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/trial/entries/entry-6/claim-schema.md",
+  "frozen_surface": "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/trial/entries/entry-6/frozen-surface.md",
+  "soundness_note": "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/trial/entries/entry-6/soundness-note.md",
+  "rejections": {
+    "verifier_entrypoint": "universal::verify_root_finalized and fold::verify_native",
+    "cases": {},
+    "coverage": "Direct tests reject missing sidecar, false terminal value, extra scalar, omitted aggregate claim; native fold mutations cover input values/keys/shapes/omissions/transcript/digest/output. No coordinator reject argv."
+  },
+  "status": "partial/ineligible; generic external native-graph decoder and linear evaluator; integration tests pending; no Falcon sparse composition",
+  "missing_capabilities": [
+    "full/reduced Falcon sparse composition",
+    "independent upgrade backend",
+    "security calculator",
+    "complete coordinator rejection argv",
+    "real workload measurements pending"
+  ],
+  "diagnostic_command": [
+    "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/trial/entries/entry-1/trial_universal",
+    "demo",
+    "{setup}",
+    "{output}",
+    "{seed}"
+  ],
+  "evidence": [
+    "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/trial/universal-external-v1/provenance.json",
+    "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/trial/universal-keccak-tight-freeze-v1.json"
+  ],
+  "request": "Please freeze entry6 separately and draw heldouts. New binary accepts bounded canonical native-graph generator bytes and private native witness files. Upstream external witness construction is excluded from file mode timing and explicitly unscored. Known pool builtin modes remain; no Falcon A/B success.",
+  "warm": {
+    "argv": [
+      "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/trial/entries/entry-6/trial_universal",
+      "serve",
+      "{setup}",
+      "shielded,keccak1k,mpt"
+    ],
+    "request_protocol": "JSON lines: command wallet|merge|root|admission, input path, output directory when applicable; ready response before requests; public preprocessing only."
+  },
+  "generator_setup": [
+    "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/trial/entries/entry-6/trial_universal",
+    "generator-setup",
+    "{setup}",
+    "{case}",
+    "{generator}"
+  ]
+}

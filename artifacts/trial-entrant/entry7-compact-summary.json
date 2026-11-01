@@ -1,0 +1,16 @@
+{
+  "requests": 90,
+  "medians_seconds": {
+    "cold:wallet": 5.671725719017559,
+    "cold:first": 18.563998202997027,
+    "cold:node": 20.289481235988205,
+    "cold:root": 14.122579524992034,
+    "cold:admission": 5.693536703009158,
+    "warm:wallet": 3.698239914010628,
+    "warm:first": 4.499601663002977,
+    "warm:node": 6.244730539998272,
+    "warm:root": 0.05624618101865053,
+    "warm:admission": 0.009716871019918472
+  },
+  "max_process_hwm_kib": 6607072
+}

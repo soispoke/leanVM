@@ -1,0 +1,457 @@
+{
+  "timestamp": "2026-10-23T20:40:44.307120+00:00",
+  "checks": [
+    {
+      "entry": 1,
+      "path": "artifacts/trial/entries/entry-1/manifest.json",
+      "matches": true
+    },
+    {
+      "entry": 1,
+      "path": "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/trial/universal-setup-v1/aggregate.key",
+      "expected": "7ea9fcd6c58bbb75883bee574643d0a577550800615012570fd8c93b81c299fa",
+      "matches": true
+    },
+    {
+      "entry": 1,
+      "path": "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/trial/entries/entry-1/trial_universal",
+      "expected": "ad5fe2b567ca30476f78d81940ab3b184ad0bf360d343b0687e117bf579b7f11",
+      "matches": true
+    },
+    {
+      "entry": 1,
+      "path": "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/trial/universal-setup-v1/aggregate.public-cache",
+      "expected": "86885e20b54daa265da11738fbe66ddd8fedc18a8bc93e10918d683aed884e2f",
+      "matches": true
+    },
+    {
+      "entry": 1,
+      "path": "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/trial/universal-setup-v1/aggregate.setup",
+      "expected": "537b81a596157798750ba2dad911d434d9761348d4c1f2af15d208d00fe4b83e",
+      "matches": true
+    },
+    {
+      "entry": 1,
+      "path": "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/trial/universal-setup-v1/aggregate.trace",
+      "expected": "51009bc58129dbc97caabf45724767e524428fd2ecefb26d75b1ff24866a4ebb",
+      "matches": true
+    },
+    {
+      "entry": 1,
+      "path": "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/trial/universal-demo-v1/app-0.generator",
+      "expected": "af571816aa3139b6ff4abb1d68bc4b6b35dc58b566ea6613220b9158e30ab298",
+      "matches": true
+    },
+    {
+      "entry": 1,
+      "path": "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/trial/universal-demo-v1/app-1.generator",
+      "expected": "cea3b859d7cd3522f43c410412823866412eab9a5d40875559f86aa0d556109e",
+      "matches": true
+    },
+    {
+      "entry": 1,
+      "path": "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/trial/universal-demo-v1/app-2.generator",
+      "expected": "65485986ca4d6be2bbf7ce6a670d2261ff73f2303de6cf970ae8d9c7a04fa107",
+      "matches": true
+    },
+    {
+      "entry": 1,
+      "path": "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/trial/entries/entry-1/claim-schema.md",
+      "expected": "180041ec30be7ca17b0231fcc09251f65ba6eed3cd26577b8a92130fc56efb0e",
+      "matches": true
+    },
+    {
+      "entry": 1,
+      "path": "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/trial/entries/entry-1/frozen-surface.md",
+      "expected": "f1d8b4baff420c35653150e864fb688f70ada521576d2982d9aceb1dc613d5bc",
+      "matches": true
+    },
+    {
+      "entry": 1,
+      "path": "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/trial/entries/entry-1/soundness-note.md",
+      "expected": "0909bc2b36d0397044df5aa6798759dc95654384be6a8443effae5c48834078d",
+      "matches": true
+    },
+    {
+      "entry": 2,
+      "path": "artifacts/trial/entries/entry-2/manifest.json",
+      "matches": true
+    },
+    {
+      "entry": 2,
+      "path": "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/trial/universal-setup-v1/aggregate.key",
+      "expected": "7ea9fcd6c58bbb75883bee574643d0a577550800615012570fd8c93b81c299fa",
+      "matches": true
+    },
+    {
+      "entry": 2,
+      "path": "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/trial/entries/entry-2/trial_universal",
+      "expected": "15d12fa88ce7202fa91d3a20ad8b5cc807641dd989a23ca207cded6b26b8f52e",
+      "matches": true
+    },
+    {
+      "entry": 2,
+      "path": "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/trial/universal-setup-v1/aggregate.public-cache",
+      "expected": "86885e20b54daa265da11738fbe66ddd8fedc18a8bc93e10918d683aed884e2f",
+      "matches": true
+    },
+    {
+      "entry": 2,
+      "path": "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/trial/universal-setup-v1/aggregate.setup",
+      "expected": "537b81a596157798750ba2dad911d434d9761348d4c1f2af15d208d00fe4b83e",
+      "matches": true
+    },
+    {
+      "entry": 2,
+      "path": "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/trial/universal-setup-v1/aggregate.trace",
+      "expected": "51009bc58129dbc97caabf45724767e524428fd2ecefb26d75b1ff24866a4ebb",
+      "matches": true
+    },
+    {
+      "entry": 2,
+      "path": "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/trial/universal-setup-v1/apps/hash3/application-id",
+      "expected": "70bd23e3e14e9b68a0e6bb3e5def512367ab1fad3f74dae0b2ab4a097f900298",
+      "matches": true
+    },
+    {
+      "entry": 2,
+      "path": "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/trial/universal-setup-v1/apps/hash3/generator",
+      "expected": "65485986ca4d6be2bbf7ce6a670d2261ff73f2303de6cf970ae8d9c7a04fa107",
+      "matches": true
+    },
+    {
+      "entry": 2,
+      "path": "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/trial/universal-setup-v1/apps/hash3/proof-key",
+      "expected": "7ee9b54f5fff475b0612964b369f0c561c5014b51cff39e260ba103d510d223b",
+      "matches": true
+    },
+    {
+      "entry": 2,
+      "path": "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/trial/universal-setup-v1/apps/hash3/public-cache",
+      "expected": "47a744d6b88e73a593e9bcc6d53ff6b4a149cafc3a5bbb00e0637d34409972b4",
+      "matches": true
+    },
+    {
+      "entry": 2,
+      "path": "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/trial/universal-setup-v1/apps/merkle/application-id",
+      "expected": "dd20d6c427bf144f55ddcaa3fa2edab43d27243f4c7f5b93ffe00f5415c7296e",
+      "matches": true
+    },
+    {
+      "entry": 2,
+      "path": "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/trial/universal-setup-v1/apps/merkle/generator",
+      "expected": "cea3b859d7cd3522f43c410412823866412eab9a5d40875559f86aa0d556109e",
+      "matches": true
+    },
+    {
+      "entry": 2,
+      "path": "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/trial/universal-setup-v1/apps/merkle/proof-key",
+      "expected": "8264009e800d53ec22d14ee13f28e1579532c268f5aff83f15e19f096be7c81c",
+      "matches": true
+    },
+    {
+      "entry": 2,
+      "path": "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/trial/universal-setup-v1/apps/merkle/public-cache",
+      "expected": "03de4d4e2554f1e364f29d1e2d93e3cd2e3893d84ed7999ce6ce97bdc12ee384",
+      "matches": true
+    },
+    {
+      "entry": 2,
+      "path": "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/trial/universal-setup-v1/apps/shielded/application-id",
+      "expected": "d6cff0a644319aeaa989c95c332b3680d7a6f43b625b692700a4da8a3af38f76",
+      "matches": true
+    },
+    {
+      "entry": 2,
+      "path": "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/trial/universal-setup-v1/apps/shielded/generator",
+      "expected": "af571816aa3139b6ff4abb1d68bc4b6b35dc58b566ea6613220b9158e30ab298",
+      "matches": true
+    },
+    {
+      "entry": 2,
+      "path": "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/trial/universal-setup-v1/apps/shielded/proof-key",
+      "expected": "ce714b86935b49bfb32ac6c60575648f239b2b084496aba974a7ccee80c131fb",
+      "matches": true
+    },
+    {
+      "entry": 2,
+      "path": "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/trial/universal-setup-v1/apps/shielded/public-cache",
+      "expected": "51622c674292118b63dc938e3c738076b5bc987ea0253a43ebac2dd173811a07",
+      "matches": true
+    },
+    {
+      "entry": 2,
+      "path": "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/trial/entries/entry-2/claim-schema.md",
+      "expected": "4b356250c1d980dc35110de5ee315df38226b5a1ce3389569d70cda42f7ab642",
+      "matches": true
+    },
+    {
+      "entry": 2,
+      "path": "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/trial/entries/entry-2/frozen-surface.md",
+      "expected": "f1d8b4baff420c35653150e864fb688f70ada521576d2982d9aceb1dc613d5bc",
+      "matches": true
+    },
+    {
+      "entry": 2,
+      "path": "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/trial/entries/entry-2/soundness-note.md",
+      "expected": "a08173eda517da81e40bdec4ff1322a6e135c62a0753c242f936821d4fb102cc",
+      "matches": true
+    },
+    {
+      "entry": 4,
+      "path": "artifacts/trial/entries/entry-4/manifest.json",
+      "matches": true
+    },
+    {
+      "entry": 4,
+      "path": "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/trial/universal-keccak-setup-v2/aggregate.key",
+      "expected": "829dc75f71fc5652b102316d58509169c201a069b5af9293a42d0f5ead0586e3",
+      "matches": true
+    },
+    {
+      "entry": 4,
+      "path": "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/trial/entries/entry-4/trial_universal",
+      "expected": "dfec1719aa106681856c42d9cd478f3e95b677e361a4b989af8b524489c7120c",
+      "matches": true
+    },
+    {
+      "entry": 4,
+      "path": "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/trial/universal-keccak-setup-v2/aggregate.public-cache",
+      "expected": "d0a9a1f0d68c27a0f2bdfd1f839d9fb365773e20f01434e838e84353ecff7eab",
+      "matches": true
+    },
+    {
+      "entry": 4,
+      "path": "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/trial/universal-keccak-setup-v2/aggregate.setup",
+      "expected": "efd28c6870746616252880fb66e0c134a4783ec308eafb966ab86346b7f7b560",
+      "matches": true
+    },
+    {
+      "entry": 4,
+      "path": "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/trial/universal-keccak-setup-v2/aggregate.trace",
+      "expected": "d5b74c7f57b5b97ef5af7fe6bd7a6da1434496a91b6ec4aa0b76763a9410c7f0",
+      "matches": true
+    },
+    {
+      "entry": 4,
+      "path": "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/trial/entries/entry-4/claim-schema.md",
+      "expected": "6ffadaff6001ccb66dae2c251aac90404edc0f8bb32fa6e4220779037984a382",
+      "matches": true
+    },
+    {
+      "entry": 4,
+      "path": "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/trial/entries/entry-4/frozen-surface.md",
+      "expected": "9aeb1d5befde0b3a32661197426f3e587dbf3d44c9d0b813bae4b593a70d43d1",
+      "matches": true
+    },
+    {
+      "entry": 4,
+      "path": "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/trial/entries/entry-4/soundness-note.md",
+      "expected": "1de62f6cce09a88468d3fc38472029ec1cf2db155b61c4be37cd73eae8a86df7",
+      "matches": true
+    },
+    {
+      "entry": 5,
+      "path": "artifacts/trial/entries/entry-5/manifest.json",
+      "matches": true
+    },
+    {
+      "entry": 5,
+      "path": "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/trial/universal-keccak-tight-setup-v1/aggregate.key",
+      "expected": "65d74ef5bae806e327050dd092de55cf2829e63103d98b6c4d25632ae0d4dd00",
+      "matches": true
+    },
+    {
+      "entry": 5,
+      "path": "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/trial/entries/entry-5/trial_universal",
+      "expected": "ed1271ff2fc8fc4a96e7e5119f224a0c89211e343e024a0a298541cd978ee28a",
+      "matches": true
+    },
+    {
+      "entry": 5,
+      "path": "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/trial/universal-keccak-tight-setup-v1/aggregate.trace",
+      "expected": "f5f5df819a2ce48216d8b40b78077d6458b2bd90309738b0f1dc880d34666740",
+      "matches": true
+    },
+    {
+      "entry": 5,
+      "path": "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/trial/universal-keccak-tight-setup-v1/aggregate.public-cache",
+      "expected": "97d2ad48abe5d297e624babcd871b195a625911fd83d1f95f245689e4633340e",
+      "matches": true
+    },
+    {
+      "entry": 5,
+      "path": "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/trial/universal-keccak-tight-setup-v1/aggregate.setup",
+      "expected": "3805204e0408dcc2f6a989435c71170a58e7443fe3e0c1500daa45de5cd78379",
+      "matches": true
+    },
+    {
+      "entry": 5,
+      "path": "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/trial/entries/entry-5/claim-schema.md",
+      "expected": "1e50f5db24f85f60a564635addfeacd5b38af2fb05fb45b53c8cef93695e05b0",
+      "matches": true
+    },
+    {
+      "entry": 5,
+      "path": "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/trial/entries/entry-5/frozen-surface.md",
+      "expected": "169e9db03e71231dcaa4052af4cdbb10beec520aeddaebbb0d525030e9258f55",
+      "matches": true
+    },
+    {
+      "entry": 5,
+      "path": "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/trial/entries/entry-5/soundness-note.md",
+      "expected": "c6e9f7a289efc8849db94ac95f783c8f51e6ed0a40b5687346fcce1615a3ee65",
+      "matches": true
+    },
+    {
+      "entry": 6,
+      "path": "artifacts/trial/entries/entry-6/manifest.json",
+      "matches": true
+    },
+    {
+      "entry": 6,
+      "path": "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/trial/universal-keccak-tight-setup-v1/aggregate.key",
+      "expected": "65d74ef5bae806e327050dd092de55cf2829e63103d98b6c4d25632ae0d4dd00",
+      "matches": true
+    },
+    {
+      "entry": 6,
+      "path": "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/trial/entries/entry-6/trial_universal",
+      "expected": "da1684edd4ae118b50bf92f9d5808d7fc9a9f534615fb50a40f3d931aa18b697",
+      "matches": true
+    },
+    {
+      "entry": 6,
+      "path": "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/trial/universal-keccak-tight-setup-v1/aggregate.trace",
+      "expected": "f5f5df819a2ce48216d8b40b78077d6458b2bd90309738b0f1dc880d34666740",
+      "matches": true
+    },
+    {
+      "entry": 6,
+      "path": "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/trial/universal-keccak-tight-setup-v1/aggregate.public-cache",
+      "expected": "97d2ad48abe5d297e624babcd871b195a625911fd83d1f95f245689e4633340e",
+      "matches": true
+    },
+    {
+      "entry": 6,
+      "path": "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/trial/universal-keccak-tight-setup-v1/aggregate.setup",
+      "expected": "3805204e0408dcc2f6a989435c71170a58e7443fe3e0c1500daa45de5cd78379",
+      "matches": true
+    },
+    {
+      "entry": 6,
+      "path": "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/trial/entries/entry-6/claim-schema.md",
+      "expected": "ab49788cf5758c25d17987b50dcebd616cb32dd7fe238e261ca10ed51bfa5312",
+      "matches": true
+    },
+    {
+      "entry": 6,
+      "path": "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/trial/entries/entry-6/frozen-surface.md",
+      "expected": "dcdb2be8d73c4ac56aea56429789d43bf18a19c5b3b4284929cc8b5db1005b0b",
+      "matches": true
+    },
+    {
+      "entry": 6,
+      "path": "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/trial/entries/entry-6/soundness-note.md",
+      "expected": "3bcd2d3e84082a08f46e6ff667d7f7ba40f529265e2d852cd1a9bbad7a57e690",
+      "matches": true
+    },
+    {
+      "entry": 7,
+      "path": "artifacts/trial/entries/entry-7/manifest.json",
+      "matches": true
+    },
+    {
+      "entry": 7,
+      "path": "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/trial/universal-compact-setup-v2/aggregate.key",
+      "expected": "65d74ef5bae806e327050dd092de55cf2829e63103d98b6c4d25632ae0d4dd00",
+      "matches": true
+    },
+    {
+      "entry": 7,
+      "path": "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/trial/entries/entry-7/trial_universal",
+      "expected": "9cf134074564cd0684ddb89b74d43fc36f69030436580256f9a30c1bd75eba8a",
+      "matches": true
+    },
+    {
+      "entry": 7,
+      "path": "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/trial/universal-compact-setup-v2/aggregate.trace",
+      "expected": "f5f5df819a2ce48216d8b40b78077d6458b2bd90309738b0f1dc880d34666740",
+      "matches": true
+    },
+    {
+      "entry": 7,
+      "path": "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/trial/entries/entry-7/claim-schema.md",
+      "expected": "56faa12faf7d2203f4835f092eab746a6a132d4c6a186f07ef61043c951c3127",
+      "matches": true
+    },
+    {
+      "entry": 7,
+      "path": "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/trial/entries/entry-7/frozen-surface.md",
+      "expected": "b56cb7341fa8938de71603926a158bdf86fa035165eca80d603ef86519f1468d",
+      "matches": true
+    },
+    {
+      "entry": 7,
+      "path": "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/trial/entries/entry-7/soundness-note.md",
+      "expected": "0aa7cf61783a663c19ef3b203eede9a09e62ee54cc9f1350c6535a1b14074080",
+      "matches": true
+    },
+    {
+      "entry": 8,
+      "path": "artifacts/trial/entries/entry-8/manifest.json",
+      "matches": true
+    },
+    {
+      "entry": 8,
+      "path": "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/trial/universal-compact-setup-v2/aggregate.key",
+      "expected": "65d74ef5bae806e327050dd092de55cf2829e63103d98b6c4d25632ae0d4dd00",
+      "matches": true
+    },
+    {
+      "entry": 8,
+      "path": "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/trial/entries/entry-8/trial_universal",
+      "expected": "3539fb96deb3d52b2fe0f3815cc10f848ea1d5090cd925086787fc60c1685f96",
+      "matches": true
+    },
+    {
+      "entry": 8,
+      "path": "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/trial/universal-compact-setup-v2/aggregate.trace",
+      "expected": "f5f5df819a2ce48216d8b40b78077d6458b2bd90309738b0f1dc880d34666740",
+      "matches": true
+    },
+    {
+      "entry": 8,
+      "path": "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/trial/entries/entry-8/claim-schema.md",
+      "expected": "6bf1877e2112a140ef0873615222b9ddb76b9315f53ee8d4a1d42637883a8d31",
+      "matches": true
+    },
+    {
+      "entry": 8,
+      "path": "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/trial/entries/entry-8/frozen-surface.md",
+      "expected": "8d4786b87bc157041c5c76d855ac46e63de0e9a3405b54398d7d6633ec6ae742",
+      "matches": true
+    },
+    {
+      "entry": 8,
+      "path": "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/trial/entries/entry-8/soundness-note.md",
+      "expected": "68824b1fb1afed6e5999217a51007fb7a64aba401d6eb251c7e092d22c855f55",
+      "matches": true
+    },
+    {
+      "entry": 0,
+      "path": "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/trial/entries/entry-0/sparse_tree",
+      "expected": "53cdea9fd300a475a7c66e85ed896e206326060846ad63a6cc8dc131bcad11e3",
+      "matches": true,
+      "scope": "manifest self consistency; no referee freeze receipt"
+    },
+    {
+      "entry": 3,
+      "path": "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/trial/entries/entry-3/falcon_driver",
+      "expected": "7ed63b5fe43c86bd71fc8dda4f8a70525d0e4e1b67b796ca1fe5727e3c0576f1",
+      "matches": true,
+      "scope": "manifest self consistency; no referee freeze receipt"
+    }
+  ],
+  "all_match": true
+}

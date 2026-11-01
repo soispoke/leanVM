@@ -1,0 +1,149 @@
+{
+  "id": "entry-7",
+  "system": "leanR1CS",
+  "source_commit": "a131e8769e66a143f57f96c000b6e2b03108e9bc",
+  "protocol_hash": "Keccak-256 Ethereum padding everywhere; native Keccak-f1600 rows",
+  "relation_B": "not admitted in bounded sparse envelope",
+  "zk": false,
+  "binaries": [
+    {
+      "path": "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/trial/entries/entry-7/trial_universal",
+      "sha256": "9cf134074564cd0684ddb89b74d43fc36f69030436580256f9a30c1bd75eba8a"
+    }
+  ],
+  "generators": {},
+  "aggregate_key": {
+    "path": "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/trial/universal-compact-setup-v2/aggregate.key",
+    "sha256": "65d74ef5bae806e327050dd092de55cf2829e63103d98b6c4d25632ae0d4dd00",
+    "derivation": "same fixed aggregate trace/key,canonical-only retained;public CSR/setup/evaluation plan regenerated at cold startup",
+    "max_applications": 5,
+    "max_depth": 2,
+    "retained_artifacts": [
+      {
+        "path": "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/trial/universal-compact-setup-v2/aggregate.key",
+        "bytes": 32,
+        "sha256": "65d74ef5bae806e327050dd092de55cf2829e63103d98b6c4d25632ae0d4dd00"
+      },
+      {
+        "path": "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/trial/universal-compact-setup-v2/aggregate.trace",
+        "bytes": 55649160,
+        "sha256": "f5f5df819a2ce48216d8b40b78077d6458b2bd90309738b0f1dc880d34666740"
+      }
+    ],
+    "retained_bytes": 55649192
+  },
+  "setup": {
+    "argv": [
+      "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/trial/entries/entry-7/trial_universal",
+      "setup-compact",
+      "{output}"
+    ],
+    "public_only_input_contract": "public deterministic dummy verifier trace,nonconstantvalues erased; no private input; keeps only trace+key,discards all derived publiccache/CSR setup",
+    "output_directory": "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/trial/universal-compact-setup-v2",
+    "retained_artifacts": [
+      {
+        "path": "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/trial/universal-compact-setup-v2/aggregate.key",
+        "bytes": 32,
+        "sha256": "65d74ef5bae806e327050dd092de55cf2829e63103d98b6c4d25632ae0d4dd00"
+      },
+      {
+        "path": "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/trial/universal-compact-setup-v2/aggregate.trace",
+        "bytes": 55649160,
+        "sha256": "f5f5df819a2ce48216d8b40b78077d6458b2bd90309738b0f1dc880d34666740"
+      }
+    ],
+    "wall_time": 15.642087426997023,
+    "process_tree_peak_ram_kib": 5434364,
+    "retained_key_bytes": 55649192,
+    "application_retained_artifacts": [],
+    "note": "Compact app setup retains canonical Description,applicationID andderivedkey; public matrices/evaluationplans rebuilt per cold process or at warm startup. Cold recompilation is timed. No disk/background cache or witness caching."
+  },
+  "commands": {
+    "wallet": [
+      "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/trial/entries/entry-7/trial_universal",
+      "wallet",
+      "{setup}",
+      "{input}",
+      "{output}"
+    ],
+    "merge_first": [
+      "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/trial/entries/entry-7/trial_universal",
+      "merge",
+      "{setup}",
+      "{input}",
+      "{output}"
+    ],
+    "merge_node": [
+      "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/trial/entries/entry-7/trial_universal",
+      "merge",
+      "{setup}",
+      "{input}",
+      "{output}"
+    ],
+    "admission": [
+      "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/trial/entries/entry-7/trial_universal",
+      "admission",
+      "{setup}",
+      "{input}"
+    ],
+    "root": [
+      "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/trial/entries/entry-7/trial_universal",
+      "root",
+      "{setup}",
+      "{input}"
+    ],
+    "reject": []
+  },
+  "input_contract": "Wallet case shielded|merkle|hash3|keccak1k|mpt and seed; fully consumed seeded independent instance. Native workload decoders frozen; only specified decoders, no arbitrary generator execution. v2 schema with 50-connector arrays length checked, full512-bit workload statement bound. Existing entry2 file contracts otherwise unchanged. External native-graph case: generator-setup SETUP ALNUM_CASE CANONICAL_DESCRIPTION; walletJSON case,seed,witness binarypath. Witnessgrammar(version1,seed,valuesF192[],nativeblocks[]),shape/count/fixedanchors checked. Export-witness CASE SEED OUT is a diagnostic helper; upstream external witness construction is not in wallet timer,so no eligible external-wallet score. Builtin wallet modes still include witness generation.",
+  "claim_schema": "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/trial/entries/entry-7/claim-schema.md",
+  "frozen_surface": "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/trial/entries/entry-7/frozen-surface.md",
+  "soundness_note": "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/trial/entries/entry-7/soundness-note.md",
+  "rejections": {
+    "verifier_entrypoint": "universal::verify_root_finalized and fold::verify_native",
+    "cases": {},
+    "coverage": "Direct tests reject missing sidecar, false terminal value, extra scalar, omitted aggregate claim; native fold mutations cover input values/keys/shapes/omissions/transcript/digest/output. No coordinator reject argv."
+  },
+  "status": "partial/ineligible compact retained setup; same aggregatekey; measurements pending; no Falcon sparse composition",
+  "missing_capabilities": [
+    "full/reduced Falcon sparse composition",
+    "independent upgrade backend",
+    "security calculator",
+    "complete coordinator rejection argv",
+    "real workload measurements pending"
+  ],
+  "diagnostic_command": [
+    "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/trial/entries/entry-1/trial_universal",
+    "demo",
+    "{setup}",
+    "{output}",
+    "{seed}"
+  ],
+  "evidence": [
+    "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/trial/universal-compact-freeze-v2.json",
+    "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/trial/universal-compact-v2/provenance.json",
+    "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/trial/universal-compact-v2/setup-process.json"
+  ],
+  "request": "Please freeze new entry7 compact retained artifact set and binary independently before draw. Same keybytes asentry5/6 but changed decoder/retention; no retroactive credit. Cold public regeneration is included in timers;warm keeps public state only. Full Falcon absent, no score.",
+  "warm": {
+    "argv": [
+      "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/trial/entries/entry-7/trial_universal",
+      "serve",
+      "{setup}",
+      "shielded,keccak1k,mpt"
+    ],
+    "request_protocol": "JSON lines: command wallet|merge|root|admission, input path, output directory when applicable; ready response before requests; public preprocessing only."
+  },
+  "generator_setup": [
+    "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/trial/entries/entry-7/trial_universal",
+    "generator-setup-compact",
+    "{setup}",
+    "{case}",
+    "{generator}"
+  ],
+  "application_setup": [
+    "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/trial/entries/entry-7/trial_universal",
+    "app-setup-compact",
+    "{setup}",
+    "{case}"
+  ]
+}

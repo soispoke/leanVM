@@ -15,11 +15,11 @@ use fiat_shamir::{
 };
 use primitives::{field::F192, multilinear::eq_table};
 
-/// Two application shapes and the first/node wrapper shapes. Shape is a
+/// N - 2 application shapes and the first/node wrapper shapes. Shape is a
 /// protocol parameter; application identities do not appear in the circuit.
 #[derive(Clone, Copy)]
-pub struct Schema {
-    pub shapes: [(usize, usize); 4],
+pub struct Schema<const N: usize = 4> {
+    pub shapes: [(usize, usize); N],
 }
 #[derive(Clone, serde::Serialize, serde::Deserialize)]
 pub struct Slot {
@@ -38,7 +38,7 @@ pub struct Certificate {
     pub statement: Statement,
     pub proof: Proof,
 }
-impl Schema {
+impl<const N: usize> Schema<N> {
     pub fn empty(&self, slot: usize) -> Slot {
         let (r, c) = self.shapes[slot];
         Slot {
@@ -52,7 +52,8 @@ impl Schema {
         }
     }
     pub fn fields(&self, s: &Statement) -> Vec<F192> {
-        assert_eq!(s.slots.len(), 4);
+        assert!(N >= 3);
+        assert_eq!(s.slots.len(), N);
         let mut out = vec![F192::new(u64::from(s.kind), 0, 0)];
         out.extend(hash_to_scalars(&s.digest));
         for (i, slot) in s.slots.iter().enumerate() {
@@ -67,9 +68,9 @@ impl Schema {
         out
     }
     pub fn wrap_first(&self, mut program: Trace, digest: Hash, carried: &[DeferredClaim]) -> (Trace, Statement) {
-        assert!(carried.len() <= 2);
+        assert!(N >= 3 && carried.len() <= N - 2);
         let old = program.public.clone();
-        let mut slots: Vec<_> = (0..4).map(|i| self.empty(i)).collect();
+        let mut slots: Vec<_> = (0..N).map(|i| self.empty(i)).collect();
         for (i, c) in carried.iter().enumerate() {
             slots[i] = Slot {
                 active: true,
@@ -84,7 +85,7 @@ impl Schema {
         trace::resume(program);
         let mut public = vec![S::u(0), old[0], old[1]];
         let mut cursor = 2;
-        for i in 0..4 {
+        for i in 0..N {
             public.push(S::u(u64::from(i < carried.len())));
             let count = 5 + self.shapes[i].0 + self.shapes[i].1;
             if i < carried.len() {
@@ -105,7 +106,7 @@ fn boolean(s: S) {
 fn input_key(k: &Hash) -> [S; 2] {
     hash_to_scalars(k).map(S::input)
 }
-fn node_digest(schema: Schema, children: [&Certificate; 2]) -> Hash {
+fn node_digest<const N: usize>(schema: Schema<N>, children: [&Certificate; 2]) -> Hash {
     let mut bytes = b"r1cs-carried-tree-node-v1".to_vec();
     for (r, c) in schema.shapes {
         bytes.extend((r as u64).to_le_bytes());
@@ -116,21 +117,25 @@ fn node_digest(schema: Schema, children: [&Certificate; 2]) -> Hash {
         public.extend(schema.fields(&child.statement));
         bytes.extend(super::first::child_digest(&child.key, &public));
     }
-    primitives::hash::hash(&bytes)
+    primitives::protocol_hash::hash(&bytes)
 }
 // The ordered digest already commits shape, child kind, identities, every
 // carried slot and its active bit. Only the fresh proof-derived claims need
 // additional binding here. Each occurs twice for routing, so absorb it once.
-fn label(inputs: &[Slot], digest: &Hash) -> Vec<u8> {
-    let claims = [inputs[4].claim.clone(), inputs[10].claim.clone()];
+fn label<const N: usize>(inputs: &[Slot], digest: &Hash) -> Vec<u8> {
+    let claims = [inputs[N].claim.clone(), inputs[inputs.len() / 2 + N].claim.clone()];
     let mut out = fold::label(&claims, digest);
-    out.extend(b"tree-digest-bound-slots-v2");
+    out.extend(b"tree-digest-bound-slots-v3");
+    out.extend((inputs.len() as u64).to_le_bytes());
+    out.extend(inputs.iter().map(|s| u8::from(s.active)));
     out
 }
-fn label_rows(inputs: &[WireClaim], _active: &[S], digest: [S; 2]) -> Vec<(S, usize)> {
-    let claims = [inputs[4].clone(), inputs[10].clone()];
+fn label_rows<const N: usize>(inputs: &[WireClaim], active: &[S], digest: [S; 2]) -> Vec<(S, usize)> {
+    let claims = [inputs[N].clone(), inputs[inputs.len() / 2 + N].clone()];
     let mut out = fold::label_rows(&claims, digest);
-    out.extend(literal(b"tree-digest-bound-slots-v2"));
+    out.extend(literal(b"tree-digest-bound-slots-v3"));
+    out.push((S::u(inputs.len() as u64), 8));
+    out.extend(active.iter().map(|&s| (s, 1)));
     out
 }
 fn lift(point: &[S], k: usize) -> S {
@@ -138,7 +143,11 @@ fn lift(point: &[S], k: usize) -> S {
 }
 
 /// All carried slots and both fresh outer claims, routed without native admission.
-pub fn inputs(schema: Schema, children: [&Certificate; 2], fresh: [DeferredClaim; 2]) -> (Vec<Slot>, Vec<usize>, Hash) {
+pub fn inputs<const N: usize>(
+    schema: Schema<N>,
+    children: [&Certificate; 2],
+    fresh: [DeferredClaim; 2],
+) -> (Vec<Slot>, Vec<usize>, Hash) {
     let mut inputs = Vec::new();
     let mut routes = Vec::new();
     for (i, child) in children.iter().enumerate() {
@@ -146,9 +155,9 @@ pub fn inputs(schema: Schema, children: [&Certificate; 2], fresh: [DeferredClaim
             inputs.push(slot.clone());
             routes.push(j);
         }
-        for slot in [2, 3] {
+        for slot in [N - 2, N - 1] {
             inputs.push(Slot {
-                active: child.statement.kind == (slot == 3),
+                active: child.statement.kind == (slot == N - 1),
                 claim: fresh[i].clone(),
             });
             routes.push(slot);
@@ -157,14 +166,14 @@ pub fn inputs(schema: Schema, children: [&Certificate; 2], fresh: [DeferredClaim
     (inputs, routes, node_digest(schema, children))
 }
 /// Native prover. Inactive slots never walk a source or allocate dense tables.
-pub fn prove(
-    schema: Schema,
-    registry: [Option<(&Setup, &Generator)>; 4],
+pub fn prove<const N: usize>(
+    schema: Schema<N>,
+    registry: [Option<(&Setup, &Generator)>; N],
     inputs: &[Slot],
     routes: &[usize],
     digest: &Hash,
 ) -> Reduction {
-    let mut ps = ProverState::from_label(&label(inputs, digest));
+    let mut ps = ProverState::from_label(&label::<N>(inputs, digest));
     let theta = ps.sample();
     let theta2 = theta * theta;
     let theta3 = theta2 * theta;
@@ -190,7 +199,7 @@ pub fn prove(
     let clog = schema.shapes.iter().map(|p| p.1).max().unwrap();
     let (rp, row_target) = fold::sumcheck(&mut pairs, rlog, true, target, &mut ps);
     let mut columns = Vec::new();
-    for slot in 0..4 {
+    for slot in 0..N {
         if let Some((_, g)) = registry[slot] {
             let products = g.column_products(&eq_table(&rp[..g.row_log]));
             let poly = parallel::map_collect(1 << g.col_log, |i| {
@@ -215,7 +224,7 @@ pub fn prove(
         }
     }
     let (cp, _) = fold::sumcheck(&mut columns, clog, false, row_target, &mut ps);
-    let carried = (0..4)
+    let carried = (0..N)
         .map(|slot| {
             let mut claim = schema.empty(slot).claim;
             if let Some((setup, g)) = registry[slot] {
@@ -233,17 +242,17 @@ pub fn prove(
         carried,
     }
 }
-fn verify_fold(
-    schema: Schema,
+pub(crate) fn verify_fold<const N: usize>(
+    schema: Schema<N>,
     inputs: &[WireClaim],
     active: &[S],
     routes: &[usize],
-    keys: [[S; 2]; 4],
-    enabled: [S; 4],
+    keys: [[S; 2]; N],
+    enabled: [S; N],
     digest: [S; 2],
     proof: &Proof,
 ) -> Vec<WireClaim> {
-    let seed = hash(&label_rows(inputs, active, digest));
+    let seed = hash(&label_rows::<N>(inputs, active, digest));
     let mut t = Transcript::from_state(proof, seed);
     let theta = t.sample();
     let theta2 = theta * theta;
@@ -266,7 +275,7 @@ fn verify_fold(
     };
     let rp = phase(rlog);
     let cp = phase(clog);
-    let output: Vec<_> = (0..4)
+    let output: Vec<_> = (0..N)
         .map(|slot| {
             let (r, c) = schema.shapes[slot];
             let values = std::array::from_fn(|_| t.next());
@@ -303,8 +312,8 @@ fn verify_fold(
 
 /// Replay both sparse child proofs in full. The fixed child layout is shared
 /// by first and node wrappers; their identities are carried, never host-trusted.
-pub fn record(
-    schema: Schema,
+pub fn record<const N: usize>(
+    schema: Schema<N>,
     shape: &Setup,
     children: [&Certificate; 2],
     context: &Hash,
@@ -330,7 +339,7 @@ pub fn record(
         let (fresh, child_digest) = deferred::verify_shape_in_rows(shape, identity, &public, context, &child.proof);
         parts.extend(child_digest.map(|v| (v, 16)));
         let mut cursor = 3;
-        for slot in 0..4 {
+        for slot in 0..N {
             let on = fields[cursor];
             cursor += 1;
             boolean(on);
@@ -353,22 +362,22 @@ pub fn record(
                 ((S::u(1) + on) * v).assert_eq(S::u(0));
             }
             // First wrappers cannot arrive with prior wrapper obligations.
-            if slot >= 2 {
+            if slot >= N - 2 {
                 ((S::u(1) + kind) * on).assert_eq(S::u(0));
             }
             inputs.push(claim);
             active.push(on);
             routes.push(slot);
         }
-        for slot in [2, 3] {
+        for slot in [N - 2, N - 1] {
             inputs.push(fresh.clone());
-            active.push(if slot == 2 { S::u(1) + kind } else { kind });
+            active.push(if slot == N - 2 { S::u(1) + kind } else { kind });
             routes.push(slot);
         }
     }
     let digest = hash(&parts);
-    let mut enabled = [S::u(0); 4];
-    let mut keys = [[S::u(0); 2]; 4];
+    let mut enabled = [S::u(0); N];
+    let mut keys = [[S::u(0); 2]; N];
     for ((claim, &on), &slot) in inputs.iter().zip(&active).zip(&routes) {
         for j in 0..2 {
             (enabled[slot] * on * (keys[slot][j] + claim.app_key[j])).assert_eq(S::u(0));
@@ -381,8 +390,8 @@ pub fn record(
     }
     // Distinct active slots must name distinct identities. The inverse advice
     // proves a differing limb, rather than assuming a host-side set operation.
-    for i in 0..4 {
-        for j in i + 1..4 {
+    for i in 0..N {
+        for j in i + 1..N {
             let diff = [keys[i][0] + keys[j][0], keys[i][1] + keys[j][1]];
             let selector = S::input(F192::new(u64::from(diff[0].value() == F192::ZERO), 0, 0));
             boolean(selector);
@@ -406,7 +415,7 @@ pub fn record(
         &reduction.proof,
     );
     let mut public = vec![S::u(1), digest[0], digest[1]];
-    for i in 0..4 {
+    for i in 0..N {
         public.push(enabled[i]);
         public.extend(output[i].flatten());
     }
@@ -415,8 +424,14 @@ pub fn record(
     program
 }
 
-pub fn statement(schema: Schema, digest: Hash, inputs: &[Slot], routes: &[usize], reduction: &Reduction) -> Statement {
-    let slots = (0..4)
+pub fn statement<const N: usize>(
+    schema: Schema<N>,
+    digest: Hash,
+    inputs: &[Slot],
+    routes: &[usize],
+    reduction: &Reduction,
+) -> Statement {
+    let slots = (0..N)
         .map(|slot| Slot {
             active: inputs.iter().enumerate().any(|(i, c)| routes[i] == slot && c.active),
             claim: reduction.carried[slot].clone(),
@@ -431,9 +446,9 @@ pub fn statement(schema: Schema, digest: Hash, inputs: &[Slot], routes: &[usize]
     s
 }
 
-impl Schema {
+impl<const N: usize> Schema<N> {
     pub fn well_formed(&self, statement: &Statement) -> bool {
-        if statement.slots.len() != 4 {
+        if statement.slots.len() != N {
             return false;
         }
         for (i, slot) in statement.slots.iter().enumerate() {
@@ -465,14 +480,14 @@ impl Schema {
 }
 /// Trusted root registry binds the generator and its role for every active
 /// identity. The sparse node proof's fresh matrix obligation is settled too.
-pub fn verify_root(
-    schema: Schema,
+pub fn verify_root<const N: usize>(
+    schema: Schema<N>,
     node: &super::first::SparseSetup,
     expected_digest: &Hash,
     statement: &Statement,
     context: &Hash,
     proof: &Proof,
-    registry: [Option<&Generator>; 4],
+    registry: [Option<&Generator>; N],
 ) -> bool {
     if !statement.kind || &statement.digest != expected_digest || !schema.well_formed(statement) {
         return false;

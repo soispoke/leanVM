@@ -22,7 +22,7 @@ pub const MAX_LOG_ROWS: usize = 24;
 pub const MAX_LOG_ROWS: usize = 26;
 
 /// A row enforces z = x*y + u. Variables zero and one are pinned public anchors.
-#[derive(Clone)]
+#[derive(Clone, serde::Serialize, serde::Deserialize)]
 pub struct Circuit {
     pub variables: usize,
     pub rows: Vec<[usize; 4]>,

@@ -1,0 +1,11 @@
+    Checking format_recursion v0.1.0 (/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/trial-entrant/crates/format_recursion)
+warning: unused import: `param_iv`
+  --> crates/format_recursion/src/private_trace.rs:11:50
+   |
+11 | use flock::hash::{Compression, blake2s_compress, param_iv};
+   |                                                  ^^^^^^^^
+   |
+   = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: `format_recursion` (lib) generated 1 warning (run `cargo fix --lib -p format_recursion` to apply 1 suggestion)
+    Finished `release` profile [optimized] target(s) in 4.16s

@@ -1,0 +1,250 @@
+   Compiling proc-macro2 v1.0.106
+   Compiling quote v1.0.46
+   Compiling unicode-ident v1.0.24
+    Checking cfg-if v1.0.4
+    Checking typenum v1.20.1
+   Compiling libc v0.2.186
+   Compiling version_check v0.9.5
+   Compiling generic-array v0.14.9
+    Checking const-oid v0.9.6
+    Checking subtle v2.6.1
+   Compiling syn v2.0.118
+   Compiling serde_core v1.0.228
+   Compiling serde v1.0.228
+    Checking once_cell v1.21.4
+    Checking getrandom v0.2.17
+   Compiling autocfg v1.5.1
+    Checking rand_core v0.6.4
+    Checking hybrid-array v0.4.14
+   Compiling paste v1.0.15
+    Checking ff v0.13.1
+    Checking keccak v0.2.2
+    Checking crypto-common v0.2.2
+    Checking block-buffer v0.12.1
+    Checking const-oid v0.10.2
+    Checking base16ct v0.2.0
+    Checking group v0.13.0
+    Checking digest v0.11.3
+    Checking sha3 v0.11.0
+    Checking cpufeatures v0.2.17
+   Compiling unicode-segmentation v1.13.3
+   Compiling num-traits v0.2.19
+   Compiling unicode-xid v0.2.6
+   Compiling zerocopy v0.8.52
+   Compiling convert_case v0.10.0
+    Checking itoa v1.0.18
+   Compiling ruint-macro v1.2.1
+    Checking foldhash v0.2.0
+    Checking hashbrown v0.17.1
+    Checking const-hex v1.19.1
+    Checking either v1.18.0
+   Compiling equivalent v1.0.2
+   Compiling winnow v1.0.4
+   Compiling indexmap v2.14.1
+   Compiling toml_parser v1.1.3+spec-1.1.0
+   Compiling toml_datetime v1.1.1+spec-1.1.0
+    Checking num-integer v0.1.47
+   Compiling toml_edit v0.25.13+spec-1.1.0
+   Compiling rustversion v1.0.23
+   Compiling zeroize_derive v1.5.0
+   Compiling serde_derive v1.0.228
+    Checking zeroize v1.9.0
+    Checking der v0.7.10
+   Compiling alloy-rlp-derive v0.3.16
+    Checking block-buffer v0.10.4
+    Checking crypto-common v0.1.6
+    Checking digest v0.10.7
+    Checking crypto-bigint v0.5.5
+    Checking hmac v0.12.1
+    Checking spki v0.7.3
+    Checking sec1 v0.7.3
+    Checking pkcs8 v0.10.2
+    Checking rfc6979 v0.4.0
+    Checking signature v2.2.0
+    Checking sha2 v0.10.9
+   Compiling derive_more-impl v2.1.1
+    Checking ppv-lite86 v0.2.21
+   Compiling proc-macro-crate v3.5.0
+    Checking elliptic-curve v0.13.8
+    Checking ecdsa v0.16.9
+   Compiling syn v3.0.4
+    Checking k256 v0.13.4
+    Checking bytes v1.12.1
+   Compiling num_enum_derive v0.7.6
+    Checking alloy-rlp v0.3.16
+    Checking ruint v1.20.0
+    Checking num-bigint v0.4.8
+   Compiling radium v0.7.0
+    Checking num_enum v0.7.6
+    Checking derive_more v2.1.1
+    Checking alloy-primitives v1.7.2
+    Checking rand_chacha v0.3.1
+    Checking tap v1.0.1
+    Checking wyz v0.5.1
+    Checking rand v0.8.8
+    Checking funty v2.0.0
+    Checking revm-primitives v20.2.1
+    Checking ark-std v0.5.0
+   Compiling ark-serialize-derive v0.5.0
+    Checking bitvec v1.1.1
+   Compiling ahash v0.8.12
+    Checking arrayvec v0.7.8
+    Checking ark-serialize v0.5.0
+   Compiling ark-ff-asm v0.5.0
+   Compiling enum-ordinalize-derive v4.4.2
+    Checking itertools v0.13.0
+   Compiling ark-ff-macros v0.5.0
+   Compiling enum-ordinalize v4.4.2
+   Compiling educe v0.6.0
+    Checking revm-bytecode v6.2.2
+    Checking allocator-api2 v0.2.21
+   Compiling thiserror v2.0.18
+    Checking bitflags v2.13.1
+    Checking hashbrown v0.15.5
+    Checking revm-state v7.0.5
+   Compiling auto_impl v1.3.0
+   Compiling thiserror-impl v2.0.18
+    Checking hex v0.4.3
+    Checking alloy-eip2930 v0.2.4
+    Checking num-rational v0.4.2
+    Checking num-iter v0.1.46
+    Checking revm-database-interface v7.0.5
+    Checking num-complex v0.4.6
+    Checking parallel v0.1.0 (/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/trial-entrant/crates/parallel)
+    Checking primitives v0.1.0 (/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/trial-entrant/crates/primitives)
+    Checking num v0.4.3
+    Checking primeorder v0.13.6
+    Checking alloy-eip7702 v0.6.3
+   Compiling getrandom v0.3.4
+    Checking revm-context-interface v9.0.0
+    Checking ark-ff v0.5.0
+   Compiling zmij v1.0.23
+    Checking p256 v0.13.2
+    Checking aurora-engine-modexp v1.3.0
+   Compiling derive-where v1.7.0
+    Checking ripemd v0.1.3
+   Compiling tracing-attributes v0.1.31
+    Checking tracing-core v0.1.36
+    Checking arrayref v0.3.9
+   Compiling serde_json v1.0.151
+   Compiling shlex v2.0.1
+   Compiling find-msvc-tools v0.1.11
+    Checking pin-project-lite v0.2.17
+    Checking tracing v0.1.44
+    Checking revm-context v8.0.4
+   Compiling cc v1.4.4
+    Checking fiat_shamir v0.1.0 (/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/trial-entrant/crates/fiat_shamir)
+    Checking revm-interpreter v24.0.0
+    Checking memchr v2.8.3
+    Checking rand_core v0.9.5
+    Checking pcs v0.1.0 (/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/trial-entrant/crates/pcs)
+   Compiling tikv-jemalloc-sys v0.7.1+5.3.1-0-g81034ce1f1373e37dc865038e1bc8eeecf559ce8
+    Checking rand_chacha v0.9.0
+    Checking ark-poly v0.5.0
+    Checking revm-database v7.0.5
+    Checking flock v0.1.0 (/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/trial-entrant/crates/flock)
+    Checking rand v0.9.4
+    Checking ark-ec v0.5.0
+    Checking ethereum_serde_utils v0.8.1
+    Checking itertools v0.14.0
+    Checking smallvec v1.15.2
+    Checking bincode v1.3.3
+    Checking leanvm_core v0.1.0 (/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/trial-entrant/crates/leanvm_core)
+    Checking ark-bls12-381 v0.5.0
+    Checking ark-bn254 v0.5.0
+    Checking ethereum_ssz v0.10.4
+    Checking revm-precompile v25.0.0
+    Checking xmss v0.1.0 (/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/trial-entrant/crates/xmss)
+    Checking revm-handler v8.1.0
+    Checking revm-inspector v8.1.0
+    Checking revm v27.1.0
+    Checking evm v0.1.0 (/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/trial-entrant/crates/evm)
+    Checking tikv-jemallocator v0.7.0
+    Checking circuit_suite v0.1.0 (/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/trial-entrant/crates/circuit_suite)
+    Checking format_recursion v0.1.0 (/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/trial-entrant/crates/format_recursion)
+warning: unused import: `param_iv`
+  --> crates/format_recursion/src/private_trace.rs:11:50
+   |
+11 | use flock::hash::{Compression, blake2s_compress, param_iv};
+   |                                                  ^^^^^^^^
+   |
+   = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+error[E0308]: mismatched types
+   --> crates/format_recursion/src/row_format/first.rs:160:13
+    |
+158 |         let mut r = super::R1cs::lower_bounded_with_blocks(
+    |                     -------------------------------------- arguments to this function are incorrect
+159 |             &source.circuit,
+160 |             &source.connectors,
+    |             ^^^^^^^^^^^^^^^^^^ expected `&[[usize; 18]]`, found `&Vec<[usize; 50]>`
+    |
+    = note: expected reference `&[[usize; 18]]`
+               found reference `&Vec<[usize; 50]>`
+note: associated function defined here
+   --> crates/format_recursion/src/row_format.rs:198:12
+    |
+198 |     pub fn lower_bounded_with_blocks(
+    |            ^^^^^^^^^^^^^^^^^^^^^^^^^
+199 |         circuit: &Circuit,
+200 |         connectors: &[[usize; 18]],
+    |         --------------------------
+
+error[E0308]: mismatched types
+   --> crates/format_recursion/src/row_format/universal.rs:245:9
+    |
+243 |     let mut r = super::R1cs::lower_bounded_with_blocks(
+    |                 -------------------------------------- arguments to this function are incorrect
+244 |         &source.circuit,
+245 |         &source.connectors,
+    |         ^^^^^^^^^^^^^^^^^^ expected `&[[usize; 18]]`, found `&Vec<[usize; 50]>`
+    |
+    = note: expected reference `&[[usize; 18]]`
+               found reference `&Vec<[usize; 50]>`
+note: associated function defined here
+   --> crates/format_recursion/src/row_format.rs:198:12
+    |
+198 |     pub fn lower_bounded_with_blocks(
+    |            ^^^^^^^^^^^^^^^^^^^^^^^^^
+199 |         circuit: &Circuit,
+200 |         connectors: &[[usize; 18]],
+    |         --------------------------
+
+error[E0308]: mismatched types
+   --> crates/format_recursion/src/row_format/universal.rs:274:25
+    |
+274 |             connectors: source.connectors.clone(),
+    |                         ^^^^^^^^^^^^^^^^^^^^^^^^^ expected an array with a size of 18, found one with a size of 50
+    |
+    = note: expected struct `Vec<[usize; 18]>`
+               found struct `Vec<[usize; 50]>`
+
+error[E0308]: mismatched types
+   --> crates/format_recursion/src/row_format/universal.rs:292:25
+    |
+292 |             connectors: self.connectors.clone(),
+    |                         ^^^^^^^^^^^^^^^^^^^^^^^ expected an array with a size of 50, found one with a size of 18
+    |
+    = note: expected struct `Vec<[usize; 50]>`
+               found struct `Vec<[usize; 18]>`
+
+error[E0308]: mismatched types
+   --> crates/format_recursion/src/row_format.rs:195:50
+    |
+195 |         Self::lower_bounded_with_blocks(circuit, connectors, values, fixed_len, max_terms, 128)
+    |         -------------------------------          ^^^^^^^^^^ expected an array with a size of 18, found one with a size of 50
+    |         |
+    |         arguments to this function are incorrect
+    |
+note: associated function defined here
+   --> crates/format_recursion/src/row_format.rs:198:12
+    |
+198 |     pub fn lower_bounded_with_blocks(
+    |            ^^^^^^^^^^^^^^^^^^^^^^^^^
+199 |         circuit: &Circuit,
+200 |         connectors: &[[usize; 18]],
+    |         --------------------------
+
+For more information about this error, try `rustc --explain E0308`.
+warning: `format_recursion` (lib) generated 1 warning
+error: could not compile `format_recursion` (lib) due to 5 previous errors; 1 warning emitted

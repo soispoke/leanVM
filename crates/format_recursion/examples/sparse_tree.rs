@@ -27,7 +27,7 @@ fn main() {
     parallel::init();
     assert_eq!(parallel::num_threads(), 12);
     let mixed = std::env::args().nth(1).as_deref() != Some("same");
-    let context = primitives::hash::hash(b"sparse-carried-tree-measure-v1");
+    let context = primitives::protocol_hash::hash(b"sparse-carried-tree-measure-v1");
     let sources = [
         row_format::shielded_source(0),
         if mixed {
@@ -59,7 +59,15 @@ fn main() {
         .collect();
     let gs: Vec<_> = generators.iter().collect();
     let schema = Schema {
+        #[cfg(not(feature = "keccak-protocol"))]
         shapes: [(16, 16), (12, 12), (20, 20), (20, 20)],
+        #[cfg(feature = "keccak-protocol")]
+        shapes: [
+            (a.row_log, a.z_log),
+            b.as_ref().map_or((a.row_log, a.z_log), |s| (s.row_log, s.z_log)),
+            (22, 22),
+            (22, 22),
+        ],
     };
     let mut leafproofs = Vec::new();
     let mut publics = Vec::new();
@@ -95,8 +103,18 @@ fn main() {
         firststatements.push(statement);
     }
     assert!(firsttraces[0].same_program(&firsttraces[1]));
-    let first = first::SparseSetup::new(firsttraces[0].clone(), false).unwrap();
+    let first = first::SparseSetup::new_with_padding(
+        firsttraces[0].clone(),
+        false,
+        if cfg!(feature = "keccak-protocol") {
+            Some((22, 22))
+        } else {
+            None
+        },
+    )
+    .unwrap();
     eprintln!("first layout {:?}", layout(&first.setup));
+    assert_eq!((first.setup.row_log, first.setup.z_log), schema.shapes[2]);
     let certs: Vec<_> = (0..2)
         .map(|i| Certificate {
             key: first.setup.key,
@@ -123,9 +141,21 @@ fn main() {
     let lower = private_trace::lower(&canonical, &canonical).unwrap();
     let rows = lower.circuit.rows.len();
     let compressions = lower.compressions.len();
+    let permutations = lower.permutations.len();
     drop(lower);
-    let node = first::SparseSetup::new(canonical.clone(), false).unwrap();
+    let node = first::SparseSetup::new_with_padding(
+        canonical.clone(),
+        false,
+        if cfg!(feature = "keccak-protocol") {
+            Some((22, 22))
+        } else {
+            None
+        },
+    )
+    .unwrap();
     eprintln!("node layout {:?}", layout(&node.setup));
+    assert_eq!((node.setup.row_log, node.setup.z_log), schema.shapes[3]);
+    #[cfg(not(feature = "keccak-protocol"))]
     assert_eq!(layout(&first.setup), layout(&node.setup), "shared shape closure");
     let start = Instant::now();
     let fresh = std::array::from_fn(|i| {
@@ -343,6 +373,6 @@ fn main() {
     ));
     println!(
         "{}",
-        serde_json::json!({"leaf_root_distinct_apps":1,"leaf_complete_root_ms":one_root_ms,"first_root_distinct_apps":if mixed{3}else{2},"first_complete_root_ms":first_root_ms,"node_root_distinct_apps":if mixed{4}else{3},"case":if mixed{"mixed"}else{"same"},"merge_s":merge_s,"native_child_checks_s":admitted,"fold_prover_s":fold_s,"record_s":record_s,"outer_prover_s":outer_s,"rows":rows,"compressions":compressions,"committed_words":node.setup.committed_words,"proof_bytes":bytes,"first_generator_bindings":first.generator.binding_count(),"node_generator_bindings":node.generator.binding_count(),"carried_bytes":statement.slots.iter().filter(|s|s.active).map(|s|24*(5+s.claim.row_point.len()+s.claim.col_point.len())).sum::<usize>(),"statement_bytes":outputs.len()*24,"core_verify_ms":verify_ms,"own_settle_ms":own_ms,"settlements":settles,"complete_root_ms":root_ms,"first_key":format!("{:02x?}",first.setup.key),"node_key":format!("{:02x?}",node.setup.key),"verifier_rejections":["false carried evaluation","substituted app key","omitted claim","duplicated claim","wrong child kind","swapped children unchanged reduction","tampered child proof","tampered root proof"],"verified":true})
+        serde_json::json!({"leaf_root_distinct_apps":1,"leaf_complete_root_ms":one_root_ms,"first_root_distinct_apps":if mixed{3}else{2},"first_complete_root_ms":first_root_ms,"node_root_distinct_apps":if mixed{4}else{3},"case":if mixed{"mixed"}else{"same"},"merge_s":merge_s,"native_child_checks_s":admitted,"fold_prover_s":fold_s,"record_s":record_s,"outer_prover_s":outer_s,"rows":rows,"compressions":compressions,"permutations":permutations,"committed_words":node.setup.committed_words,"proof_bytes":bytes,"first_generator_bindings":first.generator.binding_count(),"node_generator_bindings":node.generator.binding_count(),"carried_bytes":statement.slots.iter().filter(|s|s.active).map(|s|24*(5+s.claim.row_point.len()+s.claim.col_point.len())).sum::<usize>(),"statement_bytes":outputs.len()*24,"core_verify_ms":verify_ms,"own_settle_ms":own_ms,"settlements":settles,"complete_root_ms":root_ms,"first_key":format!("{:02x?}",first.setup.key),"node_key":format!("{:02x?}",node.setup.key),"verifier_rejections":["false carried evaluation","substituted app key","omitted claim","duplicated claim","wrong child kind","swapped children unchanged reduction","tampered child proof","tampered root proof"],"verified":true})
     );
 }

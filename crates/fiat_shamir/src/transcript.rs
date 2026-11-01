@@ -359,7 +359,7 @@ mod tests {
 
     #[test]
     fn prover_verifier_lockstep() {
-        let iv = crate::digest_words(&primitives::hash::hash(b"lbl"));
+        let iv = crate::digest_words(&primitives::protocol_hash::hash(b"lbl"));
         let pi = std::array::from_fn(|i| F64(7 + i as u64));
         let mut ps = ProverState::new(iv, pi);
         let c1 = ps.sample();

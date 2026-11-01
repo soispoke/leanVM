@@ -1,0 +1,66 @@
+{
+  "aggregate_bytes": 55649192,
+  "applications": {
+    "shielded": 11155468,
+    "keccak1k": 1747596,
+    "mpt": 39195260
+  },
+  "artifacts": [
+    {
+      "path": "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/trial/universal-compact-setup-v2/aggregate.key",
+      "bytes": 32,
+      "sha256": "65d74ef5bae806e327050dd092de55cf2829e63103d98b6c4d25632ae0d4dd00"
+    },
+    {
+      "path": "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/trial/universal-compact-setup-v2/aggregate.trace",
+      "bytes": 55649160,
+      "sha256": "f5f5df819a2ce48216d8b40b78077d6458b2bd90309738b0f1dc880d34666740"
+    },
+    {
+      "path": "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/trial/universal-compact-setup-v2/apps/keccak1k/application-id",
+      "bytes": 32,
+      "sha256": "7ddbeb1192820b4c967aad40db38287f16b4599edfb498f30207215957cc4ea4"
+    },
+    {
+      "path": "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/trial/universal-compact-setup-v2/apps/keccak1k/generator",
+      "bytes": 1747532,
+      "sha256": "5d310c0e234e39770740f065037d28987f0e682b6920d87637b989f4c55177c8"
+    },
+    {
+      "path": "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/trial/universal-compact-setup-v2/apps/keccak1k/proof-key",
+      "bytes": 32,
+      "sha256": "c1b9509ec77f48eeb11e8b58fb1b1863d2f5eb93ff777b2a24aed3f98fa0191d"
+    },
+    {
+      "path": "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/trial/universal-compact-setup-v2/apps/mpt/application-id",
+      "bytes": 32,
+      "sha256": "66ec57dba50925c78488460a17b0251a387c65b7deb402c878bd597d6d2663b9"
+    },
+    {
+      "path": "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/trial/universal-compact-setup-v2/apps/mpt/generator",
+      "bytes": 39195196,
+      "sha256": "9c58087c9e44d8c3d34aa665fa556910d90c045b8806e179a57f8557725afda7"
+    },
+    {
+      "path": "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/trial/universal-compact-setup-v2/apps/mpt/proof-key",
+      "bytes": 32,
+      "sha256": "51d8b28f215a696a830b3e57ac494d502138c6d6d0400692efef5f27663ba316"
+    },
+    {
+      "path": "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/trial/universal-compact-setup-v2/apps/shielded/application-id",
+      "bytes": 32,
+      "sha256": "51ee3c5d01acdb7161ad490099d01bcd7018d8bdc433abdbdd04721bad00d6d8"
+    },
+    {
+      "path": "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/trial/universal-compact-setup-v2/apps/shielded/generator",
+      "bytes": 11155404,
+      "sha256": "16b04cada91e45514f37c10a51ac237991899356bcdaebbd87c22b5b014f9ce9"
+    },
+    {
+      "path": "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/trial/universal-compact-setup-v2/apps/shielded/proof-key",
+      "bytes": 32,
+      "sha256": "e4c187ad0a251ae94ace560f723b8beb09fec3efefc4ed8f63aacc25726980b0"
+    }
+  ],
+  "note": "No public-cache or CSR.setup retained;public preprocessing rebuilt from canonical trace/generator. Runtime public caches and cold recompilation are counted."
+}

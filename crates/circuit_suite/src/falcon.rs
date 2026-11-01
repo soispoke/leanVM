@@ -21,7 +21,9 @@
 //! - The signature enters decoded (`s2` as 512 sign-magnitude integers), not as compressed bytes; with check 2,
 //!   "there is a valid decoded `s2`" is equivalent to "there is a valid padded compressed signature" (the
 //!   encoding is a bijection on the vectors that pass check 2), so the existential statement is the same. Decoding
-//!   the variable-length bytes in the circuit is estimated in the report, not built.
+//!   variable-length bytes is not supported by the default relation. The optional
+//!   [`Falcon512Encoded`] relation constrains fixed padded raw bytes by canonical
+//!   re-encoding, including public-key/signature headers, nonce and zero tail.
 //! - HashToPoint reads at most [`Params::squeeze_blocks`] `* 68 = 612` samples (9 SHAKE256 blocks). A signature
 //!   whose nonce needs more is rejected (`valid = 0`): `Pr[Bin(612, 4091/65536) > 100] = 7.8e-19 = 2^-60.2` for
 //!   a honest nonce. This only costs completeness, never soundness.
@@ -1484,6 +1486,8 @@ pub(crate) fn encoding_fits(c: &mut Ckt, mags: &[Word], bits: u64) -> Wire {
 /// What witness generation needs beyond the circuit.
 #[derive(Clone, Debug, Default)]
 pub struct Handles {
+    /// First raw public-key/signature input bit in the encoded relation.
+    pub encoded_input_start: Option<usize>,
     pub zero: Vec<PointHint>,
     /// Rows used by each component, in build order.
     pub rows: Vec<(&'static str, usize)>,
@@ -1507,8 +1511,68 @@ fn pk_bits(p: &Params, h: &[Word]) -> Vec<Wire> {
     bits
 }
 
+/// Verify the unique padded compressed encoding of the coefficient hints.
+/// This is hint-and-check decoding, not host parsing as a proof predicate.
+fn check_encoded(c: &mut Ckt, p: &Params, h: &[Word], nonce: &[Wire], s2: &[SignMag]) -> Wire {
+    assert_eq!(p.s2_bits, 11);
+    let budget = p.max_comp_bits.expect("encoded relation needs byte budget") as usize;
+    assert_eq!(budget % 8, 0);
+    let raw_pk = c.inputs(p.pk_len() * 8);
+    let raw_sig = c.inputs(8 + NONCE_LEN * 8 + budget);
+    let mut checks = Vec::new();
+    for (a, b) in raw_pk.iter().copied().zip(pk_bits(p, h)) {
+        checks.push(c.xor(a, b).not());
+    }
+    for (j, &bit) in raw_sig[..8].iter().enumerate() {
+        checks.push(c.xor(bit, Wire::constant(((0x30 + p.log_n) >> j) & 1 == 1)).not());
+    }
+    for (&a, &b) in raw_sig[8..8 + NONCE_LEN * 8].iter().zip(nonce) {
+        checks.push(c.xor(a, b).not());
+    }
+    let mut payload = Vec::new();
+    let mut reject = Vec::new();
+    for x in s2 {
+        let nonzero = any_lits(c, &x.mag);
+        checks.push(c.or(x.sign.not(), nonzero));
+        payload.push(vec![x.sign]);
+        reject.push(Wire::ZERO);
+        for j in (0..7).rev() {
+            payload.push(vec![x.mag[j]]);
+            reject.push(Wire::ZERO);
+        }
+        let high = &x.mag[7..];
+        for j in 0..16 {
+            let ge = geq_const(c, high, j);
+            let gt = geq_const(c, high, j + 1);
+            payload.push(vec![c.and(ge, gt.not())]); // terminating one at j = high
+            reject.push(ge.not()); // only padding positions after the terminator disappear
+        }
+    }
+    // Kept zero bits fill the fixed padded signature after the final code.
+    payload.extend((0..budget).map(|_| vec![Wire::ZERO]));
+    reject.extend(std::iter::repeat_n(Wire::ZERO, budget));
+    let max_rejected = 15 * s2.len();
+    let stages = (max_rejected + 1).next_power_of_two().trailing_zeros() as usize;
+    let (encoded, complete) = compact(c, &payload, &reject, budget, stages);
+    checks.push(complete);
+    for (i, word) in encoded.iter().enumerate() {
+        let byte = i / 8;
+        let msb = i % 8;
+        checks.push(c.xor(word[0], raw_sig[8 + NONCE_LEN * 8 + 8 * byte + 7 - msb]).not());
+    }
+    all_lits(c, &checks)
+}
+
 /// The Falcon verification circuit; returns the public bits and the handles.
 pub fn build_falcon(c: &mut Ckt, p: &Params) -> (Vec<Wire>, Handles) {
+    build_falcon_relation(c, p, false)
+}
+/// Encoded padded Round-3 relation. Coefficients are parsing hints, constrained
+/// by canonical in-circuit re-encoding of every supplied public-key/signature byte.
+pub fn build_falcon_encoded(c: &mut Ckt, p: &Params) -> (Vec<Wire>, Handles) {
+    build_falcon_relation(c, p, true)
+}
+fn build_falcon_relation(c: &mut Ckt, p: &Params, encoded: bool) -> (Vec<Wire>, Handles) {
     let n = p.n();
     let mut hd = Handles::default();
     let mut mark = c.rows();
@@ -1532,6 +1596,14 @@ pub fn build_falcon(c: &mut Ckt, p: &Params) -> (Vec<Wire>, Handles) {
         })
         .collect();
     lap(c, &mut hd, "inputs");
+    let encoding_ok = if encoded {
+        hd.encoded_input_start = Some(c.n_inputs());
+        let ok = check_encoded(c, p, &h, &nonce, &s2);
+        lap(c, &mut hd, "canonical compressed byte parser");
+        ok
+    } else {
+        Wire::ONE
+    };
 
     let mut digest_in = pk_bits(p, &h);
     digest_in.extend_from_slice(&msg);
@@ -1582,7 +1654,7 @@ pub fn build_falcon(c: &mut Ckt, p: &Params) -> (Vec<Wire>, Handles) {
         Some(b) => encoding_fits(c, &groups[1], b),
         None => Wire::ONE,
     };
-    let valid = all_lits(c, &[h2p_ok, rel_ok, norm_ok, len_ok]);
+    let valid = all_lits(c, &[h2p_ok, rel_ok, norm_ok, len_ok, encoding_ok]);
     lap(c, &mut hd, "encoding length and validity");
 
     let mut public = digest;
@@ -2943,5 +3015,236 @@ mod tests {
                 assert_eq!(fa[i] * fb[i] % q, fp[i], "q {q} n {n}");
             }
         }
+    }
+}
+
+/// Padded Round-3 compressed byte relation, sharing the reduced relation's SHAKE,
+/// modular, norm, range and completion checks.
+pub struct Falcon512Encoded;
+impl Workload for Falcon512Encoded {
+    const NAME: &'static str = "falcon512-encoded";
+    fn build(c: &mut Ckt) -> Vec<Wire> {
+        build_falcon_encoded(c, &Params::falcon512()).0
+    }
+    fn instance(seed: u64) -> Instance {
+        let fixtures = fixtures();
+        let v = &fixtures[seed as usize % fixtures.len()];
+        encoded_instance_for(&Params::falcon512(), &v.h, &v.msg, &v.nonce, &v.s2)
+    }
+    fn invalid_instance(seed: u64) -> Option<Instance> {
+        let mut instance = Self::instance(seed);
+        let start = encoded_built(&Params::falcon512()).handles.encoded_input_start.unwrap();
+        instance.inputs[start] ^= true;
+        instance.statement[32] = 0;
+        Some(instance)
+    }
+}
+/// Canonical padded raw signature bytes, used only by witness construction.
+/// The circuit independently constrains every byte against its parsing hints.
+pub fn encode_signature(p: &Params, nonce: &[u8], s2: &[i64]) -> Option<Vec<u8>> {
+    if nonce.len() != NONCE_LEN || s2.len() != p.n() {
+        return None;
+    }
+    let budget = p.max_comp_bits? as usize;
+    let mut bits = Vec::new();
+    for &x in s2 {
+        let mag = x.unsigned_abs();
+        if mag > 2047 {
+            return None;
+        }
+        bits.push(x < 0);
+        for j in (0..7).rev() {
+            bits.push((mag >> j) & 1 == 1);
+        }
+        bits.extend(std::iter::repeat_n(false, (mag >> 7) as usize));
+        bits.push(true);
+    }
+    if bits.len() > budget || !budget.is_multiple_of(8) {
+        return None;
+    }
+    bits.resize(budget, false);
+    let mut bytes = vec![(0x30 + p.log_n) as u8];
+    bytes.extend_from_slice(nonce);
+    bytes.extend(
+        bits.chunks(8)
+            .map(|b| b.iter().enumerate().fold(0, |x, (i, &v)| x | ((v as u8) << (7 - i)))),
+    );
+    Some(bytes)
+}
+pub fn encoded_built(p: &Params) -> Arc<Built> {
+    static CACHE: OnceLock<Mutex<HashMap<Params, Arc<Built>>>> = OnceLock::new();
+    let cache = CACHE.get_or_init(|| Mutex::new(HashMap::new()));
+    if let Some(b) = cache.lock().unwrap().get(p) {
+        return b.clone();
+    }
+    let mut c = Ckt::new();
+    let (public, handles) = build_falcon_encoded(&mut c, p);
+    let used = c.rows();
+    let n_inputs = c.n_inputs();
+    let (circuit, srcs) = c.finish(&public);
+    let b = Arc::new(Built {
+        circuit,
+        srcs,
+        handles,
+        used,
+        n_inputs,
+    });
+    cache.lock().unwrap().insert(p.clone(), b.clone());
+    b
+}
+pub fn encoded_instance_for(p: &Params, h: &[u64], msg: &[u8], nonce: &[u8], s2: &[i64]) -> Instance {
+    let b = encoded_built(p);
+    let s1 = native::s1(p, h, msg, nonce, s2);
+    let mut inputs = base_inputs(p, h, msg, nonce, s2, &s1);
+    assert_eq!(inputs.len(), b.handles.encoded_input_start.unwrap());
+    let pk = native::pk_bytes(p, h);
+    let sig = encode_signature(p, nonce, s2).expect("signature outside encoding budget");
+    assert_eq!(native::comp_decode(&sig[1 + NONCE_LEN..], p.n()).unwrap(), s2);
+    inputs.extend(
+        pk.iter()
+            .chain(&sig)
+            .flat_map(|&byte| (0..8).map(move |bit| (byte >> bit) & 1 == 1)),
+    );
+    inputs.resize(b.n_inputs, false);
+    let values = b.circuit.values(&inputs);
+    for z in &b.handles.zero {
+        let k = z.value(&values, p.q).unwrap_or(0);
+        for j in 0..z.bits {
+            inputs[z.first_input + j] = (k >> j) & 1 == 1;
+        }
+    }
+    let mut statement = [0; 64];
+    let mut pk_m = pk;
+    pk_m.extend_from_slice(msg);
+    statement[..32].copy_from_slice(&native::shake256(&pk_m, 32));
+    statement[32] = native::verify(p, h, msg, nonce, s2) as u8;
+    Instance { inputs, statement }
+}
+
+/// Decode external raw bytes into witness hints for the fixed-padded relation.
+/// Native decoding is only witness construction: build_falcon_encoded independently
+/// checks canonical encoding inside the proof. Arbitrary signature lengths remain
+/// unsupported. Badly encoded inputs fail at the file boundary, not as proof passes.
+pub fn encoded_instance_from_bytes(p: &Params, pk: &[u8], msg: &[u8], sig: &[u8]) -> Result<Instance, String> {
+    if msg.len() != p.msg_len {
+        return Err("wrong message length".into());
+    }
+    let budget = p.max_comp_bits.ok_or("missing compressed-byte budget")? as usize;
+    if !budget.is_multiple_of(8) || sig.len() != 1 + NONCE_LEN + budget / 8 {
+        return Err("only fixed padded signature length is supported".into());
+    }
+    if sig[0] != (0x30 + p.log_n) as u8 {
+        return Err("wrong signature header".into());
+    }
+    let h = native::decode_pk(p, pk).ok_or("invalid public-key encoding")?;
+    if native::pk_bytes(p, &h) != pk {
+        return Err("noncanonical public key".into());
+    }
+    let nonce = &sig[1..1 + NONCE_LEN];
+    let s2 = native::comp_decode(&sig[1 + NONCE_LEN..], p.n()).ok_or("invalid compressed signature")?;
+    if encode_signature(p, nonce, &s2).as_deref() != Some(sig) {
+        return Err("noncanonical signature padding".into());
+    }
+    Ok(encoded_instance_for(p, &h, msg, nonce, &s2))
+}
+
+#[cfg(test)]
+mod encoded_parser_tests {
+    use super::*;
+    use crate::{PUBLIC_BITS, read_statement};
+    #[test]
+    fn raw_byte_witness_adapter_consumes_canonical_bytes() {
+        let p = Params {
+            log_n: 2,
+            max_comp_bits: Some(64),
+            ..Params::falcon512()
+        };
+        let h = vec![1, 2, 3, 4];
+        let msg = vec![0x23; p.msg_len];
+        let nonce = vec![0x55; NONCE_LEN];
+        let s2 = vec![0, 127, -128, 2047];
+        let pk = native::pk_bytes(&p, &h);
+        let sig = encode_signature(&p, &nonce, &s2).unwrap();
+        let raw = encoded_instance_from_bytes(&p, &pk, &msg, &sig).unwrap();
+        let reference = encoded_instance_for(&p, &h, &msg, &nonce, &s2);
+        assert_eq!(raw.inputs, reference.inputs);
+        assert_eq!(raw.statement, reference.statement);
+        let mut bad_pk = pk.clone();
+        bad_pk[0] ^= 1;
+        assert!(encoded_instance_from_bytes(&p, &bad_pk, &msg, &sig).is_err());
+        let mut bad_sig = sig.clone();
+        *bad_sig.last_mut().unwrap() ^= 1;
+        assert!(encoded_instance_from_bytes(&p, &pk, &msg, &bad_sig).is_err());
+        assert!(encoded_instance_from_bytes(&p, &pk, &msg, &sig[..sig.len() - 1]).is_err());
+    }
+    #[test]
+    fn encoded_parser_accepts_canonical_bytes_and_rejects_mutations() {
+        let p = Params {
+            log_n: 2,
+            max_comp_bits: Some(64),
+            ..Params::falcon512()
+        };
+        let h = vec![1, 2, 3, 4];
+        let nonce = vec![0x55; NONCE_LEN];
+        let coefficients = vec![0, 127, -128, 2047];
+        let mut c = Ckt::new();
+        let hw: Vec<_> = (0..4).map(|_| c.inputs(p.h_bits())).collect();
+        let nw = c.inputs(NONCE_LEN * 8);
+        let s2: Vec<_> = (0..4)
+            .map(|_| SignMag {
+                sign: c.input(),
+                mag: c.inputs(11),
+            })
+            .collect();
+        let raw_start = c.n_inputs();
+        let ok = check_encoded(&mut c, &p, &hw, &nw, &s2);
+        let mut public = vec![ok];
+        public.resize(PUBLIC_BITS, Wire::ZERO);
+        let (ckt, srcs) = c.finish(&public);
+        let mut inputs = Vec::new();
+        for &x in &h {
+            inputs.extend((0..p.h_bits()).map(|j| (x >> j) & 1 == 1));
+        }
+        inputs.extend(nonce.iter().flat_map(|&x| (0..8).map(move |j| (x >> j) & 1 == 1)));
+        for &x in &coefficients {
+            inputs.push(x < 0);
+            let mag: i64 = if x < 0 { -x } else { x };
+            inputs.extend((0..11).map(|j| (mag >> j) & 1 == 1));
+        }
+        assert_eq!(inputs.len(), raw_start);
+        let pk = native::pk_bytes(&p, &h);
+        let sig = encode_signature(&p, &nonce, &coefficients).unwrap();
+        assert_eq!(native::comp_decode(&sig[1 + NONCE_LEN..], 4).unwrap(), coefficients);
+        inputs.extend(
+            pk.iter()
+                .chain(&sig)
+                .flat_map(|&x| (0..8).map(move |j| (x >> j) & 1 == 1)),
+        );
+        assert_eq!(read_statement(&ckt.values(&inputs), &srcs)[0], 1);
+        // Direct circuit evaluations: raw key/header, signature header, nonce,
+        // coefficient bits and all trailing padding are genuinely constrained.
+        let positions = [
+            raw_start,
+            raw_start + 8,
+            raw_start + pk.len() * 8,
+            raw_start + (pk.len() + 1) * 8,
+            raw_start + (pk.len() + 1 + NONCE_LEN) * 8,
+            inputs.len() - 1,
+        ];
+        for position in positions {
+            let mut bad = inputs.clone();
+            bad[position] ^= true;
+            assert_eq!(read_statement(&ckt.values(&bad), &srcs)[0], 0, "mutation at {position}");
+        }
+        let mut negative_zero = inputs.clone();
+        let decoded_sign = p.n() * p.h_bits() + NONCE_LEN * 8;
+        negative_zero[decoded_sign] = true;
+        let raw_sign = raw_start + (pk.len() + 1 + NONCE_LEN) * 8 + 7;
+        negative_zero[raw_sign] = true;
+        assert_eq!(
+            read_statement(&ckt.values(&negative_zero), &srcs)[0],
+            0,
+            "negative zero"
+        );
     }
 }

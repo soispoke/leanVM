@@ -1,0 +1,5 @@
+{
+  "source_commit": "9c83f246edfa72fcc25f445c357290512307acac",
+  "sha256": "d77c6b268f0cc3a97647e1da87cd1ffab76bb5de3943ed25d8f52db52efc96b6",
+  "note": "temporary full column eq table; no witness state retained"
+}

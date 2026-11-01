@@ -42,7 +42,7 @@ impl<W: Workload> Application<W> {
             sources,
             index,
             wiring,
-            id: primitives::hash::hash(&identity),
+            id: primitives::protocol_hash::hash(&identity),
             workload: PhantomData,
         }
     }
@@ -58,7 +58,7 @@ impl<W: Workload> Application<W> {
             bytes.extend(half.c0.to_le_bytes());
             bytes.extend(half.c1.to_le_bytes());
         }
-        primitives::hash::hash(&bytes)
+        primitives::protocol_hash::hash(&bytes)
     }
 
     pub fn create(&self, seed: u64) -> Created {
@@ -151,13 +151,13 @@ impl<W: Workload> Application<W> {
         ];
         let verify_ms = start.elapsed().as_secs_f64() * 1000.;
         let proof_bytes = bincode::serialize(&(&proved.proof, &openings)).unwrap();
-        let digest = primitives::hash::hash(&proof_bytes);
+        let digest = primitives::protocol_hash::hash(&proof_bytes);
         let mut claim_bytes = self.id.to_vec();
         for half in statement.halves() {
             claim_bytes.extend(half.c0.to_le_bytes());
             claim_bytes.extend(half.c1.to_le_bytes());
         }
-        let claim = primitives::hash::hash(&claim_bytes);
+        let claim = primitives::protocol_hash::hash(&claim_bytes);
         // Transport includes the application identity and its public statement.
         let certificate_bytes = 96 + proof_bytes.len();
         let report = serde_json::json!({

@@ -1,0 +1,29 @@
+    Checking parallel v0.1.0 (/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/trial-entrant/crates/parallel)
+    Checking primitives v0.1.0 (/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/trial-entrant/crates/primitives)
+    Checking fiat_shamir v0.1.0 (/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/trial-entrant/crates/fiat_shamir)
+    Checking xmss v0.1.0 (/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/trial-entrant/crates/xmss)
+    Checking pcs v0.1.0 (/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/trial-entrant/crates/pcs)
+    Checking flock v0.1.0 (/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/trial-entrant/crates/flock)
+    Checking evm v0.1.0 (/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/trial-entrant/crates/evm)
+    Checking leanvm_core v0.1.0 (/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/trial-entrant/crates/leanvm_core)
+    Checking circuit_suite v0.1.0 (/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/trial-entrant/crates/circuit_suite)
+warning: manual implementation of `.is_multiple_of()`
+    --> crates/circuit_suite/src/falcon.rs:3062:31
+     |
+3062 |     if bits.len() > budget || budget % 8 != 0 {
+     |                               ^^^^^^^^^^^^^^^ help: replace with: `!budget.is_multiple_of(8)`
+     |
+     = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.99.0/index.html#manual_is_multiple_of
+     = note: `#[warn(clippy::manual_is_multiple_of)]` on by default
+
+warning: manual implementation of `.is_multiple_of()`
+    --> crates/circuit_suite/src/falcon.rs:3133:8
+     |
+3133 |     if budget % 8 != 0 || sig.len() != 1 + NONCE_LEN + budget / 8 {
+     |        ^^^^^^^^^^^^^^^ help: replace with: `!budget.is_multiple_of(8)`
+     |
+     = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.99.0/index.html#manual_is_multiple_of
+
+warning: `circuit_suite` (lib) generated 2 warnings (run `cargo clippy --fix --lib -p circuit_suite -- ` to apply 2 suggestions)
+    Checking format_recursion v0.1.0 (/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/trial-entrant/crates/format_recursion)
+    Finished `release` profile [optimized] target(s) in 9.31s

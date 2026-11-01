@@ -1,0 +1,5 @@
+# Entry8 exact-draw response
+
+Frozen entry8 passed exact referee seed16058744104676432397 selecting MPT and Keccak1KiB. Four independent wallets (shielded,MPT,Keccak1KiB,shielded),two firsts,node,complete root,profile and outer admission passed under unchanged compact aggregatekey. Ten requests plus public startup are in entry8-heldout/samples.jsonl; all files/inputs retained. No Falcon; no complete A+B held-out gate or eligible score. This is entrant reproduction of a referee draw, not independent referee measurement.
+
+Matched root-only comparison across five existing certificates: ten requests pervariant,packed40.858ms versusgrouped38.361ms. Extra profiles (outside internal root timer) report aggregate settlement14.204ms; individual10ms target not met. Public plans retain packedaddresses/affinegrouping only and are rebuilt from canonical generator atcold/startup; no private witness cache. Full-series cold/warm root costs must not be inferred from root-only comparisons. No new90-request timingseries is claimed forentry8.

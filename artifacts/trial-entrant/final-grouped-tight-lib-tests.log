@@ -1,0 +1,81 @@
+   Compiling format_recursion v0.1.0 (/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/trial-entrant/crates/format_recursion)
+    Finished `release` profile [optimized] target(s) in 45.39s
+     Running unittests src/lib.rs (../target-trial-entrant/release/deps/format_recursion-497b4bbd8249be3c)
+
+running 73 tests
+test application_lowering::tests::planning_counts_connectors_and_retains_the_proving_cap ... ok
+test boolean_application::tests::ordinary_boolean_finish_cannot_discard_native_checks - should panic ... ok
+test keccak_bridge::tests::falcon_word_verifier_rejections_without_prechecks ... ignored, full Falcon adversarial proofs
+test flock_trace::tests::polynomial_lagrange_and_ring_views_match_at_random_and_domain_points ... ok
+test hash_batch::tests::binding_point_detects_every_io_column_including_padding ... ok
+test lookup_reduction::tests::duplicate_reads_are_counted_and_bad_counts_reject ... ok
+test hash_batch::tests::public_io_matches_packed_flock_layout ... ok
+test boolean_field::tests::sparse_base_maps_match_native_on_every_binary_basis_vector ... ok
+test flock_trace::tests::symbolic_matrix_walk_matches_reference ... ok
+test flock_trace::keccak_matrix_tests::symbolic_keccak_matrix_matches_native_forward ... ok
+test application_lowering::tests::automatic_selection_is_a_pure_function_of_the_circuit ... ok
+test native_arithmetic::tests::row_cap_requires_explicit_experimental_feature ... ok
+test boolean_field::tests::profile_multiplication_cutoffs_and_check_native_values ... ok
+test native_hash::keccak_sponge_tests::full_rate_and_padding_boundaries_match_reference ... ok
+test boolean_field::tests::windowed_linear_maps_match_native_on_a_complete_binary_basis ... ok
+test native_arithmetic::tests::deferred_native_evaluations_match_reference_for_dense_sparse_and_boundary_lengths ... ok
+test native_verifier::tests::product_recorder_matches_concrete_even_odd_and_zero_depths ... ok
+test native_arithmetic::tests::shared_copy_fingerprints_match_reference_including_zero_one_and_extension_cells ... ok
+test private_trace::keccak_protocol_tests::keccak_configuration_refuses_blake_only_and_mixed_hash_rows ... ok
+test flock_trace::tests::reduction_matches_reference_and_rejects_changed_terminal_slice ... ok
+test public_plan::tests::projected_inputs_require_consistent_overlaps_and_isolation ... ok
+test public_plan::tests::repeated_hash_sources_and_lengths_are_bound ... ok
+test public_plan::tests::zero_tails_and_boolean_selection_are_checked ... ok
+test native_arithmetic::tests::parallel_opening_weights_preserve_overlapping_claim_accumulation ... ok
+test recursion_fast::tests::native_node_relation_requires_actual_child_acceptance_and_caps ... ok
+test hash_batch::tests::an_unbound_proof_of_unrelated_hashes_is_rejected ... ok
+test flock_trace::tests::reduction_records_its_transcript_hashes_and_has_fixed_program ... ok
+test replay::tests::replay_cannot_stand_in_for_hash_verification ... ok
+test replay::tests::replay_checks_every_arithmetic_kind_and_public_output ... ok
+test hash_batch::tests::honest_and_adversarial_public_batch ... ok
+test native_verifier::tests::complete_recorder_enforces_same_public_context_index_and_proof ... ok
+test private_trace::keccak_protocol_tests::fixed_prefix_folding_keeps_private_zero_inputs_dynamic ... ok
+test native_verifier::tests::alternate_index_rate_records_and_binds_production_profile ... ok
+test boolean_application::tests::native_permutation_placeholders_are_bound_by_bridge ... ok
+test native_arithmetic::tests::factored_index_opening_matches_the_complete_dense_proof ... ok
+test row_format::deferred::tests::source_generator_matches_sparse_matrices_without_holding_csr ... ok
+test row_format::generator::structured_tests::offset_interval_equality_matches_enumeration ... ok
+test row_format::deferred::tests::merkle_application_matches_blake2s_and_rejects_wrong_statement_and_proof ... ok
+test row_format::tests::sparse_affine_lowering_preserves_shared_definitions_and_rejects_changed_product ... ok
+test row_format::universal::description_tests::external_generator_admission_checks_bounds_anchors_and_indices ... ok
+test shielded_lookup::tests::byte_tables_match_integer_semantics_and_reject_malformed_requests ... ok
+test shielded_lookup::tests::domains_and_row_model_are_fixed ... ok
+test shielded_lookup::tests::tampered_multiplicity_is_rejected ... ok
+test trace::tests::concatenation_preserves_all_dependencies_checks_and_outputs ... ok
+test trace::tests::constant_sharing_keeps_recorded_operations_independent_of_input_values ... ok
+test trace::tests::constants_share_only_public_values_and_reset_with_each_trace ... ok
+test trace::tests::field_operations_match_native_and_bind_their_inputs ... ok
+test native_arithmetic::tests::native_circuit_proves_and_rejects_gate_public_and_transcript_changes ... ok
+test trace::tests::merkle_selection_uses_the_constrained_bit ... ok
+test trace::tests::nonzero_advice_is_constrained ... ok
+test row_format::fold::native_tests::native_matrix_fold_matches_symbolic_and_rejects_mutations ... ok
+test verifier::tests::merkle_sources_enforce_serialized_word_and_digest_ranges ... ok
+test word_lookup_reduction::tests::sparse_integer_product_and_verifier_rejections_without_prover_prechecks ... ok
+test row_format::generator::structured_tests::affine_blocks_and_packed_rows_match_independent_walk ... ok
+test boolean_field::tests::five_product_matches_native_on_every_binary_basis_pair ... ok
+test word_query_binding::tests::direct_gather_binds_coordinates_limbs_and_schedule ... ok
+test word_tables::tests::frozen_tables_exhaustively_match_integer_semantics ... ok
+test word_tables::tests::sparse_counts_preserve_even_multiplicity_and_reject_bad_advice ... ok
+test word_lowering::tests::byte_arithmetic_uses_same_tables_and_joint_opening ... ok
+test row_format::first::padding_tests::zero_padding_matches_sparse_matrices_and_complete_root ... ok
+test word_lowering::tests::ntt_matches_direct_negacyclic_evaluations_and_opens ... ok
+test keccak_bridge::tests::permutation_bridge_rejects_malformed_proofs_without_prover_prechecks ... ok
+test native_arithmetic::tests::compact_preparation_and_reduction_preserve_every_limb_claim_and_transcript ... ok
+test row_format::spartan::tests::direct_spartan_and_r1cs_ccs_bind_products_hash_ports_and_public_output ... ok
+test recursion_fast::tests::node_gadget_binds_order_and_both_children ... ok
+test row_format::deferred::tests::deferred_child_replay_agrees_and_binds_identity_and_values ... ok
+test recursion_fast::tests::reject_chain_and_construction_caps_before_large_work ... ok
+test keccak_bridge::tests::shared_word_queries_open_against_joint_keccak_commitment ... ok
+test private_trace::keccak_protocol_tests::native_keccak_lowering_padding_schedule_and_verifier_rejections ... ok
+test verifier::tests::merkle_paths_enforce_omitted_zero_lanes ... ok
+test trace::tests::hashes_match_native_across_block_boundaries ... ok
+test row_format::first::tests::carried_first_level_settles_and_refuses_wrong_value_and_application ... ok
+test recursion_fast::tests::leaf_circuit_binds_start_length_digest_and_padding ... ok
+
+test result: ok. 72 passed; 0 failed; 1 ignored; 0 measured; 0 filtered out; finished in 59.32s
+

@@ -1,0 +1,18 @@
+   Compiling format_recursion v0.1.0 (/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/trial-entrant/crates/format_recursion)
+    Finished `release` profile [optimized] target(s) in 44.20s
+     Running unittests src/lib.rs (../target-trial-entrant/release/deps/format_recursion-497b4bbd8249be3c)
+
+running 10 tests
+test row_format::universal::description_tests::external_generator_admission_checks_bounds_anchors_and_indices ... ok
+test row_format::tests::sparse_affine_lowering_preserves_shared_definitions_and_rejects_changed_product ... ok
+test row_format::generator::structured_tests::offset_interval_equality_matches_enumeration ... ok
+test row_format::fold::native_tests::native_matrix_fold_matches_symbolic_and_rejects_mutations ... ok
+test row_format::first::padding_tests::zero_padding_matches_sparse_matrices_and_complete_root ... ok
+test row_format::deferred::tests::merkle_application_matches_blake2s_and_rejects_wrong_statement_and_proof ... ok
+test row_format::spartan::tests::direct_spartan_and_r1cs_ccs_bind_products_hash_ports_and_public_output ... ok
+test row_format::deferred::tests::source_generator_matches_sparse_matrices_without_holding_csr ... ok
+test row_format::deferred::tests::deferred_child_replay_agrees_and_binds_identity_and_values ... ok
+test row_format::first::tests::carried_first_level_settles_and_refuses_wrong_value_and_application ... ok
+
+test result: ok. 10 passed; 0 failed; 0 ignored; 0 measured; 62 filtered out; finished in 17.60s
+

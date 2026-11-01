@@ -1,0 +1,11 @@
+{
+  "entry": "entry-8",
+  "freeze_sha256": "a2604c0cbde4447f866c72b9eeb683e345ac02912e33f4e623acad240f2b6125",
+  "draw_unix": 1792787363.2097547,
+  "seed": 16058744104676432397,
+  "applications": [
+    "mpt",
+    "keccak1k"
+  ],
+  "scope": "draw only; admission must be demonstrated separately"
+}

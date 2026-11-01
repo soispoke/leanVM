@@ -1482,6 +1482,7 @@ dependencies = [
  "rand 0.9.4",
  "serde",
  "serde_json",
+ "sha3",
  "tikv-jemallocator",
  "tracing",
  "xmss",
@@ -2381,10 +2382,12 @@ version = "0.1.0"
 dependencies = [
  "bench",
  "bincode",
+ "keccak",
  "parallel",
  "primitives",
  "rand 0.9.4",
  "serde",
+ "sha3",
 ]
 
 [[package]]

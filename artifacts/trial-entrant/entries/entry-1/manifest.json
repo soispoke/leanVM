@@ -1,0 +1,140 @@
+{
+  "id": "entry-1",
+  "system": "leanR1CS",
+  "source_commit": "79c337ee957f68c59ab8d40b263363569e348a57",
+  "protocol_hash": "BLAKE2s provisional",
+  "relation_B": "decoded-input reduced",
+  "zk": false,
+  "binaries": [
+    {
+      "path": "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/trial/entries/entry-1/trial_universal",
+      "sha256": "ad5fe2b567ca30476f78d81940ab3b184ad0bf360d343b0687e117bf579b7f11"
+    }
+  ],
+  "generators": {
+    "shielded-blake2s": {
+      "path": "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/trial/universal-demo-v1/app-0.generator",
+      "sha256": "af571816aa3139b6ff4abb1d68bc4b6b35dc58b566ea6613220b9158e30ab298",
+      "application_id_keccak256": null,
+      "grammar_version": "native-source-bincode-v1",
+      "note": "Keccak ID method implemented, receipt pending; no substituted SHA ID"
+    },
+    "merkle-blake2s-depth16": {
+      "path": "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/trial/universal-demo-v1/app-1.generator",
+      "sha256": "cea3b859d7cd3522f43c410412823866412eab9a5d40875559f86aa0d556109e",
+      "application_id_keccak256": null,
+      "grammar_version": "native-source-bincode-v1",
+      "note": "Keccak ID method implemented, receipt pending; no substituted SHA ID"
+    },
+    "blake2s-preimage-three-rounds": {
+      "path": "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/trial/universal-demo-v1/app-2.generator",
+      "sha256": "65485986ca4d6be2bbf7ce6a670d2261ff73f2303de6cf970ae8d9c7a04fa107",
+      "application_id_keccak256": null,
+      "grammar_version": "native-source-bincode-v1",
+      "note": "Keccak ID method implemented, receipt pending; no substituted SHA ID"
+    }
+  },
+  "aggregate_key": {
+    "path": "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/trial/universal-setup-v1/aggregate.key",
+    "sha256": "7ea9fcd6c58bbb75883bee574643d0a577550800615012570fd8c93b81c299fa",
+    "derivation": "canonical aggregate.trace + fixed envelope; public-cache and setup are retained, hashes in universal-freeze-v1.json",
+    "max_applications": 5,
+    "max_depth": 2,
+    "retained_artifacts": [
+      {
+        "path": "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/trial/universal-setup-v1/aggregate.key",
+        "bytes": 32,
+        "sha256": "7ea9fcd6c58bbb75883bee574643d0a577550800615012570fd8c93b81c299fa"
+      },
+      {
+        "path": "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/trial/universal-setup-v1/aggregate.public-cache",
+        "bytes": 223106834,
+        "sha256": "86885e20b54daa265da11738fbe66ddd8fedc18a8bc93e10918d683aed884e2f"
+      },
+      {
+        "path": "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/trial/universal-setup-v1/aggregate.setup",
+        "bytes": 132063417,
+        "sha256": "537b81a596157798750ba2dad911d434d9761348d4c1f2af15d208d00fe4b83e"
+      },
+      {
+        "path": "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/trial/universal-setup-v1/aggregate.trace",
+        "bytes": 28473256,
+        "sha256": "51009bc58129dbc97caabf45724767e524428fd2ecefb26d75b1ff24866a4ebb"
+      }
+    ],
+    "retained_bytes": 383643539
+  },
+  "setup": {
+    "argv": [
+      "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/trial/entries/entry-1/trial_universal",
+      "setup",
+      "{output}"
+    ],
+    "public_only_input_contract": "public dummy generator used to record fixed verifier; all nonconstant trace values erased; real applications constructed after freeze",
+    "output_directory": "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/trial/universal-setup-v1",
+    "retained_artifacts": [
+      {
+        "path": "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/trial/universal-setup-v1/aggregate.key",
+        "bytes": 32,
+        "sha256": "7ea9fcd6c58bbb75883bee574643d0a577550800615012570fd8c93b81c299fa"
+      },
+      {
+        "path": "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/trial/universal-setup-v1/aggregate.public-cache",
+        "bytes": 223106834,
+        "sha256": "86885e20b54daa265da11738fbe66ddd8fedc18a8bc93e10918d683aed884e2f"
+      },
+      {
+        "path": "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/trial/universal-setup-v1/aggregate.setup",
+        "bytes": 132063417,
+        "sha256": "537b81a596157798750ba2dad911d434d9761348d4c1f2af15d208d00fe4b83e"
+      },
+      {
+        "path": "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/trial/universal-setup-v1/aggregate.trace",
+        "bytes": 28473256,
+        "sha256": "51009bc58129dbc97caabf45724767e524428fd2ecefb26d75b1ff24866a4ebb"
+      }
+    ],
+    "wall_time": 6.350745704,
+    "process_tree_peak_ram": null,
+    "retained_key_bytes": 383643539
+  },
+  "commands": {
+    "wallet": [],
+    "merge_first": [],
+    "merge_node": [],
+    "admission": [],
+    "root": [],
+    "reject": []
+  },
+  "input_contract": "demo SETUP OUT SEED consumes fresh seed for independent shielded, Merkle and BLAKE2s-preimage witnesses; outputs all wallet, first and node certs. Individual file commands and invalid input encoding not implemented yet.",
+  "claim_schema": "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/trial/entries/entry-1/claim-schema.md",
+  "frozen_surface": "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/trial/entries/entry-1/frozen-surface.md",
+  "soundness_note": "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/trial/entries/entry-1/soundness-note.md",
+  "rejections": {
+    "verifier_entrypoint": "row_format::tree::verify_root and direct replay probes inside sparse_tree example",
+    "cases": {},
+    "coverage": "historical direct verifier mutations bypass prechecks, not exposed as argv; unsupported coordinator cases unmeasured"
+  },
+  "status": "partial structural improvement; one fixed aggregate key accepts three local real applications at depth2; no referee held-out result or eligible score",
+  "missing_capabilities": [
+    "canonical generator export and Keccak IDs",
+    "aggregate key artifact",
+    "separate file commands",
+    "full Falcon",
+    "warm protocol",
+    "security calculator",
+    "independent upgrade backend"
+  ],
+  "diagnostic_command": [
+    "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/trial/entries/entry-1/trial_universal",
+    "demo",
+    "{setup}",
+    "{output}",
+    "{seed}"
+  ],
+  "evidence": [
+    "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/trial/universal-freeze-v1.json",
+    "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/trial/universal-demo-v1.json"
+  ],
+  "request": "Please snapshot frozen aggregate artifacts and binary, and supply held-out generator descriptions/draw; bounded shape 2^20 rows/columns and 2^14 hash slots. Full Falcon does not fit."
+}

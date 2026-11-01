@@ -1,0 +1,38 @@
+{
+  "trees": 15,
+  "requests": 150,
+  "startup_count": 15,
+  "root_medians": {
+    "1": {
+      "n": 5,
+      "external_s": 0.04492187799769454,
+      "internal_s": 0.029304395,
+      "settlement_profile_median_s": {
+        "0": 0.001137159,
+        "5": 0.014862622
+      }
+    },
+    "2": {
+      "n": 5,
+      "external_s": 0.04417682602070272,
+      "internal_s": 0.029311539,
+      "settlement_profile_median_s": {
+        "0": 0.001082505,
+        "1": 0.000365408,
+        "5": 0.01674495
+      }
+    },
+    "3": {
+      "n": 5,
+      "external_s": 0.057684850005898625,
+      "internal_s": 0.040721188,
+      "settlement_profile_median_s": {
+        "0": 0.001220937,
+        "1": 0.00038464,
+        "2": 0.009369387,
+        "5": 0.016354802
+      }
+    }
+  },
+  "note": "Fivefresh independent fourleaf trees per identitycount, alternating1/2/3 order; one warmpublic-onlyserver per tree. Profile repeats checks outside internal root timer. All wallet/merge/root/admission paths passed. No cold roots or full Falcon; no score."
+}

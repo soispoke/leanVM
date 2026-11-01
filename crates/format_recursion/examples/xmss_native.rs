@@ -21,7 +21,7 @@ fn main() {
     let public = canonical.builder.public_values();
     let output = canonical.output;
     let setup = canonical.builder.setup().unwrap();
-    let context = primitives::hash::hash(b"hometurf-native-xmss-v1");
+    let context = primitives::protocol_hash::hash(b"hometurf-native-xmss-v1");
     if args[1] == "prove" {
         drop(canonical);
         let start = Instant::now();

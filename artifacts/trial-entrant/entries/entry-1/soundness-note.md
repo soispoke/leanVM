@@ -1,0 +1,5 @@
+# Changes and limitations
+
+Source 79c337ee. Sparse Spartan-style deferred matrix reduction adapted from leanVM rec/tree/reduce/matrix.rs; existing WHIR/Flock composition. New one-hot routing uses Boolean selectors, prefix exclusivity and total one; characteristic-two parity alone would be unsound. Selector bytes are bound before theta. Every original child proof, Flock relation, sumcheck and opening check remains. Padding adds zero matrix rows and zero witness columns; the Flock setup uses the declared padded block count on both verifier and prover. No public-input relation is removed.
+
+Rate constant 2 means inverse rate4 in this stack (same existing protocol). Coordinator's 128-bit calculator, extension/query/grinding audit and composition budget remain unavailable; this entry does not assert a certified security regime. Depth2 is tested, not an enforced unrestricted-depth theorem. The 2^20 application bound excludes existing large Falcon circuits; no Falcon admission or mandated A/B tree is claimed. Local third application is a genuine three-round BLAKE2s preimage relation, not a referee held-out draw. Timings are one exploratory process. No eligible score.

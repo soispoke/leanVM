@@ -1,0 +1,61 @@
+[
+  {
+    "system": "r1cs",
+    "protocol": "keccak",
+    "case": "malformed generator",
+    "status": "pass",
+    "prover_prechecks_bypassed": true,
+    "scope": "Public generator admission/derivation validator, no private witness or prover; process failure may be a panic, no graceful-service claim",
+    "mutation": "wrong version",
+    "evidence": "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/trial/entry-6-external-referee/reject-wrong-version/sample.json"
+  },
+  {
+    "system": "r1cs",
+    "protocol": "keccak",
+    "case": "malformed generator",
+    "status": "pass",
+    "prover_prechecks_bypassed": true,
+    "scope": "Public generator admission/derivation validator, no private witness or prover; process failure may be a panic, no graceful-service claim",
+    "mutation": "excess variables",
+    "evidence": "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/trial/entry-6-external-referee/reject-excess-variables/sample.json"
+  },
+  {
+    "system": "r1cs",
+    "protocol": "keccak",
+    "case": "malformed generator",
+    "status": "pass",
+    "prover_prechecks_bypassed": true,
+    "scope": "Public generator admission/derivation validator, no private witness or prover; process failure may be a panic, no graceful-service claim",
+    "mutation": "out of range index",
+    "evidence": "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/trial/entry-6-external-referee/reject-out-of-range-index/sample.json"
+  },
+  {
+    "system": "r1cs",
+    "protocol": "keccak",
+    "case": "malformed generator",
+    "status": "pass",
+    "prover_prechecks_bypassed": true,
+    "scope": "Public generator admission/derivation validator, no private witness or prover; process failure may be a panic, no graceful-service claim",
+    "mutation": "wrong anchor index",
+    "evidence": "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/trial/entry-6-external-referee/reject-wrong-anchor-index/sample.json"
+  },
+  {
+    "system": "r1cs",
+    "protocol": "keccak",
+    "case": "malformed generator",
+    "status": "pass",
+    "prover_prechecks_bypassed": true,
+    "scope": "Public generator admission/derivation validator, no private witness or prover; process failure may be a panic, no graceful-service claim",
+    "mutation": "false fixed zero",
+    "evidence": "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/trial/entry-6-external-referee/reject-false-fixed-zero/sample.json"
+  },
+  {
+    "system": "r1cs",
+    "protocol": "keccak",
+    "case": "malformed generator",
+    "status": "pass",
+    "prover_prechecks_bypassed": true,
+    "scope": "Strict canonical public-generator decoder only; process failure, no graceful-service claim",
+    "evidence": "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/trial/entry-6-external-referee/reject-trailing/sample.json"
+  }
+]

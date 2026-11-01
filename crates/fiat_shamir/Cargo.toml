@@ -12,3 +12,6 @@ parallel.workspace = true
 primitives.workspace = true
 serde.workspace = true
 sha3 = "0.11"
+
+[features]
+keccak-batched-transcript = ["primitives/keccak-protocol"]

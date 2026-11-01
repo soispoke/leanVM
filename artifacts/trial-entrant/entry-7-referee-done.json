@@ -1,0 +1,14 @@
+{
+  "finished_unix": 1792787656.525704,
+  "samples": 93,
+  "completed_trees": 10,
+  "complete_5_rounds_both_modes": true,
+  "failures": [],
+  "full_challenge_admission_pass": false,
+  "frozen_surface": {
+    "checked_unix": 1792787656.87153,
+    "entry": "entry-7",
+    "objects": 6,
+    "unchanged": true
+  }
+}

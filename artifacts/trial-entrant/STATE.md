@@ -1,0 +1,1 @@
+Trial complete. Stop2026-10-23 21:01:45UTC. Allentrantjobsfinished. Entries0–8partial/ineligible,noeligible score. FinalreportP/artifacts/trial/entrant-report.md mirroredhere. No pushes. Seeentrant-stop-receipt.json andfinalgitcommit. No further research authorized under this trial.

@@ -26,7 +26,7 @@ impl Setup {
     /// Preprocess a fixed program independently of subsequent witnesses.
     #[tracing::instrument(skip_all, name = "Private setup")]
     pub fn new(program: Trace) -> Option<Self> {
-        Self::new_with_context(program, primitives::hash::hash(b"format-private-recursion-v1"))
+        Self::new_with_context(program, primitives::protocol_hash::hash(b"format-private-recursion-v1"))
     }
 
     pub(crate) fn new_with_context(program: Trace, context: Hash) -> Option<Self> {
@@ -41,6 +41,9 @@ impl Setup {
         let mut prepared = private_trace::PreparedProgram::new(program)?;
         // The constructor's canonical witness is owned by the prepared program.
         let mut lower = prepared.lower_setup()?;
+        if !lower.keccak_connectors.is_empty() {
+            return None;
+        }
         let raw_fixed_len = lower.fixed_public.len();
         let bridge = if let Some(capacity) = public_capacity {
             if capacity < raw_fixed_len {
@@ -192,7 +195,8 @@ pub fn node(left: (&Setup, &Hash, &Proof), right: (&Setup, &Hash, &Proof)) -> Op
     Some(trace)
 }
 
-#[cfg(test)]
+// These fixtures exercise the legacy BLAKE2s application/bridge backend.
+#[cfg(all(test, not(feature = "keccak-protocol")))]
 mod tests {
     use super::*;
 

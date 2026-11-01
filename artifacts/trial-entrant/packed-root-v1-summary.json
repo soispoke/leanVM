@@ -1,0 +1,19 @@
+{
+  "warm_comparison": {
+    "structured": {
+      "count": 10,
+      "external_median_s": 0.03893001450342126
+    },
+    "packed": {
+      "count": 10,
+      "external_median_s": 0.03617724048672244
+    }
+  },
+  "profile_extra_untimed_median_s": {
+    "0": 0.001280479,
+    "1": 0.00045601,
+    "2": 0.0096496,
+    "5": 0.014815684
+  },
+  "note": "Same five certificates, alternating ABAB/BABA warm requests. Root-only service retains public setup. Profile repeats matrix checks outside internal root timer, included in external profile request but excluded from comparison."
+}

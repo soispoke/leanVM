@@ -1,6 +1,9 @@
 //! Uniform native lowering for Boolean full-adder circuits.
+#[cfg(feature = "keccak-protocol")]
+use crate::keccak_bridge::KeccakShape as PrivateShape;
+#[cfg(not(feature = "keccak-protocol"))]
+use crate::private_bridge::PrivateShape;
 use crate::{
-    private_bridge::PrivateShape,
     private_trace,
     trace::{self, S, Trace, hash},
 };
@@ -21,7 +24,7 @@ pub fn identity(circuit: &Circuit) -> [u8; 32] {
     for source in &circuit.sigma {
         bytes.extend(source.to_le_bytes());
     }
-    primitives::hash::hash(&bytes)
+    primitives::protocol_hash::hash(&bytes)
 }
 
 /// Choose solely from fixed circuit wiring, public output positions and identity.
@@ -44,7 +47,11 @@ pub fn select(circuit: &Circuit, sources: &[Src]) -> Option<Selection> {
         PrivateShape::plan(
             lowered.circuit.rows.len(),
             lowered.circuit.public.len(),
-            lowered.compressions.len(),
+            if cfg!(feature = "keccak-protocol") {
+                lowered.permutations.len()
+            } else {
+                lowered.compressions.len()
+            },
         )
     };
     let untrimmed = shape(false)?;
@@ -204,7 +211,11 @@ mod tests {
                 let actual = PrivateShape::for_circuit(
                     lowered.circuit.rows.len(),
                     lowered.circuit.public.len(),
-                    lowered.compressions.len(),
+                    if cfg!(feature = "keccak-protocol") {
+                        lowered.permutations.len()
+                    } else {
+                        lowered.compressions.len()
+                    },
                 )
                 .unwrap();
                 assert_eq!(
@@ -222,8 +233,9 @@ mod tests {
 
     #[test]
     fn planning_counts_connectors_and_retains_the_proving_cap() {
-        let below = PrivateShape::plan(7392, 2, 128).unwrap();
-        let above = PrivateShape::plan(7393, 2, 128).unwrap();
+        let boundary = if cfg!(feature = "keccak-protocol") { 5952 } else { 7392 };
+        let below = PrivateShape::plan(boundary, 2, 128).unwrap();
+        let above = PrivateShape::plan(boundary + 1, 2, 128).unwrap();
         assert_eq!(below.index.log_rows, 13);
         assert_eq!(above.index.log_rows, 14);
         let beyond_cap = PrivateShape::plan(1 << crate::native_arithmetic::MAX_LOG_ROWS, 2, 128).unwrap();

@@ -1,0 +1,15 @@
+   Compiling primitives v0.1.0 (/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/trial-entrant/crates/primitives)
+   Compiling fiat_shamir v0.1.0 (/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/trial-entrant/crates/fiat_shamir)
+   Compiling pcs v0.1.0 (/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/trial-entrant/crates/pcs)
+   Compiling flock v0.1.0 (/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/trial-entrant/crates/flock)
+   Compiling evm v0.1.0 (/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/trial-entrant/crates/evm)
+   Compiling circuit_suite v0.1.0 (/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/trial-entrant/crates/circuit_suite)
+    Finished `release` profile [optimized] target(s) in 1m 04s
+     Running unittests src/lib.rs (../target-trial-entrant/release/deps/circuit_suite-670681c04b07d437)
+
+running 2 tests
+test falcon::encoded_parser_tests::encoded_parser_accepts_canonical_bytes_and_rejects_mutations ... ok
+test falcon::encoded_parser_tests::raw_byte_witness_adapter_consumes_canonical_bytes ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 83 filtered out; finished in 0.38s
+

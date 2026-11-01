@@ -43,7 +43,7 @@ fn joint_layout(log_rows: usize, q_log: usize) -> Option<(usize, usize)> {
     Some((q_offset, stack_log))
 }
 
-#[cfg(test)]
+#[cfg(all(test, not(feature = "keccak-protocol")))]
 fn copy_compact_native(destination: &mut [F64], source: &[F64], log_rows: usize) {
     let n = 1usize << log_rows;
     assert_eq!(source.len(), 16 * n);
@@ -199,7 +199,8 @@ impl PrivateBridge {
     }
 
     fn new_inner(mut circuit: Circuit, io_variables: Vec<[usize; 18]>, padded: bool) -> Option<Self> {
-        if io_variables.is_empty()
+        if cfg!(feature = "keccak-protocol")
+            || io_variables.is_empty()
             || io_variables.len() > MAX_BLOCKS
             || circuit.public.len() < 2
             || circuit.public[..2] != [0, 1]
@@ -471,7 +472,7 @@ impl PrivateBridge {
     }
 }
 
-#[cfg(test)]
+#[cfg(all(test, not(feature = "keccak-protocol")))]
 mod tests {
     use super::*;
     use flock::hash::param_iv;

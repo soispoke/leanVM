@@ -1,0 +1,37 @@
+   Compiling serde_core v1.0.228
+   Compiling serde v1.0.228
+    Checking parallel v0.1.0 (/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/trial-entrant/crates/parallel)
+    Checking hashbrown v0.17.1
+    Checking const-hex v1.19.1
+    Checking serde_json v1.0.151
+    Checking bytes v1.12.1
+    Checking primitives v0.1.0 (/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/trial-entrant/crates/primitives)
+    Checking bincode v1.3.3
+    Checking alloy-rlp v0.3.16
+    Checking ruint v1.20.0
+    Checking fiat_shamir v0.1.0 (/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/trial-entrant/crates/fiat_shamir)
+    Checking alloy-primitives v1.7.2
+    Checking pcs v0.1.0 (/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/trial-entrant/crates/pcs)
+    Checking revm-primitives v20.2.1
+    Checking alloy-eip7702 v0.6.3
+    Checking alloy-eip2930 v0.2.4
+    Checking ethereum_serde_utils v0.8.1
+    Checking revm-bytecode v6.2.2
+    Checking revm-precompile v25.0.0
+    Checking flock v0.1.0 (/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/trial-entrant/crates/flock)
+    Checking ethereum_ssz v0.10.4
+    Checking revm-state v7.0.5
+    Checking revm-database-interface v7.0.5
+    Checking xmss v0.1.0 (/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/trial-entrant/crates/xmss)
+    Checking revm-context-interface v9.0.0
+    Checking revm-database v7.0.5
+    Checking revm-context v8.0.4
+    Checking revm-interpreter v24.0.0
+    Checking revm-handler v8.1.0
+    Checking leanvm_core v0.1.0 (/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/trial-entrant/crates/leanvm_core)
+    Checking revm-inspector v8.1.0
+    Checking revm v27.1.0
+    Checking evm v0.1.0 (/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/trial-entrant/crates/evm)
+    Checking circuit_suite v0.1.0 (/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/trial-entrant/crates/circuit_suite)
+    Checking format_recursion v0.1.0 (/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/trial-entrant/crates/format_recursion)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 13.19s

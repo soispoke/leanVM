@@ -36,7 +36,7 @@ fn main() {
     assert!(format == "B" || format == "C");
     assert!(outer == "A" || outer == "B");
     assert!(mode == "carried" || mode == "direct");
-    let context = primitives::hash::hash(b"r1cs-deferred-measurement-v1");
+    let context = primitives::protocol_hash::hash(b"r1cs-deferred-measurement-v1");
     let source0 = row_format::shielded_source(0);
     let source1 = if case == "merkle" {
         row_format::merkle_source(1)
@@ -68,7 +68,6 @@ fn main() {
     let mut proofs = Vec::new();
     let mut wallets = Vec::new();
     for i in 0..2 {
-        std::fs::write("/proc/self/clear_refs", "5").unwrap();
         let start_rss = rss("VmRSS:");
         let start = Instant::now();
         let (values, blocks) = (sources[i].rebuild)();
@@ -103,6 +102,7 @@ fn main() {
     let lower = private_trace::lower(&canonical, &canonical).unwrap();
     let rows = lower.circuit.rows.len();
     let compressions = lower.compressions.len();
+    let permutations = lower.permutations.len();
     let stages = lower.stage_census;
     drop(lower.circuit);
     drop(lower.values);
@@ -122,7 +122,7 @@ fn main() {
         }
         Backend::Sparse(s) => s.setup.committed_words,
     };
-    std::fs::write("/proc/self/clear_refs", "5").unwrap();
+
     let start_rss = rss("VmRSS:");
     let start = Instant::now();
     let fresh: Vec<_> = (0..2)
@@ -182,6 +182,21 @@ fn main() {
             settlements.push(serde_json::json!({"app":if i==0{"shielded"}else{case.as_str()},"ms":ms,"rows":g.rows()}));
         }
     }
+    let complete_root_start = Instant::now();
+    if mode == "carried" {
+        match &backend {
+            Backend::Sparse(s) => assert!(first::verify_sparse_root(
+                s,
+                &context,
+                &digest,
+                &reduction.carried,
+                &proof,
+                &gs
+            )),
+            Backend::Fixed(s) => assert!(first::verify_root(s, &digest, &reduction.carried, &proof, &gs)),
+        }
+    }
+    let complete_root_ms = complete_root_start.elapsed().as_secs_f64() * 1000.;
     let mut wrong = outputs.clone();
     *wrong.last_mut().unwrap() += F192::ONE;
     match &backend {
@@ -208,6 +223,6 @@ fn main() {
     };
     println!(
         "{}",
-        serde_json::json!({"case":case,"carried_shapes":carried_shapes,"own_claim_shape":own_shape,"sparse_shape":sparse_shape,"format":format,"outer_backend":outer,"mode":mode,"wallets":wallets,"merge_s":merge_s,"native_child_checks_s":admission_s,"fold_prover_s":fold_s,"record_s":record_s,"outer_prover_s":prover_s,"rows":rows,"compressions":compressions,"committed_words":words,"proof_bytes":bytes.len(),"core_verify_ms":core_verify_ms,"own_merge_matrix_settle_ms":own_settle_ms,"root_settlements":settlements,"carried_claim_bytes":carried_bytes,"application_digest_bytes":32,"setup_s":setup_s,"peak_rss_kib":peak,"additional_peak_rss_kib":peak.saturating_sub(start_rss),"stage_census":stages,"fold_proof_bytes":bincode::serialize(&reduction.proof).unwrap().len(),"outer_matrix_deferred":outer=="B","source_program_digests":sources.iter().map(|s|s.program_digest().iter().map(|b|format!("{b:02x}")).collect::<String>()).collect::<Vec<_>>(),"verified":true})
+        serde_json::json!({"case":case,"carried_shapes":carried_shapes,"own_claim_shape":own_shape,"sparse_shape":sparse_shape,"format":format,"outer_backend":outer,"mode":mode,"wallets":wallets,"merge_s":merge_s,"native_child_checks_s":admission_s,"fold_prover_s":fold_s,"record_s":record_s,"outer_prover_s":prover_s,"rows":rows,"compressions":compressions,"permutations":permutations,"committed_words":words,"proof_bytes":bytes.len(),"core_verify_ms":core_verify_ms,"complete_root_ms":complete_root_ms,"own_merge_matrix_settle_ms":own_settle_ms,"root_settlements":settlements,"carried_claim_bytes":carried_bytes,"application_digest_bytes":32,"setup_s":setup_s,"peak_rss_kib":peak,"additional_peak_rss_kib":peak.saturating_sub(start_rss),"stage_census":stages,"fold_proof_bytes":bincode::serialize(&reduction.proof).unwrap().len(),"outer_matrix_deferred":outer=="B","source_program_digests":sources.iter().map(|s|s.program_digest().iter().map(|b|format!("{b:02x}")).collect::<String>()).collect::<Vec<_>>(),"verified":true})
     );
 }

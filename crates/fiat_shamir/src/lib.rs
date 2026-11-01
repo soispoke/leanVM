@@ -20,7 +20,7 @@ pub fn compress(a: [F64; 4], b: [F64; 4]) -> [F64; 4] {
     for (slot, w) in input.as_chunks_mut::<8>().0.iter_mut().zip(a.into_iter().chain(b)) {
         *slot = w.0.to_le_bytes();
     }
-    digest_words(&primitives::hash::hash(&input))
+    digest_words(&primitives::protocol_hash::hash(&input))
 }
 
 /// A 32-byte digest as the four little-endian words the chain runs in.
@@ -57,6 +57,8 @@ fn pow_bits_ok(base: [F64; 4], nonce: F192, bits: u32) -> bool {
 pub struct FiatShamirState {
     /// The 256-bit chaining value: a Merkle-Damgård hash of the transcript so far.
     cv: [F64; 4],
+    #[cfg(feature = "keccak-batched-transcript")]
+    pending: Vec<F192>,
     /// On the Keccak chain, the scalars absorbed since the last challenge: the next one hashes them with the state.
     keccak: Option<Vec<F192>>,
 }
@@ -78,6 +80,8 @@ impl FiatShamirState {
         Self {
             cv: compress(iv, public_input),
             keccak: None,
+            #[cfg(feature = "keccak-batched-transcript")]
+            pending: Vec::new(),
         }
     }
 
@@ -85,8 +89,10 @@ impl FiatShamirState {
     /// the chaining value, which is all a domain separator has to be.
     pub fn from_label(label: &[u8]) -> Self {
         Self {
-            cv: digest_words(&primitives::hash::hash(label)),
+            cv: digest_words(&primitives::protocol_hash::hash(label)),
             keccak: None,
+            #[cfg(feature = "keccak-batched-transcript")]
+            pending: Vec::new(),
         }
     }
 
@@ -99,12 +105,19 @@ impl FiatShamirState {
         Self {
             cv: keccak_words(label),
             keccak: Some(Vec::new()),
+            #[cfg(feature = "keccak-batched-transcript")]
+            pending: Vec::new(),
         }
     }
 
     /// Absorb one 24-byte scalar (three little-endian `K` limbs):
     /// `cv ← compress(cv, (c0, c1, c2, DS_OBSERVE))`.
     pub fn observe(&mut self, x: F192) {
+        #[cfg(feature = "keccak-batched-transcript")]
+        if self.keccak.is_none() {
+            self.pending.push(x);
+            return;
+        }
         if let Some(pending) = &mut self.keccak {
             pending.push(x);
             return;
@@ -119,6 +132,12 @@ impl FiatShamirState {
     /// public; soundness comes from each challenge being a random-oracle image
     /// of the entire prior transcript.
     pub fn sample(&mut self) -> F192 {
+        #[cfg(feature = "keccak-batched-transcript")]
+        if self.keccak.is_none() {
+            self.cv = self.batch_digest(2);
+            self.pending.clear();
+            return F192::new(self.cv[0].0, self.cv[1].0, self.cv[2].0);
+        }
         if let Some(pending) = &mut self.keccak {
             let words = [self.cv]
                 .into_iter()
@@ -143,16 +162,44 @@ impl FiatShamirState {
     /// the live state (the nonce is bound separately by [`Self::absorb_nonce`]).
     fn pow_base(&self) -> [F64; 4] {
         assert!(self.keccak.is_none(), "the Keccak chain does not grind");
-        compress(self.cv, [F64::ZERO, F64::ZERO, F64::ZERO, DS_POW_BASE])
+        compress(self.absorbed_state(), [F64::ZERO, F64::ZERO, F64::ZERO, DS_POW_BASE])
     }
 
     /// The current 256-bit chaining value.
     pub fn state(&self) -> [F64; 4] {
+        self.absorbed_state()
+    }
+
+    // Experimental absorb batching: lengths and terminal roles have fixed
+    // little-endian u64 encodings; every scalar remains a full 24-byte value.
+    #[cfg(feature = "keccak-batched-transcript")]
+    fn batch_digest(&self, tag: u64) -> [F64; 4] {
+        let mut bytes = Vec::with_capacity(48 + 24 * self.pending.len());
+        for w in self.cv {
+            bytes.extend_from_slice(&w.0.to_le_bytes());
+        }
+        bytes.extend_from_slice(&(self.pending.len() as u64).to_le_bytes());
+        for x in &self.pending {
+            for w in [x.c0, x.c1, x.c2] {
+                bytes.extend_from_slice(&w.to_le_bytes());
+            }
+        }
+        bytes.extend_from_slice(&tag.to_le_bytes());
+        digest_words(&primitives::protocol_hash::hash(&bytes))
+    }
+    fn absorbed_state(&self) -> [F64; 4] {
+        #[cfg(feature = "keccak-batched-transcript")]
+        if !self.pending.is_empty() {
+            return self.batch_digest(1);
+        }
         self.cv
     }
 
     /// Bind a grinding nonce into the state (both sides, so they stay in lockstep).
     fn absorb_nonce(&mut self, nonce: F192) {
+        self.cv = self.absorbed_state();
+        #[cfg(feature = "keccak-batched-transcript")]
+        self.pending.clear();
         self.cv = compress(self.cv, [F64(nonce.c0), F64(nonce.c1), F64(nonce.c2), DS_POW_NONCE]);
     }
 
@@ -174,7 +221,7 @@ impl FiatShamirState {
                 n = n.wrapping_add(1);
             }
         } else {
-            const BATCH: usize = 2 * primitives::hash::LANES;
+            const BATCH: usize = 2 * primitives::protocol_hash::LANES;
             let mut template = [[0u8; 64]; BATCH];
             for input in &mut template {
                 for (slot, word) in input[..32].as_chunks_mut::<8>().0.iter_mut().zip(base) {
@@ -188,7 +235,7 @@ impl FiatShamirState {
                     input[32..40].copy_from_slice(&(first + i as u64).to_le_bytes());
                 }
                 let mut digests = [[0u8; 32]; BATCH];
-                primitives::hash::hash_many::<64>(inputs.as_flattened(), digests.as_flattened_mut());
+                primitives::protocol_hash::hash_many::<64>(inputs.as_flattened(), digests.as_flattened_mut());
                 digests
                     .iter()
                     .position(|d| u64::from_le_bytes(d[..8].try_into().unwrap()) & ((1u64 << bits) - 1) == 0)
@@ -242,9 +289,45 @@ mod tests {
         std::array::from_fn(|i| F64(k + i as u64))
     }
 
+    #[cfg(feature = "keccak-batched-transcript")]
+    #[test]
+    fn batched_absorbs_match_independent_encoding_and_keep_grinding() {
+        use sha3::Digest;
+        let mut a = FiatShamirState::from_label(b"batch-reference");
+        let initial = a.cv;
+        let xs = [f(7), f(11), f(19)];
+        for x in xs {
+            a.observe(x);
+        }
+        let mut encoded: Vec<_> = initial.into_iter().flat_map(|w| w.0.to_le_bytes()).collect();
+        encoded.extend_from_slice(&3u64.to_le_bytes());
+        for x in xs {
+            for w in [x.c0, x.c1, x.c2] {
+                encoded.extend_from_slice(&w.to_le_bytes());
+            }
+        }
+        encoded.extend_from_slice(&2u64.to_le_bytes());
+        let digest: [u8; 32] = sha3::Keccak256::digest(encoded).into();
+        let words = digest_words(&digest);
+        assert_eq!(a.sample(), F192::new(words[0].0, words[1].0, words[2].0));
+        let mut prover = FiatShamirState::from_label(b"batch-reference");
+        for x in xs {
+            prover.observe(x);
+        }
+        let mut verifier = prover.clone();
+        let nonce = prover.grind_pow(8);
+        assert!(verifier.verify_pow_field(F192::new(nonce, 0, 0), 8));
+        assert_eq!(prover.sample(), verifier.sample());
+        let mut wrong = FiatShamirState::from_label(b"batch-reference");
+        for x in xs.into_iter().rev() {
+            wrong.observe(x);
+        }
+        assert_ne!(wrong.sample(), F192::new(words[0].0, words[1].0, words[2].0));
+    }
+
     #[test]
     fn fs_binds_the_public_input() {
-        let iv = digest_words(&primitives::hash::hash(b"t"));
+        let iv = digest_words(&primitives::protocol_hash::hash(b"t"));
         let mut a = FiatShamirState::new(iv, pi(1));
         let mut b = FiatShamirState::new(iv, pi(2));
         assert_ne!(a.sample(), b.sample());
@@ -252,8 +335,8 @@ mod tests {
 
     #[test]
     fn fs_binds_the_iv() {
-        let mut a = FiatShamirState::new(digest_words(&primitives::hash::hash(b"t")), pi(1));
-        let mut b = FiatShamirState::new(digest_words(&primitives::hash::hash(b"u")), pi(1));
+        let mut a = FiatShamirState::new(digest_words(&primitives::protocol_hash::hash(b"t")), pi(1));
+        let mut b = FiatShamirState::new(digest_words(&primitives::protocol_hash::hash(b"u")), pi(1));
         assert_ne!(a.sample(), b.sample());
     }
 
@@ -270,7 +353,7 @@ mod tests {
 
     #[test]
     fn pow_predicate() {
-        let sp = FiatShamirState::new(digest_words(&primitives::hash::hash(b"t")), pi(1));
+        let sp = FiatShamirState::new(digest_words(&primitives::protocol_hash::hash(b"t")), pi(1));
         let base = sp.pow_base();
         for bits in [0, 8, 13, 17] {
             let mut clone = sp.clone();
@@ -287,7 +370,7 @@ mod tests {
 
     #[test]
     fn pow_accepts_and_binds_full_field_nonce() {
-        let mut verifier = FiatShamirState::new(digest_words(&primitives::hash::hash(b"t")), pi(1));
+        let mut verifier = FiatShamirState::new(digest_words(&primitives::protocol_hash::hash(b"t")), pi(1));
         let base = verifier.pow_base();
         let nonce = (0..u64::MAX)
             .map(|lo| F192::new(lo, 1, 2))
@@ -299,7 +382,7 @@ mod tests {
         assert!(verifier.verify_pow_field(nonce, 8));
         assert_eq!(verifier.state(), expected.state());
 
-        let mut zero_bits = FiatShamirState::new(digest_words(&primitives::hash::hash(b"t")), pi(1));
+        let mut zero_bits = FiatShamirState::new(digest_words(&primitives::protocol_hash::hash(b"t")), pi(1));
         assert!(!zero_bits.verify_pow_field(F192::new(0, 1, 0), 0));
     }
 }

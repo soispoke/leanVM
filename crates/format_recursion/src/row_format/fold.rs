@@ -380,3 +380,160 @@ fn hash_to_fields(c: &DeferredClaim) -> Vec<F192> {
         .chain(c.matrix_values)
         .collect()
 }
+
+/// Native verifier for the same two-phase matrix fold used by the recursion
+/// circuit. It authenticates every key/dimension and consumes the entire proof.
+/// Final root reduction can thereby settle multiple points of one identity once.
+pub fn verify_native(
+    setups: &[&Setup],
+    inputs: &[DeferredClaim],
+    digest: &Hash,
+    reduction: &Reduction,
+) -> Option<Vec<DeferredClaim>> {
+    use fiat_shamir::transcript::{Receiver, VerifierState};
+    use primitives::multilinear::eq_eval;
+    if setups.is_empty() || inputs.is_empty() || reduction.carried.len() != setups.len() {
+        return None;
+    }
+    for (i, s) in setups.iter().enumerate() {
+        if setups[..i].iter().any(|other| other.key == s.key) {
+            return None;
+        }
+    }
+    let indices: Vec<_> = inputs
+        .iter()
+        .map(|c| setups.iter().position(|s| s.key == c.app_key))
+        .collect::<Option<_>>()?;
+    for (c, &i) in inputs.iter().zip(&indices) {
+        if c.row_point.len() != setups[i].row_log || c.col_point.len() != setups[i].z_log {
+            return None;
+        }
+    }
+    let mut vs = VerifierState::from_label(&label(inputs, digest), &reduction.proof);
+    let theta = vs.sample();
+    let theta2 = theta * theta;
+    let theta3 = theta2 * theta;
+    let mut power = F192::ONE;
+    let mut running = F192::ZERO;
+    for c in inputs {
+        running += power * (c.matrix_values[0] + theta * c.matrix_values[1] + theta2 * c.matrix_values[2]);
+        power *= theta3;
+    }
+    let rlog = setups.iter().map(|s| s.row_log).max()?;
+    let clog = setups.iter().map(|s| s.z_log).max()?;
+    let mut phase = |n| -> Option<Vec<F192>> {
+        let mut point = Vec::new();
+        for _ in 0..n {
+            let q = vs.next_round_poly(3, running, None).ok()?;
+            let r = vs.sample();
+            running = poly_eval(&q, r);
+            point.push(r);
+        }
+        Some(point)
+    };
+    let rp = phase(rlog)?;
+    let cp = phase(clog)?;
+    let mut output = Vec::new();
+    for s in setups {
+        output.push(DeferredClaim {
+            app_key: s.key,
+            row_point: rp[..s.row_log].to_vec(),
+            col_point: cp[..s.z_log].to_vec(),
+            matrix_values: [vs.next_scalar().ok()?, vs.next_scalar().ok()?, vs.next_scalar().ok()?],
+        });
+    }
+    let lift = |point: &[F192], k: usize| point[k..].iter().fold(F192::ONE, |a, &x| a * (F192::ONE + x));
+    let mut total = F192::ZERO;
+    power = F192::ONE;
+    for (c, &i) in inputs.iter().zip(&indices) {
+        let s = setups[i];
+        let values = output[i].matrix_values;
+        total += power
+            * eq_eval(&c.row_point, &rp[..s.row_log])
+            * lift(&rp, s.row_log)
+            * eq_eval(&c.col_point, &cp[..s.z_log])
+            * lift(&cp, s.z_log)
+            * (values[0] + theta * values[1] + theta2 * values[2]);
+        power *= theta3;
+    }
+    if total != running || output != reduction.carried {
+        return None;
+    }
+    vs.finish().ok()?;
+    Some(output)
+}
+
+#[cfg(test)]
+mod native_tests {
+    use super::super::{R1cs, Source, generator::Generator};
+    use super::*;
+    #[test]
+    fn native_matrix_fold_matches_symbolic_and_rejects_mutations() {
+        parallel::init();
+        let mut b = crate::native_hash::Builder::default();
+        let a = b.input(7);
+        let z = b.gate(a, a, b.one());
+        for w in b.hash_words(&[a, z]) {
+            b.expose(w);
+        }
+        let (circuit, connectors) = b.export_protocol_circuit();
+        let fixed_len = circuit.public.len() - 4;
+        let source = Source {
+            circuit,
+            connectors,
+            fixed_len,
+            values: b.values.clone(),
+            compressions: b.protocol_blocks(),
+            rebuild: Box::new(|| unreachable!()),
+        };
+        let setup = Setup::new(
+            R1cs::lower_bounded(&source.circuit, &source.connectors, &source.values, source.fixed_len, 8),
+            false,
+        );
+        let generator = Generator::new(&source, 8, setup.key);
+        let claims: Vec<_> = (0..2)
+            .map(|i| {
+                let rp: Vec<_> = (0..setup.row_log)
+                    .map(|j| F192::new((i * 113 + j + 2) as u64, 3, 5))
+                    .collect();
+                let cp: Vec<_> = (0..setup.z_log)
+                    .map(|j| F192::new((i * 37 + j + 9) as u64, 7, 11))
+                    .collect();
+                let values = generator.evaluate(&rp, &cp);
+                DeferredClaim {
+                    app_key: setup.key,
+                    row_point: rp,
+                    col_point: cp,
+                    matrix_values: values,
+                }
+            })
+            .collect();
+        let digest = [71; 32];
+        let reduction = prove_generated(&[&setup], &[&generator], &claims, &digest);
+        let verified = verify_native(&[&setup], &claims, &digest, &reduction).unwrap();
+        assert!(generator.settle(&verified[0]));
+        assert!(record(&[&setup], &claims, &digest, &reduction).satisfied());
+        let mut false_input = claims.clone();
+        false_input[0].matrix_values[0] += F192::ONE;
+        assert!(verify_native(&[&setup], &false_input, &digest, &reduction).is_none());
+        let mut omitted = claims.clone();
+        omitted.remove(0);
+        assert!(verify_native(&[&setup], &omitted, &digest, &reduction).is_none());
+        let mut wrong_key = claims.clone();
+        wrong_key[0].app_key[0] ^= 1;
+        assert!(verify_native(&[&setup], &wrong_key, &digest, &reduction).is_none());
+        let mut wrong_shape = claims.clone();
+        wrong_shape[0].row_point.pop();
+        assert!(verify_native(&[&setup], &wrong_shape, &digest, &reduction).is_none());
+        let mut forged = reduction.clone();
+        forged.carried[0].matrix_values[0] += F192::ONE;
+        assert!(verify_native(&[&setup], &claims, &digest, &forged).is_none());
+        let mut forged = reduction.clone();
+        forged.proof.stream.push(F192::ONE);
+        assert!(verify_native(&[&setup], &claims, &digest, &forged).is_none());
+        let mut forged = reduction.clone();
+        forged.proof.stream.pop();
+        assert!(verify_native(&[&setup], &claims, &digest, &forged).is_none());
+        assert!(verify_native(&[&setup], &claims, &[72; 32], &reduction).is_none());
+    }
+}

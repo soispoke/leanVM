@@ -1,0 +1,239 @@
+{
+  "id": "entry-2",
+  "system": "leanR1CS",
+  "source_commit": "cea0251a9fbc899f8a563e512225ca7a8291e382",
+  "protocol_hash": "BLAKE2s provisional",
+  "relation_B": "decoded-input reduced",
+  "zk": false,
+  "binaries": [
+    {
+      "path": "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/trial/entries/entry-2/trial_universal",
+      "sha256": "15d12fa88ce7202fa91d3a20ad8b5cc807641dd989a23ca207cded6b26b8f52e"
+    }
+  ],
+  "generators": {
+    "shielded": {
+      "path": "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/trial/universal-setup-v1/apps/shielded/generator",
+      "sha256": "af571816aa3139b6ff4abb1d68bc4b6b35dc58b566ea6613220b9158e30ab298",
+      "application_id_keccak256": "464c4228d8538e4338763734ff20f7c12fd3b3d34b216f2c7f2d1c6df4062d52",
+      "grammar_version": "native-source-bincode-v1"
+    },
+    "merkle": {
+      "path": "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/trial/universal-setup-v1/apps/merkle/generator",
+      "sha256": "cea3b859d7cd3522f43c410412823866412eab9a5d40875559f86aa0d556109e",
+      "application_id_keccak256": "e40784775e1dded18935930be0cb0de8f2b4be9992248898527117e6cc22b291",
+      "grammar_version": "native-source-bincode-v1"
+    },
+    "hash3": {
+      "path": "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/trial/universal-setup-v1/apps/hash3/generator",
+      "sha256": "65485986ca4d6be2bbf7ce6a670d2261ff73f2303de6cf970ae8d9c7a04fa107",
+      "application_id_keccak256": "4271a605d391cee55b9d2875282baaa8c5db76260e2a0913c6256149f9b68d33",
+      "grammar_version": "native-source-bincode-v1"
+    }
+  },
+  "aggregate_key": {
+    "path": "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/trial/universal-setup-v1/aggregate.key",
+    "sha256": "7ea9fcd6c58bbb75883bee574643d0a577550800615012570fd8c93b81c299fa",
+    "derivation": "canonical aggregate.trace + fixed envelope; public-cache and setup are retained, hashes in universal-freeze-v1.json",
+    "max_applications": 5,
+    "max_depth": 2,
+    "retained_artifacts": [
+      {
+        "path": "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/trial/universal-setup-v1/aggregate.key",
+        "bytes": 32,
+        "sha256": "7ea9fcd6c58bbb75883bee574643d0a577550800615012570fd8c93b81c299fa"
+      },
+      {
+        "path": "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/trial/universal-setup-v1/aggregate.public-cache",
+        "bytes": 223106834,
+        "sha256": "86885e20b54daa265da11738fbe66ddd8fedc18a8bc93e10918d683aed884e2f"
+      },
+      {
+        "path": "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/trial/universal-setup-v1/aggregate.setup",
+        "bytes": 132063417,
+        "sha256": "537b81a596157798750ba2dad911d434d9761348d4c1f2af15d208d00fe4b83e"
+      },
+      {
+        "path": "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/trial/universal-setup-v1/aggregate.trace",
+        "bytes": 28473256,
+        "sha256": "51009bc58129dbc97caabf45724767e524428fd2ecefb26d75b1ff24866a4ebb"
+      }
+    ],
+    "retained_bytes": 383643539
+  },
+  "setup": {
+    "argv": [
+      "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/trial/entries/entry-2/trial_universal",
+      "setup",
+      "{output}"
+    ],
+    "public_only_input_contract": "public dummy generator used to record fixed verifier; all nonconstant trace values erased; real applications constructed after freeze",
+    "output_directory": "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/trial/universal-setup-v1",
+    "retained_artifacts": [
+      {
+        "path": "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/trial/universal-setup-v1/aggregate.key",
+        "bytes": 32,
+        "sha256": "7ea9fcd6c58bbb75883bee574643d0a577550800615012570fd8c93b81c299fa"
+      },
+      {
+        "path": "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/trial/universal-setup-v1/aggregate.public-cache",
+        "bytes": 223106834,
+        "sha256": "86885e20b54daa265da11738fbe66ddd8fedc18a8bc93e10918d683aed884e2f"
+      },
+      {
+        "path": "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/trial/universal-setup-v1/aggregate.setup",
+        "bytes": 132063417,
+        "sha256": "537b81a596157798750ba2dad911d434d9761348d4c1f2af15d208d00fe4b83e"
+      },
+      {
+        "path": "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/trial/universal-setup-v1/aggregate.trace",
+        "bytes": 28473256,
+        "sha256": "51009bc58129dbc97caabf45724767e524428fd2ecefb26d75b1ff24866a4ebb"
+      }
+    ],
+    "wall_time": 6.350745704,
+    "process_tree_peak_ram": null,
+    "retained_key_bytes": 383643539,
+    "note": "Aggregate setup reused from entry1; changed verifier/executable requires new freeze and draw. App public preprocessing created later under apps; all counted separately below.",
+    "application_retained_artifacts": [
+      {
+        "path": "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/trial/universal-setup-v1/apps/hash3/application-id",
+        "bytes": 32,
+        "sha256": "70bd23e3e14e9b68a0e6bb3e5def512367ab1fad3f74dae0b2ab4a097f900298"
+      },
+      {
+        "path": "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/trial/universal-setup-v1/apps/hash3/generator",
+        "bytes": 772,
+        "sha256": "65485986ca4d6be2bbf7ce6a670d2261ff73f2303de6cf970ae8d9c7a04fa107"
+      },
+      {
+        "path": "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/trial/universal-setup-v1/apps/hash3/proof-key",
+        "bytes": 32,
+        "sha256": "7ee9b54f5fff475b0612964b369f0c561c5014b51cff39e260ba103d510d223b"
+      },
+      {
+        "path": "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/trial/universal-setup-v1/apps/hash3/public-cache",
+        "bytes": 90459133,
+        "sha256": "47a744d6b88e73a593e9bcc6d53ff6b4a149cafc3a5bbb00e0637d34409972b4"
+      },
+      {
+        "path": "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/trial/universal-setup-v1/apps/merkle/application-id",
+        "bytes": 32,
+        "sha256": "dd20d6c427bf144f55ddcaa3fa2edab43d27243f4c7f5b93ffe00f5415c7296e"
+      },
+      {
+        "path": "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/trial/universal-setup-v1/apps/merkle/generator",
+        "bytes": 15620,
+        "sha256": "cea3b859d7cd3522f43c410412823866412eab9a5d40875559f86aa0d556109e"
+      },
+      {
+        "path": "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/trial/universal-setup-v1/apps/merkle/proof-key",
+        "bytes": 32,
+        "sha256": "8264009e800d53ec22d14ee13f28e1579532c268f5aff83f15e19f096be7c81c"
+      },
+      {
+        "path": "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/trial/universal-setup-v1/apps/merkle/public-cache",
+        "bytes": 90502841,
+        "sha256": "03de4d4e2554f1e364f29d1e2d93e3cd2e3893d84ed7999ce6ce97bdc12ee384"
+      },
+      {
+        "path": "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/trial/universal-setup-v1/apps/shielded/application-id",
+        "bytes": 32,
+        "sha256": "d6cff0a644319aeaa989c95c332b3680d7a6f43b625b692700a4da8a3af38f76"
+      },
+      {
+        "path": "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/trial/universal-setup-v1/apps/shielded/generator",
+        "bytes": 4762484,
+        "sha256": "af571816aa3139b6ff4abb1d68bc4b6b35dc58b566ea6613220b9158e30ab298"
+      },
+      {
+        "path": "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/trial/universal-setup-v1/apps/shielded/proof-key",
+        "bytes": 32,
+        "sha256": "ce714b86935b49bfb32ac6c60575648f239b2b084496aba974a7ccee80c131fb"
+      },
+      {
+        "path": "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/trial/universal-setup-v1/apps/shielded/public-cache",
+        "bytes": 103070537,
+        "sha256": "51622c674292118b63dc938e3c738076b5bc987ea0253a43ebac2dd173811a07"
+      }
+    ],
+    "application_retained_bytes": 288811579
+  },
+  "commands": {
+    "wallet": [
+      "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/trial/entries/entry-2/trial_universal",
+      "wallet",
+      "{setup}",
+      "{input}",
+      "{output}"
+    ],
+    "merge_first": [
+      "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/trial/entries/entry-2/trial_universal",
+      "merge",
+      "{setup}",
+      "{input}",
+      "{output}"
+    ],
+    "merge_node": [
+      "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/trial/entries/entry-2/trial_universal",
+      "merge",
+      "{setup}",
+      "{input}",
+      "{output}"
+    ],
+    "admission": [
+      "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/trial/entries/entry-2/trial_universal",
+      "admission",
+      "{setup}",
+      "{input}"
+    ],
+    "root": [
+      "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/trial/entries/entry-2/trial_universal",
+      "root",
+      "{setup}",
+      "{input}"
+    ],
+    "reject": []
+  },
+  "input_contract": "Wallet JSON case shielded|merkle|hash3 and seed consumes fresh independent witnesses; merge JSON child directories and registry [{slot,case}]; root JSON certificate directory, expected_digest bytes32, registry. Ordered children. Actual samples/inputs under universal-v3. Malformed commands fail. No external arbitrary generator or heldout Keccak/MPT decoder.",
+  "claim_schema": "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/trial/entries/entry-2/claim-schema.md",
+  "frozen_surface": "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/trial/entries/entry-2/frozen-surface.md",
+  "soundness_note": "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/trial/entries/entry-2/soundness-note.md",
+  "rejections": {
+    "verifier_entrypoint": "universal::verify_root_finalized and fold::verify_native",
+    "cases": {},
+    "coverage": "Direct tests reject missing sidecar, false terminal value, extra scalar, omitted aggregate claim; native fold mutations cover input values/keys/shapes/omissions/transcript/digest/output. No coordinator reject argv."
+  },
+  "status": "partial/ineligible calibration: complete cold/warm file adapter and finalized roots; only three local BLAKE applications; new freeze/draw requested",
+  "missing_capabilities": [
+    "full Falcon composition",
+    "Keccak protocol in this frozen binary",
+    "heldout decoders",
+    "independent upgrade backend",
+    "security calculator",
+    "coordinator invalid-case adapter"
+  ],
+  "diagnostic_command": [
+    "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/trial/entries/entry-1/trial_universal",
+    "demo",
+    "{setup}",
+    "{output}",
+    "{seed}"
+  ],
+  "evidence": [
+    "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/trial/universal-v3/summary.json",
+    "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/trial/universal-v3/samples.jsonl",
+    "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/trial/universal-v3/provenance.json",
+    "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/trial/universal-v2/finalization-screen.jsonl"
+  ],
+  "request": "Please freeze entry2 separately and draw heldouts. This changed binary does not retrofit entry1. Expected decoder limitations declared.",
+  "warm": {
+    "argv": [
+      "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/trial/entries/entry-2/trial_universal",
+      "serve",
+      "{setup}",
+      "shielded,merkle,hash3"
+    ],
+    "request_protocol": "JSON lines: command wallet|merge|root|admission, input path, output directory when applicable; ready response before requests; public preprocessing only."
+  }
+}

@@ -15,7 +15,7 @@ fn public(child: &format_recursion::Child) -> [F192; 2] {
         .iter()
         .flat_map(|x| [x.c0.to_le_bytes(), x.c1.to_le_bytes()].concat())
         .collect();
-    hash_to_scalars(&primitives::hash::hash(&bytes))
+    hash_to_scalars(&primitives::protocol_hash::hash(&bytes))
 }
 
 fn main() {

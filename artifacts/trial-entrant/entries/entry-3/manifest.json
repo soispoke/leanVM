@@ -1,0 +1,79 @@
+{
+  "id": "entry-3",
+  "system": "leanR1CS",
+  "source_commit": "81a17dc611858116c6da2543e394d2d57f1f3c4d",
+  "protocol_hash": "BLAKE2s provisional; SHAKE native Keccak application",
+  "relation_B": "full fixed-padded encoded Falcon512; variable lengths unsupported",
+  "zk": false,
+  "binaries": [
+    {
+      "path": "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/trial/entries/entry-3/falcon_driver",
+      "sha256": "7ed63b5fe43c86bd71fc8dda4f8a70525d0e4e1b67b796ca1fe5727e3c0576f1"
+    }
+  ],
+  "generators": {},
+  "aggregate_key": null,
+  "setup": {
+    "argv": [],
+    "public_only_input_contract": "No reusable setup adapter; setup builds from fixture-derived canonical circuit. Not eligible setup isolation evidence.",
+    "output_directory": null,
+    "retained_artifacts": [],
+    "wall_time": null,
+    "process_tree_peak_ram": null,
+    "retained_key_bytes": null
+  },
+  "commands": {
+    "wallet": [],
+    "merge_first": [],
+    "merge_node": [],
+    "admission": [],
+    "root": [],
+    "reject": []
+  },
+  "input_contract": "Diagnostic workload driver only, fixture-seed selection; not fresh raw-byte coordinator adapter.",
+  "claim_schema": "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/trial/entries/entry-3/calibration.md",
+  "frozen_surface": "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/trial/entries/entry-3/calibration.md",
+  "soundness_note": "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/trial/entries/entry-3/calibration.md",
+  "rejections": {
+    "verifier_entrypoint": "KeccakBridge::verify",
+    "cases": {
+      "six_encoded_mutations": [
+        "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/trial/entries/entry-3/falcon_driver",
+        "falcon-encoded",
+        "rows",
+        "reject",
+        "{output}",
+        "0"
+      ]
+    },
+    "prover_prechecks_bypassed": true
+  },
+  "diagnostic_commands": {
+    "prove": [
+      "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/trial/entries/entry-3/falcon_driver",
+      "falcon-encoded",
+      "rows",
+      "prove",
+      "{output}",
+      "0"
+    ],
+    "verify": [
+      "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/trial/entries/entry-3/falcon_driver",
+      "falcon-encoded",
+      "rows",
+      "verify",
+      "{input}",
+      "0"
+    ]
+  },
+  "status": "partial/ineligible Falcon parser calibration; no recursive composition, reusable key freeze or heldout admission",
+  "evidence": [
+    "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/trial/falcon-encoded/summary.json",
+    "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/trial/falcon-encoded/samples.jsonl",
+    "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/trial/falcon-encoded/provenance.json",
+    "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/trial/falcon-encoded/full-screen.jsonl",
+    "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/trial/falcon-encoded/full-verify.jsonl",
+    "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/trial/falcon-encoded/rejections.stdout"
+  ],
+  "request": "Record calibration; no heldout draw requested for noncomposing wallet-only bridge."
+}

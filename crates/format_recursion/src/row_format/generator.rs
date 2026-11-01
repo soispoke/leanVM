@@ -7,10 +7,10 @@ use primitives::{
 };
 use std::{
     collections::{BTreeMap, HashMap},
-    sync::Arc,
+    sync::{Arc, OnceLock},
 };
 
-#[derive(Clone)]
+#[derive(Clone, serde::Serialize, serde::Deserialize)]
 enum Row {
     Product([usize; 4]),
     Linear {
@@ -25,7 +25,7 @@ enum Row {
     },
 }
 
-#[derive(Clone, PartialEq, Eq, Hash)]
+#[derive(Clone, PartialEq, Eq, Hash, serde::Serialize, serde::Deserialize)]
 enum Binding {
     Constant(F192),
     Column(usize),
@@ -34,12 +34,15 @@ enum Binding {
 
 /// Trusted compilation metadata for a source generator, never a stored A/B/C.
 /// Definitions are bounded affine source instructions, shared across their uses.
+#[derive(serde::Serialize, serde::Deserialize)]
 pub struct Generator {
     pub app_key: Hash,
     pub row_log: usize,
     pub col_log: usize,
     bindings: Vec<Binding>,
     rows: Vec<Row>,
+    #[serde(skip)]
+    evaluation_plan: OnceLock<EvaluationPlan>,
 }
 
 fn mul(k: F192, v: F192) -> F192 {
@@ -72,6 +75,10 @@ fn scalar(f: &Form) -> Option<F192> {
 }
 impl Generator {
     pub fn new(source: &Source, cap: usize, app_key: Hash) -> Self {
+        Self::new_with_blocks(source, cap, app_key, 128)
+    }
+    pub fn new_with_blocks(source: &Source, cap: usize, app_key: Hash, minimum_blocks: usize) -> Self {
+        assert!(minimum_blocks.is_power_of_two() && minimum_blocks >= 128);
         let c = &source.circuit;
         let fixed: HashMap<_, _> = c.public[..source.fixed_len]
             .iter()
@@ -107,7 +114,7 @@ impl Generator {
             assigned[d] = true;
         }
         let public_len = 1 + c.public.len() - source.fixed_len;
-        let blocks = source.connectors.len().max(128).next_power_of_two();
+        let blocks = source.connectors.len().max(minimum_blocks).next_power_of_two();
         let port_start = public_len.next_power_of_two().next_multiple_of(blocks);
         let mut origins = vec![Origin::Constant(F192::ZERO); port_start];
         origins[0] = Origin::Constant(F192::ONE);
@@ -119,12 +126,8 @@ impl Generator {
                 map[id] = j + 1;
             }
         }
-        let padding = flock::hash::padding_block();
-        let padding = crate::private_bridge::io_words(
-            &padding,
-            &flock::hash::blake2s_compress(&padding.0, &padding.1, padding.2, padding.3, padding.4),
-        );
-        for slot in 0..18 {
+        let padding = crate::row_hash::padding();
+        for slot in 0..crate::row_hash::PORTS {
             for block in 0..blocks {
                 origins.push(
                     source
@@ -175,7 +178,7 @@ impl Generator {
         for (j, &id) in c.public[source.fixed_len..].iter().enumerate() {
             materialized.push((j + 1, Origin::Variable(id), form(id, &defs, &fixed)));
         }
-        for slot in 0..18 {
+        for slot in 0..crate::row_hash::PORTS {
             for block in 0..blocks {
                 let origin = source
                     .connectors
@@ -267,6 +270,7 @@ impl Generator {
             col_log: origins.len().next_power_of_two().trailing_zeros() as usize,
             bindings,
             rows,
+            evaluation_plan: OnceLock::new(),
         }
     }
     pub fn rows(&self) -> usize {
@@ -361,8 +365,203 @@ impl Generator {
         });
         products.try_into().unwrap()
     }
-    #[tracing::instrument(skip_all, name = "Generator matrix settlement")]
+    /// Public-only compilation of constant padding runs; no matrix claim is cached.
+    pub fn prepare_evaluation(&self) {
+        self.evaluation_plan.get_or_init(|| {
+            let mut plan = Vec::new();
+            let mut i = 0;
+            while i < self.rows.len() {
+                let mut run = 1;
+                if let Row::Port {
+                    dest,
+                    source: Origin::Constant(value),
+                } = self.rows[i]
+                {
+                    while i + run < self.rows.len() {
+                        if let Row::Port {
+                            dest: next,
+                            source: Origin::Constant(v),
+                        } = self.rows[i + run]
+                            && next == dest + run
+                            && v == value
+                        {
+                            run += 1;
+                        } else {
+                            break;
+                        }
+                    }
+                    if run >= 8 {
+                        plan.push(EvaluationPart::ConstantPorts {
+                            start: i,
+                            dest,
+                            len: run,
+                            value,
+                        });
+                        i += run;
+                        continue;
+                    }
+                }
+                // Keep walk chunks within one low equality-table block.
+                match plan.last_mut() {
+                    Some(EvaluationPart::Walk { start, len }) if (*start >> 10) == (i >> 10) && *start + *len == i => {
+                        *len += 1
+                    }
+                    _ => plan.push(EvaluationPart::Walk { start: i, len: 1 }),
+                }
+                i += 1;
+            }
+            let mut constants = Vec::new();
+            let mut constant_ids = HashMap::new();
+            let mut constant = |value: F192| {
+                *constant_ids.entry((value.c0, value.c1, value.c2)).or_insert_with(|| {
+                    let id = u32::try_from(constants.len()).unwrap();
+                    constants.push(value);
+                    id
+                })
+            };
+            let narrow = |value: usize| {
+                assert!(value < (1 << 30), "evaluation index exceeds packed plan bound");
+                value as u32
+            };
+            let rows = self
+                .rows
+                .iter()
+                .map(|row| match *row {
+                    Row::Product(ids) => ids.map(narrow),
+                    Row::Linear { other, scale, u, d } => {
+                        [narrow(other) | (1 << 30), narrow(u), narrow(d), constant(scale)]
+                    }
+                    Row::Port {
+                        dest,
+                        source: Origin::Variable(id),
+                    } => [narrow(dest) | (2 << 30), narrow(id), 0, 0],
+                    Row::Port {
+                        dest,
+                        source: Origin::Constant(value),
+                    } => [narrow(dest) | (3 << 30), constant(value), 0, 0],
+                })
+                .collect();
+            let mut affine_groups = Vec::new();
+            let mut affine_terms = Vec::new();
+            let affine_ranges = self
+                .bindings
+                .iter()
+                .map(|binding| {
+                    let start = affine_groups.len();
+                    if let Binding::Affine(form) = binding {
+                        let mut i = 0;
+                        while i < form.len() {
+                            let high = form[i].0 >> 10;
+                            let begin = affine_terms.len();
+                            while i < form.len() && form[i].0 >> 10 == high {
+                                affine_terms.push(((form[i].0 & 1023) as u16, form[i].1));
+                                i += 1;
+                            }
+                            affine_groups.push((high, begin, affine_terms.len()));
+                        }
+                    }
+                    (start, affine_groups.len())
+                })
+                .collect();
+            EvaluationPlan {
+                parts: plan,
+                rows,
+                constants,
+                affine_ranges,
+                affine_groups,
+                affine_terms,
+            }
+        });
+    }
+    /// Logical retained allocation size of the public evaluation plan. Whole
+    /// process RSS also includes allocator overhead and the original generator.
+    pub fn evaluation_plan_bytes(&self) -> usize {
+        self.prepare_evaluation();
+        let p = self.evaluation_plan.get().unwrap();
+        std::mem::size_of::<EvaluationPlan>()
+            + p.parts.capacity() * std::mem::size_of::<EvaluationPart>()
+            + p.rows.capacity() * std::mem::size_of::<[u32; 4]>()
+            + p.constants.capacity() * std::mem::size_of::<F192>()
+            + p.affine_ranges.capacity() * std::mem::size_of::<(usize, usize)>()
+            + p.affine_groups.capacity() * std::mem::size_of::<(usize, usize, usize)>()
+            + p.affine_terms.capacity() * std::mem::size_of::<(u16, F192)>()
+    }
+    /// Evaluate exactly the same matrix, summing fixed padding runs by binary
+    /// carry dynamic programming instead of materializing every padding row.
+    #[tracing::instrument(skip_all, name = "Generator structured matrix settlement")]
     pub fn evaluate(&self, row_point: &[F192], col_point: &[F192]) -> [F192; 3] {
+        assert_eq!(row_point.len(), self.row_log);
+        assert_eq!(col_point.len(), self.col_log);
+        self.prepare_evaluation();
+        let plan = self.evaluation_plan.get().unwrap();
+        let low_log = row_point.len().min(10);
+        let low = eq_table(&row_point[..low_log]);
+        let high = eq_table(&row_point[low_log..]);
+        let col_low_log = col_point.len().min(10);
+        let col_low = eq_table(&col_point[..col_low_log]);
+        let col_high = eq_table(&col_point[col_low_log..]);
+        let column = |j: usize| col_low[j & (col_low.len() - 1)] * col_high[j >> col_low_log];
+        let at = parallel::map_collect(self.bindings.len(), |i| match &self.bindings[i] {
+            Binding::Constant(v) => mul(*v, column(0)),
+            Binding::Column(j) => column(*j),
+            Binding::Affine(_) => {
+                let (start, end) = plan.affine_ranges[i];
+                plan.affine_groups[start..end]
+                    .iter()
+                    .fold(F192::ZERO, |sum, &(high, start, end)| {
+                        let lo = plan.affine_terms[start..end]
+                            .iter()
+                            .fold(F192::ZERO, |sum, &(j, k)| sum + mul(k, col_low[j as usize]));
+                        sum + lo * col_high[high]
+                    })
+            }
+        });
+        parallel::map_reduce(
+            plan.parts.len(),
+            || [F192::ZERO; 3],
+            |part| match plan.parts[part] {
+                EvaluationPart::ConstantPorts {
+                    start,
+                    dest,
+                    len,
+                    value,
+                } => {
+                    let rows = interval_equality(row_point, &[], start, 0, len);
+                    let pairs = interval_equality(row_point, col_point, start, dest, len);
+                    [pairs + mul(value, column(0) * rows), column(0) * rows, F192::ZERO]
+                }
+                EvaluationPart::Walk { start, len } => {
+                    let mut sums = [F192Unreduced::ZERO; 3];
+                    for base in (0..len).step_by(4) {
+                        let values: [[F192; 3]; 4] = std::array::from_fn(|k| {
+                            if base + k < len {
+                                packed_row_values(plan, start + base + k, &at, column)
+                            } else {
+                                [F192::ZERO; 3]
+                            }
+                        });
+                        let weights = std::array::from_fn(|k| {
+                            if base + k < len {
+                                low[(start + base + k) & (low.len() - 1)]
+                            } else {
+                                F192::ZERO
+                            }
+                        });
+                        for j in 0..3 {
+                            for v in mul_unreduced4(weights, std::array::from_fn(|k| values[k][j])) {
+                                sums[j] ^= v;
+                            }
+                        }
+                    }
+                    sums.map(|s| s.reduce() * high[start >> low_log])
+                }
+            },
+            |a, b| std::array::from_fn(|i| a[i] + b[i]),
+        )
+    }
+
+    #[tracing::instrument(skip_all, name = "Generator matrix settlement")]
+    pub fn evaluate_walk(&self, row_point: &[F192], col_point: &[F192]) -> [F192; 3] {
         assert_eq!(row_point.len(), self.row_log);
         assert_eq!(col_point.len(), self.col_log);
         // Factor the row equality table. Each block shares its high weight,
@@ -412,5 +611,151 @@ impl Generator {
             && claim.row_point.len() == self.row_log
             && claim.col_point.len() == self.col_log
             && self.evaluate(&claim.row_point, &claim.col_point) == claim.matrix_values
+    }
+}
+
+#[derive(Clone, Copy)]
+enum EvaluationPart {
+    Walk {
+        start: usize,
+        len: usize,
+    },
+    ConstantPorts {
+        start: usize,
+        dest: usize,
+        len: usize,
+        value: F192,
+    },
+}
+
+/// Sum eq(r,start+i)*eq(c,dest+i), 0<=i<len. Empty c omits its factor.
+/// State bits are the two addition carries and the borrow in i-len.
+fn interval_equality(r: &[F192], c: &[F192], start: usize, dest: usize, len: usize) -> F192 {
+    assert!(start + len <= 1usize << r.len());
+    assert!(c.is_empty() || dest + len <= 1usize << c.len());
+    let mut state = [F192::ZERO; 8];
+    state[0] = F192::ONE;
+    for bit in 0..=r.len().max(c.len()) {
+        let mut next = [F192::ZERO; 8];
+        for (s, weight) in state.into_iter().enumerate() {
+            if weight == F192::ZERO {
+                continue;
+            }
+            for digit in 0..2 {
+                let a = digit + ((start >> bit) & 1) + (s & 1);
+                let b = digit + ((dest >> bit) & 1) + ((s >> 1) & 1);
+                let borrow = usize::from(digit < ((len >> bit) & 1) + (s >> 2));
+                let row_weight = r
+                    .get(bit)
+                    .map_or(if a & 1 == 0 { F192::ONE } else { F192::ZERO }, |&p| {
+                        if a & 1 == 1 { p } else { F192::ONE + p }
+                    });
+                let col_weight = if c.is_empty() {
+                    F192::ONE
+                } else {
+                    c.get(bit)
+                        .map_or(if b & 1 == 0 { F192::ONE } else { F192::ZERO }, |&p| {
+                            if b & 1 == 1 { p } else { F192::ONE + p }
+                        })
+                };
+                let carry_b = if c.is_empty() { 0 } else { b >> 1 };
+                next[(a >> 1) | (carry_b << 1) | (borrow << 2)] += weight * row_weight * col_weight;
+            }
+        }
+        state = next;
+    }
+    state[4]
+}
+
+#[cfg(test)]
+mod structured_tests {
+    use super::*;
+    #[test]
+    fn affine_blocks_and_packed_rows_match_independent_walk() {
+        let g = Generator {
+            app_key: [0; 32],
+            row_log: 11,
+            col_log: 12,
+            bindings: vec![
+                Binding::Constant(F192::new(9, 7, 5)),
+                Binding::Column(1031),
+                Binding::Affine(vec![
+                    (0, F192::ONE),
+                    (1, F192::new(3, 2, 1)),
+                    (1023, F192::ONE),
+                    (1024, F192::new(7, 0, 0)),
+                    (2049, F192::ONE),
+                ]),
+                Binding::Affine(vec![(7, F192::ONE), (1023, F192::ONE), (1031, F192::ONE)]),
+            ],
+            rows: vec![
+                Row::Product([0, 1, 2, 3]),
+                Row::Linear {
+                    other: 2,
+                    scale: F192::new(3, 4, 5),
+                    u: 1,
+                    d: 3,
+                },
+                Row::Port {
+                    dest: 3073,
+                    source: Origin::Variable(2),
+                },
+                Row::Port {
+                    dest: 4095,
+                    source: Origin::Constant(F192::new(1, 2, 3)),
+                },
+            ],
+            evaluation_plan: OnceLock::new(),
+        };
+        for seed in 0..8 {
+            let row: Vec<_> = (0..11).map(|i| F192::new(i + seed + 3, i + 7, i + 11)).collect();
+            let col: Vec<_> = (0..12).map(|i| F192::new(i + seed + 17, i + 23, i + 31)).collect();
+            assert_eq!(g.evaluate(&row, &col), g.evaluate_walk(&row, &col));
+        }
+    }
+    #[test]
+    fn offset_interval_equality_matches_enumeration() {
+        let r: Vec<_> = (0..5).map(|i| F192::new(i + 3, i + 7, i + 11)).collect();
+        let c: Vec<_> = (0..5).map(|i| F192::new(i + 17, i + 23, i + 31)).collect();
+        let er = eq_table(&r);
+        let ec = eq_table(&c);
+        for start in 0..32 {
+            for dest in 0..32 {
+                for len in 0..=(32 - start).min(32 - dest) {
+                    assert_eq!(
+                        interval_equality(&r, &c, start, dest, len),
+                        (0..len).fold(F192::ZERO, |v, i| v + er[start + i] * ec[dest + i]),
+                        "start={start} dest={dest} len={len}"
+                    );
+                    assert_eq!(
+                        interval_equality(&r, &[], start, 0, len),
+                        (0..len).fold(F192::ZERO, |v, i| v + er[start + i])
+                    );
+                }
+            }
+        }
+    }
+}
+
+/// Public-only packed addressing plan. Four u32s per row replace a wide Rust
+/// enum in the root hot loop; top two bits tag the first bounded index.
+struct EvaluationPlan {
+    parts: Vec<EvaluationPart>,
+    rows: Vec<[u32; 4]>,
+    constants: Vec<F192>,
+    affine_ranges: Vec<(usize, usize)>,
+    affine_groups: Vec<(usize, usize, usize)>,
+    affine_terms: Vec<(u16, F192)>,
+}
+fn packed_row_values(plan: &EvaluationPlan, row: usize, at: &[F192], column: impl Fn(usize) -> F192) -> [F192; 3] {
+    let [tag, b, c, d] = plan.rows[row];
+    let a = (tag & 0x3fff_ffff) as usize;
+    let (b, c, d) = (b as usize, c as usize, d as usize);
+    match tag >> 30 {
+        0 => [at[a], at[b], at[c] + at[d]],
+        1 => [mul(plan.constants[d], at[a]) + at[b] + at[c], column(0), F192::ZERO],
+        2 => [column(a) + at[b], column(0), F192::ZERO],
+        3 => [column(a) + mul(plan.constants[b], column(0)), column(0), F192::ZERO],
+        _ => unreachable!(),
     }
 }

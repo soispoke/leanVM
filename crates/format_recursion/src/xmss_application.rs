@@ -140,7 +140,8 @@ pub fn create(f: &Fixture) -> Application {
     Application { builder: b, output }
 }
 
-#[cfg(test)]
+// These fixtures exercise the legacy BLAKE2s application/bridge backend.
+#[cfg(all(test, not(feature = "keccak-protocol")))]
 mod tests {
     use super::*;
     #[test]

@@ -109,6 +109,6 @@ pub fn fixture(seed: u64) -> Fixture {
         wiring,
         committed,
         openings,
-        app_id: primitives::hash::hash(&identity),
+        app_id: primitives::protocol_hash::hash(&identity),
     }
 }

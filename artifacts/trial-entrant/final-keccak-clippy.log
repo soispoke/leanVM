@@ -1,0 +1,28 @@
+    Checking primitives v0.1.0 (/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/trial-entrant/crates/primitives)
+    Checking fiat_shamir v0.1.0 (/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/trial-entrant/crates/fiat_shamir)
+    Checking xmss v0.1.0 (/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/trial-entrant/crates/xmss)
+    Checking pcs v0.1.0 (/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/trial-entrant/crates/pcs)
+    Checking flock v0.1.0 (/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/trial-entrant/crates/flock)
+    Checking evm v0.1.0 (/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/trial-entrant/crates/evm)
+    Checking leanvm_core v0.1.0 (/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/trial-entrant/crates/leanvm_core)
+    Checking circuit_suite v0.1.0 (/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/trial-entrant/crates/circuit_suite)
+    Checking format_recursion v0.1.0 (/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/trial-entrant/crates/format_recursion)
+warning: using `chunks_exact` with a constant chunk size
+   --> crates/format_recursion/src/row_format.rs:664:46
+    |
+664 | ...   let actual_statement: Vec<u8> = bits.chunks_exact(8).map(|chunk| chunk.iter().enumerate().fold(0, |byte, (i, &bit)| byte | ((...
+    |                                            ^^^^^^^^^^^^^^^ help: consider using `as_chunks` instead: `as_chunks::<8>().0.iter()`
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.99.0/index.html#chunks_exact_to_as_chunks
+    = note: `#[warn(clippy::chunks_exact_to_as_chunks)]` on by default
+
+warning: using `chunks_exact` with a constant chunk size
+   --> crates/format_recursion/src/row_format.rs:666:34
+    |
+666 |         let words: Vec<_> = bits.chunks_exact(64).map(|chunk| b.pack(chunk)).collect();
+    |                                  ^^^^^^^^^^^^^^^^ help: consider using `as_chunks` instead: `as_chunks::<64>().0.iter()`
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.99.0/index.html#chunks_exact_to_as_chunks
+
+warning: `format_recursion` (lib) generated 2 warnings (run `cargo clippy --fix --lib -p format_recursion -- ` to apply 2 suggestions)
+    Finished `release` profile [optimized] target(s) in 9.27s

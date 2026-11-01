@@ -1,0 +1,58 @@
+{
+  "id": "entry-0",
+  "system": "leanR1CS",
+  "source_commit": "65745ca1c60d91bab8ab6af38eeae12cc196724c",
+  "protocol_hash": "BLAKE2s provisional",
+  "relation_B": "decoded-input reduced",
+  "zk": false,
+  "binaries": [
+    {
+      "path": "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/trial/entries/entry-0/sparse_tree",
+      "sha256": "53cdea9fd300a475a7c66e85ed896e206326060846ad63a6cc8dc131bcad11e3"
+    }
+  ],
+  "generators": {},
+  "aggregate_key": {
+    "path": null,
+    "sha256": null,
+    "derivation": "in-process SparseSetup from fixed trace; export absent",
+    "max_applications": 2,
+    "max_depth": 2
+  },
+  "setup": {
+    "argv": [],
+    "public_only_input_contract": "not exposed separately",
+    "output_directory": null,
+    "retained_artifacts": [],
+    "wall_time": null,
+    "process_tree_peak_ram": null,
+    "retained_key_bytes": null
+  },
+  "commands": {
+    "wallet": [],
+    "merge_first": [],
+    "merge_node": [],
+    "admission": [],
+    "root": [],
+    "reject": []
+  },
+  "input_contract": "Historical sparse_tree internally consumes fixed seeds 0..3, independent witnesses. No external fresh-seed file adapter; not measurable under required interface. Child order bound by digest.",
+  "claim_schema": "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/trial/entries/entry-0/claim-schema.md",
+  "frozen_surface": "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/trial/entries/entry-0/frozen-surface.md",
+  "soundness_note": "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/trial/entries/entry-0/soundness-note.md",
+  "rejections": {
+    "verifier_entrypoint": "row_format::tree::verify_root and direct replay probes inside sparse_tree example",
+    "cases": {},
+    "coverage": "historical direct verifier mutations bypass prechecks, not exposed as argv; unsupported coordinator cases unmeasured"
+  },
+  "status": "partial baseline calibration; binary built; no file adapter or eligible score",
+  "missing_capabilities": [
+    "canonical generator export and Keccak IDs",
+    "aggregate key artifact",
+    "separate file commands",
+    "full Falcon",
+    "warm protocol",
+    "security calculator",
+    "independent upgrade backend"
+  ]
+}

@@ -1,0 +1,446 @@
+[
+  {
+    "system": "entry-8",
+    "case": "admission heldout control",
+    "mode": "cold",
+    "protocol_hash": "keccak",
+    "n": 5,
+    "successes": 5,
+    "external_median_s": 6.120476184005383,
+    "external_min_s": 5.733914300013566,
+    "external_max_s": 8.008344023983227,
+    "external_relative_range": 0.3716099296184534,
+    "peak_rss_median_bytes": 1511817216,
+    "peak_rss_max_bytes": 1521106944,
+    "file_bytes_median": null,
+    "file_bytes_max": null,
+    "max_rss_sample_gap_s": 0.021305633010342717,
+    "evidence": [
+      "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/trial/entry-8-referee/cold-2/admission/sample.json",
+      "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/trial/entry-8-referee/cold-0/admission/sample.json",
+      "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/trial/entry-8-referee/cold-4/admission/sample.json",
+      "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/trial/entry-8-referee/cold-3/admission/sample.json",
+      "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/trial/entry-8-referee/cold-1/admission/sample.json"
+    ],
+    "reported_metrics": {
+      "seconds": {
+        "median": 6.011333122,
+        "min": 5.62982028,
+        "max": 7.888411193,
+        "n": 5
+      }
+    }
+  },
+  {
+    "system": "entry-8",
+    "case": "admission heldout control",
+    "mode": "warm",
+    "protocol_hash": "keccak",
+    "n": 5,
+    "successes": 5,
+    "external_median_s": 0.013271998992422596,
+    "external_min_s": 0.012544413999421522,
+    "external_max_s": 0.01938313600840047,
+    "external_relative_range": 0.515274452091459,
+    "peak_rss_median_bytes": 2798247936,
+    "peak_rss_max_bytes": 2827485184,
+    "file_bytes_median": 0,
+    "file_bytes_max": 0,
+    "max_rss_sample_gap_s": 0.008488911000313237,
+    "evidence": [
+      "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/trial/entry-8-referee/warm-2/admission/sample.json",
+      "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/trial/entry-8-referee/warm-0/admission/sample.json",
+      "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/trial/entry-8-referee/warm-3/admission/sample.json",
+      "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/trial/entry-8-referee/warm-4/admission/sample.json",
+      "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/trial/entry-8-referee/warm-1/admission/sample.json"
+    ],
+    "reported_metrics": {
+      "seconds": {
+        "median": 0.010429526,
+        "min": 0.009896355,
+        "max": 0.015486265,
+        "n": 5
+      }
+    }
+  },
+  {
+    "system": "entry-8",
+    "case": "first heldout control",
+    "mode": "cold",
+    "protocol_hash": "keccak",
+    "n": 10,
+    "successes": 10,
+    "external_median_s": 19.433731777506182,
+    "external_min_s": 19.02082643000176,
+    "external_max_s": 19.780971428001067,
+    "external_relative_range": 0.039114721078899746,
+    "peak_rss_median_bytes": 6867109888.0,
+    "peak_rss_max_bytes": 6885908480,
+    "file_bytes_median": 212959.0,
+    "file_bytes_max": 213903,
+    "max_rss_sample_gap_s": 0.032348370004910976,
+    "evidence": [
+      "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/trial/entry-8-referee/cold-2/first-1/sample.json",
+      "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/trial/entry-8-referee/cold-2/first-0/sample.json",
+      "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/trial/entry-8-referee/cold-0/first-1/sample.json",
+      "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/trial/entry-8-referee/cold-0/first-0/sample.json",
+      "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/trial/entry-8-referee/cold-4/first-1/sample.json",
+      "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/trial/entry-8-referee/cold-4/first-0/sample.json",
+      "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/trial/entry-8-referee/cold-3/first-1/sample.json",
+      "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/trial/entry-8-referee/cold-3/first-0/sample.json",
+      "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/trial/entry-8-referee/cold-1/first-1/sample.json",
+      "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/trial/entry-8-referee/cold-1/first-0/sample.json"
+    ],
+    "reported_metrics": {
+      "seconds": {
+        "median": 19.2615171045,
+        "min": 18.797711509,
+        "max": 19.580767058,
+        "n": 10
+      }
+    }
+  },
+  {
+    "system": "entry-8",
+    "case": "first heldout control",
+    "mode": "warm",
+    "protocol_hash": "keccak",
+    "n": 10,
+    "successes": 10,
+    "external_median_s": 4.57376402450609,
+    "external_min_s": 4.361719771986827,
+    "external_max_s": 4.836896769003943,
+    "external_relative_range": 0.1038918917703518,
+    "peak_rss_median_bytes": 6769545216.0,
+    "peak_rss_max_bytes": 6829039616,
+    "file_bytes_median": 213295.0,
+    "file_bytes_max": 214671,
+    "max_rss_sample_gap_s": 0.01483926799846813,
+    "evidence": [
+      "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/trial/entry-8-referee/warm-2/first-1/sample.json",
+      "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/trial/entry-8-referee/warm-2/first-0/sample.json",
+      "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/trial/entry-8-referee/warm-0/first-1/sample.json",
+      "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/trial/entry-8-referee/warm-0/first-0/sample.json",
+      "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/trial/entry-8-referee/warm-3/first-1/sample.json",
+      "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/trial/entry-8-referee/warm-3/first-0/sample.json",
+      "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/trial/entry-8-referee/warm-4/first-1/sample.json",
+      "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/trial/entry-8-referee/warm-4/first-0/sample.json",
+      "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/trial/entry-8-referee/warm-1/first-1/sample.json",
+      "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/trial/entry-8-referee/warm-1/first-0/sample.json"
+    ],
+    "reported_metrics": {
+      "seconds": {
+        "median": 4.571061127,
+        "min": 4.358883538,
+        "max": 4.831254724,
+        "n": 10
+      }
+    }
+  },
+  {
+    "system": "entry-8",
+    "case": "keccak1k public application setup",
+    "mode": "setup",
+    "protocol_hash": null,
+    "n": 1,
+    "successes": 1,
+    "external_median_s": 1.5393474489974324,
+    "external_min_s": 1.5393474489974324,
+    "external_max_s": 1.5393474489974324,
+    "external_relative_range": 0.0,
+    "peak_rss_median_bytes": 581001216,
+    "peak_rss_max_bytes": 581001216,
+    "file_bytes_median": null,
+    "file_bytes_max": null,
+    "max_rss_sample_gap_s": 0.011960525996983051,
+    "evidence": [
+      "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/trial/entry-8-referee/setup-keccak1k/sample.json"
+    ],
+    "reported_metrics": {
+      "seconds": {
+        "median": 1.478868841,
+        "min": 1.478868841,
+        "max": 1.478868841,
+        "n": 1
+      }
+    }
+  },
+  {
+    "system": "entry-8",
+    "case": "mpt public application setup",
+    "mode": "setup",
+    "protocol_hash": null,
+    "n": 1,
+    "successes": 1,
+    "external_median_s": 5.235192523978185,
+    "external_min_s": 5.235192523978185,
+    "external_max_s": 5.235192523978185,
+    "external_relative_range": 0.0,
+    "peak_rss_median_bytes": 1329291264,
+    "peak_rss_max_bytes": 1329291264,
+    "file_bytes_median": null,
+    "file_bytes_max": null,
+    "max_rss_sample_gap_s": 0.012589506019139662,
+    "evidence": [
+      "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/trial/entry-8-referee/setup-mpt/sample.json"
+    ],
+    "reported_metrics": {
+      "seconds": {
+        "median": 5.002721197,
+        "min": 5.002721197,
+        "max": 5.002721197,
+        "n": 1
+      }
+    }
+  },
+  {
+    "system": "entry-8",
+    "case": "node heldout control",
+    "mode": "cold",
+    "protocol_hash": "keccak",
+    "n": 5,
+    "successes": 5,
+    "external_median_s": 21.934466821985552,
+    "external_min_s": 20.84383576302207,
+    "external_max_s": 27.00530991499545,
+    "external_relative_range": 0.2809037576330579,
+    "peak_rss_median_bytes": 6833844224,
+    "peak_rss_max_bytes": 6851104768,
+    "file_bytes_median": 217063,
+    "file_bytes_max": 217895,
+    "max_rss_sample_gap_s": 0.04391727701295167,
+    "evidence": [
+      "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/trial/entry-8-referee/cold-2/node/sample.json",
+      "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/trial/entry-8-referee/cold-0/node/sample.json",
+      "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/trial/entry-8-referee/cold-4/node/sample.json",
+      "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/trial/entry-8-referee/cold-3/node/sample.json",
+      "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/trial/entry-8-referee/cold-1/node/sample.json"
+    ],
+    "reported_metrics": {
+      "seconds": {
+        "median": 21.760546685,
+        "min": 20.678061976,
+        "max": 26.804090078,
+        "n": 5
+      }
+    }
+  },
+  {
+    "system": "entry-8",
+    "case": "node heldout control",
+    "mode": "warm",
+    "protocol_hash": "keccak",
+    "n": 5,
+    "successes": 5,
+    "external_median_s": 6.472623865993228,
+    "external_min_s": 6.375736514979508,
+    "external_max_s": 6.768388964002952,
+    "external_relative_range": 0.06066356660803608,
+    "peak_rss_median_bytes": 6760534016,
+    "peak_rss_max_bytes": 6809673728,
+    "file_bytes_median": 216231,
+    "file_bytes_max": 217287,
+    "max_rss_sample_gap_s": 0.015036827011499554,
+    "evidence": [
+      "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/trial/entry-8-referee/warm-2/node/sample.json",
+      "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/trial/entry-8-referee/warm-0/node/sample.json",
+      "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/trial/entry-8-referee/warm-3/node/sample.json",
+      "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/trial/entry-8-referee/warm-4/node/sample.json",
+      "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/trial/entry-8-referee/warm-1/node/sample.json"
+    ],
+    "reported_metrics": {
+      "seconds": {
+        "median": 6.467839903,
+        "min": 6.370882567,
+        "max": 6.76519857,
+        "n": 5
+      }
+    }
+  },
+  {
+    "system": "entry-8",
+    "case": "root heldout control",
+    "mode": "cold",
+    "protocol_hash": "keccak",
+    "n": 5,
+    "successes": 5,
+    "external_median_s": 15.098369345010724,
+    "external_min_s": 14.743949905998306,
+    "external_max_s": 17.680793417006498,
+    "external_relative_range": 0.1945139533878654,
+    "peak_rss_median_bytes": 2772815872,
+    "peak_rss_max_bytes": 2805760000,
+    "file_bytes_median": null,
+    "file_bytes_max": null,
+    "max_rss_sample_gap_s": 0.024006727995583788,
+    "evidence": [
+      "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/trial/entry-8-referee/cold-2/root/sample.json",
+      "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/trial/entry-8-referee/cold-0/root/sample.json",
+      "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/trial/entry-8-referee/cold-4/root/sample.json",
+      "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/trial/entry-8-referee/cold-3/root/sample.json",
+      "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/trial/entry-8-referee/cold-1/root/sample.json"
+    ],
+    "reported_metrics": {
+      "seconds": {
+        "median": 14.948026755,
+        "min": 14.586595784,
+        "max": 17.411739479,
+        "n": 5
+      }
+    }
+  },
+  {
+    "system": "entry-8",
+    "case": "root heldout control",
+    "mode": "warm",
+    "protocol_hash": "keccak",
+    "n": 5,
+    "successes": 5,
+    "external_median_s": 0.04455093201249838,
+    "external_min_s": 0.04059584499918856,
+    "external_max_s": 0.04739406399312429,
+    "external_relative_range": 0.1525943159175335,
+    "peak_rss_median_bytes": 2837516288,
+    "peak_rss_max_bytes": 2858340352,
+    "file_bytes_median": 0,
+    "file_bytes_max": 0,
+    "max_rss_sample_gap_s": 0.01037160400301218,
+    "evidence": [
+      "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/trial/entry-8-referee/warm-2/root/sample.json",
+      "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/trial/entry-8-referee/warm-0/root/sample.json",
+      "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/trial/entry-8-referee/warm-3/root/sample.json",
+      "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/trial/entry-8-referee/warm-4/root/sample.json",
+      "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/trial/entry-8-referee/warm-1/root/sample.json"
+    ],
+    "reported_metrics": {
+      "seconds": {
+        "median": 0.040665524,
+        "min": 0.038052503,
+        "max": 0.042451835,
+        "n": 5
+      }
+    }
+  },
+  {
+    "system": "entry-8",
+    "case": "shielded public application setup",
+    "mode": "setup",
+    "protocol_hash": null,
+    "n": 1,
+    "successes": 1,
+    "external_median_s": 2.19628336300957,
+    "external_min_s": 2.19628336300957,
+    "external_max_s": 2.19628336300957,
+    "external_relative_range": 0.0,
+    "peak_rss_median_bytes": 695967744,
+    "peak_rss_max_bytes": 695967744,
+    "file_bytes_median": null,
+    "file_bytes_max": null,
+    "max_rss_sample_gap_s": 0.011440953996498138,
+    "evidence": [
+      "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/trial/entry-8-referee/setup-shielded/sample.json"
+    ],
+    "reported_metrics": {
+      "seconds": {
+        "median": 2.096939816,
+        "min": 2.096939816,
+        "max": 2.096939816,
+        "n": 1
+      }
+    }
+  },
+  {
+    "system": "entry-8",
+    "case": "wallet heldout control",
+    "mode": "cold",
+    "protocol_hash": "keccak",
+    "n": 20,
+    "successes": 20,
+    "external_median_s": 6.050682618006249,
+    "external_min_s": 4.9605968199903145,
+    "external_max_s": 10.473642079014098,
+    "external_relative_range": 0.9111443463614323,
+    "peak_rss_median_bytes": 4806961152.0,
+    "peak_rss_max_bytes": 5446180864,
+    "file_bytes_median": 213599.0,
+    "file_bytes_max": 214447,
+    "max_rss_sample_gap_s": 0.026860270998440683,
+    "evidence": [
+      "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/trial/entry-8-referee/cold-2/wallet-1/sample.json",
+      "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/trial/entry-8-referee/cold-2/wallet-2/sample.json",
+      "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/trial/entry-8-referee/cold-2/wallet-0/sample.json",
+      "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/trial/entry-8-referee/cold-2/wallet-3/sample.json",
+      "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/trial/entry-8-referee/cold-0/wallet-1/sample.json",
+      "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/trial/entry-8-referee/cold-0/wallet-2/sample.json",
+      "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/trial/entry-8-referee/cold-0/wallet-0/sample.json",
+      "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/trial/entry-8-referee/cold-0/wallet-3/sample.json",
+      "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/trial/entry-8-referee/cold-4/wallet-1/sample.json",
+      "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/trial/entry-8-referee/cold-4/wallet-2/sample.json",
+      "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/trial/entry-8-referee/cold-4/wallet-0/sample.json",
+      "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/trial/entry-8-referee/cold-4/wallet-3/sample.json",
+      "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/trial/entry-8-referee/cold-3/wallet-1/sample.json",
+      "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/trial/entry-8-referee/cold-3/wallet-2/sample.json",
+      "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/trial/entry-8-referee/cold-3/wallet-0/sample.json",
+      "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/trial/entry-8-referee/cold-3/wallet-3/sample.json",
+      "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/trial/entry-8-referee/cold-1/wallet-1/sample.json",
+      "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/trial/entry-8-referee/cold-1/wallet-2/sample.json",
+      "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/trial/entry-8-referee/cold-1/wallet-0/sample.json",
+      "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/trial/entry-8-referee/cold-1/wallet-3/sample.json"
+    ],
+    "reported_metrics": {
+      "seconds": {
+        "median": 5.9998573875000005,
+        "min": 4.908237874,
+        "max": 10.399454682,
+        "n": 20
+      }
+    }
+  },
+  {
+    "system": "entry-8",
+    "case": "wallet heldout control",
+    "mode": "warm",
+    "protocol_hash": "keccak",
+    "n": 20,
+    "successes": 20,
+    "external_median_s": 3.6805946819949895,
+    "external_min_s": 3.401270817994373,
+    "external_max_s": 4.5461864300013985,
+    "external_relative_range": 0.31106810472987156,
+    "peak_rss_median_bytes": 6744260608.0,
+    "peak_rss_max_bytes": 6957518848,
+    "file_bytes_median": 213199.0,
+    "file_bytes_max": 214127,
+    "max_rss_sample_gap_s": 0.016731608979171142,
+    "evidence": [
+      "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/trial/entry-8-referee/warm-2/wallet-1/sample.json",
+      "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/trial/entry-8-referee/warm-2/wallet-2/sample.json",
+      "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/trial/entry-8-referee/warm-2/wallet-0/sample.json",
+      "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/trial/entry-8-referee/warm-2/wallet-3/sample.json",
+      "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/trial/entry-8-referee/warm-0/wallet-1/sample.json",
+      "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/trial/entry-8-referee/warm-0/wallet-2/sample.json",
+      "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/trial/entry-8-referee/warm-0/wallet-0/sample.json",
+      "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/trial/entry-8-referee/warm-0/wallet-3/sample.json",
+      "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/trial/entry-8-referee/warm-3/wallet-1/sample.json",
+      "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/trial/entry-8-referee/warm-3/wallet-2/sample.json",
+      "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/trial/entry-8-referee/warm-3/wallet-0/sample.json",
+      "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/trial/entry-8-referee/warm-3/wallet-3/sample.json",
+      "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/trial/entry-8-referee/warm-4/wallet-1/sample.json",
+      "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/trial/entry-8-referee/warm-4/wallet-2/sample.json",
+      "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/trial/entry-8-referee/warm-4/wallet-0/sample.json",
+      "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/trial/entry-8-referee/warm-4/wallet-3/sample.json",
+      "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/trial/entry-8-referee/warm-1/wallet-1/sample.json",
+      "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/trial/entry-8-referee/warm-1/wallet-2/sample.json",
+      "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/trial/entry-8-referee/warm-1/wallet-0/sample.json",
+      "/root/yukon-autoresearch/workspaces/leanr1cs-closure-20261022/artifacts/trial/entry-8-referee/warm-1/wallet-3/sample.json"
+    ],
+    "reported_metrics": {
+      "seconds": {
+        "median": 3.67779792,
+        "min": 3.399380546,
+        "max": 4.542135972,
+        "n": 20
+      }
+    }
+  }
+]

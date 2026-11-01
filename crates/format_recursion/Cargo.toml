@@ -10,6 +10,9 @@ workspace = true
 [features]
 default = []
 experimental-log26 = []
+keccak-protocol = ["primitives/keccak-protocol"]
+trial-keccak-tight = ["keccak-protocol"]
+keccak-batched-transcript = ["keccak-protocol", "fiat_shamir/keccak-batched-transcript"]
 
 [dependencies]
 circuit_suite = { path = "../circuit_suite" }
@@ -22,7 +25,9 @@ leanvm_core.workspace = true
 rand.workspace = true
 xmss.workspace = true
 serde_json = "1"
-serde.workspace = true
+sha3 = "0.11"
+serde = { workspace = true, features = ["rc"] }
 bincode.workspace = true
 tikv-jemallocator.workspace = true
 tracing.workspace = true
+

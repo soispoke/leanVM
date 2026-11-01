@@ -1,0 +1,19 @@
+{
+  "comparison": {
+    "packed": {
+      "count": 10,
+      "external_median_s": 0.04085787100484595
+    },
+    "grouped": {
+      "count": 10,
+      "external_median_s": 0.03836054950079415
+    }
+  },
+  "profile_repeat_median_s": {
+    "0": 0.000992062,
+    "1": 0.000331622,
+    "2": 0.008595042,
+    "5": 0.014204059
+  },
+  "note": "Matched root-only diagnostic under same five certificates,ABAB/BABA. Profiles repeat checks outside internal root time,not scored. No fresh heldout claim."
+}
